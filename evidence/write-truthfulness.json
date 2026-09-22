@@ -1,0 +1,31 @@
+{
+  "question": "Does a non-vendor write path report refusals truthfully, instead of as an empty success?",
+  "successfulInsert": {
+    "succeeded": true,
+    "rowsAffected": 1,
+    "cleanedUp": true
+  },
+  "deleteCleanup": {
+    "succeeded": true,
+    "rowsAffected": 1
+  },
+  "refusals": [
+    {
+      "case": "column that does not exist",
+      "httpStatusCode": 500,
+      "errorCode": "ItemNotFoundException",
+      "serverMessagePreserved": true,
+      "reportedAsSuccess": false
+    },
+    {
+      "case": "insert into a restricted schema",
+      "httpStatusCode": 500,
+      "errorCode": "SecurityException",
+      "serverMessagePreserved": true,
+      "reportedAsSuccess": false
+    }
+  ],
+  "bothRefusalsLoud": true,
+  "neitherReportedAsEmptySuccess": true,
+  "notExercised": "both refusals arrived as HTTP 500; an HTTP 200 body carrying success:false was not produced by these cases, so that branch of the client is implemented but unproven"
+}

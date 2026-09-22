@@ -21,6 +21,7 @@ func main() {
 	listJSON := flag.Bool("list-apps-json", false, "write list-apps-compatible JSON to stdout and exit")
 	version := flag.Bool("version", false, "print this build's identity and exit")
 	resident := flag.Bool("resident", false, "print this build's identity, then stay alive until killed")
+	writeProbe := flag.Bool("write-probe", false, "run the write-truthfulness probe and print JSON outcomes")
 	flag.Parse()
 	if *version {
 		fmt.Println(buildID)
@@ -44,6 +45,10 @@ func main() {
 	client, err := creatio.NewClient(config)
 	if err != nil {
 		fatal(err)
+	}
+	if *writeProbe {
+		runWriteProbe(client)
+		return
 	}
 	if *listJSON {
 		apps, err := client.ListApps(context.Background())
@@ -70,3 +75,52 @@ func main() {
 }
 
 func fatal(err error) { fmt.Fprintln(os.Stderr, "creatio-mcp-go:", err); os.Exit(1) }
+
+// runWriteProbe exercises two writes: one that should succeed and is cleaned up, and one that must be
+// REFUSED. The refusal is the point — the vendor path can report a refused operation as an empty
+// success, and this probe records exactly what is reported instead.
+func runWriteProbe(client *creatio.Client) {
+	ctx := context.Background()
+	results := map[string]any{}
+
+	name := "creatio-mcp-go probe " + time.Now().UTC().Format("20060102T150405Z")
+	inserted, err := client.Insert(ctx, "Contact", map[string]any{"Name": name})
+	results["insertShouldSucceed"] = inserted
+	if err != nil {
+		results["insertError"] = err.Error()
+	}
+
+	if inserted.Succeeded && inserted.RecordID != "" {
+		deleted, err := client.Delete(ctx, "Contact", inserted.RecordID)
+		results["deleteCleanup"] = deleted
+		if err != nil {
+			results["deleteError"] = err.Error()
+		}
+	}
+
+	// Two different refusals, because they exercise different server behaviour:
+	// (a) a schema-level error, which arrives as HTTP 500 with a body;
+	// (b) a restricted schema, which is the case that can arrive as HTTP 200 with success:false —
+	//     the shape the vendor provider turns into an empty success.
+	refused, err := client.Insert(ctx, "Contact", map[string]any{"ThisColumnDoesNotExist": "x"})
+	results["refusalBadColumn"] = refused
+	if err != nil {
+		results["refusalBadColumnError"] = err.Error()
+	}
+	restricted, err := client.Insert(ctx, "SysSchema", map[string]any{"Name": "probe"})
+	results["refusalRestrictedSchema"] = restricted
+	if err != nil {
+		results["refusalRestrictedError"] = err.Error()
+	}
+
+	// A refusal is loud when the client did not claim success AND classified the failure AND kept the
+	// server's own words. Requiring one specific class was too narrow: the server refuses in more than
+	// one way, and every way must stay loud.
+	loud := func(o creatio.WriteOutcome) bool {
+		return !o.Succeeded && o.FailureClass != "" && o.FailureDetail != ""
+	}
+	results["bothRefusalsLoud"] = loud(refused) && loud(restricted)
+	results["neitherReportedAsEmptySuccess"] = !refused.Succeeded && !restricted.Succeeded
+
+	_ = json.NewEncoder(os.Stdout).Encode(results)
+}

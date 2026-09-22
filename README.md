@@ -154,3 +154,42 @@ script fails loudly if the process is not alive when the overwrite is attempted.
 
 Reproduce: `scripts/replace-while-running.ps1` (needs two builds stamped with
 `-ldflags "-X main.buildID=..."`).
+
+## Prototype 2 — a write path that tells the truth
+
+**Question.** clio's knowledge base records that `ATF.Repository`'s `RemoteDataProvider` catches its own
+exceptions and returns `Success=false` with an **empty payload**, and that the consumer side then drops
+the flag — so a refused operation can surface as an empty success. clio needed a dedicated
+`ClassifyingDataProvider` wrapper to stop that. Does a client that does not use the vendor assembly need
+one?
+
+**Measured against a live Creatio 10.1.725.0 environment, forms auth:**
+
+| Case | Result |
+|---|---|
+| Insert a record | succeeded, 1 row, id returned |
+| Delete it again (cleanup) | succeeded, 1 row — nothing left behind |
+| Insert with a column that does not exist | **refused**, HTTP 500, `ItemNotFoundException`, server's message preserved |
+| Insert into a restricted schema | **refused**, HTTP 500, `SecurityException: Current user does not have permissions for the "SysSchema" object` |
+
+Neither refusal was reported as success. Both carry a failure class and the server's own words.
+
+**What this means for the rewrite question.** clio reaches the same truthfulness, but only because it
+wraps the vendor provider in `ClassifyingDataProvider` to undo a behaviour it did not choose. A client
+built directly on the documented endpoints never acquires that behaviour, so it needs no patch to
+correct it. That is a real, if modest, argument for a rewrite — not a language preference.
+
+**What was NOT exercised, stated plainly.** Both refusals arrived as HTTP 500. An HTTP 200 body carrying
+`success:false` — the exact shape the vendor provider swallows — was not produced by either case. The
+client handles it and there is code for it, but that branch is **unproven**.
+
+**Two payload details that are not guessable**, both found by being refused:
+
+1. A `columnValues` item is `{expressionType, parameter}` **directly**. Wrapping it in an `expression`
+   object — the obvious symmetry with `SelectQuery`'s column expressions — makes the server answer
+   HTTP 500 `NullReferenceException`, naming no field. The correct shape is visible in clio's own
+   `DataServiceBatchCommand`.
+2. Go's resolver does not apply the DNS search domain the way `host` does, so a short corporate
+   hostname fails with `no such host` where other tools succeed.
+
+Reproduce: `-write-probe`. Case 2 and 3 are safe by construction — they are supposed to fail.
