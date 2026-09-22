@@ -71,8 +71,9 @@ conventions that are only discoverable by decompiling or by failing.
 authorization-app URI, so that half of the kill criterion was never exercised. It is not evidence of
 success.
 
-This establishes the vendor-client-free `list-apps` path only. It says nothing about OAuth, package
-installation, IIS/DISM/PowerShell operations, or the rest of clio's CLI.
+The live list-apps parity above is evidence for that one command and forms-auth mode. The newer
+R0/R1/R2 prototype probes below have unit and wire-shape coverage, but are not yet live comparisons
+against the same Creatio instance and clio process.
 
 `scripts/compare-with-clio.sh` is the reproducible evidence harness: it runs clio `list-apps --json`
 and this client against the same environment, normalises both result sets, and writes only counts,
@@ -93,7 +94,8 @@ side then drops the flag — turning a rejected read into an empty successful li
 
 ## 3. What this does not prove
 
-This is one read-only command. It says nothing about the write path, package installation, IIS/DISM/PowerShell operations, or clio's other 249 CLI verbs.
+This is still a small read-only slice. It says nothing about write parity, package installation, most
+IIS/DISM/PowerShell operations, or parity for clio's 202 MCP tools.
 
 ## 4. Kill criterion
 
@@ -101,9 +103,11 @@ If `list-apps` cannot be reproduced without a vendor assembly for both authentic
 
 ## Run as an MCP server
 
-The server uses the official [`github.com/modelcontextprotocol/go-sdk`](https://github.com/modelcontextprotocol/go-sdk) over stdio. Its resident list is `list-apps`, `clio-run`, and `get-tool-contract`; `odata-read`, `find-empty-iis-port`, and `start-creatio` are available through `clio-run` or by raw tool name, and their schemas are returned on demand by `get-tool-contract`. The protocol probes establish progress-token correlation, response `_meta`, cancellation, and hidden-name dispatch.
+The server uses the official [`github.com/modelcontextprotocol/go-sdk`](https://github.com/modelcontextprotocol/go-sdk) over stdio. Its resident list is `list-apps`, `clio-run`, and `get-tool-contract`; `odata-read`, `find-empty-iis-port`, `start-creatio`, `execute-esq`, and `get-entity-schema-properties` are available through `clio-run` or by raw tool name, and their schemas are returned on demand by `get-tool-contract`. The protocol probes establish progress-token correlation, response `_meta`, cancellation, and hidden-name dispatch.
 
-`odata-read` proves that clio's `IApplicationClient` OData read path is replaceable with direct HTTP: it supports entity, projection, ordering, pagination and count; filters and expands are rejected until their full contract is ported. `find-empty-iis-port` and `start-creatio` are the minimum R1 portability probes. On Windows they call the built-in `appcmd.exe` and `netstat.exe` directly; the Go implementation has no `creatio.client`, `Microsoft.Web.Administration`, WMI, PowerShell, or .NET helper dependency. `start-creatio` requires a registered environment name and can launch `dotnet Terrasoft.WebHost.dll` on non-IIS hosts — that starts the Creatio application and is not a .NET library dependency in this MCP server. Windows command behavior is covered with mocked command responses and a Windows cross-build, but has not been live-tested on Windows in this checkout. These probes do not establish parity for Clio's full 202-tool catalog. Creatio-client connection details are read only from environment variables; see `.env.example`. The local `start-creatio` tool separately reads Clio's `appsettings.json`. The `--list-apps-json` mode exists solely for the comparison harness and returns clio's JSON field names.
+`odata-read` replaces the narrow `IApplicationClient` OData read path with direct HTTP: it supports entity, projection, ordering, pagination and count; filters and expands are still rejected. R1's `find-empty-iis-port` and `start-creatio` use built-in `appcmd.exe`/`netstat.exe` and have no `creatio.client`, `Microsoft.Web.Administration`, WMI, PowerShell, or .NET helper dependency. `start-creatio` launches `dotnet Terrasoft.WebHost.dll` where appropriate; that is the Creatio application's runtime, not a .NET library linked into this MCP server. The Windows commands have mocked coverage and a Windows cross-build, but no live Windows run.
+
+R2's `execute-esq` sends the caller's raw SelectQuery JSON unchanged to `DataService/.../SelectQuery`, so relation paths, filters, sorting, and paging are accepted without an ESQ builder. It enforces the same 200,000-byte response ceiling and detects aliases silently dropped by Creatio. `get-entity-schema-properties` reads the merged runtime schema through `RuntimeEntitySchemaRequest`; the 2,049-column test fixture exceeds 200 KB. It does not implement package-scoped designer reads. Unlike Clio's per-call named environments, this prototype has one process-wide target configured by `CREATIO_URL`; that is an architectural difference to preserve in any timing comparison. Both R2 tools are tested against mocked HTTP responses, not yet against a live Creatio instance. Collectively these probes still do not establish parity for Clio's full 202-tool catalog. Creatio-client connection details are read only from environment variables; see `.env.example`. The local `start-creatio` tool separately reads Clio's `appsettings.json`. The `--list-apps-json` mode exists solely for the comparison harness and returns clio's JSON field names.
 
 ## Related work
 

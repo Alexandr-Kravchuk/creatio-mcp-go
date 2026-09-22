@@ -10,6 +10,7 @@ import (
 	"net/http/cookiejar"
 	"net/url"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -26,9 +27,10 @@ type App struct {
 
 // Client talks directly to documented Creatio HTTP endpoints; it has no vendor .NET dependency.
 type Client struct {
-	config Config
-	http   *http.Client
-	token  string
+	config  Config
+	http    *http.Client
+	tokenMu sync.RWMutex
+	token   string
 }
 
 // NewClient creates a client with an isolated cookie jar for forms authentication.
@@ -65,8 +67,8 @@ func (c *Client) ListApps(ctx context.Context) ([]App, error) {
 	if csrf := c.csrfToken(); csrf != "" {
 		req.Header.Set("BPMCSRF", csrf)
 	}
-	if c.token != "" {
-		req.Header.Set("Authorization", "Bearer "+c.token)
+	if token := c.bearerToken(); token != "" {
+		req.Header.Set("Authorization", "Bearer "+token)
 	}
 	response, err := c.http.Do(req)
 	if err != nil {
@@ -164,8 +166,16 @@ func (c *Client) acquireToken(ctx context.Context) error {
 	if err := json.Unmarshal(payload, &token); err != nil || token.AccessToken == "" {
 		return fmt.Errorf("OAuth token endpoint returned no access_token")
 	}
+	c.tokenMu.Lock()
 	c.token = token.AccessToken
+	c.tokenMu.Unlock()
 	return nil
+}
+
+func (c *Client) bearerToken() string {
+	c.tokenMu.RLock()
+	defer c.tokenMu.RUnlock()
+	return c.token
 }
 
 // authURL is deliberately NOT built through serviceURL. The authentication route is the documented
@@ -200,13 +210,19 @@ func (c *Client) serviceURL(path string) string {
 }
 
 func readResponse(response *http.Response) ([]byte, error) {
+	return readResponseLimit(response, maxResponseBytes)
+}
+
+var errResponseTooLarge = fmt.Errorf("response exceeds safety byte limit")
+
+func readResponseLimit(response *http.Response, limit int) ([]byte, error) {
 	defer response.Body.Close()
-	payload, err := io.ReadAll(io.LimitReader(response.Body, maxResponseBytes+1))
+	payload, err := io.ReadAll(io.LimitReader(response.Body, int64(limit)+1))
 	if err != nil {
 		return nil, err
 	}
-	if len(payload) > maxResponseBytes {
-		return nil, fmt.Errorf("response exceeds %d-byte safety limit", maxResponseBytes)
+	if len(payload) > limit {
+		return nil, fmt.Errorf("%w: %d bytes", errResponseTooLarge, limit)
 	}
 	return payload, nil
 }

@@ -149,7 +149,7 @@ func TestTwoTierMCPExposesContractAndRunsHiddenToolByRawName(t *testing.T) {
 		t.Fatalf("get-tool-contract index = %#v, err = %v", contracts, err)
 	}
 	contractIndex, ok := contracts.StructuredContent.(map[string]any)
-	if !ok || !reflect.DeepEqual(contractIndex["tools"], []any{"find-empty-iis-port", "odata-read", "start-creatio"}) {
+	if !ok || !reflect.DeepEqual(contractIndex["tools"], []any{"execute-esq", "find-empty-iis-port", "get-entity-schema-properties", "odata-read", "start-creatio"}) {
 		t.Fatalf("contract index = %#v", contracts.StructuredContent)
 	}
 	startContract, err := session.CallTool(context.Background(), &mcp.CallToolParams{
@@ -273,6 +273,59 @@ func TestStructuredToolResultSerializesContentArray(t *testing.T) {
 	}
 	if !strings.Contains(string(encoded), `"content":[]`) {
 		t.Fatalf("structured result must serialize content as an array: %s", encoded)
+	}
+}
+
+func TestR2ToolsDispatchRawSelectQueryAndMergedSchemaRead(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/ServiceModel/AuthService.svc/Login":
+			_, _ = w.Write([]byte(`{"Code":0}`))
+		case "/0/DataService/json/SyncReply/SelectQuery":
+			_, _ = w.Write([]byte(`{"success":true,"rows":[{"Id":"contact-1"}]}`))
+		case "/0/DataService/json/SyncReply/RuntimeEntitySchemaRequest":
+			_, _ = w.Write([]byte(`{"success":true,"schema":{"uId":"schema-1","name":"Contact","primaryColumnUId":"column-1","primaryDisplayColumnName":"Name","caption":{"en-US":"Contact"},"columns":{"items":{"id":{"uId":"column-1","name":"Id","caption":{"en-US":"Id"},"dataValueType":0,"isRequired":true,"isInherited":false,"isIndexed":true},"name":{"uId":"column-2","name":"Name","caption":{"en-US":"Full name"},"dataValueType":1,"isRequired":true,"isInherited":false}}}}}`))
+		default:
+			t.Errorf("unexpected Creatio route %s", r.URL.Path)
+			http.NotFound(w, r)
+		}
+	}))
+	defer server.Close()
+	client, err := creatio.NewClient(creatio.Config{BaseURL: server.URL, Login: "example-user", Password: "test-password"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	session := connectTestClient(t, newMCPServer(client), mcp.NewClient(&mcp.Implementation{Name: "probe-client", Version: "test"}, nil))
+
+	esq, err := session.CallTool(context.Background(), &mcp.CallToolParams{
+		Name: "execute-esq", Arguments: map[string]any{
+			"query": map[string]any{
+				"rootSchemaName": "Contact", "columns": map[string]any{"items": map[string]any{
+					"Id": map[string]any{"expression": map[string]any{"expressionType": 0, "columnPath": "Id"}},
+				}},
+			},
+		},
+	})
+	if err != nil || esq.IsError {
+		t.Fatalf("execute-esq result = %#v, err = %v", esq, err)
+	}
+	esqValue, ok := esq.StructuredContent.(map[string]any)
+	if !ok || esqValue["success"] != true || esqValue["count"] != float64(1) {
+		t.Fatalf("execute-esq structured content = %#v", esq.StructuredContent)
+	}
+
+	schema, err := session.CallTool(context.Background(), &mcp.CallToolParams{
+		Name: "get-entity-schema-properties", Arguments: map[string]any{"schema-name": "Contact"},
+	})
+	if err != nil || schema.IsError {
+		t.Fatalf("get-entity-schema-properties result = %#v, err = %v", schema, err)
+	}
+	schemaValue, ok := schema.StructuredContent.(map[string]any)
+	if !ok || schemaValue["name"] != "Contact" || schemaValue["own-column-count"] != float64(2) {
+		t.Fatalf("schema structured content = %#v", schema.StructuredContent)
+	}
+	if schemaValue["package-name"] != "(merged: all packages)" {
+		t.Fatalf("schema package mode = %#v", schemaValue["package-name"])
 	}
 }
 

@@ -100,8 +100,8 @@ func (c *Client) write(ctx context.Context, operation, route string, payload map
 	if csrf := c.csrfToken(); csrf != "" {
 		req.Header.Set("BPMCSRF", csrf)
 	}
-	if c.token != "" {
-		req.Header.Set("Authorization", "Bearer "+c.token)
+	if token := c.bearerToken(); token != "" {
+		req.Header.Set("Authorization", "Bearer "+token)
 	}
 	response, err := c.http.Do(req)
 	if err != nil {

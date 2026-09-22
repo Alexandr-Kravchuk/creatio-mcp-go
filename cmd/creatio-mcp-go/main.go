@@ -149,7 +149,7 @@ func newMCPServerWithHiddenTools(client *creatio.Client, hostTools hiddenToolSer
 }
 
 func hiddenToolNames() []string {
-	return []string{"find-empty-iis-port", "odata-read", "start-creatio"}
+	return []string{"execute-esq", "find-empty-iis-port", "get-entity-schema-properties", "odata-read", "start-creatio"}
 }
 
 func isHiddenTool(name string) bool {
@@ -183,6 +183,39 @@ func invokeHiddenTool(ctx context.Context, client *creatio.Client, hostTools hid
 			return nil, fmt.Errorf("decode find-empty-iis-port arguments: %w", err)
 		}
 		return structuredToolResult(hostTools.findEmptyIISPort(ctx)), nil
+	case "execute-esq":
+		var input struct {
+			Query     json.RawMessage `json:"query"`
+			TimeoutMS *int            `json:"timeout,omitempty"`
+		}
+		if err := decodeStrictArgs(args, &input); err != nil {
+			return nil, fmt.Errorf("decode execute-esq arguments: %w", err)
+		}
+		if len(input.Query) == 0 {
+			return nil, errors.New("query is required")
+		}
+		return structuredToolResult(client.ExecuteESQ(ctx, creatio.ExecuteESQRequest{
+			Query: input.Query, TimeoutMS: input.TimeoutMS,
+		})), nil
+	case "get-entity-schema-properties":
+		var input struct {
+			SchemaName   string `json:"schema-name"`
+			PackageName  string `json:"package-name,omitempty"`
+			RequiredOnly bool   `json:"required-only,omitempty"`
+		}
+		if err := decodeStrictArgs(args, &input); err != nil {
+			return nil, fmt.Errorf("decode get-entity-schema-properties arguments: %w", err)
+		}
+		if strings.TrimSpace(input.PackageName) != "" {
+			return nil, errors.New("package-name reads are not implemented; this probe supports only the merged runtime schema view")
+		}
+		result, err := client.GetEntitySchemaProperties(ctx, creatio.EntitySchemaPropertiesRequest{
+			SchemaName: input.SchemaName, RequiredOnly: input.RequiredOnly,
+		})
+		if err != nil {
+			return nil, err
+		}
+		return structuredToolResult(result), nil
 	case "start-creatio":
 		var input struct {
 			EnvironmentName string `json:"environmentName"`
@@ -245,6 +278,30 @@ var odataReadContract = map[string]any{
 
 var hiddenToolContracts = map[string]map[string]any{
 	"odata-read": odataReadContract,
+	"execute-esq": {
+		"name":        "execute-esq",
+		"description": "Run a raw Creatio DataService SelectQuery against the single CREATIO_URL configured when the Go process starts. Query is forwarded without translation, including filters, relation paths, ordering and paging. Responses are capped at 200000 UTF-8 bytes.",
+		"inputSchema": map[string]any{
+			"type":     "object",
+			"required": []string{"query"},
+			"properties": map[string]any{
+				"query":   map[string]string{"type": "object", "description": "Raw SelectQuery JSON; include rootSchemaName and any columns, filters, orders, rowCount and rowsOffset."},
+				"timeout": map[string]any{"type": "integer", "minimum": 1000, "maximum": 120000, "default": 30000},
+			},
+		},
+	},
+	"get-entity-schema-properties": {
+		"name":        "get-entity-schema-properties",
+		"description": "Read the merged runtime entity-schema metadata from Creatio. This prototype does not implement package-scoped designer reads; target is the single CREATIO_URL configured at process start.",
+		"inputSchema": map[string]any{
+			"type":     "object",
+			"required": []string{"schema-name"},
+			"properties": map[string]any{
+				"schema-name":   map[string]string{"type": "string"},
+				"required-only": map[string]any{"type": "boolean", "default": false},
+			},
+		},
+	},
 	"find-empty-iis-port": {
 		"name":        "find-empty-iis-port",
 		"description": "Find the first free port in the default IIS deployment range. Windows only; reads IIS bindings and active TCP endpoints.",
