@@ -71,15 +71,14 @@ conventions that are only discoverable by decompiling or by failing.
 authorization-app URI, so that half of the kill criterion was never exercised. It is not evidence of
 success.
 
-This is also one read-only command. It says nothing about the write path, package installation,
-IIS/DISM/PowerShell operations, or the other 249 CLI verbs.
+This is still only one read-only command. It says nothing about package installation,
+IIS/DISM/PowerShell operations, or clio's other 249 CLI verbs.
 
-The earlier note said: `scripts/compare-with-clio.sh` exists and is the intended evidence:
-it runs clio `list-apps --json` and this client against the same environment, normalises both result
-sets, and writes only counts, SHA-256 fingerprints and mismatch counts to `evidence/latest.json` —
-never raw application data, URLs or credentials. **No environment was reachable when this was written,
-so no parity verdict exists yet.** Until that file contains a verdict, this pilot has proven the
-protocol is reachable and has NOT proven the output matches.
+`scripts/compare-with-clio.sh` is the reproducible evidence harness: it runs clio `list-apps --json`
+and this client against the same environment, normalises both result sets, and writes only counts,
+SHA-256 fingerprints and mismatch counts to `evidence/latest.json` — never raw application data, URLs
+or credentials. The committed evidence is the forms-auth run reported above; rerun the harness before
+using this result against another Creatio version or authentication configuration.
 
 ### Build status
 
@@ -98,7 +97,7 @@ This is one read-only command. It says nothing about the write path, package ins
 
 ## 4. Kill criterion
 
-If `list-apps` cannot be reproduced without a vendor assembly for both authentication modes clio supports (forms authentication and OAuth client credentials), a full rewrite should stop here. **The kill criterion has not been evaluated**, because neither a Go build nor a live Go-versus-clio diff could be produced in this environment.
+If `list-apps` cannot be reproduced without a vendor assembly for both authentication modes clio supports (forms authentication and OAuth client credentials), a full rewrite should stop here. **It has passed for forms authentication and remains open for OAuth client credentials.** A full rewrite must not be approved until OAuth is exercised against the same clio-versus-Go harness.
 
 ## Run as an MCP server
 
