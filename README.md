@@ -101,7 +101,9 @@ If `list-apps` cannot be reproduced without a vendor assembly for both authentic
 
 ## Run as an MCP server
 
-The server uses the official [`github.com/modelcontextprotocol/go-sdk`](https://github.com/modelcontextprotocol/go-sdk) over stdio. It exposes `list-apps` and a deliberately bounded `odata-read` tool. `odata-read` proves that clio's `IApplicationClient` OData read path is replaceable with direct HTTP: it supports entity, projection, ordering, pagination and count; it deliberately refuses filters/expands until their full contract is ported and tested. Connection details are read only from environment variables; see `.env.example`. The `--list-apps-json` mode exists solely for the comparison harness and returns clio's JSON field names.
+The server uses the official [`github.com/modelcontextprotocol/go-sdk`](https://github.com/modelcontextprotocol/go-sdk) over stdio. Its resident list is `list-apps`, `clio-run`, and `get-tool-contract`; `odata-read` is available through `clio-run` or by raw tool name, and its schema is returned on demand by `get-tool-contract`. This is the minimum two-level surface needed to test the protocol design with one hidden tool.
+
+`odata-read` proves that clio's `IApplicationClient` OData read path is replaceable with direct HTTP: it supports entity, projection, ordering, pagination and count; filters and expands are rejected until their full contract is ported. The Go SDK protocol probes pass for correlated `notifications/progress`, result `_meta`, cancellation reaching the tool context, raw calls to tools absent from `tools/list`, and the `clio-run`/`get-tool-contract` discovery route. These checks establish SDK and prototype feasibility; they do not establish parity for Clio's full 202-tool catalog. Connection details are read only from environment variables; see `.env.example`. The `--list-apps-json` mode exists solely for the comparison harness and returns clio's JSON field names.
 
 ## Related work
 

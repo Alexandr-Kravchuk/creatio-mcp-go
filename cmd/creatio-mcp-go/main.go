@@ -1,11 +1,13 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/Alexandr-Kravchuk/creatio-mcp-go/internal/creatio"
@@ -60,6 +62,13 @@ func main() {
 		}
 		return
 	}
+	server := newMCPServer(client)
+	if err := server.Run(context.Background(), &mcp.StdioTransport{}); err != nil {
+		fatal(err)
+	}
+}
+
+func newMCPServer(client *creatio.Client) *mcp.Server {
 	server := mcp.NewServer(&mcp.Implementation{Name: "creatio-mcp-go", Version: "0.1.0"}, nil)
 	mcp.AddTool(server, &mcp.Tool{Name: "list-apps", Description: "List installed Creatio applications through DataService."},
 		func(ctx context.Context, _ *mcp.CallToolRequest, _ struct{}) (*mcp.CallToolResult, any, error) {
@@ -69,17 +78,96 @@ func main() {
 			}
 			return nil, apps, nil
 		})
-	mcp.AddTool(server, &mcp.Tool{Name: "odata-read", Description: "Read a bounded OData v4 collection without a vendor .NET client."},
-		func(ctx context.Context, _ *mcp.CallToolRequest, input creatio.ODataReadRequest) (*mcp.CallToolResult, any, error) {
-			result, err := client.ODataRead(ctx, input)
+	// odata-read is deliberately omitted from tools/list. It remains directly callable by its raw
+	// name and through clio-run, while get-tool-contract provides its schema on demand.
+	mcp.AddTool(server, &mcp.Tool{Name: "clio-run", Description: "Invoke a supported Creatio MCP tool by name."},
+		func(ctx context.Context, _ *mcp.CallToolRequest, input clioRunArgs) (*mcp.CallToolResult, any, error) {
+			if strings.TrimSpace(input.Command) != "odata-read" {
+				return nil, nil, fmt.Errorf("unknown tool %q; discover supported names with get-tool-contract", input.Command)
+			}
+			result, err := invokeODataRead(ctx, client, input.Args)
 			if err != nil {
 				return nil, nil, err
 			}
 			return nil, result, nil
 		})
-	if err := server.Run(context.Background(), &mcp.StdioTransport{}); err != nil {
-		fatal(err)
+	mcp.AddTool(server, &mcp.Tool{Name: "get-tool-contract", Description: "List supported hidden tools or retrieve one tool's input schema."},
+		func(_ context.Context, _ *mcp.CallToolRequest, input getToolContractArgs) (*mcp.CallToolResult, any, error) {
+			if input.Name == "" {
+				return nil, map[string]any{"tools": []string{"odata-read"}}, nil
+			}
+			if input.Name != "odata-read" {
+				return nil, nil, fmt.Errorf("unknown tool contract %q", input.Name)
+			}
+			return nil, odataReadContract, nil
+		})
+	server.AddReceivingMiddleware(func(next mcp.MethodHandler) mcp.MethodHandler {
+		return func(ctx context.Context, method string, request mcp.Request) (mcp.Result, error) {
+			if method != "tools/call" {
+				return next(ctx, method, request)
+			}
+			call, ok := request.(*mcp.ServerRequest[*mcp.CallToolParamsRaw])
+			if !ok || call.Params == nil || call.Params.Name != "odata-read" {
+				return next(ctx, method, request)
+			}
+			var args map[string]any
+			if len(call.Params.Arguments) > 0 {
+				if err := json.Unmarshal(call.Params.Arguments, &args); err != nil {
+					return toolError(err), nil
+				}
+			}
+			result, err := invokeODataRead(ctx, client, args)
+			if err != nil {
+				return toolError(err), nil
+			}
+			return &mcp.CallToolResult{StructuredContent: result}, nil
+		}
+	})
+	return server
+}
+
+type clioRunArgs struct {
+	Command string         `json:"command"`
+	Args    map[string]any `json:"args"`
+}
+
+type getToolContractArgs struct {
+	Name string `json:"name,omitempty"`
+}
+
+var odataReadContract = map[string]any{
+	"name":        "odata-read",
+	"description": "Read an OData v4 collection. Supports entity, select, orderBy, top, skip and count.",
+	"inputSchema": map[string]any{
+		"type":     "object",
+		"required": []string{"entity"},
+		"properties": map[string]any{
+			"entity":  map[string]string{"type": "string"},
+			"select":  map[string]any{"type": "array", "items": map[string]string{"type": "string"}},
+			"orderBy": map[string]string{"type": "string"},
+			"top":     map[string]string{"type": "integer"},
+			"skip":    map[string]string{"type": "integer"},
+			"count":   map[string]string{"type": "boolean"},
+		},
+	},
+}
+
+func invokeODataRead(ctx context.Context, client *creatio.Client, args map[string]any) (creatio.ODataReadResult, error) {
+	encoded, err := json.Marshal(args)
+	if err != nil {
+		return creatio.ODataReadResult{}, fmt.Errorf("encode odata-read arguments: %w", err)
 	}
+	var input creatio.ODataReadRequest
+	decoder := json.NewDecoder(bytes.NewReader(encoded))
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&input); err != nil {
+		return creatio.ODataReadResult{}, fmt.Errorf("decode odata-read arguments: %w", err)
+	}
+	return client.ODataRead(ctx, input)
+}
+
+func toolError(err error) *mcp.CallToolResult {
+	return &mcp.CallToolResult{Content: []mcp.Content{&mcp.TextContent{Text: err.Error()}}, IsError: true}
 }
 
 func fatal(err error) { fmt.Fprintln(os.Stderr, "creatio-mcp-go:", err); os.Exit(1) }
