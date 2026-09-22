@@ -119,3 +119,38 @@ The pilot references, but does not copy, these paths in the clio checkout:
 - `clio/Common/ServiceUrlBuilder.cs`
 - `clio/Common/ClassifyingDataProvider.cs`
 - `docs/knowledge/Common/remotedataprovider-swallows-every-failure-into-success-false.md`
+
+## Prototype 1 — replacing the binary while it runs
+
+**Question.** On Windows, `dotnet tool update clio` fails while `clio mcp-server` runs: Windows will not
+delete the versioned store directory that holds a mapped image. A single Go binary has no such
+directory. Does the lock go away?
+
+**Measured on Windows 10.0.26200, with a live resident process holding the image:**
+
+| Operation | Result |
+|---|---|
+| Overwrite the file directly | **refused** — `The process cannot access the file because it is being used by another process` |
+| Rename it aside, then place the new build | **permitted** |
+| Resident process afterwards | still `build-A` |
+| New launch from the same path | `build-B` |
+
+**Verdict: the lock is the same; the escape is not.** Windows refuses to overwrite or delete a mapped
+image either way — Go changes nothing about that. What changes is that a *single file* can be renamed
+aside, and the replacement takes its path immediately. `dotnet tool update` cannot use that escape,
+because its update path must **delete the versioned store directory**, and deletion is exactly what
+Windows refuses.
+
+So packaging does not remove the lock. It decides whether the standard Windows workaround is available
+at all. And note what this still does not do: the resident process keeps running the old build. Nothing
+here updates a process that is already running — which was the conclusion of the earlier distribution
+research and remains true.
+
+**One discarded run, recorded because it looked like a pass.** The first attempt used `select{}` to hold
+the process open. The Go runtime detects that every goroutine is asleep and panics with `all goroutines
+are asleep - deadlock!`, so the process died immediately and the overwrite then succeeded against a file
+nothing was holding — reported as "overwrite PERMITTED". The resident mode now sleeps instead, and the
+script fails loudly if the process is not alive when the overwrite is attempted.
+
+Reproduce: `scripts/replace-while-running.ps1` (needs two builds stamped with
+`-ldflags "-X main.buildID=..."`).

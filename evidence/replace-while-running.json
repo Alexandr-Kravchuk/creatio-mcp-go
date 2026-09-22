@@ -1,0 +1,13 @@
+{
+  "question": "Can the Go binary be replaced on disk while the process is running, so the next launch takes the new build?",
+  "platform": "Windows 10.0.26200, amd64",
+  "binary": "cross-compiled from macOS arm64, GOOS=windows GOARCH=amd64",
+  "residentProcessAlive": true,
+  "directOverwrite": "refused",
+  "directOverwriteError": "IOException: The process cannot access the file because it is being used by another process",
+  "renameThenPlace": "permitted",
+  "residentProcessIdentityAfter": "build-A",
+  "newLaunchIdentityAfter": "build-B",
+  "verdict": "the file lock is the same as .NET's, but a single binary can use the rename-aside pattern, which a dotnet tool cannot because its update must DELETE the versioned store directory",
+  "invalidRunNote": "the first attempt used select{} for the resident mode; the Go runtime panicked with 'all goroutines are asleep - deadlock!', the process died, and the overwrite then succeeded against nothing. That run was discarded."
+}
