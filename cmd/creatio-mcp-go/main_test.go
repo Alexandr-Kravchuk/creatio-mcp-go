@@ -149,7 +149,7 @@ func TestTwoTierMCPExposesContractAndRunsHiddenToolByRawName(t *testing.T) {
 		t.Fatalf("get-tool-contract index = %#v, err = %v", contracts, err)
 	}
 	contractIndex, ok := contracts.StructuredContent.(map[string]any)
-	if !ok || !reflect.DeepEqual(contractIndex["tools"], []any{"execute-esq", "find-empty-iis-port", "get-entity-schema-properties", "get-package-file", "list-app-sections", "list-package-files", "list-packages", "list-pages", "odata-read", "start-creatio"}) {
+	if !ok || !reflect.DeepEqual(contractIndex["tools"], []any{"execute-esq", "find-empty-iis-port", "get-entity-schema-properties", "get-package-file", "get-sql-schema", "list-app-sections", "list-package-files", "list-packages", "list-pages", "odata-read", "start-creatio"}) {
 		t.Fatalf("contract index = %#v", contracts.StructuredContent)
 	}
 	startContract, err := session.CallTool(context.Background(), &mcp.CallToolParams{
@@ -282,6 +282,10 @@ func TestStageTwoReadToolsDispatchByRawName(t *testing.T) {
 			}
 			return
 		}
+		if r.URL.Path == "/0/ServiceModel/SqlScriptSchemaDesignerService.svc/GetSchema" {
+			_, _ = w.Write([]byte(`{"schema":{"name":"UsrQuery","body":"SELECT 1;","package":{"name":"UsrPackage"}}}`))
+			return
+		}
 		if r.URL.Path != "/0/DataService/json/SyncReply/SelectQuery" {
 			t.Errorf("unexpected Creatio route %s", r.URL.Path)
 			http.NotFound(w, r)
@@ -303,6 +307,8 @@ func TestStageTwoReadToolsDispatchByRawName(t *testing.T) {
 			_, _ = w.Write([]byte(`{"success":true,"rows":[{"Id":"section-1","Code":"Contacts","Caption":"Contacts"}]}`))
 		case "SysSchema":
 			_, _ = w.Write([]byte(`{"success":true,"rows":[{"Name":"UsrContacts_FormPage","UId":"page-1","PackageName":"UsrPackage","ParentSchemaName":"FormPageTemplate"}]}`))
+		case "VwSysSqlScriptInPackage":
+			_, _ = w.Write([]byte(`{"success":true,"rows":[{"UId":"sql-1"}]}`))
 		default:
 			t.Errorf("unexpected SelectQuery root %q", query.RootSchema)
 			_, _ = w.Write([]byte(`{"success":false,"rows":[]}`))
@@ -318,6 +324,7 @@ func TestStageTwoReadToolsDispatchByRawName(t *testing.T) {
 	for _, call := range []*mcp.CallToolParams{
 		{Name: "list-package-files", Arguments: map[string]any{"package-name": "UsrPackage"}},
 		{Name: "get-package-file", Arguments: map[string]any{"package-name": "UsrPackage", "file-path": "Files/a.cs"}},
+		{Name: "get-sql-schema", Arguments: map[string]any{"schema-name": "UsrQuery"}},
 		{Name: "list-packages", Arguments: map[string]any{"filter": "usr"}},
 		{Name: "list-app-sections", Arguments: map[string]any{"application-code": "Contacts"}},
 		{Name: "list-pages", Arguments: map[string]any{"package-name": "UsrPackage"}},

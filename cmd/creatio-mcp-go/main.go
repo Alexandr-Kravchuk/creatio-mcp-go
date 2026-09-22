@@ -150,7 +150,7 @@ func newMCPServerWithHiddenTools(client *creatio.Client, hostTools hiddenToolSer
 
 func hiddenToolNames() []string {
 	return []string{
-		"execute-esq", "find-empty-iis-port", "get-entity-schema-properties", "get-package-file",
+		"execute-esq", "find-empty-iis-port", "get-entity-schema-properties", "get-package-file", "get-sql-schema",
 		"list-app-sections", "list-package-files", "list-packages", "list-pages", "odata-read", "start-creatio",
 	}
 }
@@ -174,6 +174,14 @@ func progressReporter(ctx context.Context, session *mcp.ServerSession, token any
 func invokeHiddenTool(ctx context.Context, client *creatio.Client, hostTools hiddenToolServices, name string, args map[string]any,
 	progress func(float64, float64, string) error) (*mcp.CallToolResult, error) {
 	switch name {
+	case "get-sql-schema":
+		var input struct {
+			SchemaName string `json:"schema-name"`
+		}
+		if err := decodeStrictArgs(args, &input); err != nil {
+			return nil, fmt.Errorf("decode get-sql-schema arguments: %w", err)
+		}
+		return structuredToolResult(client.GetSQLSchema(ctx, input.SchemaName)), nil
 	case "get-package-file":
 		var input struct {
 			PackageName string `json:"package-name"`
@@ -343,6 +351,13 @@ var hiddenToolContracts = map[string]map[string]any{
 		"inputSchema": map[string]any{"type": "object", "required": []string{"package-name", "file-path"}, "properties": map[string]any{
 			"package-name": map[string]string{"type": "string"},
 			"file-path":    map[string]string{"type": "string"},
+		}},
+	},
+	"get-sql-schema": {
+		"name":        "get-sql-schema",
+		"description": "Read one uniquely named SQL script schema and its body through the native SqlScriptSchemaDesignerService. This Go prototype returns the body in the response and does not write output-file.",
+		"inputSchema": map[string]any{"type": "object", "required": []string{"schema-name"}, "properties": map[string]any{
+			"schema-name": map[string]string{"type": "string"},
 		}},
 	},
 	"list-package-files": {

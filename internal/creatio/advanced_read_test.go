@@ -445,6 +445,74 @@ func TestClioGatePackageFileReadsAuthenticateAndNormalizePaths(t *testing.T) {
 	}
 }
 
+func TestGetSQLSchemaResolvesByUniqueNameAndReadsDesignerBody(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/ServiceModel/AuthService.svc/Login" {
+			_, _ = w.Write([]byte(`{"Code":0}`))
+			return
+		}
+		switch r.URL.Path {
+		case "/0/DataService/json/SyncReply/SelectQuery":
+			var query struct {
+				RootSchema string `json:"rootSchemaName"`
+				RowCount   int    `json:"rowCount"`
+				Filters    struct {
+					Items map[string]struct {
+						Left struct {
+							Column string `json:"columnPath"`
+						} `json:"leftExpression"`
+					} `json:"items"`
+				} `json:"filters"`
+			}
+			if err := json.NewDecoder(r.Body).Decode(&query); err != nil {
+				t.Errorf("decode SQL schema query: %v", err)
+			}
+			if query.RootSchema != "VwSysSqlScriptInPackage" || query.RowCount != 2 || query.Filters.Items["byName"].Left.Column != "Name" {
+				t.Errorf("schema resolution query = %#v", query)
+			}
+			_, _ = w.Write([]byte(`{"success":true,"rows":[{"UId":"sql-guid"}]}`))
+		case "/0/ServiceModel/SqlScriptSchemaDesignerService.svc/GetSchema":
+			var request struct {
+				SchemaUID        string `json:"schemaUId"`
+				UseFullHierarchy bool   `json:"useFullHierarchy"`
+			}
+			if err := json.NewDecoder(r.Body).Decode(&request); err != nil || request.SchemaUID != "sql-guid" || request.UseFullHierarchy {
+				t.Errorf("designer request = %#v, err = %v", request, err)
+			}
+			_, _ = w.Write([]byte(`{"schema":{"name":"UsrReport","body":"SELECT '𐐀';","caption":[{"cultureName":"en-US","value":"Report query"}],"package":{"name":"UsrPackage"}}}`))
+		default:
+			t.Errorf("unexpected route %s", r.URL.Path)
+			http.NotFound(w, r)
+		}
+	}))
+	defer server.Close()
+	client := newFormsTestClient(t, server.URL)
+	result := client.GetSQLSchema(context.Background(), " UsrReport ")
+	if !result.Success || result.SchemaName != "UsrReport" || result.SchemaUID != "sql-guid" || result.PackageName != "UsrPackage" || result.Caption != "Report query" || result.Body != "SELECT '𐐀';" || result.BodyLength != utf16Length(result.Body) {
+		t.Fatalf("SQL schema result = %#v", result)
+	}
+}
+
+func TestGetSQLSchemaRejectsAmbiguousNamesWithoutLoadingDesigner(t *testing.T) {
+	designerCalls := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/ServiceModel/AuthService.svc/Login" {
+			_, _ = w.Write([]byte(`{"Code":0}`))
+			return
+		}
+		if strings.HasSuffix(r.URL.Path, "/GetSchema") {
+			designerCalls++
+		}
+		_, _ = w.Write([]byte(`{"success":true,"rows":[{"UId":"sql-guid-1"},{"UId":"sql-guid-2"}]}`))
+	}))
+	defer server.Close()
+	client := newFormsTestClient(t, server.URL)
+	result := client.GetSQLSchema(context.Background(), "DuplicateSql")
+	if result.Success || !strings.Contains(result.Error, "ambiguous") || designerCalls != 0 {
+		t.Fatalf("ambiguous SQL schema result = %#v; designer calls=%d", result, designerCalls)
+	}
+}
+
 func newFormsTestClient(t *testing.T, baseURL string) *Client {
 	t.Helper()
 	client, err := NewClient(Config{BaseURL: baseURL, Login: "example-user", Password: "replace-me"})
