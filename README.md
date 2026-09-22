@@ -6,21 +6,55 @@ Can clio's `list-apps` behaviour be reproduced from Go, without `ATF.Repository`
 
 ## 2. Answer and evidence
 
-**Not established in this checkout yet.** The implementation is a deliberately small, wire-level pilot, but its required live comparison could not run in the build environment: no Go toolchain is installed and outbound DNS is unavailable, so the official MCP Go SDK cannot be downloaded. The harness records the required evidence once those prerequisites are available: it runs clio `list-apps --json` and the Go client against the same forms-authenticated environment, normalizes the two result sets, and writes only counts, SHA-256 fingerprints, and mismatch counts to `evidence/latest.json`. Raw application data is never persisted.
+**The protocol half of the question is ANSWERED. The live-parity half is not.**
 
-The C# reference shows that this command uses **Creatio DataService SelectQuery**, not OData v4: `POST /[0/]DataService/json/SyncReply/SelectQuery` against `SysInstalledApp`. This pilot sends that documented JSON endpoint directly and makes every transport, HTTP, HTML-login-page, malformed-JSON, and `success:false` failure loud. It intentionally does not inherit the vendor provider behaviour that can turn a failed read into an empty successful list.
+### What is established, by decompiling the vendor assembly
 
-To produce the decision evidence on a machine with Go and network access:
+`ATF.Repository` encapsulates no private protocol. Decompiled from
+`ATF.Repository.dll` 2.0.3.5 (`netstandard2.0`) with `ilspycmd`, `RemoteDataProvider` declares five
+plain HTTP endpoints and nothing else:
 
-```bash
-export CLIO_ROOT=/path/to/clio
-export CREATIO_URL=https://example.invalid
-export CREATIO_LOGIN=example-user
-export CREATIO_PASSWORD=replace-me
-./scripts/compare-with-clio.sh
-```
+| Member | Endpoint |
+|---|---|
+| `SelectEndpointUri` | `/DataService/json/SyncReply/SelectQuery` (`/0/…` on .NET Framework) |
+| `BatchEndpointUrl` | `/DataService/json/SyncReply/BatchQuery` |
+| `SysSettingEndpointUrl` | `/DataService/json/SyncReply/QuerySysSettings` |
+| `FeatureEndpointUrl` | `/rest/FeatureService/GetFeatureState` |
+| `RunProcessEndpointUrl` | `/ServiceModel/ProcessEngineService.svc/RunProcess` |
 
-For OAuth, set `CREATIO_CLIENT_ID`, `CREATIO_CLIENT_SECRET`, and `CREATIO_AUTH_APP_URI` (the IdentityService `/connect/token` endpoint) instead of forms credentials, then run the same harness. It selects clio's matching OAuth client-credentials mode and compares the two results. Run and record both modes before treating the question as answered.
+`GetItems(ISelectQuery)` serialises the query and calls `ExecutePostRequest(url, requestData, 1800000)`
+against the first of them. The same routes are already registered independently in clio's own
+`ServiceUrlBuilder` (`KnownRoute.Select`, `KnownRoute.BatchQuery`).
+
+**Therefore the vendor assembly is a query builder and serialiser over documented HTTP endpoints, not a
+carrier of unreachable behaviour.** Reproducing it from another language is work — translating an
+expression tree into the `SelectQuery` JSON shape — not an access problem. The kill criterion stated in
+section 4 was **not** hit.
+
+Note the provenance correction: an earlier draft of this file attributed the endpoint choice to "the C#
+reference". It cannot come from there — `InstalledApplicationQueryService.cs` only calls
+`ATF.Repository`. The endpoints above come from the decompiled assembly, which is why they are stated
+with a version and a tool.
+
+### What is NOT established
+
+The live comparison has not run. `scripts/compare-with-clio.sh` exists and is the intended evidence:
+it runs clio `list-apps --json` and this client against the same environment, normalises both result
+sets, and writes only counts, SHA-256 fingerprints and mismatch counts to `evidence/latest.json` —
+never raw application data, URLs or credentials. **No environment was reachable when this was written,
+so no parity verdict exists yet.** Until that file contains a verdict, this pilot has proven the
+protocol is reachable and has NOT proven the output matches.
+
+### Build status
+
+Builds against `github.com/modelcontextprotocol/go-sdk v1.0.0`, Go 1.27.1, darwin/arm64. The resulting
+static binary is 11.5 MB and needs no runtime installed — the single-binary property that motivated
+choosing Go for the pilot, measured rather than assumed.
+
+This client makes transport, HTTP, HTML-login-page, malformed-JSON and `success:false` failures loud. It
+deliberately does not inherit the vendor behaviour documented in clio's knowledge base, where
+`RemoteDataProvider` returns `Success=false` with an empty payload instead of throwing, and the consumer
+side then drops the flag — turning a rejected read into an empty successful list.
 
 ## 3. What this does not prove
 

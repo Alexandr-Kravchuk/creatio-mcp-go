@@ -31,7 +31,7 @@ func main() {
 			if err != nil { return nil, nil, err }
 			return nil, apps, nil
 		})
-	if err := server.Run(context.Background(), mcp.NewStdioTransport()); err != nil { fatal(err) }
+	if err := server.Run(context.Background(), &mcp.StdioTransport{}); err != nil { fatal(err) }
 }
 
 func fatal(err error) { fmt.Fprintln(os.Stderr, "creatio-mcp-go:", err); os.Exit(1) }
