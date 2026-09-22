@@ -1,0 +1,7 @@
+# Local connection settings and generated comparison evidence must never be committed.
+.env
+.env.*
+!.env.example
+evidence/latest.json
+bin/
+coverage.out
