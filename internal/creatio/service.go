@@ -43,33 +43,27 @@ func (c *Client) getClioGateJSON(ctx context.Context, route string, query url.Va
 	}
 	requestCtx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
-	if c.config.ClientID != "" {
-		if err := c.acquireToken(requestCtx); err != nil {
+	client := c.requestClient()
+	response, err := c.doAuthenticated(requestCtx, client, func() (*http.Request, error) {
+		requestURL := c.serviceURL(route)
+		if encoded := query.Encode(); encoded != "" {
+			requestURL += "?" + encoded
+		}
+		request, err := http.NewRequestWithContext(requestCtx, http.MethodGet, requestURL, nil)
+		if err != nil {
+			return nil, fmt.Errorf("build ClioGate request: %w", err)
+		}
+		request.Header.Set("Accept", "application/json")
+		return request, nil
+	})
+	if err != nil {
+		if isAuthenticationError(err) {
 			return nil, err
 		}
-	} else if err := c.formsLogin(requestCtx); err != nil {
+		if isTransportError(err) {
+			return nil, fmt.Errorf("ClioGate %s transport failure: %w", route, err)
+		}
 		return nil, err
-	}
-
-	requestURL := c.serviceURL(route)
-	if encoded := query.Encode(); encoded != "" {
-		requestURL += "?" + encoded
-	}
-	request, err := http.NewRequestWithContext(requestCtx, http.MethodGet, requestURL, nil)
-	if err != nil {
-		return nil, fmt.Errorf("build ClioGate request: %w", err)
-	}
-	request.Header.Set("Accept", "application/json")
-	if csrf := c.csrfToken(); csrf != "" {
-		request.Header.Set("BPMCSRF", csrf)
-	}
-	if token := c.bearerToken(); token != "" {
-		request.Header.Set("Authorization", "Bearer "+token)
-	}
-	client := &http.Client{Transport: c.http.Transport, Jar: c.http.Jar, CheckRedirect: c.http.CheckRedirect}
-	response, err := client.Do(request)
-	if err != nil {
-		return nil, fmt.Errorf("ClioGate %s transport failure: %w", route, err)
 	}
 	payload, err := readResponseLimit(response, responseLimit)
 	if err != nil {
@@ -90,34 +84,27 @@ func (c *Client) postCreatioJSON(ctx context.Context, route string, body []byte,
 	}
 	requestCtx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
-	if c.config.ClientID != "" {
-		if err := c.acquireToken(requestCtx); err != nil {
-			return nil, err
-		}
-	} else if err := c.formsLogin(requestCtx); err != nil {
-		return nil, err
-	}
-
-	request, err := http.NewRequestWithContext(requestCtx, http.MethodPost,
-		c.serviceURL(route), bytes.NewReader(body))
-	if err != nil {
-		return nil, fmt.Errorf("build Creatio service request: %w", err)
-	}
-	request.Header.Set("Content-Type", "application/json")
-	request.Header.Set("Accept", "application/json")
-	if csrf := c.csrfToken(); csrf != "" {
-		request.Header.Set("BPMCSRF", csrf)
-	}
-	if token := c.bearerToken(); token != "" {
-		request.Header.Set("Authorization", "Bearer "+token)
-	}
-
 	// The configured Client has a 45-second timeout. For endpoints with a caller-selected deadline,
 	// retain its transport/cookie jar but let the request context carry the requested timeout.
-	client := &http.Client{Transport: c.http.Transport, Jar: c.http.Jar, CheckRedirect: c.http.CheckRedirect}
-	response, err := client.Do(request)
+	client := c.requestClient()
+	response, err := c.doAuthenticated(requestCtx, client, func() (*http.Request, error) {
+		request, err := http.NewRequestWithContext(requestCtx, http.MethodPost,
+			c.serviceURL(route), bytes.NewReader(body))
+		if err != nil {
+			return nil, fmt.Errorf("build Creatio service request: %w", err)
+		}
+		request.Header.Set("Content-Type", "application/json")
+		request.Header.Set("Accept", "application/json")
+		return request, nil
+	})
 	if err != nil {
-		return nil, fmt.Errorf("Creatio service %s transport failure: %w", route, err)
+		if isAuthenticationError(err) {
+			return nil, err
+		}
+		if isTransportError(err) {
+			return nil, fmt.Errorf("Creatio service %s transport failure: %w", route, err)
+		}
+		return nil, err
 	}
 	payload, err := readResponseLimit(response, responseLimit)
 	if err != nil {

@@ -71,40 +71,34 @@ func (c *Client) Delete(ctx context.Context, schema, id string) (WriteOutcome, e
 
 func (c *Client) write(ctx context.Context, operation, route string, payload map[string]any) (WriteOutcome, error) {
 	out := WriteOutcome{Operation: operation}
-	if c.config.ClientID != "" {
-		if err := c.acquireToken(ctx); err != nil {
+	buildFailureClass := ""
+	response, err := c.doAuthenticated(ctx, c.http, func() (*http.Request, error) {
+		body, err := json.Marshal(payload)
+		if err != nil {
+			buildFailureClass = "encode"
+			return nil, err
+		}
+		req, err := http.NewRequestWithContext(ctx, http.MethodPost,
+			c.serviceURL("DataService/json/SyncReply/"+route), bytes.NewReader(body))
+		if err != nil {
+			buildFailureClass = "request"
+			return nil, err
+		}
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Accept", "application/json")
+		return req, nil
+	})
+	if err != nil {
+		if isAuthenticationError(err) {
 			out.FailureClass = "auth"
 			out.FailureDetail = err.Error()
 			return out, err
 		}
-	} else if err := c.formsLogin(ctx); err != nil {
-		out.FailureClass = "auth"
-		out.FailureDetail = err.Error()
-		return out, err
-	}
-	body, err := json.Marshal(payload)
-	if err != nil {
-		out.FailureClass = "encode"
-		out.FailureDetail = err.Error()
-		return out, err
-	}
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost,
-		c.serviceURL("DataService/json/SyncReply/"+route), bytes.NewReader(body))
-	if err != nil {
-		out.FailureClass = "request"
-		out.FailureDetail = err.Error()
-		return out, err
-	}
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "application/json")
-	if csrf := c.csrfToken(); csrf != "" {
-		req.Header.Set("BPMCSRF", csrf)
-	}
-	if token := c.bearerToken(); token != "" {
-		req.Header.Set("Authorization", "Bearer "+token)
-	}
-	response, err := c.http.Do(req)
-	if err != nil {
+		if buildFailureClass != "" {
+			out.FailureClass = buildFailureClass
+			out.FailureDetail = err.Error()
+			return out, err
+		}
 		out.FailureClass = "transport"
 		out.FailureDetail = err.Error()
 		return out, fmt.Errorf("%s: transport: %w", route, err)

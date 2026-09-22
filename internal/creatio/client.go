@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -44,35 +45,27 @@ func NewClient(config Config) (*Client, error) {
 
 // ListApps authenticates, sends the DataService SelectQuery, and rejects every non-success response.
 func (c *Client) ListApps(ctx context.Context) ([]App, error) {
-	if c.config.ClientID != "" {
-		if err := c.acquireToken(ctx); err != nil {
+	response, err := c.doAuthenticated(ctx, c.http, func() (*http.Request, error) {
+		body, err := json.Marshal(selectQuery())
+		if err != nil {
+			return nil, fmt.Errorf("encode SelectQuery: %w", err)
+		}
+		req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.serviceURL("DataService/json/SyncReply/SelectQuery"), bytes.NewReader(body))
+		if err != nil {
+			return nil, fmt.Errorf("build DataService request: %w", err)
+		}
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Accept", "application/json")
+		return req, nil
+	})
+	if err != nil {
+		if isAuthenticationError(err) {
 			return nil, err
 		}
-	} else if err := c.formsLogin(ctx); err != nil {
+		if isTransportError(err) {
+			return nil, fmt.Errorf("DataService SelectQuery transport failure: %w", err)
+		}
 		return nil, err
-	}
-	body, err := json.Marshal(selectQuery())
-	if err != nil {
-		return nil, fmt.Errorf("encode SelectQuery: %w", err)
-	}
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.serviceURL("DataService/json/SyncReply/SelectQuery"), bytes.NewReader(body))
-	if err != nil {
-		return nil, fmt.Errorf("build DataService request: %w", err)
-	}
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "application/json")
-	// Forms-authenticated DataService calls also require the CSRF header. The vendor Creatio.Client
-	// reads the BPMCSRF cookie set by the login response and echoes it as a header; without it the
-	// server answers HTTP 403 with no indication of what is missing.
-	if csrf := c.csrfToken(); csrf != "" {
-		req.Header.Set("BPMCSRF", csrf)
-	}
-	if token := c.bearerToken(); token != "" {
-		req.Header.Set("Authorization", "Bearer "+token)
-	}
-	response, err := c.http.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("DataService SelectQuery transport failure: %w", err)
 	}
 	payload, readErr := readResponse(response)
 	if readErr != nil {
@@ -176,6 +169,59 @@ func (c *Client) bearerToken() string {
 	c.tokenMu.RLock()
 	defer c.tokenMu.RUnlock()
 	return c.token
+}
+
+// requestClient preserves the configured transport, cookie jar, and redirect policy while allowing
+// the request context to carry a caller-selected deadline.
+func (c *Client) requestClient() *http.Client {
+	return &http.Client{Transport: c.http.Transport, Jar: c.http.Jar, CheckRedirect: c.http.CheckRedirect}
+}
+
+// doAuthenticated is the single request path for Creatio endpoints that require forms or OAuth
+// authentication. The caller retains ownership of endpoint-specific response handling.
+func (c *Client) doAuthenticated(ctx context.Context, client *http.Client, buildRequest func() (*http.Request, error)) (*http.Response, error) {
+	if c.config.ClientID != "" {
+		if err := c.acquireToken(ctx); err != nil {
+			return nil, authenticationError{err: err}
+		}
+	} else if err := c.formsLogin(ctx); err != nil {
+		return nil, authenticationError{err: err}
+	}
+	request, err := buildRequest()
+	if err != nil {
+		return nil, err
+	}
+	if csrf := c.csrfToken(); csrf != "" {
+		request.Header.Set("BPMCSRF", csrf)
+	}
+	if token := c.bearerToken(); token != "" {
+		request.Header.Set("Authorization", "Bearer "+token)
+	}
+	response, err := client.Do(request)
+	if err != nil {
+		return nil, transportError{err: err}
+	}
+	return response, nil
+}
+
+type authenticationError struct{ err error }
+
+func (e authenticationError) Error() string { return e.err.Error() }
+func (e authenticationError) Unwrap() error { return e.err }
+
+func isAuthenticationError(err error) bool {
+	var target authenticationError
+	return errors.As(err, &target)
+}
+
+type transportError struct{ err error }
+
+func (e transportError) Error() string { return e.err.Error() }
+func (e transportError) Unwrap() error { return e.err }
+
+func isTransportError(err error) bool {
+	var target transportError
+	return errors.As(err, &target)
 }
 
 // authURL is deliberately NOT built through serviceURL. The authentication route is the documented

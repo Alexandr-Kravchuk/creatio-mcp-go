@@ -43,48 +43,42 @@ func (c *Client) ODataRead(ctx context.Context, input ODataReadRequest) (ODataRe
 	if err := input.validate(); err != nil {
 		return ODataReadResult{}, err
 	}
-	if c.config.ClientID != "" {
-		if err := c.acquireToken(ctx); err != nil {
+	response, err := c.doAuthenticated(ctx, c.http, func() (*http.Request, error) {
+		query := url.Values{}
+		if len(input.Select) > 0 {
+			query.Set("$select", strings.Join(input.Select, ","))
+		}
+		if input.OrderBy != "" {
+			query.Set("$orderby", input.OrderBy)
+		}
+		if input.Skip != nil {
+			query.Set("$skip", fmt.Sprintf("%d", *input.Skip))
+		}
+		if input.Count {
+			query.Set("$count", "true")
+		}
+		top := defaultODataTop
+		if input.Top != nil {
+			top = *input.Top
+		}
+		query.Set("$top", fmt.Sprintf("%d", top))
+
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet,
+			c.serviceURL("odata/"+input.Entity)+"?"+query.Encode(), nil)
+		if err != nil {
+			return nil, fmt.Errorf("build OData request: %w", err)
+		}
+		req.Header.Set("Accept", "application/json")
+		return req, nil
+	})
+	if err != nil {
+		if isAuthenticationError(err) {
 			return ODataReadResult{}, err
 		}
-	} else if err := c.formsLogin(ctx); err != nil {
+		if isTransportError(err) {
+			return ODataReadResult{}, fmt.Errorf("OData transport failure: %w", err)
+		}
 		return ODataReadResult{}, err
-	}
-
-	query := url.Values{}
-	if len(input.Select) > 0 {
-		query.Set("$select", strings.Join(input.Select, ","))
-	}
-	if input.OrderBy != "" {
-		query.Set("$orderby", input.OrderBy)
-	}
-	if input.Skip != nil {
-		query.Set("$skip", fmt.Sprintf("%d", *input.Skip))
-	}
-	if input.Count {
-		query.Set("$count", "true")
-	}
-	top := defaultODataTop
-	if input.Top != nil {
-		top = *input.Top
-	}
-	query.Set("$top", fmt.Sprintf("%d", top))
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet,
-		c.serviceURL("odata/"+input.Entity)+"?"+query.Encode(), nil)
-	if err != nil {
-		return ODataReadResult{}, fmt.Errorf("build OData request: %w", err)
-	}
-	req.Header.Set("Accept", "application/json")
-	if csrf := c.csrfToken(); csrf != "" {
-		req.Header.Set("BPMCSRF", csrf)
-	}
-	if token := c.bearerToken(); token != "" {
-		req.Header.Set("Authorization", "Bearer "+token)
-	}
-	response, err := c.http.Do(req)
-	if err != nil {
-		return ODataReadResult{}, fmt.Errorf("OData transport failure: %w", err)
 	}
 	payload, readErr := readResponse(response)
 	if readErr != nil {
