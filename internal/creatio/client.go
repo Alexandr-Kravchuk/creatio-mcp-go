@@ -59,6 +59,12 @@ func (c *Client) ListApps(ctx context.Context) ([]App, error) {
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
+	// Forms-authenticated DataService calls also require the CSRF header. The vendor Creatio.Client
+	// reads the BPMCSRF cookie set by the login response and echoes it as a header; without it the
+	// server answers HTTP 403 with no indication of what is missing.
+	if csrf := c.csrfToken(); csrf != "" {
+		req.Header.Set("BPMCSRF", csrf)
+	}
 	if c.token != "" {
 		req.Header.Set("Authorization", "Bearer "+c.token)
 	}
@@ -98,12 +104,18 @@ func (c *Client) formsLogin(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("encode forms login: %w", err)
 	}
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.serviceURL("ServiceModel/AuthService.svc/Login"), bytes.NewReader(body))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.authURL(), bytes.NewReader(body))
 	if err != nil {
 		return fmt.Errorf("build forms login request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
+	// Forms-authenticated DataService calls also require the CSRF header. The vendor Creatio.Client
+	// reads the BPMCSRF cookie set by the login response and echoes it as a header; without it the
+	// server answers HTTP 403 with no indication of what is missing.
+	if csrf := c.csrfToken(); csrf != "" {
+		req.Header.Set("BPMCSRF", csrf)
+	}
 	response, err := c.http.Do(req)
 	if err != nil {
 		return fmt.Errorf("forms login transport failure: %w", err)
@@ -115,7 +127,9 @@ func (c *Client) formsLogin(ctx context.Context) error {
 	if response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices {
 		return fmt.Errorf("forms login returned HTTP %d", response.StatusCode)
 	}
-	var result struct { Code int `json:"Code"` }
+	var result struct {
+		Code int `json:"Code"`
+	}
 	if err := json.Unmarshal(payload, &result); err != nil {
 		return fmt.Errorf("forms login returned invalid JSON: %w", err)
 	}
@@ -144,7 +158,9 @@ func (c *Client) acquireToken(ctx context.Context) error {
 	if response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices {
 		return fmt.Errorf("OAuth token endpoint returned HTTP %d", response.StatusCode)
 	}
-	var token struct { AccessToken string `json:"access_token"` }
+	var token struct {
+		AccessToken string `json:"access_token"`
+	}
 	if err := json.Unmarshal(payload, &token); err != nil || token.AccessToken == "" {
 		return fmt.Errorf("OAuth token endpoint returned no access_token")
 	}
@@ -152,19 +168,55 @@ func (c *Client) acquireToken(ctx context.Context) error {
 	return nil
 }
 
+// authURL is deliberately NOT built through serviceURL. The authentication route is the documented
+// site-root exception: the vendor Creatio.Client posts to "/ServiceModel/AuthService.svc/Login" with no
+// "/0/" prefix on .NET Framework, while every DataService route does take that prefix. Applying the
+// prefix uniformly is what a naive reimplementation does, and it answers HTTP 401 with no explanation.
+// csrfToken returns the BPMCSRF value the login response placed in the cookie jar, or "" when the
+// request is bearer-authenticated and no such cookie exists.
+func (c *Client) csrfToken() string {
+	u, err := url.Parse(c.config.BaseURL)
+	if err != nil {
+		return ""
+	}
+	for _, cookie := range c.http.Jar.Cookies(u) {
+		if strings.EqualFold(cookie.Name, "BPMCSRF") {
+			return cookie.Value
+		}
+	}
+	return ""
+}
+
+func (c *Client) authURL() string {
+	return c.config.BaseURL + "/ServiceModel/AuthService.svc/Login"
+}
+
 func (c *Client) serviceURL(path string) string {
 	prefix := "/0/"
-	if c.config.IsNetCore { prefix = "/" }
+	if c.config.IsNetCore {
+		prefix = "/"
+	}
 	return c.config.BaseURL + prefix + path
 }
 
 func readResponse(response *http.Response) ([]byte, error) {
 	defer response.Body.Close()
 	payload, err := io.ReadAll(io.LimitReader(response.Body, maxResponseBytes+1))
-	if err != nil { return nil, err }
-	if len(payload) > maxResponseBytes { return nil, fmt.Errorf("response exceeds %d-byte safety limit", maxResponseBytes) }
+	if err != nil {
+		return nil, err
+	}
+	if len(payload) > maxResponseBytes {
+		return nil, fmt.Errorf("response exceeds %d-byte safety limit", maxResponseBytes)
+	}
 	return payload, nil
 }
 
-func looksLikeHTML(payload []byte) bool { return strings.HasPrefix(strings.ToLower(strings.TrimSpace(string(payload))), "<") }
-func versionOrNone(version string) string { if version == "" { return "none" }; return version }
+func looksLikeHTML(payload []byte) bool {
+	return strings.HasPrefix(strings.ToLower(strings.TrimSpace(string(payload))), "<")
+}
+func versionOrNone(version string) string {
+	if version == "" {
+		return "none"
+	}
+	return version
+}
