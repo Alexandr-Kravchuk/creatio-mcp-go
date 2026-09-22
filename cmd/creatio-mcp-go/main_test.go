@@ -343,8 +343,146 @@ func TestStructuredToolResultSerializesContentArray(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(string(encoded), `"content":[]`) {
-		t.Fatalf("structured result must serialize content as an array: %s", encoded)
+	if !strings.Contains(string(encoded), `"content":[{"type":"text","text":"{\"ok\":true}"}]`) {
+		t.Fatalf("structured result must include one JSON text block: %s", encoded)
+	}
+}
+
+func TestMCPResponsesIncludeOneTextCopyForEveryHiddenTool(t *testing.T) {
+	creatioServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/ServiceModel/AuthService.svc/Login":
+			http.SetCookie(w, &http.Cookie{Name: ".ASPXAUTH", Value: "session", Path: "/"})
+			http.SetCookie(w, &http.Cookie{Name: "BPMCSRF", Value: "csrf", Path: "/"})
+			_, _ = w.Write([]byte(`{"Code":0}`))
+		case "/0/DataService/json/SyncReply/SelectQuery":
+			var query struct {
+				RootSchema string `json:"rootSchemaName"`
+			}
+			if err := json.NewDecoder(r.Body).Decode(&query); err != nil {
+				t.Errorf("decode SelectQuery: %v", err)
+				http.Error(w, "bad query", http.StatusBadRequest)
+				return
+			}
+			switch query.RootSchema {
+			case "SysInstalledApp":
+				_, _ = w.Write([]byte(`{"success":true,"rows":[{"Id":"app-1","Name":"App","Code":"App","Version":"1"}]}`))
+			case "VwSysSqlScriptInPackage":
+				_, _ = w.Write([]byte(`{"success":true,"rows":[{"UId":"sql-1"}]}`))
+			default:
+				_, _ = w.Write([]byte(`{"success":true,"rows":[]}`))
+			}
+		case "/0/DataService/json/SyncReply/RuntimeEntitySchemaRequest":
+			_, _ = w.Write([]byte(`{"success":true,"schema":{"uId":"schema-1","name":"Contact","columns":{"items":{}}}}`))
+		case "/0/odata/Contact":
+			_, _ = w.Write([]byte(`{"value":[]}`))
+		case "/0/rest/CreatioApiGateway/GetPackageFilesDirectoryContent":
+			_, _ = w.Write([]byte(`[]`))
+		case "/0/rest/CreatioApiGateway/GetPackageFileContent":
+			_, _ = w.Write([]byte(`"<Project />"`))
+		case "/0/ServiceModel/SqlScriptSchemaDesignerService.svc/GetSchema":
+			_, _ = w.Write([]byte(`{"schema":{"name":"Query","body":"SELECT 1;","package":{"name":"Pkg"}}}`))
+		default:
+			t.Errorf("unexpected Creatio route %s", r.URL.Path)
+			http.NotFound(w, r)
+		}
+	}))
+	defer creatioServer.Close()
+	client, err := creatio.NewClient(creatio.Config{BaseURL: creatioServer.URL, Login: "example-user", Password: "replace-me"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	hostTools := hiddenToolServices{
+		findEmptyIISPort: func(context.Context) hosttools.PortDiscoveryResult {
+			return hosttools.PortDiscoveryResult{Status: "available", Summary: "mocked", RangeStart: 41000, RangeEnd: 41010, FirstAvailablePort: intPointer(41000)}
+		},
+		startCreatio: func(_ context.Context, environment string, _ func(float64, float64, string) error) (hosttools.StartResult, error) {
+			return hosttools.StartResult{Status: "started", Environment: environment, StartedBy: "mock", Summary: "mocked"}, nil
+		},
+	}
+	session := connectTestClient(t, newMCPServerWithHiddenTools(client, hostTools), mcp.NewClient(&mcp.Implementation{Name: "probe-client", Version: "test"}, nil))
+	index, err := session.CallTool(context.Background(), &mcp.CallToolParams{Name: "get-tool-contract"})
+	if err != nil || index.IsError {
+		t.Fatalf("get-tool-contract index = %#v, err = %v", index, err)
+	}
+	indexValue, ok := index.StructuredContent.(map[string]any)
+	if !ok {
+		t.Fatalf("contract index structured content = %#v", index.StructuredContent)
+	}
+	toolNames, ok := indexValue["tools"].([]any)
+	if !ok {
+		t.Fatalf("contract index tools = %#v", indexValue["tools"])
+	}
+	argsByName := map[string]map[string]any{
+		"execute-esq":                  {"query": map[string]any{"rootSchemaName": "Contact"}},
+		"find-empty-iis-port":          {},
+		"get-entity-schema-properties": {"schema-name": "Contact"},
+		"get-package-file":             {"package-name": "Pkg", "file-path": "Pkg.csproj"},
+		"get-sql-schema":               {"schema-name": "Query"},
+		"list-app-sections":            {"application-code": "App"},
+		"list-package-files":           {"package-name": "Pkg"},
+		"list-packages":                {},
+		"list-pages":                   {},
+		"odata-read":                   {"entity": "Contact"},
+		"start-creatio":                {"environmentName": "mock"},
+	}
+	if len(argsByName) != len(toolNames) {
+		t.Fatalf("test argument cases = %d, contract index names = %d", len(argsByName), len(toolNames))
+	}
+	for _, rawName := range toolNames {
+		name, ok := rawName.(string)
+		if !ok {
+			t.Fatalf("contract tool name has type %T", rawName)
+		}
+		args, ok := argsByName[name]
+		if !ok {
+			t.Fatalf("missing test arguments for contract tool %q", name)
+		}
+		calls := []*mcp.CallToolParams{
+			{Name: name, Arguments: args},
+			{Name: "clio-run", Arguments: map[string]any{"command": name, "args": args}},
+		}
+		for _, call := range calls {
+			t.Run(name+"/"+call.Name, func(t *testing.T) {
+				result, err := session.CallTool(context.Background(), call)
+				if err != nil || result.IsError {
+					t.Fatalf("call %q via %q = %#v, err = %v", name, call.Name, result, err)
+				}
+				assertOneJSONTextContent(t, result)
+			})
+		}
+	}
+
+	apps, err := session.CallTool(context.Background(), &mcp.CallToolParams{Name: "list-apps"})
+	if err != nil || apps.IsError {
+		t.Fatalf("list-apps = %#v, err = %v", apps, err)
+	}
+	assertOneJSONTextContent(t, apps)
+}
+
+func assertOneJSONTextContent(t *testing.T, result *mcp.CallToolResult) {
+	t.Helper()
+	if len(result.Content) != 1 {
+		t.Fatalf("content block count = %d, want 1: %#v", len(result.Content), result.Content)
+	}
+	textContent, ok := result.Content[0].(*mcp.TextContent)
+	if !ok {
+		t.Fatalf("content[0] type = %T, want TextContent", result.Content[0])
+	}
+	var textValue any
+	if err := json.Unmarshal([]byte(textContent.Text), &textValue); err != nil {
+		t.Fatalf("content text is not JSON: %q (%v)", textContent.Text, err)
+	}
+	structuredJSON, err := json.Marshal(result.StructuredContent)
+	if err != nil {
+		t.Fatalf("encode structured content: %v", err)
+	}
+	var structuredValue any
+	if err := json.Unmarshal(structuredJSON, &structuredValue); err != nil {
+		t.Fatalf("decode structured content: %v", err)
+	}
+	if !reflect.DeepEqual(textValue, structuredValue) {
+		t.Fatalf("content JSON = %#v, structured content = %#v", textValue, structuredValue)
 	}
 }
 

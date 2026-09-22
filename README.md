@@ -97,6 +97,9 @@ side then drops the flag — turning a rejected read into an empty successful li
 This is still a small read-only slice. It says nothing about write parity, package installation, most
 IIS/DISM/PowerShell operations, or parity for clio's 202 MCP tools.
 
+Authentication uses one session per process and reauthenticates once after an authentication refusal.
+Each structured tool response includes one JSON text block alongside its structured content.
+
 ## 4. Kill criterion
 
 If `list-apps` cannot be reproduced without a vendor assembly for both authentication modes clio supports (forms authentication and OAuth client credentials), a full rewrite should stop here. **It has passed for forms authentication and remains open for OAuth client credentials.** A full rewrite must not be approved until OAuth is exercised against the same clio-versus-Go harness.

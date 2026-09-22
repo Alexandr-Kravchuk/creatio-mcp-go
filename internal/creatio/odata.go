@@ -43,7 +43,7 @@ func (c *Client) ODataRead(ctx context.Context, input ODataReadRequest) (ODataRe
 	if err := input.validate(); err != nil {
 		return ODataReadResult{}, err
 	}
-	response, err := c.doAuthenticated(ctx, c.http, func() (*http.Request, error) {
+	response, _, err := c.doAuthenticated(ctx, c.http, func() (*http.Request, error) {
 		query := url.Values{}
 		if len(input.Select) > 0 {
 			query.Set("$select", strings.Join(input.Select, ","))

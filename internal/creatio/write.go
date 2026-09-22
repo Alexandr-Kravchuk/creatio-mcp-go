@@ -72,7 +72,7 @@ func (c *Client) Delete(ctx context.Context, schema, id string) (WriteOutcome, e
 func (c *Client) write(ctx context.Context, operation, route string, payload map[string]any) (WriteOutcome, error) {
 	out := WriteOutcome{Operation: operation}
 	buildFailureClass := ""
-	response, err := c.doAuthenticated(ctx, c.http, func() (*http.Request, error) {
+	response, authRejected, err := c.doAuthenticated(ctx, c.http, func() (*http.Request, error) {
 		body, err := json.Marshal(payload)
 		if err != nil {
 			buildFailureClass = "encode"
@@ -110,6 +110,19 @@ func (c *Client) write(ctx context.Context, operation, route string, payload map
 		out.FailureClass = "read"
 		out.FailureDetail = err.Error()
 		return out, err
+	}
+	if authRejected {
+		out.FailureClass = "auth"
+		if response.StatusCode != http.StatusOK {
+			snippet := strings.TrimSpace(string(raw))
+			if len(snippet) > 400 {
+				snippet = snippet[:400]
+			}
+			out.FailureDetail = fmt.Sprintf("HTTP %d: %s", response.StatusCode, snippet)
+			return out, fmt.Errorf("%s: HTTP %d", route, response.StatusCode)
+		}
+		out.FailureDetail = "server answered an HTML login page after one authentication retry"
+		return out, fmt.Errorf("%s: %s", route, out.FailureDetail)
 	}
 	if response.StatusCode != http.StatusOK {
 		out.FailureClass = "http"

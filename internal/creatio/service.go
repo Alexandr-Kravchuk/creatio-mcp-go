@@ -44,7 +44,7 @@ func (c *Client) getClioGateJSON(ctx context.Context, route string, query url.Va
 	requestCtx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 	client := c.requestClient()
-	response, err := c.doAuthenticated(requestCtx, client, func() (*http.Request, error) {
+	response, _, err := c.doAuthenticated(requestCtx, client, func() (*http.Request, error) {
 		requestURL := c.serviceURL(route)
 		if encoded := query.Encode(); encoded != "" {
 			requestURL += "?" + encoded
@@ -85,9 +85,9 @@ func (c *Client) postCreatioJSON(ctx context.Context, route string, body []byte,
 	requestCtx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 	// The configured Client has a 45-second timeout. For endpoints with a caller-selected deadline,
-	// retain its transport/cookie jar but let the request context carry the requested timeout.
+	// retain its transport and redirect policy while the request context carries the requested timeout.
 	client := c.requestClient()
-	response, err := c.doAuthenticated(requestCtx, client, func() (*http.Request, error) {
+	response, _, err := c.doAuthenticated(requestCtx, client, func() (*http.Request, error) {
 		request, err := http.NewRequestWithContext(requestCtx, http.MethodPost,
 			c.serviceURL(route), bytes.NewReader(body))
 		if err != nil {

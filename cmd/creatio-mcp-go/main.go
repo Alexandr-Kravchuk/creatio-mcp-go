@@ -8,6 +8,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"sort"
 	"strings"
 	"time"
 
@@ -149,10 +150,12 @@ func newMCPServerWithHiddenTools(client *creatio.Client, hostTools hiddenToolSer
 }
 
 func hiddenToolNames() []string {
-	return []string{
-		"execute-esq", "find-empty-iis-port", "get-entity-schema-properties", "get-package-file", "get-sql-schema",
-		"list-app-sections", "list-package-files", "list-packages", "list-pages", "odata-read", "start-creatio",
+	names := make([]string, 0, len(hiddenToolContracts))
+	for name := range hiddenToolContracts {
+		names = append(names, name)
 	}
+	sort.Strings(names)
+	return names
 }
 
 func isHiddenTool(name string) bool {
@@ -304,7 +307,14 @@ func invokeHiddenTool(ctx context.Context, client *creatio.Client, hostTools hid
 }
 
 func structuredToolResult(value any) *mcp.CallToolResult {
-	return &mcp.CallToolResult{Content: []mcp.Content{}, StructuredContent: value}
+	encoded, err := json.Marshal(value)
+	if err != nil {
+		return toolError(fmt.Errorf("encode structured tool result: %w", err))
+	}
+	return &mcp.CallToolResult{
+		Content:           []mcp.Content{&mcp.TextContent{Text: string(encoded)}},
+		StructuredContent: value,
+	}
 }
 
 func decodeStrictArgs(args map[string]any, target any) error {
