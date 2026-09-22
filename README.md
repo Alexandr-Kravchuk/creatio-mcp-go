@@ -101,7 +101,7 @@ If `list-apps` cannot be reproduced without a vendor assembly for both authentic
 
 ## Run as an MCP server
 
-The server uses the official [`github.com/modelcontextprotocol/go-sdk`](https://github.com/modelcontextprotocol/go-sdk) over stdio and exposes one tool, `list-apps`. Connection details are read only from environment variables; see `.env.example`. The `--list-apps-json` mode exists solely for the comparison harness and returns clio's JSON field names.
+The server uses the official [`github.com/modelcontextprotocol/go-sdk`](https://github.com/modelcontextprotocol/go-sdk) over stdio. It exposes `list-apps` and a deliberately bounded `odata-read` tool. `odata-read` proves that clio's `IApplicationClient` OData read path is replaceable with direct HTTP: it supports entity, projection, ordering, pagination and count; it deliberately refuses filters/expands until their full contract is ported and tested. Connection details are read only from environment variables; see `.env.example`. The `--list-apps-json` mode exists solely for the comparison harness and returns clio's JSON field names.
 
 ## Related work
 

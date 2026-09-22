@@ -21,7 +21,7 @@ func TestInsertTreatsSuccessFalseAsLoudRefusal(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client, err := NewClient(Config{BaseURL: server.URL, Login: "user", Password: "pass"})
+	client, err := NewClient(Config{BaseURL: server.URL, Login: "example-user", Password: "replace-me"})
 	if err != nil {
 		t.Fatal(err)
 	}

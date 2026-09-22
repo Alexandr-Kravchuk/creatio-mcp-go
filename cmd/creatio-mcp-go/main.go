@@ -69,6 +69,14 @@ func main() {
 			}
 			return nil, apps, nil
 		})
+	mcp.AddTool(server, &mcp.Tool{Name: "odata-read", Description: "Read a bounded OData v4 collection without a vendor .NET client."},
+		func(ctx context.Context, _ *mcp.CallToolRequest, input creatio.ODataReadRequest) (*mcp.CallToolResult, any, error) {
+			result, err := client.ODataRead(ctx, input)
+			if err != nil {
+				return nil, nil, err
+			}
+			return nil, result, nil
+		})
 	if err := server.Run(context.Background(), &mcp.StdioTransport{}); err != nil {
 		fatal(err)
 	}
