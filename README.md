@@ -71,8 +71,8 @@ conventions that are only discoverable by decompiling or by failing.
 authorization-app URI, so that half of the kill criterion was never exercised. It is not evidence of
 success.
 
-This is still only one read-only command. It says nothing about package installation,
-IIS/DISM/PowerShell operations, or clio's other 249 CLI verbs.
+This establishes the vendor-client-free `list-apps` path only. It says nothing about OAuth, package
+installation, IIS/DISM/PowerShell operations, or the rest of clio's CLI.
 
 `scripts/compare-with-clio.sh` is the reproducible evidence harness: it runs clio `list-apps --json`
 and this client against the same environment, normalises both result sets, and writes only counts,
@@ -101,9 +101,9 @@ If `list-apps` cannot be reproduced without a vendor assembly for both authentic
 
 ## Run as an MCP server
 
-The server uses the official [`github.com/modelcontextprotocol/go-sdk`](https://github.com/modelcontextprotocol/go-sdk) over stdio. Its resident list is `list-apps`, `clio-run`, and `get-tool-contract`; `odata-read` is available through `clio-run` or by raw tool name, and its schema is returned on demand by `get-tool-contract`. This is the minimum two-level surface needed to test the protocol design with one hidden tool.
+The server uses the official [`github.com/modelcontextprotocol/go-sdk`](https://github.com/modelcontextprotocol/go-sdk) over stdio. Its resident list is `list-apps`, `clio-run`, and `get-tool-contract`; `odata-read`, `find-empty-iis-port`, and `start-creatio` are available through `clio-run` or by raw tool name, and their schemas are returned on demand by `get-tool-contract`. The protocol probes establish progress-token correlation, response `_meta`, cancellation, and hidden-name dispatch.
 
-`odata-read` proves that clio's `IApplicationClient` OData read path is replaceable with direct HTTP: it supports entity, projection, ordering, pagination and count; filters and expands are rejected until their full contract is ported. The Go SDK protocol probes pass for correlated `notifications/progress`, result `_meta`, cancellation reaching the tool context, raw calls to tools absent from `tools/list`, and the `clio-run`/`get-tool-contract` discovery route. These checks establish SDK and prototype feasibility; they do not establish parity for Clio's full 202-tool catalog. Connection details are read only from environment variables; see `.env.example`. The `--list-apps-json` mode exists solely for the comparison harness and returns clio's JSON field names.
+`odata-read` proves that clio's `IApplicationClient` OData read path is replaceable with direct HTTP: it supports entity, projection, ordering, pagination and count; filters and expands are rejected until their full contract is ported. `find-empty-iis-port` and `start-creatio` are the minimum R1 portability probes. On Windows they call the built-in `appcmd.exe` and `netstat.exe` directly; the Go implementation has no `creatio.client`, `Microsoft.Web.Administration`, WMI, PowerShell, or .NET helper dependency. `start-creatio` requires a registered environment name and can launch `dotnet Terrasoft.WebHost.dll` on non-IIS hosts — that starts the Creatio application and is not a .NET library dependency in this MCP server. Windows command behavior is covered with mocked command responses and a Windows cross-build, but has not been live-tested on Windows in this checkout. These probes do not establish parity for Clio's full 202-tool catalog. Creatio-client connection details are read only from environment variables; see `.env.example`. The local `start-creatio` tool separately reads Clio's `appsettings.json`. The `--list-apps-json` mode exists solely for the comparison harness and returns clio's JSON field names.
 
 ## Related work
 

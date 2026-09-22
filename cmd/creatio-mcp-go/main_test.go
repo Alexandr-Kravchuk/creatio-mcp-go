@@ -2,14 +2,17 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/Alexandr-Kravchuk/creatio-mcp-go/internal/creatio"
+	"github.com/Alexandr-Kravchuk/creatio-mcp-go/internal/hosttools"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
@@ -141,6 +144,28 @@ func TestTwoTierMCPExposesContractAndRunsHiddenToolByRawName(t *testing.T) {
 	if !ok || contractValue["name"] != "odata-read" {
 		t.Fatalf("contract result = %#v", contract.StructuredContent)
 	}
+	contracts, err := session.CallTool(context.Background(), &mcp.CallToolParams{Name: "get-tool-contract"})
+	if err != nil || contracts.IsError {
+		t.Fatalf("get-tool-contract index = %#v, err = %v", contracts, err)
+	}
+	contractIndex, ok := contracts.StructuredContent.(map[string]any)
+	if !ok || !reflect.DeepEqual(contractIndex["tools"], []any{"find-empty-iis-port", "odata-read", "start-creatio"}) {
+		t.Fatalf("contract index = %#v", contracts.StructuredContent)
+	}
+	startContract, err := session.CallTool(context.Background(), &mcp.CallToolParams{
+		Name: "get-tool-contract", Arguments: map[string]any{"name": "start-creatio"},
+	})
+	if err != nil || startContract.IsError {
+		t.Fatalf("start-creatio contract = %#v, err = %v", startContract, err)
+	}
+	startContractValue, ok := startContract.StructuredContent.(map[string]any)
+	if !ok {
+		t.Fatalf("start-creatio contract content = %#v", startContract.StructuredContent)
+	}
+	startSchema, ok := startContractValue["inputSchema"].(map[string]any)
+	if !ok || !reflect.DeepEqual(startSchema["required"], []any{"environmentName"}) {
+		t.Fatalf("start-creatio schema = %#v", startContractValue["inputSchema"])
+	}
 
 	for _, call := range []*mcp.CallToolParams{
 		{Name: "odata-read", Arguments: map[string]any{"entity": "Contact"}},
@@ -168,6 +193,86 @@ func TestTwoTierMCPExposesContractAndRunsHiddenToolByRawName(t *testing.T) {
 	})
 	if err != nil || !unsupported.IsError {
 		t.Fatalf("unsupported filter must fail before HTTP: result = %#v, err = %v", unsupported, err)
+	}
+}
+
+func TestHiddenR1ToolsDispatchByRawNameAndStartProgress(t *testing.T) {
+	var startedEnvironment string
+	services := hiddenToolServices{
+		findEmptyIISPort: func(context.Context) hosttools.PortDiscoveryResult {
+			return hosttools.PortDiscoveryResult{Status: "available", FirstAvailablePort: intPointer(41000)}
+		},
+		startCreatio: func(_ context.Context, environment string, progress func(float64, float64, string) error) (hosttools.StartResult, error) {
+			startedEnvironment = environment
+			if progress != nil {
+				if err := progress(1, 1, "mock start complete"); err != nil {
+					return hosttools.StartResult{}, err
+				}
+			}
+			return hosttools.StartResult{Status: "started", Environment: environment, StartedBy: "mock"}, nil
+		},
+	}
+	server := newMCPServerWithHiddenTools(nil, services)
+	notifications := make(chan *mcp.ProgressNotificationParams, 1)
+	client := mcp.NewClient(&mcp.Implementation{Name: "probe-client", Version: "test"}, &mcp.ClientOptions{
+		ProgressNotificationHandler: func(_ context.Context, req *mcp.ProgressNotificationClientRequest) {
+			notifications <- req.Params
+		},
+	})
+	session := connectTestClient(t, server, client)
+
+	portResult, err := session.CallTool(context.Background(), &mcp.CallToolParams{Name: "find-empty-iis-port"})
+	if err != nil || portResult.IsError {
+		t.Fatalf("raw find-empty-iis-port result = %#v, err = %v", portResult, err)
+	}
+	port, ok := portResult.StructuredContent.(map[string]any)
+	if !ok || port["status"] != "available" || port["firstAvailablePort"] != float64(41000) {
+		t.Fatalf("raw find-empty-iis-port content = %#v", portResult.StructuredContent)
+	}
+
+	startResult, err := session.CallTool(context.Background(), &mcp.CallToolParams{
+		Name: "start-creatio", Meta: mcp.Meta{"progressToken": "start-probe-token"},
+		Arguments: map[string]any{"environmentName": "dev"},
+	})
+	if err != nil || startResult.IsError {
+		t.Fatalf("raw start-creatio result = %#v, err = %v", startResult, err)
+	}
+	if startedEnvironment != "dev" {
+		t.Fatalf("start environment = %q", startedEnvironment)
+	}
+	select {
+	case notification := <-notifications:
+		if notification.ProgressToken != "start-probe-token" || notification.Message != "mock start complete" {
+			t.Fatalf("start progress notification = %#v", notification)
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("start-creatio did not emit correlated progress")
+	}
+
+	missingEnvironment, err := session.CallTool(context.Background(), &mcp.CallToolParams{Name: "start-creatio"})
+	if err != nil || !missingEnvironment.IsError {
+		t.Fatalf("start-creatio without required environmentName = %#v, err = %v", missingEnvironment, err)
+	}
+
+	badArgs, err := session.CallTool(context.Background(), &mcp.CallToolParams{
+		Name: "clio-run", Arguments: map[string]any{
+			"command": "find-empty-iis-port", "args": map[string]any{"rangeStart": 1},
+		},
+	})
+	if err != nil || !badArgs.IsError {
+		t.Fatalf("unknown hidden-tool input must fail: result = %#v, err = %v", badArgs, err)
+	}
+}
+
+func intPointer(value int) *int { return &value }
+
+func TestStructuredToolResultSerializesContentArray(t *testing.T) {
+	encoded, err := json.Marshal(structuredToolResult(map[string]any{"ok": true}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(encoded), `"content":[]`) {
+		t.Fatalf("structured result must serialize content as an array: %s", encoded)
 	}
 }
 

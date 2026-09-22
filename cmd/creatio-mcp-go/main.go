@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -11,6 +12,7 @@ import (
 	"time"
 
 	"github.com/Alexandr-Kravchuk/creatio-mcp-go/internal/creatio"
+	"github.com/Alexandr-Kravchuk/creatio-mcp-go/internal/hosttools"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
@@ -69,6 +71,26 @@ func main() {
 }
 
 func newMCPServer(client *creatio.Client) *mcp.Server {
+	return newMCPServerWithHiddenTools(client, defaultHiddenToolServices())
+}
+
+type hiddenToolServices struct {
+	findEmptyIISPort func(context.Context) hosttools.PortDiscoveryResult
+	startCreatio     func(context.Context, string, func(float64, float64, string) error) (hosttools.StartResult, error)
+}
+
+func defaultHiddenToolServices() hiddenToolServices {
+	return hiddenToolServices{
+		findEmptyIISPort: func(ctx context.Context) hosttools.PortDiscoveryResult {
+			return hosttools.FindEmptyIISPort(ctx, nil)
+		},
+		startCreatio: func(ctx context.Context, environment string, progress func(float64, float64, string) error) (hosttools.StartResult, error) {
+			return hosttools.StartCreatio(ctx, hosttools.StartOptions{EnvironmentName: environment, Progress: progress})
+		},
+	}
+}
+
+func newMCPServerWithHiddenTools(client *creatio.Client, hostTools hiddenToolServices) *mcp.Server {
 	server := mcp.NewServer(&mcp.Implementation{Name: "creatio-mcp-go", Version: "0.1.0"}, nil)
 	mcp.AddTool(server, &mcp.Tool{Name: "list-apps", Description: "List installed Creatio applications through DataService."},
 		func(ctx context.Context, _ *mcp.CallToolRequest, _ struct{}) (*mcp.CallToolResult, any, error) {
@@ -78,28 +100,27 @@ func newMCPServer(client *creatio.Client) *mcp.Server {
 			}
 			return nil, apps, nil
 		})
-	// odata-read is deliberately omitted from tools/list. It remains directly callable by its raw
-	// name and through clio-run, while get-tool-contract provides its schema on demand.
+	// Hidden tools are deliberately omitted from tools/list. They remain directly callable by raw
+	// name and through clio-run, while get-tool-contract provides their schemas on demand.
 	mcp.AddTool(server, &mcp.Tool{Name: "clio-run", Description: "Invoke a supported Creatio MCP tool by name."},
-		func(ctx context.Context, _ *mcp.CallToolRequest, input clioRunArgs) (*mcp.CallToolResult, any, error) {
-			if strings.TrimSpace(input.Command) != "odata-read" {
-				return nil, nil, fmt.Errorf("unknown tool %q; discover supported names with get-tool-contract", input.Command)
-			}
-			result, err := invokeODataRead(ctx, client, input.Args)
+		func(ctx context.Context, req *mcp.CallToolRequest, input clioRunArgs) (*mcp.CallToolResult, any, error) {
+			result, err := invokeHiddenTool(ctx, client, hostTools, strings.TrimSpace(input.Command), input.Args,
+				progressReporter(ctx, req.Session, req.Params.GetProgressToken()))
 			if err != nil {
 				return nil, nil, err
 			}
-			return nil, result, nil
+			return result, nil, nil
 		})
 	mcp.AddTool(server, &mcp.Tool{Name: "get-tool-contract", Description: "List supported hidden tools or retrieve one tool's input schema."},
 		func(_ context.Context, _ *mcp.CallToolRequest, input getToolContractArgs) (*mcp.CallToolResult, any, error) {
 			if input.Name == "" {
-				return nil, map[string]any{"tools": []string{"odata-read"}}, nil
+				return nil, map[string]any{"tools": hiddenToolNames()}, nil
 			}
-			if input.Name != "odata-read" {
+			contract, ok := hiddenToolContracts[input.Name]
+			if !ok {
 				return nil, nil, fmt.Errorf("unknown tool contract %q", input.Name)
 			}
-			return nil, odataReadContract, nil
+			return nil, contract, nil
 		})
 	server.AddReceivingMiddleware(func(next mcp.MethodHandler) mcp.MethodHandler {
 		return func(ctx context.Context, method string, request mcp.Request) (mcp.Result, error) {
@@ -107,7 +128,7 @@ func newMCPServer(client *creatio.Client) *mcp.Server {
 				return next(ctx, method, request)
 			}
 			call, ok := request.(*mcp.ServerRequest[*mcp.CallToolParamsRaw])
-			if !ok || call.Params == nil || call.Params.Name != "odata-read" {
+			if !ok || call.Params == nil || !isHiddenTool(call.Params.Name) {
 				return next(ctx, method, request)
 			}
 			var args map[string]any
@@ -116,14 +137,84 @@ func newMCPServer(client *creatio.Client) *mcp.Server {
 					return toolError(err), nil
 				}
 			}
-			result, err := invokeODataRead(ctx, client, args)
+			result, err := invokeHiddenTool(ctx, client, hostTools, call.Params.Name, args,
+				progressReporter(ctx, call.Session, call.Params.GetProgressToken()))
 			if err != nil {
 				return toolError(err), nil
 			}
-			return &mcp.CallToolResult{StructuredContent: result}, nil
+			return result, nil
 		}
 	})
 	return server
+}
+
+func hiddenToolNames() []string {
+	return []string{"find-empty-iis-port", "odata-read", "start-creatio"}
+}
+
+func isHiddenTool(name string) bool {
+	_, ok := hiddenToolContracts[name]
+	return ok
+}
+
+func progressReporter(ctx context.Context, session *mcp.ServerSession, token any) func(float64, float64, string) error {
+	if token == nil || session == nil {
+		return nil
+	}
+	return func(progress, total float64, message string) error {
+		return session.NotifyProgress(ctx, &mcp.ProgressNotificationParams{
+			ProgressToken: token, Progress: progress, Total: total, Message: message,
+		})
+	}
+}
+
+func invokeHiddenTool(ctx context.Context, client *creatio.Client, hostTools hiddenToolServices, name string, args map[string]any,
+	progress func(float64, float64, string) error) (*mcp.CallToolResult, error) {
+	switch name {
+	case "odata-read":
+		result, err := invokeODataRead(ctx, client, args)
+		if err != nil {
+			return nil, err
+		}
+		return structuredToolResult(result), nil
+	case "find-empty-iis-port":
+		var input struct{}
+		if err := decodeStrictArgs(args, &input); err != nil {
+			return nil, fmt.Errorf("decode find-empty-iis-port arguments: %w", err)
+		}
+		return structuredToolResult(hostTools.findEmptyIISPort(ctx)), nil
+	case "start-creatio":
+		var input struct {
+			EnvironmentName string `json:"environmentName"`
+		}
+		if err := decodeStrictArgs(args, &input); err != nil {
+			return nil, fmt.Errorf("decode start-creatio arguments: %w", err)
+		}
+		if strings.TrimSpace(input.EnvironmentName) == "" {
+			return nil, errors.New("environmentName is required")
+		}
+		result, err := hostTools.startCreatio(ctx, input.EnvironmentName, progress)
+		if err != nil {
+			return nil, err
+		}
+		return structuredToolResult(result), nil
+	default:
+		return nil, fmt.Errorf("unknown tool %q; discover supported names with get-tool-contract", name)
+	}
+}
+
+func structuredToolResult(value any) *mcp.CallToolResult {
+	return &mcp.CallToolResult{Content: []mcp.Content{}, StructuredContent: value}
+}
+
+func decodeStrictArgs(args map[string]any, target any) error {
+	encoded, err := json.Marshal(args)
+	if err != nil {
+		return err
+	}
+	decoder := json.NewDecoder(bytes.NewReader(encoded))
+	decoder.DisallowUnknownFields()
+	return decoder.Decode(target)
 }
 
 type clioRunArgs struct {
@@ -148,6 +239,24 @@ var odataReadContract = map[string]any{
 			"top":     map[string]string{"type": "integer"},
 			"skip":    map[string]string{"type": "integer"},
 			"count":   map[string]string{"type": "boolean"},
+		},
+	},
+}
+
+var hiddenToolContracts = map[string]map[string]any{
+	"odata-read": odataReadContract,
+	"find-empty-iis-port": {
+		"name":        "find-empty-iis-port",
+		"description": "Find the first free port in the default IIS deployment range. Windows only; reads IIS bindings and active TCP endpoints.",
+		"inputSchema": map[string]any{"type": "object", "properties": map[string]any{}},
+	},
+	"start-creatio": {
+		"name":        "start-creatio",
+		"description": "Start a registered local Creatio environment through IIS on Windows or dotnet on other platforms. This changes local process/server state.",
+		"inputSchema": map[string]any{
+			"type":       "object",
+			"required":   []string{"environmentName"},
+			"properties": map[string]any{"environmentName": map[string]string{"type": "string", "description": "Target registered Clio environment name."}},
 		},
 	},
 }
