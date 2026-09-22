@@ -167,6 +167,284 @@ func TestGetEntitySchemaPropertiesMapsLargeMergedRuntimeSchema(t *testing.T) {
 	}
 }
 
+func TestListPackagesFiltersSortsAndPagesLikeMCPContract(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/ServiceModel/AuthService.svc/Login" {
+			_, _ = w.Write([]byte(`{"Code":0}`))
+			return
+		}
+		if r.URL.Path != "/0/DataService/json/SyncReply/SelectQuery" {
+			t.Errorf("unexpected route %s", r.URL.Path)
+			http.NotFound(w, r)
+			return
+		}
+		var query struct {
+			RootSchema string `json:"rootSchemaName"`
+			RowCount   int    `json:"rowCount"`
+			Columns    struct {
+				Items map[string]json.RawMessage `json:"items"`
+			} `json:"columns"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&query); err != nil {
+			t.Errorf("decode package query: %v", err)
+		}
+		if query.RootSchema != "SysPackage" || query.RowCount != 10000 || len(query.Columns.Items) != 4 {
+			t.Errorf("package SelectQuery = %#v", query)
+		}
+		_, _ = w.Write([]byte(`{"success":true,"rows":[
+			{"Name":"UsrZulu","UId":"uid-z","Maintainer":"ATF","Version":"1.2"},
+			{"Name":"SysBase","UId":"uid-s","Maintainer":"Creatio","Version":"8"},
+			{"Name":"UsrAlpha","UId":"uid-a","Maintainer":"ATF","Version":"2.0"}
+		]}`))
+	}))
+	defer server.Close()
+	client := newFormsTestClient(t, server.URL)
+	limit := 1
+	result, err := client.ListPackages(context.Background(), PackageListRequest{Filter: "uSr", Limit: &limit, Offset: 0})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.Total != 2 || result.Count != 1 || !result.Truncated || result.Packages[0].Name != "UsrAlpha" || result.Packages[0].UID != "uid-a" {
+		t.Fatalf("package page = %#v", result)
+	}
+	if _, err := client.ListPackages(context.Background(), PackageListRequest{Offset: -1}); err == nil {
+		t.Fatal("negative offset should be rejected before making a request")
+	}
+}
+
+func TestListAppSectionsResolvesApplicationAndMapsSectionFields(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/ServiceModel/AuthService.svc/Login" {
+			_, _ = w.Write([]byte(`{"Code":0}`))
+			return
+		}
+		if r.URL.Path != "/0/DataService/json/SyncReply/SelectQuery" {
+			t.Errorf("unexpected route %s", r.URL.Path)
+			http.NotFound(w, r)
+			return
+		}
+		var query struct {
+			RootSchema string `json:"rootSchemaName"`
+			Filters    struct {
+				Items map[string]struct {
+					Left struct {
+						Column string `json:"columnPath"`
+					} `json:"leftExpression"`
+				} `json:"items"`
+			} `json:"filters"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&query); err != nil {
+			t.Errorf("decode section query: %v", err)
+		}
+		switch query.RootSchema {
+		case "SysInstalledApp":
+			if query.Filters.Items["Code"].Left.Column != "Code" {
+				t.Errorf("application lookup filter = %#v", query.Filters.Items)
+			}
+			_, _ = w.Write([]byte(`{"success":true,"rows":[{"Id":"app-1","Name":"Contacts","Code":"Contacts","Version":"1.5"}]}`))
+		case "ApplicationSection":
+			if query.Filters.Items["ApplicationId"].Left.Column != "ApplicationId" {
+				t.Errorf("section lookup filter = %#v", query.Filters.Items)
+			}
+			_, _ = w.Write([]byte(`{"success":true,"rows":[{"Id":"section-1","Code":"Contacts","Caption":"Contacts","Description":"People","EntitySchemaName":"Contact","PackageId":"pkg-1","SectionSchemaUId":"schema-1","LogoId":"logo-1","IconBackground":"#247EE5","ClientTypeId":"client-1"}]}`))
+		default:
+			t.Errorf("unexpected root schema %q", query.RootSchema)
+			_, _ = w.Write([]byte(`{"success":false,"rows":[]}`))
+		}
+	}))
+	defer server.Close()
+	client := newFormsTestClient(t, server.URL)
+	result := client.ListAppSections(context.Background(), " Contacts ")
+	if !result.Success || result.ApplicationID != "app-1" || result.ApplicationVersion == nil || *result.ApplicationVersion != "1.5" || len(result.Sections) != 1 {
+		t.Fatalf("section result = %#v", result)
+	}
+	section := result.Sections[0]
+	if section.IconID == nil || *section.IconID != "logo-1" || section.EntitySchemaName == nil || *section.EntitySchemaName != "Contact" || section.Caption != "Contacts" {
+		t.Fatalf("section fields = %#v", section)
+	}
+}
+
+func TestListPagesUsesBoundedEmptyPackageCrossCheck(t *testing.T) {
+	pageQueries := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/ServiceModel/AuthService.svc/Login" {
+			_, _ = w.Write([]byte(`{"Code":0}`))
+			return
+		}
+		if r.URL.Path != "/0/DataService/json/SyncReply/SelectQuery" {
+			t.Errorf("unexpected route %s", r.URL.Path)
+			http.NotFound(w, r)
+			return
+		}
+		var query struct {
+			RootSchema string         `json:"rootSchemaName"`
+			RowCount   int            `json:"rowCount"`
+			Filters    map[string]any `json:"filters"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&query); err != nil {
+			t.Errorf("decode page query: %v", err)
+		}
+		if query.RootSchema != "SysSchema" {
+			t.Errorf("page query root = %q", query.RootSchema)
+		}
+		pageQueries++
+		filterItems := query.Filters["items"].(map[string]any)
+		if filterItems["ManagerName"] == nil || filterItems["Name"] == nil {
+			t.Errorf("required page filters absent: %#v", filterItems)
+		}
+		if pageQueries == 1 {
+			if filterItems["PackageName"] == nil || query.RowCount != 1 {
+				t.Errorf("primary package-filtered query = %#v", query)
+			}
+			_, _ = w.Write([]byte(`{"success":true,"rows":[]}`))
+			return
+		}
+		if filterItems["PackageName"] != nil || query.RowCount != pageFallbackLimit {
+			t.Errorf("fallback query = %#v", query)
+		}
+		_, _ = w.Write([]byte(`{"success":true,"rows":[
+			{"Name":"UsrOne","UId":"uid-1","PackageName":"Target","ParentSchemaName":"FormPageTemplate"},
+			{"Name":"UsrOther","UId":"uid-2","PackageName":"Other","ParentSchemaName":"BlankPageTemplate"},
+			{"Name":"UsrTwo","UId":"uid-3","PackageName":"Target","ParentSchemaName":"FormPageTemplate"}
+		]}`))
+	}))
+	defer server.Close()
+	client := newFormsTestClient(t, server.URL)
+	limit := 1
+	result := client.ListPages(context.Background(), PageListRequest{PackageName: "Target", SearchPattern: " Usr* ", Limit: &limit})
+	if !result.Success || result.Count != 1 || result.Total != 2 || !result.Truncated || result.Pages[0].SchemaName != "UsrOne" || pageQueries != 2 {
+		t.Fatalf("page result = %#v; queries=%d", result, pageQueries)
+	}
+}
+
+func TestListPagesCountsOnlyWhenPageIsFull(t *testing.T) {
+	countQueries := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/ServiceModel/AuthService.svc/Login" {
+			_, _ = w.Write([]byte(`{"Code":0}`))
+			return
+		}
+		var query struct {
+			Columns struct {
+				Items map[string]json.RawMessage `json:"items"`
+			} `json:"columns"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&query); err != nil {
+			t.Errorf("decode SelectQuery: %v", err)
+		}
+		if _, isCount := query.Columns.Items["RecordCount"]; isCount {
+			countQueries++
+			_, _ = w.Write([]byte(`{"success":true,"rows":[{"RecordCount":5}]}`))
+			return
+		}
+		_, _ = w.Write([]byte(`{"success":true,"rows":[
+			{"Name":"UsrOne","UId":"uid-1","PackageName":"Target","ParentSchemaName":"FormPageTemplate"},
+			{"Name":"UsrTwo","UId":"uid-2","PackageName":"Target","ParentSchemaName":"FormPageTemplate"}
+		]}`))
+	}))
+	defer server.Close()
+	client := newFormsTestClient(t, server.URL)
+	limit := 2
+	result := client.ListPages(context.Background(), PageListRequest{PackageName: "Target", Limit: &limit})
+	if !result.Success || result.Count != 2 || result.Total != 5 || !result.Truncated || countQueries != 1 {
+		t.Fatalf("page count result = %#v; count queries=%d", result, countQueries)
+	}
+}
+
+func TestListPagesResolvesApplicationCodeThroughPackagesService(t *testing.T) {
+	var sawApplicationPackages bool
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/ServiceModel/AuthService.svc/Login" {
+			_, _ = w.Write([]byte(`{"Code":0}`))
+			return
+		}
+		switch r.URL.Path {
+		case "/0/DataService/json/SyncReply/SelectQuery":
+			var query struct {
+				RootSchema string `json:"rootSchemaName"`
+			}
+			if err := json.NewDecoder(r.Body).Decode(&query); err != nil {
+				t.Errorf("decode query: %v", err)
+			}
+			switch query.RootSchema {
+			case "SysInstalledApp":
+				_, _ = w.Write([]byte(`{"success":true,"rows":[{"Id":"app-1"}]}`))
+			case "SysSchema":
+				_, _ = w.Write([]byte(`{"success":true,"rows":[{"Name":"UsrPage","UId":"page-1","PackageName":"AppPackage","ParentSchemaName":"FormPageTemplate"}]}`))
+			default:
+				t.Errorf("unexpected query root %q", query.RootSchema)
+			}
+		case "/0/ServiceModel/ApplicationPackagesService.svc/GetApplicationPackages":
+			var applicationID string
+			if err := json.NewDecoder(r.Body).Decode(&applicationID); err != nil || applicationID != "app-1" {
+				t.Errorf("application package request = %q, err=%v", applicationID, err)
+			}
+			sawApplicationPackages = true
+			_, _ = w.Write([]byte(`{"success":true,"packages":[{"name":"AppPackage","isApplicationPrimaryPackage":true}]}`))
+		default:
+			t.Errorf("unexpected route %s", r.URL.Path)
+			http.NotFound(w, r)
+		}
+	}))
+	defer server.Close()
+	client := newFormsTestClient(t, server.URL)
+	result := client.ListPages(context.Background(), PageListRequest{ApplicationCode: "App", SearchPattern: "Usr"})
+	if !result.Success || result.Count != 1 || result.Pages[0].PackageName != "AppPackage" || !sawApplicationPackages {
+		t.Fatalf("page result = %#v; packages service was called=%v", result, sawApplicationPackages)
+	}
+}
+
+func TestClioGatePackageFileReadsAuthenticateAndNormalizePaths(t *testing.T) {
+	var fileRequestCount int
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/ServiceModel/AuthService.svc/Login" {
+			http.SetCookie(w, &http.Cookie{Name: "BPMCSRF", Value: "csrf-token", Path: "/"})
+			_, _ = w.Write([]byte(`{"Code":0}`))
+			return
+		}
+		if r.Header.Get("BPMCSRF") != "csrf-token" {
+			t.Errorf("BPMCSRF header = %q", r.Header.Get("BPMCSRF"))
+		}
+		switch r.URL.Path {
+		case "/0/rest/CreatioApiGateway/GetPackageFilesDirectoryContent":
+			if r.URL.Query().Get("packageName") != "CrtBase" {
+				t.Errorf("package list query = %v", r.URL.Query())
+			}
+			_, _ = w.Write([]byte(`["z\\b.cs","a.cs","A.cs"]`))
+		case "/0/rest/CreatioApiGateway/GetPackageFileContent":
+			fileRequestCount++
+			if r.URL.Query().Get("packageName") != "CrtBase" {
+				t.Errorf("package content query = %v", r.URL.Query())
+			}
+			switch r.URL.Query().Get("filePath") {
+			case "src/Main.cs":
+				_, _ = w.Write([]byte(`"𐐀"`))
+			case "CrtBase.csproj":
+				_, _ = w.Write([]byte(`"<Project />"`))
+			default:
+				t.Errorf("unexpected file path %q", r.URL.Query().Get("filePath"))
+			}
+		default:
+			t.Errorf("unexpected route %s", r.URL.Path)
+			http.NotFound(w, r)
+		}
+	}))
+	defer server.Close()
+	client := newFormsTestClient(t, server.URL)
+	files := client.ListPackageFiles(context.Background(), " CrtBase ")
+	if !files.Success || files.Count != 3 || strings.Join(files.Files, ",") != "A.cs,a.cs,z/b.cs" {
+		t.Fatalf("package files = %#v", files)
+	}
+	content := client.GetPackageFile(context.Background(), "CrtBase", `src\Main.cs`)
+	if !content.Success || content.FilePath != "src/Main.cs" || content.Content != "𐐀" || content.ContentLength != 2 || content.ProjectContent != "<Project />" || content.ProjectContentLength != 11 || fileRequestCount != 2 {
+		t.Fatalf("package content = %#v; requests=%d", content, fileRequestCount)
+	}
+	traversal := client.GetPackageFile(context.Background(), "CrtBase", "../outside.cs")
+	if traversal.Success || !strings.Contains(traversal.Error, "remain inside") || fileRequestCount != 2 {
+		t.Fatalf("traversal path must be rejected before network I/O: %#v; requests=%d", traversal, fileRequestCount)
+	}
+}
+
 func newFormsTestClient(t *testing.T, baseURL string) *Client {
 	t.Helper()
 	client, err := NewClient(Config{BaseURL: baseURL, Login: "example-user", Password: "replace-me"})

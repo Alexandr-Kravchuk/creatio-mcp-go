@@ -149,7 +149,10 @@ func newMCPServerWithHiddenTools(client *creatio.Client, hostTools hiddenToolSer
 }
 
 func hiddenToolNames() []string {
-	return []string{"execute-esq", "find-empty-iis-port", "get-entity-schema-properties", "odata-read", "start-creatio"}
+	return []string{
+		"execute-esq", "find-empty-iis-port", "get-entity-schema-properties", "get-package-file",
+		"list-app-sections", "list-package-files", "list-packages", "list-pages", "odata-read", "start-creatio",
+	}
 }
 
 func isHiddenTool(name string) bool {
@@ -171,6 +174,62 @@ func progressReporter(ctx context.Context, session *mcp.ServerSession, token any
 func invokeHiddenTool(ctx context.Context, client *creatio.Client, hostTools hiddenToolServices, name string, args map[string]any,
 	progress func(float64, float64, string) error) (*mcp.CallToolResult, error) {
 	switch name {
+	case "get-package-file":
+		var input struct {
+			PackageName string `json:"package-name"`
+			FilePath    string `json:"file-path"`
+		}
+		if err := decodeStrictArgs(args, &input); err != nil {
+			return nil, fmt.Errorf("decode get-package-file arguments: %w", err)
+		}
+		return structuredToolResult(client.GetPackageFile(ctx, input.PackageName, input.FilePath)), nil
+	case "list-package-files":
+		var input struct {
+			PackageName string `json:"package-name"`
+		}
+		if err := decodeStrictArgs(args, &input); err != nil {
+			return nil, fmt.Errorf("decode list-package-files arguments: %w", err)
+		}
+		return structuredToolResult(client.ListPackageFiles(ctx, input.PackageName)), nil
+	case "list-packages":
+		var input struct {
+			Filter string `json:"filter,omitempty"`
+			Limit  *int   `json:"limit,omitempty"`
+			Offset int    `json:"offset,omitempty"`
+		}
+		if err := decodeStrictArgs(args, &input); err != nil {
+			return nil, fmt.Errorf("decode list-packages arguments: %w", err)
+		}
+		result, err := client.ListPackages(ctx, creatio.PackageListRequest{
+			Filter: input.Filter, Limit: input.Limit, Offset: input.Offset,
+		})
+		if err != nil {
+			return nil, err
+		}
+		return structuredToolResult(result), nil
+	case "list-app-sections":
+		var input struct {
+			ApplicationCode string `json:"application-code"`
+		}
+		if err := decodeStrictArgs(args, &input); err != nil {
+			return nil, fmt.Errorf("decode list-app-sections arguments: %w", err)
+		}
+		return structuredToolResult(client.ListAppSections(ctx, input.ApplicationCode)), nil
+	case "list-pages":
+		var input struct {
+			PackageName   string `json:"package-name,omitempty"`
+			Code          string `json:"code,omitempty"`
+			SearchPattern string `json:"search-pattern,omitempty"`
+			Limit         *int   `json:"limit,omitempty"`
+			UID           string `json:"uid,omitempty"`
+		}
+		if err := decodeStrictArgs(args, &input); err != nil {
+			return nil, fmt.Errorf("decode list-pages arguments: %w", err)
+		}
+		return structuredToolResult(client.ListPages(ctx, creatio.PageListRequest{
+			PackageName: input.PackageName, ApplicationCode: input.Code,
+			SearchPattern: input.SearchPattern, Limit: input.Limit, UID: input.UID,
+		})), nil
 	case "odata-read":
 		result, err := invokeODataRead(ctx, client, args)
 		if err != nil {
@@ -278,6 +337,50 @@ var odataReadContract = map[string]any{
 
 var hiddenToolContracts = map[string]map[string]any{
 	"odata-read": odataReadContract,
+	"get-package-file": {
+		"name":        "get-package-file",
+		"description": "Read one package-relative file and the generated package project file through ClioGate 2.0.0.47 or newer. Paths must be relative and stay inside the package Files directory.",
+		"inputSchema": map[string]any{"type": "object", "required": []string{"package-name", "file-path"}, "properties": map[string]any{
+			"package-name": map[string]string{"type": "string"},
+			"file-path":    map[string]string{"type": "string"},
+		}},
+	},
+	"list-package-files": {
+		"name":        "list-package-files",
+		"description": "List package-relative files materialized by Creatio through ClioGate 2.0.0.47 or newer.",
+		"inputSchema": map[string]any{"type": "object", "required": []string{"package-name"}, "properties": map[string]any{
+			"package-name": map[string]string{"type": "string"},
+		}},
+	},
+	"list-packages": {
+		"name":        "list-packages",
+		"description": "List packages from the single CREATIO_URL configured at process start. Filters by case-insensitive package-name substring, then pages the sorted result.",
+		"inputSchema": map[string]any{
+			"type": "object", "properties": map[string]any{
+				"filter": map[string]string{"type": "string"},
+				"limit":  map[string]any{"type": "integer", "minimum": 0, "default": 50},
+				"offset": map[string]any{"type": "integer", "minimum": 0, "default": 0},
+			},
+		},
+	},
+	"list-app-sections": {
+		"name":        "list-app-sections",
+		"description": "List sections of an installed application by its code on the single configured Creatio instance.",
+		"inputSchema": map[string]any{"type": "object", "required": []string{"application-code"}, "properties": map[string]any{
+			"application-code": map[string]string{"type": "string"},
+		}},
+	},
+	"list-pages": {
+		"name":        "list-pages",
+		"description": "List Freedom UI pages by package, application code, schema-name substring and/or UId. Application code resolves through Creatio's ApplicationPackagesService.",
+		"inputSchema": map[string]any{"type": "object", "properties": map[string]any{
+			"package-name":   map[string]string{"type": "string"},
+			"code":           map[string]string{"type": "string"},
+			"search-pattern": map[string]string{"type": "string"},
+			"limit":          map[string]any{"type": "integer", "minimum": 0, "default": 50},
+			"uid":            map[string]string{"type": "string"},
+		}},
+	},
 	"execute-esq": {
 		"name":        "execute-esq",
 		"description": "Run a raw Creatio DataService SelectQuery against the single CREATIO_URL configured when the Go process starts. Query is forwarded without translation, including filters, relation paths, ordering and paging. Responses are capped at 200000 UTF-8 bytes.",

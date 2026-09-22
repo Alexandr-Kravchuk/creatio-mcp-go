@@ -149,7 +149,7 @@ func TestTwoTierMCPExposesContractAndRunsHiddenToolByRawName(t *testing.T) {
 		t.Fatalf("get-tool-contract index = %#v, err = %v", contracts, err)
 	}
 	contractIndex, ok := contracts.StructuredContent.(map[string]any)
-	if !ok || !reflect.DeepEqual(contractIndex["tools"], []any{"execute-esq", "find-empty-iis-port", "get-entity-schema-properties", "odata-read", "start-creatio"}) {
+	if !ok || !reflect.DeepEqual(contractIndex["tools"], []any{"execute-esq", "find-empty-iis-port", "get-entity-schema-properties", "get-package-file", "list-app-sections", "list-package-files", "list-packages", "list-pages", "odata-read", "start-creatio"}) {
 		t.Fatalf("contract index = %#v", contracts.StructuredContent)
 	}
 	startContract, err := session.CallTool(context.Background(), &mcp.CallToolParams{
@@ -264,6 +264,71 @@ func TestHiddenR1ToolsDispatchByRawNameAndStartProgress(t *testing.T) {
 	}
 }
 
+func TestStageTwoReadToolsDispatchByRawName(t *testing.T) {
+	creatioServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/ServiceModel/AuthService.svc/Login" {
+			_, _ = w.Write([]byte(`{"Code":0}`))
+			return
+		}
+		if r.URL.Path == "/0/rest/CreatioApiGateway/GetPackageFilesDirectoryContent" {
+			_, _ = w.Write([]byte(`["Files/a.cs"]`))
+			return
+		}
+		if r.URL.Path == "/0/rest/CreatioApiGateway/GetPackageFileContent" {
+			if r.URL.Query().Get("filePath") == "UsrPackage.csproj" {
+				_, _ = w.Write([]byte(`"<Project />"`))
+			} else {
+				_, _ = w.Write([]byte(`"class A {}"`))
+			}
+			return
+		}
+		if r.URL.Path != "/0/DataService/json/SyncReply/SelectQuery" {
+			t.Errorf("unexpected Creatio route %s", r.URL.Path)
+			http.NotFound(w, r)
+			return
+		}
+		var query struct {
+			RootSchema string `json:"rootSchemaName"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&query); err != nil {
+			t.Errorf("decode SelectQuery: %v", err)
+			return
+		}
+		switch query.RootSchema {
+		case "SysPackage":
+			_, _ = w.Write([]byte(`{"success":true,"rows":[{"Name":"UsrPackage","UId":"pkg-1","Version":"1","Maintainer":"ATF"}]}`))
+		case "SysInstalledApp":
+			_, _ = w.Write([]byte(`{"success":true,"rows":[{"Id":"app-1","Name":"Contacts","Code":"Contacts","Version":"1"}]}`))
+		case "ApplicationSection":
+			_, _ = w.Write([]byte(`{"success":true,"rows":[{"Id":"section-1","Code":"Contacts","Caption":"Contacts"}]}`))
+		case "SysSchema":
+			_, _ = w.Write([]byte(`{"success":true,"rows":[{"Name":"UsrContacts_FormPage","UId":"page-1","PackageName":"UsrPackage","ParentSchemaName":"FormPageTemplate"}]}`))
+		default:
+			t.Errorf("unexpected SelectQuery root %q", query.RootSchema)
+			_, _ = w.Write([]byte(`{"success":false,"rows":[]}`))
+		}
+	}))
+	defer creatioServer.Close()
+	client, err := creatio.NewClient(creatio.Config{BaseURL: creatioServer.URL, Login: "example-user", Password: "replace-me"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	session := connectTestClient(t, newMCPServer(client), mcp.NewClient(&mcp.Implementation{Name: "probe-client", Version: "test"}, nil))
+
+	for _, call := range []*mcp.CallToolParams{
+		{Name: "list-package-files", Arguments: map[string]any{"package-name": "UsrPackage"}},
+		{Name: "get-package-file", Arguments: map[string]any{"package-name": "UsrPackage", "file-path": "Files/a.cs"}},
+		{Name: "list-packages", Arguments: map[string]any{"filter": "usr"}},
+		{Name: "list-app-sections", Arguments: map[string]any{"application-code": "Contacts"}},
+		{Name: "list-pages", Arguments: map[string]any{"package-name": "UsrPackage"}},
+	} {
+		result, err := session.CallTool(context.Background(), call)
+		if err != nil || result.IsError || result.StructuredContent == nil {
+			t.Fatalf("raw call %q result = %#v, err = %v", call.Name, result, err)
+		}
+	}
+}
+
 func intPointer(value int) *int { return &value }
 
 func TestStructuredToolResultSerializesContentArray(t *testing.T) {
@@ -291,7 +356,7 @@ func TestR2ToolsDispatchRawSelectQueryAndMergedSchemaRead(t *testing.T) {
 		}
 	}))
 	defer server.Close()
-	client, err := creatio.NewClient(creatio.Config{BaseURL: server.URL, Login: "example-user", Password: "test-password"})
+	client, err := creatio.NewClient(creatio.Config{BaseURL: server.URL, Login: "example-user", Password: "replace-me"})
 	if err != nil {
 		t.Fatal(err)
 	}
