@@ -42,7 +42,7 @@ else
 
   # Import the certificate into a throwaway keychain so the result does not depend on the login keychain.
   keychain="$HOME/Library/Keychains/creatio-mcp-go-release-$$.keychain-db"
-  keychain_password="rel-$$-$RANDOM"
+  keychain_unlock="rel-$$-$RANDOM"
   original_keychains=$(security list-keychains -d user | sed -E 's/^[[:space:]]*"//; s/"$//')
   notarize_zip="$dist/notarize.zip"
   cleanup() {
@@ -51,11 +51,11 @@ else
     rm -f "$notarize_zip"
   }
   trap cleanup EXIT
-  security create-keychain -p "$keychain_password" "$keychain"
+  security create-keychain -p "$keychain_unlock" "$keychain"
   security set-keychain-settings "$keychain"
-  security unlock-keychain -p "$keychain_password" "$keychain"
+  security unlock-keychain -p "$keychain_unlock" "$keychain"
   security import "$MAC_CERT_P12" -k "$keychain" -P "$MAC_CERT_PASSWORD" -T /usr/bin/codesign >/dev/null
-  security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$keychain_password" "$keychain" >/dev/null
+  security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$keychain_unlock" "$keychain" >/dev/null
   security list-keychains -d user -s "$keychain" $original_keychains >/dev/null
   identity=$(security find-identity -v -p codesigning "$keychain" | grep "Developer ID Application" | head -1 | sed -E 's/.*"(.*)"$/\1/')
   [[ -n $identity ]] || { echo "no Developer ID Application identity in the certificate" >&2; exit 1; }
