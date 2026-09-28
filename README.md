@@ -141,6 +141,33 @@ Each structured tool response includes one JSON text block alongside its structu
 
 If `list-apps` cannot be reproduced without a vendor assembly for both authentication modes clio supports (forms authentication and OAuth client credentials), a full rewrite should stop here. **It has passed for both: forms authentication on-premises and in the cloud, and OAuth client credentials in the cloud** (see "Live MCP-to-MCP comparison"). The criterion is met; it does not by itself justify a rewrite, which still depends on write parity and the remaining tool catalog.
 
+## Try it
+
+Preview builds are published on the [Releases](https://github.com/Alexandr-Kravchuk/creatio-mcp-go/releases)
+page for macOS (arm64, amd64), Linux (amd64, arm64) and Windows (amd64). Each archive holds one static
+binary; nothing else needs installing. Verify it against `SHA256SUMS` from the same release.
+
+The binaries are not signed. On macOS, remove the download quarantine once, or Gatekeeper refuses to
+start the binary:
+
+```bash
+xattr -d com.apple.quarantine ./creatio-mcp-go
+```
+
+The server talks to **one** Creatio environment, set through environment variables (see `.env.example`):
+`CREATIO_URL`, then either `CREATIO_LOGIN` + `CREATIO_PASSWORD` or `CREATIO_CLIENT_ID` +
+`CREATIO_CLIENT_SECRET` + `CREATIO_AUTH_APP_URI`, and `CREATIO_IS_NET_CORE=true` for a .NET Core
+environment. Unlike clio, tools take no `environment-name`. Register it with Claude Code, for example:
+
+```bash
+claude mcp add creatio-go --env CREATIO_URL=https://your-site.creatio.com --env CREATIO_LOGIN=example-user --env CREATIO_PASSWORD=replace-me -- /path/to/creatio-mcp-go
+```
+
+What to expect: the read tools listed below, answering in clio's MCP response shapes. `start-creatio`
+changes local process state; `-write-probe` inserts and deletes a record and is not meant for testers.
+Report a response that differs from clio's for the same call, with the tool name and arguments; to
+compare systematically, run `scripts/compare-mcp.py` against a registered clio environment.
+
 ## Run as an MCP server
 
 The server uses the official [`github.com/modelcontextprotocol/go-sdk`](https://github.com/modelcontextprotocol/go-sdk) over stdio. Its resident list is `list-apps`, `clio-run`, and `get-tool-contract`; `odata-read`, `find-empty-iis-port`, `start-creatio`, `execute-esq`, `get-entity-schema-properties`, `get-package-file`, `get-sql-schema`, `list-app-sections`, `list-package-files`, `list-packages`, and `list-pages` are available through `clio-run` or by raw tool name, and their schemas are returned on demand by `get-tool-contract`. The protocol probes establish progress-token correlation, response `_meta`, cancellation, and hidden-name dispatch.

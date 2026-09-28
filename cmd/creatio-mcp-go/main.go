@@ -22,6 +22,14 @@ import (
 // asked separately and compared.
 var buildID = "unstamped"
 
+// serverVersion reports the release tag a published build is stamped with, or "dev" for a local build.
+func serverVersion() string {
+	if buildID == "unstamped" {
+		return "dev"
+	}
+	return buildID
+}
+
 func main() {
 	listJSON := flag.Bool("list-apps-json", false, "write list-apps-compatible JSON to stdout and exit")
 	version := flag.Bool("version", false, "print this build's identity and exit")
@@ -92,7 +100,7 @@ func defaultHiddenToolServices() hiddenToolServices {
 }
 
 func newMCPServerWithHiddenTools(client *creatio.Client, hostTools hiddenToolServices) *mcp.Server {
-	server := mcp.NewServer(&mcp.Implementation{Name: "creatio-mcp-go", Version: "0.1.0"}, nil)
+	server := mcp.NewServer(&mcp.Implementation{Name: "creatio-mcp-go", Version: serverVersion()}, nil)
 	mcp.AddTool(server, &mcp.Tool{Name: "list-apps", Description: "List installed Creatio applications through DataService."},
 		func(ctx context.Context, _ *mcp.CallToolRequest, _ struct{}) (*mcp.CallToolResult, any, error) {
 			return nil, client.ListAppsResponse(ctx), nil

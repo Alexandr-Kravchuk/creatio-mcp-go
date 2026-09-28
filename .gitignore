@@ -7,3 +7,4 @@ evidence/mcp-latest.json
 bin/
 coverage.out
 __pycache__/
+dist/
