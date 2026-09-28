@@ -1,14 +1,139 @@
 # creatio-mcp-go
 
-## 1. Question
+An MCP server for the [Creatio](https://www.creatio.com) low-code platform, written in Go. It
+reimplements part of [clio](https://github.com/Advance-Technologies-Foundation/clio)'s MCP server:
+the same tool names and response shapes, but as one static binary that needs no .NET runtime and
+talks to Creatio over its documented HTTP endpoints.
+
+**Status: preview.** It covers a set of read tools, and on live Creatio environments they return the
+same data as clio (see [Answer and evidence](#2-answer-and-evidence)). It is published so people can
+try it and report where it answers differently from clio.
+
+## Install
+
+### 1. Download
+
+Take the archive for your platform from [Releases](https://github.com/Alexandr-Kravchuk/creatio-mcp-go/releases):
+macOS (arm64, amd64), Linux (amd64, arm64) or Windows (amd64). Check it against `SHA256SUMS` from the
+same release, unpack it, and note the full path to `creatio-mcp-go` (`creatio-mcp-go.exe` on Windows).
+
+```bash
+shasum -a 256 -c SHA256SUMS --ignore-missing
+tar -xzf creatio-mcp-go_0.1.0_darwin_arm64.tar.gz
+```
+
+On Windows, compare `(Get-FileHash .\creatio-mcp-go_0.1.0_windows_amd64.zip).Hash` with the line in
+`SHA256SUMS`, then unpack the zip.
+
+The macOS binaries are signed with a Developer ID certificate and notarized by Apple, so they start
+as downloaded; macOS checks the notarization online on the first launch. The Windows binary is not
+signed: if Windows marks it as blocked, run `Unblock-File .\creatio-mcp-go.exe` in PowerShell.
+
+### 2. Pick the connection settings
+
+One server process works with **one** Creatio environment, set through environment variables. Unlike
+clio, tools take no `environment-name`; to work with several environments, register the server
+several times under different names.
+
+| Variable | Value |
+|---|---|
+| `CREATIO_URL` | Site root, for example `https://your-site.creatio.com` (no `/0`) |
+| `CREATIO_LOGIN`, `CREATIO_PASSWORD` | Forms login — or, instead, the three OAuth variables below |
+| `CREATIO_CLIENT_ID`, `CREATIO_CLIENT_SECRET` | OAuth client-credentials app of the site |
+| `CREATIO_AUTH_APP_URI` | Token endpoint, `https://<identity-service>/connect/token` |
+| `CREATIO_IS_NET_CORE` | `true` only for a .NET Core site, whose service URLs have no `/0` prefix |
+
+Set either the login pair or the OAuth triple, not both. An OAuth client for a site can be created
+with `clio create-server-to-server-oauth-app -e <environment>`. The commands below put the password
+into your shell history and into the client's config file in plain text, the same way clio stores it
+in `appsettings.json`.
+
+### 3. Claude Code
+
+```bash
+claude mcp add creatio-go --env CREATIO_URL=https://your-site.creatio.com --env CREATIO_LOGIN=example-user --env CREATIO_PASSWORD=replace-me -- /path/to/creatio-mcp-go
+```
+
+This registers the server for the current project only. Add `--scope user` to make it available in
+every project, or `--scope project` to write it to `.mcp.json` for the whole team (then keep
+credentials out of the file you commit). With OAuth, replace the two login variables with
+`--env CREATIO_CLIENT_ID=… --env CREATIO_CLIENT_SECRET=… --env CREATIO_AUTH_APP_URI=…`.
+
+Check it: `claude mcp list` must show `creatio-go: … ✔ Connected`. Remove it with
+`claude mcp remove creatio-go`.
+
+### 4. Codex
+
+```bash
+codex mcp add creatio-go --env CREATIO_URL=https://your-site.creatio.com --env CREATIO_LOGIN=example-user --env CREATIO_PASSWORD=replace-me -- /path/to/creatio-mcp-go
+```
+
+This adds the server to `~/.codex/config.toml` for every project. The same entry can be written by hand:
+
+```toml
+[mcp_servers.creatio-go]
+command = "/path/to/creatio-mcp-go"
+# Optional: run the tools without asking each time. Codex asks by default, and
+# `codex exec` without this line refuses every tool call instead of asking.
+default_tools_approval_mode = "approve"
+
+[mcp_servers.creatio-go.env]
+CREATIO_URL = "https://your-site.creatio.com"
+CREATIO_LOGIN = "example-user"
+CREATIO_PASSWORD = "replace-me"
+```
+
+Check it: `codex mcp list` must show `creatio-go` as `enabled`. Remove it with
+`codex mcp remove creatio-go`.
+
+On Windows, use the full path to the executable in both clients, for example
+`C:\Tools\creatio-mcp-go\creatio-mcp-go.exe`.
+
+### 5. Try a call
+
+Ask the agent, for example: *"Call list-apps of creatio-go and tell me how many applications there
+are."* A working setup answers with `success: true` and the list. A wrong URL, password or runtime
+setting does not stop the server from starting; the first call then fails with the reason, for
+example `forms login rejected credentials` or `DataService SelectQuery returned HTTP 404`.
+
+Only three tools are listed up front — `list-apps`, `clio-run` and `get-tool-contract`, as in clio.
+The rest are called by name, directly or through `clio-run`, and `get-tool-contract` returns their
+input schemas:
+
+| Tool | What it reads |
+|---|---|
+| `list-apps` | Installed applications |
+| `list-packages` | Packages, with name filter and paging |
+| `list-app-sections` | Sections of one application |
+| `list-pages` | Freedom UI pages by package, application or name |
+| `get-entity-schema-properties` | Columns of an entity schema |
+| `execute-esq` | Any DataService SelectQuery (ESQ) passed as JSON |
+| `get-sql-schema` | Body of an SQL script schema |
+| `list-package-files`, `get-package-file` | Package files; need cliogate 2.0.0.47+ on the site |
+| `odata-read` | OData entity reads with projection, ordering and paging |
+| `find-empty-iis-port`, `start-creatio` | Local machine: free IIS port, start a local Creatio |
+
+Nothing here writes to Creatio. `start-creatio` starts a local process; the `-write-probe` command-line
+flag inserts and deletes a test record and is not meant for everyday use.
+
+Found an answer that differs from clio's for the same call? Open an issue with the tool name and the
+arguments. To compare many calls at once, run `scripts/compare-mcp.py` against an environment
+registered in clio. Release archives are built with `scripts/build-release.sh <tag>`.
+
+## Background: the research behind it
+
+This repository started as a pilot that answered whether clio's MCP behaviour can be reproduced
+without clio's .NET dependencies. The sections below keep that record.
+
+### 1. Question
 
 Can clio's `list-apps` behaviour be reproduced from Go, without `ATF.Repository` or `creatio.client`, with output matching clio?
 
-## 2. Answer and evidence
+### 2. Answer and evidence
 
 **Answered: yes, with full parity for both forms authentication and OAuth client credentials.**
 
-### What is established, by decompiling the vendor assembly
+#### What is established, by decompiling the vendor assembly
 
 `ATF.Repository` encapsulates no private protocol. Decompiled from
 `ATF.Repository.dll` 2.0.3.5 (`netstandard2.0`) with `ilspycmd`, `RemoteDataProvider` declares five
@@ -36,7 +161,7 @@ reference". It cannot come from there — `InstalledApplicationQueryService.cs` 
 `ATF.Repository`. The endpoints above come from the decompiled assembly, which is why they are stated
 with a version and a tool.
 
-### The live comparison — full parity
+#### The live comparison — full parity
 
 Against a Creatio 10.1.725.0 environment (`IsNetCore=false`), forms auth:
 
@@ -50,7 +175,7 @@ Against a Creatio 10.1.725.0 environment (`IsNetCore=false`), forms auth:
 
 The two fingerprints are equal. See `evidence/latest.json`.
 
-### Two things a naive reimplementation gets wrong, both found by hitting them
+#### Two things a naive reimplementation gets wrong, both found by hitting them
 
 Reaching parity took two corrections, and neither is guessable from the C# — both were confirmed by
 decompiling the vendor assemblies:
@@ -65,7 +190,7 @@ decompiling the vendor assemblies:
 That is the real cost a rewrite pays: not the protocol, which is plain HTTP, but a set of undocumented
 conventions that are only discoverable by decompiling or by failing.
 
-### What is still NOT established
+#### What is still NOT established
 
 The first live list-apps parity above was forms-auth only. OAuth client credentials were exercised
 later, on a cloud environment with its own identity service, through a server-to-server client created
@@ -73,7 +198,7 @@ with clio `create-server-to-server-oauth-app`: `compare-with-clio.sh` reported a
 and the MCP comparison below found no data differences. .NET Core routing (no `/0/` prefix) is still
 covered only by mocked tests.
 
-### Live MCP-to-MCP comparison (2026-09-28)
+#### Live MCP-to-MCP comparison (2026-09-28)
 
 `scripts/compare-mcp.py` starts clio `mcp-server` and this server over stdio, sends both the calls in
 `scripts/mcp-parity-cases.json` against one registered clio environment, and compares the answers after
@@ -118,7 +243,7 @@ empty, which clio 8.1 changed), and writes only counts, SHA-256 fingerprints and
 rerun the harness before using this result against another Creatio version or authentication
 configuration.
 
-### Build status
+#### Build status
 
 Builds against `github.com/modelcontextprotocol/go-sdk v1.0.0`, Go 1.27.1, darwin/arm64. The resulting
 static binary is 11.5 MB and needs no runtime installed — the single-binary property that motivated
@@ -129,7 +254,7 @@ deliberately does not inherit the vendor behaviour documented in clio's knowledg
 `RemoteDataProvider` returns `Success=false` with an empty payload instead of throwing, and the consumer
 side then drops the flag — turning a rejected read into an empty successful list.
 
-## 3. What this does not prove
+### 3. What this does not prove
 
 This is still a small read-only slice. It says nothing about write parity, package installation, most
 IIS/DISM/PowerShell operations, or parity for clio's 202 MCP tools.
@@ -137,36 +262,11 @@ IIS/DISM/PowerShell operations, or parity for clio's 202 MCP tools.
 Authentication uses one session per process and reauthenticates once after an authentication refusal.
 Each structured tool response includes one JSON text block alongside its structured content.
 
-## 4. Kill criterion
+### 4. Kill criterion
 
 If `list-apps` cannot be reproduced without a vendor assembly for both authentication modes clio supports (forms authentication and OAuth client credentials), a full rewrite should stop here. **It has passed for both: forms authentication on-premises and in the cloud, and OAuth client credentials in the cloud** (see "Live MCP-to-MCP comparison"). The criterion is met; it does not by itself justify a rewrite, which still depends on write parity and the remaining tool catalog.
 
-## Try it
-
-Preview builds are published on the [Releases](https://github.com/Alexandr-Kravchuk/creatio-mcp-go/releases)
-page for macOS (arm64, amd64), Linux (amd64, arm64) and Windows (amd64). Each archive holds one static
-binary; nothing else needs installing. Verify it against `SHA256SUMS` from the same release.
-
-The macOS binaries are signed with a Developer ID certificate and notarized by Apple, so Gatekeeper
-starts them as downloaded (it checks the notarization online on first launch). The Windows binary is
-not signed; if Windows marks the downloaded file as blocked, run `Unblock-File .\creatio-mcp-go.exe`
-in PowerShell. Release archives are built with `scripts/build-release.sh <tag>`.
-
-The server talks to **one** Creatio environment, set through environment variables (see `.env.example`):
-`CREATIO_URL`, then either `CREATIO_LOGIN` + `CREATIO_PASSWORD` or `CREATIO_CLIENT_ID` +
-`CREATIO_CLIENT_SECRET` + `CREATIO_AUTH_APP_URI`, and `CREATIO_IS_NET_CORE=true` for a .NET Core
-environment. Unlike clio, tools take no `environment-name`. Register it with Claude Code, for example:
-
-```bash
-claude mcp add creatio-go --env CREATIO_URL=https://your-site.creatio.com --env CREATIO_LOGIN=example-user --env CREATIO_PASSWORD=replace-me -- /path/to/creatio-mcp-go
-```
-
-What to expect: the read tools listed below, answering in clio's MCP response shapes. `start-creatio`
-changes local process state; `-write-probe` inserts and deletes a record and is not meant for testers.
-Report a response that differs from clio's for the same call, with the tool name and arguments; to
-compare systematically, run `scripts/compare-mcp.py` against a registered clio environment.
-
-## Run as an MCP server
+## Implementation notes
 
 The server uses the official [`github.com/modelcontextprotocol/go-sdk`](https://github.com/modelcontextprotocol/go-sdk) over stdio. Its resident list is `list-apps`, `clio-run`, and `get-tool-contract`; `odata-read`, `find-empty-iis-port`, `start-creatio`, `execute-esq`, `get-entity-schema-properties`, `get-package-file`, `get-sql-schema`, `list-app-sections`, `list-package-files`, `list-packages`, and `list-pages` are available through `clio-run` or by raw tool name, and their schemas are returned on demand by `get-tool-contract`. The protocol probes establish progress-token correlation, response `_meta`, cancellation, and hidden-name dispatch.
 
