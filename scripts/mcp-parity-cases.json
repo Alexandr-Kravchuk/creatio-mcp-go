@@ -1,0 +1,21 @@
+[
+  {"label": "list-apps", "tool": "list-apps"},
+  {"label": "list-packages default", "tool": "list-packages"},
+  {"label": "list-packages filter+paging", "tool": "list-packages", "args": {"filter": "crt", "limit": 10, "offset": 5}},
+  {"label": "list-packages no match", "tool": "list-packages", "args": {"filter": "zz-no-such-package"}},
+  {"label": "list-app-sections Customer 360", "tool": "list-app-sections", "args": {"application-code": "CrtCustomer360App"}},
+  {"label": "list-app-sections unknown app", "tool": "list-app-sections", "args": {"application-code": "ZzNoSuchApp"}},
+  {"label": "list-pages search", "tool": "list-pages", "args": {"search-pattern": "Contact", "limit": 20}},
+  {"label": "list-pages by app code", "tool": "list-pages", "args": {"code": "CrtCustomer360App", "limit": 20}},
+  {"label": "list-pages by package", "tool": "list-pages", "args": {"package-name": "CrtBase", "limit": 20}},
+  {"label": "entity schema Contact", "tool": "get-entity-schema-properties", "args": {"schema-name": "Contact"}},
+  {"label": "entity schema Account required", "tool": "get-entity-schema-properties", "args": {"schema-name": "Account", "required-only": true}},
+  {"label": "entity schema unknown", "tool": "get-entity-schema-properties", "args": {"schema-name": "ZzNoSuchEntity"}},
+  {"label": "sql schema ambiguous name", "tool": "get-sql-schema", "args": {"schema-name": "BorderRadiusFeatureMSSql"}, "clio-run": true},
+  {"label": "sql schema unknown", "tool": "get-sql-schema", "args": {"schema-name": "ZzNoSuchSqlScript"}, "clio-run": true},
+  {"label": "list-package-files cliogate", "tool": "list-package-files", "args": {"package-name": "cliogate"}, "clio-run": true},
+  {"label": "list-package-files unknown", "tool": "list-package-files", "args": {"package-name": "ZzNoSuchPackage"}, "clio-run": true},
+  {"label": "get-package-file source file", "tool": "get-package-file", "args": {"package-name": "cliogate", "file-path": "cs/CreatioApiGateway.cs"}, "clio-run": true},
+  {"label": "get-package-file path traversal", "tool": "get-package-file", "args": {"package-name": "cliogate", "file-path": "../web.config"}, "clio-run": true},
+  {"label": "execute-esq Contact top 5", "tool": "execute-esq", "args": {"query": {"rootSchemaName": "Contact", "operationType": 0, "rowCount": 5, "columns": {"items": {"Name": {"expression": {"expressionType": 0, "columnPath": "Name"}}}}}}, "clio-run": true}
+]

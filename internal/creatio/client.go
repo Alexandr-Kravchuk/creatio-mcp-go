@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -55,8 +56,17 @@ func NewClient(config Config) (*Client, error) {
 	return &Client{config: config, http: &http.Client{Timeout: 45 * time.Second}}, nil
 }
 
-// ListApps authenticates, sends the DataService SelectQuery, and rejects every non-success response.
+// ListApps returns clio's CLI list-apps shape, where an empty version prints as "none".
 func (c *Client) ListApps(ctx context.Context) ([]App, error) {
+	apps, err := c.installedApps(ctx)
+	for i := range apps {
+		apps[i].Version = versionOrNone(apps[i].Version)
+	}
+	return apps, err
+}
+
+// installedApps authenticates, sends the DataService SelectQuery, and rejects every non-success response.
+func (c *Client) installedApps(ctx context.Context) ([]App, error) {
 	response, _, err := c.doAuthenticated(ctx, c.http, func() (*http.Request, error) {
 		body, err := json.Marshal(selectQuery())
 		if err != nil {
@@ -101,9 +111,45 @@ func (c *Client) ListApps(ctx context.Context) ([]App, error) {
 		if row.ID == "" {
 			return nil, fmt.Errorf("DataService SelectQuery returned an installed application without Id")
 		}
-		apps = append(apps, App{ID: row.ID, Name: row.Name, Code: row.Code, Version: versionOrNone(row.Version), Description: row.Description})
+		apps = append(apps, App{ID: row.ID, Name: row.Name, Code: row.Code, Version: row.Version, Description: row.Description})
 	}
 	return apps, nil
+}
+
+// AppListItem is one application in the clio MCP list-apps response; clio omits the description.
+type AppListItem struct {
+	ID      string `json:"id"`
+	Name    string `json:"name"`
+	Code    string `json:"code"`
+	Version string `json:"version"`
+}
+
+// AppListResponse is the clio MCP list-apps envelope: success plus applications, or success=false plus error.
+type AppListResponse struct {
+	Success      bool          `json:"success"`
+	Applications []AppListItem `json:"applications,omitzero"` // [] on an empty success, absent on failure, as in clio
+	Error        string        `json:"error,omitempty"`
+}
+
+// ListAppsResponse returns applications in clio's MCP order (name, then code, case-insensitive), keeps an
+// empty version empty as clio's MCP tool does, and reports failures inside the envelope.
+func (c *Client) ListAppsResponse(ctx context.Context) AppListResponse {
+	apps, err := c.installedApps(ctx)
+	if err != nil {
+		return AppListResponse{Error: err.Error()}
+	}
+	items := make([]AppListItem, 0, len(apps))
+	for _, app := range apps {
+		items = append(items, AppListItem{ID: app.ID, Name: app.Name, Code: app.Code, Version: app.Version})
+	}
+	sort.SliceStable(items, func(i, j int) bool {
+		left, right := strings.ToLower(items[i].Name), strings.ToLower(items[j].Name)
+		if left != right {
+			return left < right
+		}
+		return strings.ToLower(items[i].Code) < strings.ToLower(items[j].Code)
+	})
+	return AppListResponse{Success: true, Applications: items}
 }
 
 func (c *Client) formsLogin(ctx context.Context, client *http.Client) error {

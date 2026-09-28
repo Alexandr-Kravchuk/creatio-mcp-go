@@ -95,11 +95,7 @@ func newMCPServerWithHiddenTools(client *creatio.Client, hostTools hiddenToolSer
 	server := mcp.NewServer(&mcp.Implementation{Name: "creatio-mcp-go", Version: "0.1.0"}, nil)
 	mcp.AddTool(server, &mcp.Tool{Name: "list-apps", Description: "List installed Creatio applications through DataService."},
 		func(ctx context.Context, _ *mcp.CallToolRequest, _ struct{}) (*mcp.CallToolResult, any, error) {
-			apps, err := client.ListApps(ctx)
-			if err != nil {
-				return nil, nil, err
-			}
-			return nil, apps, nil
+			return nil, client.ListAppsResponse(ctx), nil
 		})
 	// Hidden tools are deliberately omitted from tools/list. They remain directly callable by raw
 	// name and through clio-run, while get-tool-contract provides their schemas on demand.

@@ -13,6 +13,8 @@ import (
 const (
 	maxPackageTextFileBytes     = 10 << 20
 	maxPackageFileResponseBytes = 64 << 20 // JSON escaping can expand a 10 MiB UTF-8 file several-fold.
+	// minClioGateVersion is the first cliogate release that serves the package-file routes.
+	minClioGateVersion = "2.0.0.47"
 )
 
 type PackageFilesResult struct {

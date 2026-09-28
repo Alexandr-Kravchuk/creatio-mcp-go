@@ -39,8 +39,10 @@ dotnet "$clio_dll" "${clio_args[@]}" >"$temp_dir/clio.json"
 python3 - "$temp_dir/clio.json" "$temp_dir/go.json" "$evidence_path" <<'PY'
 import hashlib, json, pathlib, sys
 def normalized(path):
+    # clio 8.1+ prints PascalCase keys and null descriptions; compare values, not serializer conventions.
     rows = json.load(open(path, encoding="utf-8")); required = ("id", "name", "code", "version", "description")
-    return sorted([{key: row.get(key, "") for key in required} for row in rows], key=lambda row: tuple(row[key].casefold() for key in required))
+    rows = [{str(key).casefold(): value for key, value in row.items()} for row in rows]
+    return sorted([{key: row.get(key) or "" for key in required} for row in rows], key=lambda row: tuple(row[key].casefold() for key in required))
 left, right = normalized(sys.argv[1]), normalized(sys.argv[2])
 fingerprint = lambda rows: hashlib.sha256(json.dumps(rows, separators=(",", ":"), ensure_ascii=False).encode()).hexdigest()
 left_set = {json.dumps(row, sort_keys=True, separators=(",", ":"), ensure_ascii=False) for row in left}; right_set = {json.dumps(row, sort_keys=True, separators=(",", ":"), ensure_ascii=False) for row in right}

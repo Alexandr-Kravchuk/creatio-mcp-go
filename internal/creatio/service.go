@@ -69,11 +69,15 @@ func (c *Client) getClioGateJSON(ctx context.Context, route string, query url.Va
 	if err != nil {
 		return nil, fmt.Errorf("ClioGate %s response: %w", route, err)
 	}
+	if response.StatusCode == http.StatusNotFound {
+		return nil, fmt.Errorf("ClioGate %s returned HTTP 404: install or update the cliogate package to version %s or higher in the target environment (clio install-gate), then retry", route, minClioGateVersion)
+	}
+	// ClioGate answers a missing package or file with HTTP 400 or an HTML error page, never with a reason.
+	if response.StatusCode == http.StatusBadRequest || response.StatusCode >= http.StatusInternalServerError || looksLikeHTML(payload) {
+		return nil, fmt.Errorf("ClioGate could not complete %s (HTTP %d). The package or file may not exist; inspect the Creatio Error.log. If the installed gate artifacts are stale, run install-gate and retry", route, response.StatusCode)
+	}
 	if response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices {
 		return nil, fmt.Errorf("ClioGate %s returned HTTP %d", route, response.StatusCode)
-	}
-	if looksLikeHTML(payload) {
-		return nil, fmt.Errorf("ClioGate could not complete %s; the package or file may not exist, or the installed gate may be stale", route)
 	}
 	return payload, nil
 }

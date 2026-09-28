@@ -71,15 +71,48 @@ conventions that are only discoverable by decompiling or by failing.
 authorization-app URI, so that half of the kill criterion was never exercised. It is not evidence of
 success.
 
-The live list-apps parity above is evidence for that one command and forms-auth mode. The newer
-R0/R1/R2 prototype probes below have unit and wire-shape coverage, but are not yet live comparisons
-against the same Creatio instance and clio process.
+The live list-apps parity above is evidence for that one command and forms-auth mode.
 
-`scripts/compare-with-clio.sh` is the reproducible evidence harness: it runs clio `list-apps --json`
-and this client against the same environment, normalises both result sets, and writes only counts,
-SHA-256 fingerprints and mismatch counts to `evidence/latest.json` — never raw application data, URLs
-or credentials. The committed evidence is the forms-auth run reported above; rerun the harness before
-using this result against another Creatio version or authentication configuration.
+### Live MCP-to-MCP comparison (2026-09-28)
+
+`scripts/compare-mcp.py` starts clio `mcp-server` and this server over stdio, sends both the calls in
+`scripts/mcp-parity-cases.json` against one registered clio environment, and compares the answers after
+normalising serializer conventions (key case, `-`/`_`, absent versus empty values). It prints and writes
+to `evidence/mcp-latest.json` only verdicts, timings and differing JSON paths — never values, URLs,
+environment names or credentials.
+
+Run against clio 8.1.0.134 and two Creatio environments on .NET Framework, forms auth, 19 cases each:
+
+| | environment with ClioGate | environment without ClioGate |
+|---|---|---|
+| same data (`match`) | 12 | 11 |
+| both refused, wording differs (`both-failed`) | 6 | 8 |
+| same data, a nested diagnostic worded differently (`error-text`) | 1 | 0 |
+| different data (`mismatch`) | 0 | 0 |
+
+Every read that returned data — `list-apps`, `list-packages`, `list-app-sections`, `list-pages`,
+`get-entity-schema-properties`, `execute-esq`, `list-package-files`, `get-package-file` — returned the
+same data from both servers. Three differences found on the way were fixed rather than normalised away:
+the MCP `list-apps` now returns clio's `{success, applications}` envelope in clio's order with an empty
+version kept empty (the CLI `--list-apps-json` mode keeps `"none"`); a missing or failed ClioGate route
+now names the cause as clio does instead of reporting a bare HTTP status; and `get-sql-schema` always
+carries `bodyLength`. Single-run timings, not a benchmark: clio starts in 0.6 s, this server in 0.01 s.
+The first call and every `list-app-sections`, `list-pages` and `execute-esq` call are faster here
+(1.3–8 s versus 0.03–0.3 s). Repeated small reads are not: after its first call clio answers
+`list-packages` and `get-entity-schema-properties` in 0.04–0.07 s, and this server takes 0.03–0.12 s,
+because it re-reads every SysPackage row on each call while clio appears to keep results in-process.
+The comparison used the global clio tool; a newer clio can be compared by pointing `--clio-dll` at it.
+
+Still not covered by a live run: .NET Core routing (no such environment was available), OAuth, a
+uniquely named SQL script (every candidate was reported as ambiguous by both servers), the Windows host
+tools, and `odata-read`, which clio does not expose as an MCP tool.
+
+`scripts/compare-with-clio.sh` is the reproducible CLI evidence harness: it runs clio `list-apps --json`
+and this client against the same environment, normalises both result sets (key case and `null` versus
+empty, which clio 8.1 changed), and writes only counts, SHA-256 fingerprints and mismatch counts to
+`evidence/latest.json` — never raw application data, URLs or credentials. The file is not committed;
+rerun the harness before using this result against another Creatio version or authentication
+configuration.
 
 ### Build status
 
@@ -110,9 +143,9 @@ The server uses the official [`github.com/modelcontextprotocol/go-sdk`](https://
 
 `odata-read` replaces the narrow `IApplicationClient` OData read path with direct HTTP: it supports entity, projection, ordering, pagination and count; filters and expands are still rejected. R1's `find-empty-iis-port` and `start-creatio` use built-in `appcmd.exe`/`netstat.exe` and have no `creatio.client`, `Microsoft.Web.Administration`, WMI, PowerShell, or .NET helper dependency. `start-creatio` launches `dotnet Terrasoft.WebHost.dll` where appropriate; that is the Creatio application's runtime, not a .NET library linked into this MCP server. The Windows commands have mocked coverage and a Windows cross-build, but no live Windows run.
 
-R2's `execute-esq` sends the caller's raw SelectQuery JSON unchanged to `DataService/.../SelectQuery`, so relation paths, filters, sorting, and paging are accepted without an ESQ builder. It enforces the same 200,000-byte response ceiling and detects aliases silently dropped by Creatio. `get-entity-schema-properties` reads the merged runtime schema through `RuntimeEntitySchemaRequest`; the 2,049-column test fixture exceeds 200 KB. It does not implement package-scoped designer reads. Unlike Clio's per-call named environments, this prototype has one process-wide target configured by `CREATIO_URL`; that is an architectural difference to preserve in any timing comparison. Both R2 tools are tested against mocked HTTP responses, not yet against a live Creatio instance. Collectively these probes still do not establish parity for Clio's full 202-tool catalog. Creatio-client connection details are read only from environment variables; see `.env.example`. The local `start-creatio` tool separately reads Clio's `appsettings.json`. The `--list-apps-json` mode exists solely for the comparison harness and returns clio's JSON field names.
+R2's `execute-esq` sends the caller's raw SelectQuery JSON unchanged to `DataService/.../SelectQuery`, so relation paths, filters, sorting, and paging are accepted without an ESQ builder. It enforces the same 200,000-byte response ceiling and detects aliases silently dropped by Creatio. `get-entity-schema-properties` reads the merged runtime schema through `RuntimeEntitySchemaRequest`; the 2,049-column test fixture exceeds 200 KB. It does not implement package-scoped designer reads. Unlike Clio's per-call named environments, this prototype has one process-wide target configured by `CREATIO_URL`; that is an architectural difference to preserve in any timing comparison. Both R2 tools have mocked coverage; `get-entity-schema-properties` and `execute-esq` are also covered by the live MCP comparison above. Collectively these probes still do not establish parity for Clio's full 202-tool catalog. Creatio-client connection details are read only from environment variables; see `.env.example`. The local `start-creatio` tool separately reads Clio's `appsettings.json`. The `--list-apps-json` mode exists solely for the comparison harness and returns clio's JSON field names.
 
-Stage 2 breadth is in progress; six of the plan's ten representative reads are now implemented: `list-packages` (SysPackage query plus case-insensitive filtering and local paging), `list-app-sections` (application lookup plus ApplicationSection query), `list-pages` (Freedom UI SysSchema query, including primary-package resolution, bounded empty-result cross-check, and total/truncated reporting), `get-sql-schema` (unique-name resolution plus the native SQL schema designer endpoint), and `list-package-files` / `get-package-file` (ClioGate package-file reads). `list-pages` also calls Creatio's `ApplicationPackagesService` when given an application code; package and section metadata are read through DataService. The package-file pair calls the existing `/rest/CreatioApiGateway/GetPackageFilesDirectoryContent` and `GetPackageFileContent` routes, so it has no linked .NET or `creatio.client` dependency, but requires ClioGate 2.0.0.47+ installed in the target Creatio environment. File reads retain the 10 MiB source limit and reject rooted/traversing paths. `get-sql-schema` returns its body inline and intentionally does not implement Clio's optional local `output-file` write. These tools preserve the main MCP response shapes but, like the other Go probes, target the one process-configured instance instead of accepting Clio's per-call `environment-name`. Their behavior has mocked wire-level coverage only; no live comparison has yet been run. The Stage 2 target remains 10–15 representative reads; `get-page`, `describe-environment`, `list-entity-client-schemas`, and `get-target-package` are not implemented yet.
+Stage 2 breadth is in progress; six of the plan's ten representative reads are now implemented: `list-packages` (SysPackage query plus case-insensitive filtering and local paging), `list-app-sections` (application lookup plus ApplicationSection query), `list-pages` (Freedom UI SysSchema query, including primary-package resolution, bounded empty-result cross-check, and total/truncated reporting), `get-sql-schema` (unique-name resolution plus the native SQL schema designer endpoint), and `list-package-files` / `get-package-file` (ClioGate package-file reads). `list-pages` also calls Creatio's `ApplicationPackagesService` when given an application code; package and section metadata are read through DataService. The package-file pair calls the existing `/rest/CreatioApiGateway/GetPackageFilesDirectoryContent` and `GetPackageFileContent` routes, so it has no linked .NET or `creatio.client` dependency, but requires ClioGate 2.0.0.47+ installed in the target Creatio environment. File reads retain the 10 MiB source limit and reject rooted/traversing paths. `get-sql-schema` returns its body inline and intentionally does not implement Clio's optional local `output-file` write. These tools preserve the main MCP response shapes but, like the other Go probes, target the one process-configured instance instead of accepting Clio's per-call `environment-name`. Beyond mocked wire-level coverage, they are covered by the live MCP comparison above. The Stage 2 target remains 10–15 representative reads; `get-page`, `describe-environment`, `list-entity-client-schemas`, and `get-target-package` are not implemented yet.
 
 ## Related work
 

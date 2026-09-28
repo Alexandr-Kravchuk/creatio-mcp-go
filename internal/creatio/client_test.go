@@ -2,6 +2,7 @@ package creatio
 
 import (
 	"context"
+	"encoding/json"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -166,5 +167,104 @@ func TestODataReadOAuthUsesBearerAndNetCoreRoute(t *testing.T) {
 	}
 	if result, err := client.ODataRead(context.Background(), ODataReadRequest{Entity: "Account"}); err != nil || len(result.Rows) != 0 {
 		t.Fatalf("result = %#v, err = %v", result, err)
+	}
+}
+
+func TestListAppsResponseMatchesClioMCPEnvelope(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/ServiceModel/AuthService.svc/Login":
+			http.SetCookie(w, &http.Cookie{Name: "BPMCSRF", Value: "csrf-token", Path: "/"})
+			_, _ = io.WriteString(w, `{"Code":0}`)
+		case "/0/DataService/json/SyncReply/SelectQuery":
+			_, _ = io.WriteString(w, `{"success":true,"rows":[`+
+				`{"Id":"id-3","Name":"sales","Code":"B","Version":"1.0.0","Description":"dropped"},`+
+				`{"Id":"id-2","Name":"Sales","Code":"a","Version":""},`+
+				`{"Id":"id-1","Name":"Case","Code":"Case","Version":"2.0.0"}]}`)
+		default:
+			t.Fatalf("unexpected route %s", r.URL.Path)
+		}
+	}))
+	defer server.Close()
+
+	client, err := NewClient(Config{BaseURL: server.URL, Login: "example-user", Password: "replace-me"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	response := client.ListAppsResponse(context.Background())
+	want := []AppListItem{
+		{ID: "id-1", Name: "Case", Code: "Case", Version: "2.0.0"},
+		{ID: "id-2", Name: "Sales", Code: "a", Version: ""},
+		{ID: "id-3", Name: "sales", Code: "B", Version: "1.0.0"},
+	}
+	if !response.Success || response.Error != "" || len(response.Applications) != len(want) {
+		t.Fatalf("response = %#v", response)
+	}
+	for i := range want {
+		if response.Applications[i] != want[i] {
+			t.Fatalf("applications[%d] = %#v, want %#v", i, response.Applications[i], want[i])
+		}
+	}
+}
+
+func TestListAppsResponseReportsFailureInsideEnvelope(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/ServiceModel/AuthService.svc/Login":
+			http.SetCookie(w, &http.Cookie{Name: "BPMCSRF", Value: "csrf-token", Path: "/"})
+			_, _ = io.WriteString(w, `{"Code":0}`)
+		case "/0/DataService/json/SyncReply/SelectQuery":
+			_, _ = io.WriteString(w, `{"success":false,"errorInfo":{"message":"denied"}}`)
+		default:
+			t.Fatalf("unexpected route %s", r.URL.Path)
+		}
+	}))
+	defer server.Close()
+
+	client, err := NewClient(Config{BaseURL: server.URL, Login: "example-user", Password: "replace-me"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	response := client.ListAppsResponse(context.Background())
+	if response.Success || response.Applications != nil || !strings.Contains(response.Error, "denied") {
+		t.Fatalf("response = %#v", response)
+	}
+}
+
+func TestClioGateNotFoundAsksToInstallClioGate(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/ServiceModel/AuthService.svc/Login":
+			http.SetCookie(w, &http.Cookie{Name: "BPMCSRF", Value: "csrf-token", Path: "/"})
+			_, _ = io.WriteString(w, `{"Code":0}`)
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer server.Close()
+
+	client, err := NewClient(Config{BaseURL: server.URL, Login: "example-user", Password: "replace-me"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	result := client.ListPackageFiles(context.Background(), "Custom")
+	if result.Success || !strings.Contains(result.Error, "cliogate") || !strings.Contains(result.Error, minClioGateVersion) {
+		t.Fatalf("result = %#v", result)
+	}
+}
+
+func TestListAppsResponseSerializesLikeClio(t *testing.T) {
+	cases := map[string]struct {
+		response AppListResponse
+		want     string
+	}{
+		"empty success keeps the list": {AppListResponse{Success: true, Applications: []AppListItem{}}, `{"success":true,"applications":[]}`},
+		"failure omits the list":       {AppListResponse{Error: "denied"}, `{"success":false,"error":"denied"}`},
+	}
+	for name, tc := range cases {
+		encoded, err := json.Marshal(tc.response)
+		if err != nil || string(encoded) != tc.want {
+			t.Fatalf("%s: %s, %v; want %s", name, encoded, err, tc.want)
+		}
 	}
 }

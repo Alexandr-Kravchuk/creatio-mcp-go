@@ -15,7 +15,7 @@ type SQLSchemaResult struct {
 	PackageName string `json:"packageName,omitempty"`
 	Caption     string `json:"caption,omitempty"`
 	Body        string `json:"body,omitempty"`
-	BodyLength  int    `json:"bodyLength,omitempty"`
+	BodyLength  int    `json:"bodyLength"` // always present, 0 on failure, as in clio
 	Error       string `json:"error,omitempty"`
 }
 
