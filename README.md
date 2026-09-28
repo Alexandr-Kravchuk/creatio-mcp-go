@@ -147,12 +147,10 @@ Preview builds are published on the [Releases](https://github.com/Alexandr-Kravc
 page for macOS (arm64, amd64), Linux (amd64, arm64) and Windows (amd64). Each archive holds one static
 binary; nothing else needs installing. Verify it against `SHA256SUMS` from the same release.
 
-The binaries are not signed. On macOS, remove the download quarantine once, or Gatekeeper refuses to
-start the binary:
-
-```bash
-xattr -d com.apple.quarantine ./creatio-mcp-go
-```
+The macOS binaries are signed with a Developer ID certificate and notarized by Apple, so Gatekeeper
+starts them as downloaded (it checks the notarization online on first launch). The Windows binary is
+not signed; if Windows marks the downloaded file as blocked, run `Unblock-File .\creatio-mcp-go.exe`
+in PowerShell. Release archives are built with `scripts/build-release.sh <tag>`.
 
 The server talks to **one** Creatio environment, set through environment variables (see `.env.example`):
 `CREATIO_URL`, then either `CREATIO_LOGIN` + `CREATIO_PASSWORD` or `CREATIO_CLIENT_ID` +
