@@ -79,7 +79,7 @@ else
     --key "$APPLE_API_KEY" --key-id "$APPLE_API_KEY_ID" --issuer "$APPLE_API_ISSUER" --wait \
     | tee "$dist/notary.log"
   grep -q "status: Accepted" "$dist/notary.log" || { echo "notarization was not accepted" >&2; exit 1; }
-  rm -f "$dist/notary.log"
+  rm -f "$dist/notary.log" "$notarize_zip"
 fi
 
 for target in "${targets[@]}"; do
