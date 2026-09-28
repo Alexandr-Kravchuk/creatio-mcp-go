@@ -137,9 +137,10 @@ def go_environment(clio_env, settings_path):
     settings = json.loads(path.read_text(encoding="utf-8-sig")).get("Environments", {}).get(clio_env)
     if settings is None:
         sys.exit("the named clio environment is not registered")
-    for key in ("CREATIO_URL", "CREATIO_LOGIN", "CREATIO_PASSWORD", "CREATIO_CLIENT_ID",
-                "CREATIO_CLIENT_SECRET", "CREATIO_AUTH_APP_URI"):
-        env.pop(key, None)
+    # Drop every inherited connection variable, including the CREATIO_MCP_* aliases, so the named
+    # environment alone decides the target and the authentication mode.
+    for key in [key for key in env if key.startswith("CREATIO_")]:
+        env.pop(key)
     env["CREATIO_URL"] = settings["Uri"]
     oauth = {"CREATIO_CLIENT_ID": "ClientId", "CREATIO_CLIENT_SECRET": "ClientSecret", "CREATIO_AUTH_APP_URI": "AuthAppUri"}
     forms = {"CREATIO_LOGIN": "Login", "CREATIO_PASSWORD": "Password"}

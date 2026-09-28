@@ -58,11 +58,10 @@ func (c *Client) ListPackageFiles(ctx context.Context, packageName string) Packa
 		files[i] = strings.TrimLeft(strings.ReplaceAll(files[i], `\`, "/"), "/")
 	}
 	sort.SliceStable(files, func(i, j int) bool {
-		left, right := strings.ToLower(files[i]), strings.ToLower(files[j])
-		if left == right {
-			return files[i] < files[j]
+		if order := compareOrdinalIgnoreCase(files[i], files[j]); order != 0 {
+			return order < 0
 		}
-		return left < right
+		return files[i] < files[j]
 	})
 	return PackageFilesResult{Success: true, PackageName: packageName, Files: files, Count: len(files)}
 }

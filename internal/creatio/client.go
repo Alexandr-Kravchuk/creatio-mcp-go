@@ -143,11 +143,10 @@ func (c *Client) ListAppsResponse(ctx context.Context) AppListResponse {
 		items = append(items, AppListItem{ID: app.ID, Name: app.Name, Code: app.Code, Version: app.Version})
 	}
 	sort.SliceStable(items, func(i, j int) bool {
-		left, right := strings.ToLower(items[i].Name), strings.ToLower(items[j].Name)
-		if left != right {
-			return left < right
+		if order := compareOrdinalIgnoreCase(items[i].Name, items[j].Name); order != 0 {
+			return order < 0
 		}
-		return strings.ToLower(items[i].Code) < strings.ToLower(items[j].Code)
+		return compareOrdinalIgnoreCase(items[i].Code, items[j].Code) < 0
 	})
 	return AppListResponse{Success: true, Applications: items}
 }
@@ -513,4 +512,10 @@ func versionOrNone(version string) string {
 		return "none"
 	}
 	return version
+}
+
+// compareOrdinalIgnoreCase orders strings like .NET StringComparer.OrdinalIgnoreCase, which clio uses:
+// it compares upper-cased text, so '_' (0x5F) sorts after letters. Lower-casing would put it before them.
+func compareOrdinalIgnoreCase(left, right string) int {
+	return strings.Compare(strings.ToUpper(left), strings.ToUpper(right))
 }

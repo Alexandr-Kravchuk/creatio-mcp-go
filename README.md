@@ -6,7 +6,7 @@ Can clio's `list-apps` behaviour be reproduced from Go, without `ATF.Repository`
 
 ## 2. Answer and evidence
 
-**Answered: yes, with full parity on the forms-auth path. OAuth remains untested.**
+**Answered: yes, with full parity for both forms authentication and OAuth client credentials.**
 
 ### What is established, by decompiling the vendor assembly
 
@@ -67,11 +67,11 @@ conventions that are only discoverable by decompiling or by failing.
 
 ### What is still NOT established
 
-**OAuth client-credentials is untested.** The environment used carries no client id, secret or
-authorization-app URI, so that half of the kill criterion was never exercised. It is not evidence of
-success.
-
-The live list-apps parity above is evidence for that one command and forms-auth mode.
+The first live list-apps parity above was forms-auth only. OAuth client credentials were exercised
+later, on a cloud environment with its own identity service, through a server-to-server client created
+with clio `create-server-to-server-oauth-app`: `compare-with-clio.sh` reported a match (42 of 42 rows)
+and the MCP comparison below found no data differences. .NET Core routing (no `/0/` prefix) is still
+covered only by mocked tests.
 
 ### Live MCP-to-MCP comparison (2026-09-28)
 
@@ -81,20 +81,21 @@ normalising serializer conventions (key case, `-`/`_`, absent versus empty value
 to `evidence/mcp-latest.json` only verdicts, timings and differing JSON paths — never values, URLs,
 environment names or credentials.
 
-Run against clio 8.1.0.134 and two Creatio environments on .NET Framework, forms auth, 19 cases each:
+Run against clio 8.1.0.134, all environments on .NET Framework, 19 cases each:
 
-| | environment with ClioGate | environment without ClioGate |
-|---|---|---|
-| same data (`match`) | 12 | 11 |
-| both refused, wording differs (`both-failed`) | 6 | 8 |
-| same data, a nested diagnostic worded differently (`error-text`) | 1 | 0 |
-| different data (`mismatch`) | 0 | 0 |
+| | on-premises, ClioGate, forms | on-premises, no ClioGate, forms | cloud, no ClioGate, forms | same cloud, OAuth |
+|---|---|---|---|---|
+| same data (`match`) | 12 | 11 | 11 | 11 |
+| both refused, wording differs (`both-failed`) | 6 | 8 | 8 | 8 |
+| same data, a nested diagnostic worded differently (`error-text`) | 1 | 0 | 0 | 0 |
+| different data (`mismatch`) | 0 | 0 | 0 | 0 |
 
 Every read that returned data — `list-apps`, `list-packages`, `list-app-sections`, `list-pages`,
 `get-entity-schema-properties`, `execute-esq`, `list-package-files`, `get-package-file` — returned the
-same data from both servers. Three differences found on the way were fixed rather than normalised away:
-the MCP `list-apps` now returns clio's `{success, applications}` envelope in clio's order with an empty
-version kept empty (the CLI `--list-apps-json` mode keeps `"none"`); a missing or failed ClioGate route
+same data from both servers. Four differences found on the way were fixed rather than normalised away:
+the MCP `list-apps` now returns clio's `{success, applications}` envelope with an empty version kept
+empty, in clio's `StringComparer.OrdinalIgnoreCase` order — lower-casing put `Custom_…` before
+`Customer 360`, because `_` sorts before lower-case letters but after upper-case ones (the CLI `--list-apps-json` mode keeps `"none"`); a missing or failed ClioGate route
 now names the cause as clio does instead of reporting a bare HTTP status; and `get-sql-schema` always
 carries `bodyLength`. Single-run timings, not a benchmark: clio starts in 0.6 s, this server in 0.01 s.
 The first call and every `list-app-sections`, `list-pages` and `execute-esq` call are faster here
@@ -103,7 +104,10 @@ The first call and every `list-app-sections`, `list-pages` and `execute-esq` cal
 because it re-reads every SysPackage row on each call while clio appears to keep results in-process.
 The comparison used the global clio tool; a newer clio can be compared by pointing `--clio-dll` at it.
 
-Still not covered by a live run: .NET Core routing (no such environment was available), OAuth, a
+`list-packages` is the exception: clio orders it with the culture-sensitive default comparer, which the
+lower-cased order matched on all four runs but is not guaranteed to match for every name.
+
+Still not covered by a live run: .NET Core routing (no such environment was available), a
 uniquely named SQL script (every candidate was reported as ambiguous by both servers), the Windows host
 tools, and `odata-read`, which clio does not expose as an MCP tool.
 
@@ -135,7 +139,7 @@ Each structured tool response includes one JSON text block alongside its structu
 
 ## 4. Kill criterion
 
-If `list-apps` cannot be reproduced without a vendor assembly for both authentication modes clio supports (forms authentication and OAuth client credentials), a full rewrite should stop here. **It has passed for forms authentication and remains open for OAuth client credentials.** A full rewrite must not be approved until OAuth is exercised against the same clio-versus-Go harness.
+If `list-apps` cannot be reproduced without a vendor assembly for both authentication modes clio supports (forms authentication and OAuth client credentials), a full rewrite should stop here. **It has passed for both: forms authentication on-premises and in the cloud, and OAuth client credentials in the cloud** (see "Live MCP-to-MCP comparison"). The criterion is met; it does not by itself justify a rewrite, which still depends on write parity and the remaining tool catalog.
 
 ## Run as an MCP server
 

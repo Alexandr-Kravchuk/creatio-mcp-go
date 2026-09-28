@@ -144,7 +144,7 @@ func mapRuntimeSchema(schema runtimeSchemaPayload, requestedName string, require
 		columns = append(columns, column)
 	}
 	sort.SliceStable(columns, func(i, j int) bool {
-		return strings.ToLower(columns[i].Name) < strings.ToLower(columns[j].Name)
+		return compareOrdinalIgnoreCase(columns[i].Name, columns[j].Name) < 0
 	})
 
 	inheritedCount := 0

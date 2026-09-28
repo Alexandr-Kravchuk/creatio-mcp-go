@@ -69,6 +69,8 @@ func (c *Client) ListPackages(ctx context.Context, input PackageListRequest) (Pa
 		}
 	}
 	sort.SliceStable(packages, func(i, j int) bool {
+		// clio orders packages with the culture-sensitive default comparer, not OrdinalIgnoreCase. Lower-cased
+		// ordinal order agreed with it on every live environment compared; a culture collation is not emulated.
 		return strings.ToLower(packages[i].Name) < strings.ToLower(packages[j].Name)
 	})
 	total := len(packages)

@@ -268,3 +268,13 @@ func TestListAppsResponseSerializesLikeClio(t *testing.T) {
 		}
 	}
 }
+
+func TestCompareOrdinalIgnoreCaseMatchesDotNet(t *testing.T) {
+	// .NET: string.Compare("Customer 360", "Custom_x", StringComparison.OrdinalIgnoreCase) < 0.
+	if compareOrdinalIgnoreCase("Customer 360", "Custom_x") >= 0 {
+		t.Fatal("letters must sort before '_' as in OrdinalIgnoreCase")
+	}
+	if compareOrdinalIgnoreCase("sales", "SALES") != 0 {
+		t.Fatal("case must be ignored")
+	}
+}
