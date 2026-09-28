@@ -1,6 +1,6 @@
 # Installation and usage
 
-Download, configure and register the server in Claude Code or Codex.
+The short version is in the [README](../README.md). This page covers each step in full.
 
 ## 1. Download
 
