@@ -109,10 +109,12 @@ func newMCPServerWithHiddenTools(client *creatio.Client, hostTools hiddenToolSer
 	// name and through clio-run, while get-tool-contract provides their schemas on demand.
 	mcp.AddTool(server, &mcp.Tool{Name: "clio-run", Description: "Invoke a supported Creatio MCP tool by name."},
 		func(ctx context.Context, req *mcp.CallToolRequest, input clioRunArgs) (*mcp.CallToolResult, any, error) {
-			result, err := invokeHiddenTool(ctx, client, hostTools, strings.TrimSpace(input.Command), input.Args,
+			command := strings.TrimSpace(input.Command)
+			result, err := invokeHiddenTool(ctx, client, hostTools, command, input.Args,
 				progressReporter(ctx, req.Session, req.Params.GetProgressToken()))
 			if err != nil {
-				return nil, nil, err
+				// clio's clio-run dispatcher reports a failed inner tool with this prefix.
+				return toolError(clioFailure("Error: tool '"+command+"' failed: ", err)), nil, nil
 			}
 			return result, nil, nil
 		})
@@ -145,7 +147,8 @@ func newMCPServerWithHiddenTools(client *creatio.Client, hostTools hiddenToolSer
 			result, err := invokeHiddenTool(ctx, client, hostTools, call.Params.Name, args,
 				progressReporter(ctx, call.Session, call.Params.GetProgressToken()))
 			if err != nil {
-				return toolError(err), nil
+				// clio's McpToolErrorFilter reports a failed direct call with this prefix.
+				return toolError(clioFailure("MCP tool '"+call.Params.Name+"' failed: ", err)), nil
 			}
 			return result, nil
 		}
@@ -468,6 +471,15 @@ func invokeODataRead(ctx context.Context, client *creatio.Client, args map[strin
 		return creatio.ODataReadResult{}, fmt.Errorf("decode odata-read arguments: %w", err)
 	}
 	return client.ODataRead(ctx, input)
+}
+
+// clioFailure prefixes a tool failure the way clio does. Argument-binding refusals carry no prefix in clio,
+// because they are raised before the tool runs.
+func clioFailure(prefix string, err error) error {
+	if strings.HasPrefix(err.Error(), "invalid-parameter-type:") {
+		return err
+	}
+	return fmt.Errorf("%s%w", prefix, err)
 }
 
 func toolError(err error) *mcp.CallToolResult {
