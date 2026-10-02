@@ -86,7 +86,7 @@ func findAppArguments(args map[string]any) (creatio.FindAppRequest, string) {
 	}
 	if len(unknown) > 0 {
 		sort.Strings(unknown)
-		return input, "Unknown args: " + joinCallerKeys(unknown) + ". Valid: environment-name, search-pattern, code. Use search-pattern for a substring filter."
+		return input, "Unknown args: " + joinCallerKeys(unknown) + ". Valid: code, search-pattern. Use search-pattern for a substring filter."
 	}
 	return input, ""
 }

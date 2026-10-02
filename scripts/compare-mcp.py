@@ -71,7 +71,8 @@ def payload(response):
 
 # clio stamps a fresh random correlation-id on many answers so its own log can be searched; it never
 # matches between two calls, and this server keeps no such log, so the key is left out of the comparison.
-IGNORED_KEYS = {"correlationid"}
+# get-page's files.fetchedAt is the time of the call itself, so it differs between any two calls too.
+IGNORED_KEYS = {"correlationid", "fetchedat"}
 
 
 def normalize(value):
@@ -113,8 +114,11 @@ def verdict(clio_value, go_value):
     found = differences(clio_value, go_value)
     if not found:
         return "match", found
-    failed = [isinstance(v, dict) and v.get("success") is False for v in (clio_value, go_value)]
-    if all(failed) and all(p.endswith(".error: value differs") or ": only in " in p for p in found):
+    # A refusal is success:false, or a non-zero exit-code in clio's command-style envelope.
+    failed = [isinstance(v, dict) and (v.get("success") is False or v.get("exitcode", 0) != 0)
+              for v in (clio_value, go_value)]
+    if all(failed) and all(p.endswith("error: value differs") or p.endswith("].value: value differs")
+                           or ": only in " in p for p in found):
         # Both refused. The wording is expected to differ; the refusal itself is the contract.
         return "both-failed", found
     if all(p.endswith("error: value differs") for p in found):
@@ -182,6 +186,10 @@ def main():
                 clio_response, clio_seconds = clio.call(name, {"args": clio_arguments})
             go_response, go_seconds = go.call(name, arguments)
             outcome, paths = verdict(normalize(payload(clio_response)), normalize(payload(go_response)))
+            known = set(case.get("known-differences", []))
+            if outcome == "mismatch" and paths and all(path.split(":")[0] in known for path in paths):
+                # Listed in the case file with the reason; reported, but not counted as a regression.
+                outcome = "known-diff"
             results.append({"tool": name, "case": case.get("label", name), "verdict": outcome,
                             "clio_seconds": round(clio_seconds, 2), "go_seconds": round(go_seconds, 2),
                             "differences": paths})
@@ -194,7 +202,7 @@ def main():
 
     summary = {"schema": 1, "clio_startup_seconds": round(clio.startup_seconds, 2),
                "go_startup_seconds": round(go.startup_seconds, 2),
-               "counts": {v: sum(r["verdict"] == v for r in results) for v in ("match", "both-failed", "error-text", "mismatch")},
+               "counts": {v: sum(r["verdict"] == v for r in results) for v in ("match", "both-failed", "error-text", "known-diff", "mismatch")},
                "cases": results}
     evidence = pathlib.Path(options.evidence)
     evidence.parent.mkdir(parents=True, exist_ok=True)

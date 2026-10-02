@@ -12,7 +12,7 @@
   {"label": "entity client schemas unknown", "tool": "list-entity-client-schemas", "args": {"entity-name": "ZzNoSuchEntity"}, "clio-run": true},
   {"label": "page Contacts_FormPage", "tool": "get-page", "args": {"schema-name": "Contacts_FormPage"}},
   {"label": "page Accounts_FormPage", "tool": "get-page", "args": {"schema-name": "Accounts_FormPage"}},
-  {"label": "page with editable schema", "tool": "get-page", "args": {"schema-name": "Calls_FormPage"}},
+  {"label": "page with editable schema", "tool": "get-page", "args": {"schema-name": "Calls_FormPage"}, "known-differences": ["$.editable.modifiedon"], "why": "clio formats modifiedOn in its host's regional date format; this server keeps the DataService value."},
   {"label": "page mobile", "tool": "get-page", "args": {"schema-name": "MobileCalendar_ListPage"}},
   {"label": "page unparsable body", "tool": "get-page", "args": {"schema-name": "OrderGeneratedWebFormPageV2"}},
   {"label": "page unknown", "tool": "get-page", "args": {"schema-name": "ZzNoSuch_FormPage"}}

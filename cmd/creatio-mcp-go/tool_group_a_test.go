@@ -14,7 +14,7 @@ func TestFindAppArgumentsRecoverAliasesAndRefuseUnknownKeys(t *testing.T) {
 	if input.SearchPattern != "bound" {
 		t.Fatalf("a bound argument must win over its alias: %#v", input)
 	}
-	if _, refusal := findAppArguments(map[string]any{"bogus": 1}); refusal != "Unknown args: 'bogus'. Valid: environment-name, search-pattern, code. Use search-pattern for a substring filter." {
+	if _, refusal := findAppArguments(map[string]any{"bogus": 1}); refusal != "Unknown args: 'bogus'. Valid: code, search-pattern. Use search-pattern for a substring filter." {
 		t.Fatalf("unknown key refusal = %q", refusal)
 	}
 	if _, refusal := findAppArguments(map[string]any{"environment-name": "dev"}); refusal != environmentNameRefusal {

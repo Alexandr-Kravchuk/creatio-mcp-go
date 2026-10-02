@@ -68,7 +68,7 @@ func TestGroupBToolsRefuseForeignEnvironmentSelectorsInsideTheEnvelope(t *testin
 		{&mcp.CallToolParams{Name: "list-sys-settings", Arguments: map[string]any{"uri": "elsewhere"}}, `"settings":[]`},
 		{&mcp.CallToolParams{Name: "get-user-culture", Arguments: map[string]any{"foo": 1}}, `"reason":"Unknown args: 'foo'.`},
 		{&mcp.CallToolParams{Name: "describe-environment", Arguments: map[string]any{"client-id": "x"}}, `"exit-code":1`},
-		{&mcp.CallToolParams{Name: "describe-environment", Arguments: map[string]any{"environmentName": "x"}}, "Rename: 'environmentName' -\\u003e 'environment-name'."},
+		{&mcp.CallToolParams{Name: "describe-environment", Arguments: map[string]any{"environmentName": "x"}}, "environment-name is not accepted"},
 	}
 	for _, c := range cases {
 		result, err := session.CallTool(context.Background(), c.call)

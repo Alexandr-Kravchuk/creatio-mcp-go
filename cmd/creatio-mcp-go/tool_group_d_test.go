@@ -38,7 +38,7 @@ func TestGroupDToolsAnswerByRawNameAndThroughClioRun(t *testing.T) {
 		"read-entity-business-rules": {map[string]any{"package-name": "Nope", "entity-schema-name": "Account"}, `{"count":0,"rules":[],"error":"Package 'Nope' was not found."}`},
 		"read-page-business-rules":   {map[string]any{"package-name": "Nope"}, `{"count":0,"rules":[],"error":"page-schema-name is required."}`},
 		"get-record-rights":          {map[string]any{"entity": "Contact", "record-id": "x"}, `{"success":true,"output":"No record rights found for Contact 'x'."}`},
-		"get-process-signature":      {map[string]any{"process-name": "P", "bogus": 1}, `{"success":false,"processResolutionFailed":false,"parameters":[],"error":"Unknown args: 'bogus'. Valid: process-name, culture."}`},
+		"get-process-signature":      {map[string]any{"process-name": "P", "bogus": 1}, `{"success":false,"processResolutionFailed":false,"parameters":[],"error":"Unknown args: 'bogus'. Valid: culture, process-name."}`},
 	}
 	for name, c := range cases {
 		for _, call := range []*mcp.CallToolParams{

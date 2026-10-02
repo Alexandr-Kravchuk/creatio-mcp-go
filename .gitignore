@@ -8,3 +8,4 @@ bin/
 coverage.out
 __pycache__/
 dist/
+.clio-pages/

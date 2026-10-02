@@ -102,10 +102,22 @@ input schemas:
 | `get-sql-schema` | Body of an SQL script schema |
 | `list-package-files`, `get-package-file` | Package files; need cliogate 2.0.0.47+ on the site |
 | `odata-read` | OData entity reads with projection, ordering and paging |
+| `get-app-info`, `find-app` | One application's package, entities and pages; search applications |
+| `find-entity-schema`, `get-entity-schema-column-properties` | Find entity schemas; one column's properties |
+| `list-entity-client-schemas` | Client (page) schemas built on an entity |
+| `get-page` | A Freedom UI page, written to `.clio-pages/<schema>/` as `body.js`, `bundle.json`, `meta.json` |
+| `read-entity-business-rules`, `read-page-business-rules` | Business rules of an entity or a page |
+| `get-record-rights` | Access rights on one record |
+| `get-process-signature` | Parameters of a business process |
+| `get-sys-setting`, `list-sys-settings` | System setting values |
+| `get-user-culture`, `get-schema-name-prefix`, `get-target-package` | Current user culture, schema name prefix, package new schemas go to |
+| `describe-environment` | Creatio version, runtime, current user and cliogate state |
+| `list-themes`, `list-printables`, `list-user-tasks`, `list-page-templates` | Themes, printables, process user tasks, page templates |
 | `find-empty-iis-port`, `start-creatio` | Local machine: free IIS port, start a local Creatio |
 
-Nothing here writes to Creatio. `start-creatio` starts a local process; the `-write-probe` command-line
-flag inserts and deletes a test record and is not meant for everyday use.
+Nothing here writes to Creatio. `get-page` writes local files, the way clio does, under
+`output-directory` or the workspace root. `start-creatio` starts a local process; the `-write-probe`
+command-line flag inserts and deletes a test record and is not meant for everyday use.
 
 Found an answer that differs from clio's for the same call? Open an issue with the tool name and the
 arguments. To compare many calls at once, run `scripts/compare-mcp.py` against an environment

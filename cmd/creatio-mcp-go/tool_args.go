@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-// environmentNameAliases are the legacy spellings clio answers with a rename hint.
+// environmentNameAliases are the legacy spellings clio answers with a rename to environment-name.
 var environmentNameAliases = map[string]bool{"environmentname": true, "environment_name": true, "environment": true}
 
 // environmentNameRefusal answers a call that names an environment. This server targets the one environment
@@ -26,6 +26,12 @@ func unknownArgumentError(args map[string]any, known map[string]bool) string {
 	if _, ok := args["environment-name"]; ok {
 		return environmentNameRefusal
 	}
+	for key := range args {
+		// clio answers these with a rename to environment-name, which this server would then refuse.
+		if environmentNameAliases[strings.ToLower(key)] {
+			return environmentNameRefusal
+		}
+	}
 	keys := make([]string, 0, len(args))
 	for key := range args {
 		if !known[key] {
@@ -36,23 +42,12 @@ func unknownArgumentError(args map[string]any, known map[string]bool) string {
 		return ""
 	}
 	sort.Strings(keys)
-	var renamed, unknown []string
+	unknown := make([]string, 0, len(keys))
 	for _, key := range keys {
-		shown := strings.NewReplacer("'", "", "\"", "").Replace(key)
-		if environmentNameAliases[strings.ToLower(key)] {
-			renamed = append(renamed, fmt.Sprintf("'%s' -> 'environment-name'", shown))
-		} else {
-			unknown = append(unknown, fmt.Sprintf("'%s'", shown))
-		}
+		unknown = append(unknown, fmt.Sprintf("'%s'", strings.NewReplacer("'", "", "\"", "").Replace(key)))
 	}
-	parts := make([]string, 0, 2)
-	if len(renamed) > 0 {
-		parts = append(parts, "Rename: "+joinCallerKeys(renamed)+".")
-	}
-	if len(unknown) > 0 {
-		parts = append(parts, "Unknown args: "+joinCallerKeys(unknown)+". Valid: environment-name.")
-	}
-	return strings.Join(parts, " ")
+	// clio lists environment-name here; this server refuses it, so it lists only what it accepts.
+	return "Unknown args: " + joinCallerKeys(unknown) + ". " + validArgumentsHint(known)
 }
 
 func joinCallerKeys(keys []string) string {
@@ -89,4 +84,17 @@ func refusesConnectionArgs(args map[string]any) string {
 		}
 	}
 	return ""
+}
+
+// validArgumentsHint names the arguments a tool accepts, in sorted order.
+func validArgumentsHint(known map[string]bool) string {
+	if len(known) == 0 {
+		return "This tool takes no arguments; the environment comes from the CREATIO_* variables."
+	}
+	names := make([]string, 0, len(known))
+	for name := range known {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+	return "Valid: " + strings.Join(names, ", ") + "."
 }

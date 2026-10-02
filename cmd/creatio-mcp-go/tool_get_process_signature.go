@@ -3,13 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/Alexandr-Kravchuk/creatio-mcp-go/internal/creatio"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
-
-const processSignatureValidArgs = "Valid: process-name, culture."
 
 var processSignatureKnownArgs = map[string]bool{"process-name": true, "culture": true}
 
@@ -32,8 +29,7 @@ func init() {
 		// Its uri/login/password fallback would target another environment, so it is refused.
 		message := refusesConnectionArgs(args)
 		if message == "" {
-			message = strings.Replace(unknownArgumentError(args, processSignatureKnownArgs),
-				"Valid: environment-name.", processSignatureValidArgs, 1)
+			message = unknownArgumentError(args, processSignatureKnownArgs)
 		}
 		if message != "" {
 			return structuredToolResult(creatio.ProcessSignatureResponse{

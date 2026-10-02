@@ -8,14 +8,21 @@ func TestUnknownArgumentErrorMirrorsClioWording(t *testing.T) {
 		want string
 	}{
 		{map[string]any{}, ""},
-		{map[string]any{"foo": 1}, "Unknown args: 'foo'. Valid: environment-name."},
-		{map[string]any{"environmentName": "x", "b": 1, "a": 1}, "Rename: 'environmentName' -> 'environment-name'. Unknown args: 'a', 'b'. Valid: environment-name."},
+		{map[string]any{"foo": 1}, "Unknown args: 'foo'. This tool takes no arguments; the environment comes from the CREATIO_* variables."},
+		{map[string]any{"environmentName": "x", "b": 1, "a": 1}, environmentNameRefusal},
 		{map[string]any{"environment-name": "x"}, environmentNameRefusal},
 	}
 	for _, c := range cases {
 		if got := unknownArgumentError(c.args, nil); got != c.want {
 			t.Errorf("unknownArgumentError(%v) = %q, want %q", c.args, got, c.want)
 		}
+	}
+}
+
+func TestUnknownArgumentErrorListsTheAcceptedArguments(t *testing.T) {
+	got := unknownArgumentError(map[string]any{"bogus": 1}, map[string]bool{"process-name": true, "culture": true})
+	if want := "Unknown args: 'bogus'. Valid: culture, process-name."; got != want {
+		t.Fatalf("unknownArgumentError = %q, want %q", got, want)
 	}
 }
 
