@@ -1,0 +1,19 @@
+[
+  {"label": "schema name prefix", "tool": "get-schema-name-prefix", "clio-run": true},
+  {"label": "target package current setting", "tool": "get-target-package", "clio-run": true},
+  {"label": "target package Custom", "tool": "get-target-package", "args": {"package": "Custom"}, "clio-run": true},
+  {"label": "target package case-insensitive", "tool": "get-target-package", "args": {"package": "custom"}, "clio-run": true},
+  {"label": "target package locked", "tool": "get-target-package", "args": {"package": "CrtBase"}, "clio-run": true},
+  {"label": "target package unknown", "tool": "get-target-package", "args": {"package": "ZzNoSuchPackage"}, "clio-run": true},
+  {"label": "target package legacy alias", "tool": "get-target-package", "args": {"package-name": "Custom"}, "clio-run": true},
+  {"label": "entity client schemas Contact", "tool": "list-entity-client-schemas", "args": {"entity-name": "Contact"}, "clio-run": true},
+  {"label": "entity client schemas Account", "tool": "list-entity-client-schemas", "args": {"entity-name": "Account"}, "clio-run": true},
+  {"label": "entity client schemas typed Activity", "tool": "list-entity-client-schemas", "args": {"entity-name": "Activity"}, "clio-run": true},
+  {"label": "entity client schemas unknown", "tool": "list-entity-client-schemas", "args": {"entity-name": "ZzNoSuchEntity"}, "clio-run": true},
+  {"label": "page Contacts_FormPage", "tool": "get-page", "args": {"schema-name": "Contacts_FormPage"}},
+  {"label": "page Accounts_FormPage", "tool": "get-page", "args": {"schema-name": "Accounts_FormPage"}},
+  {"label": "page with editable schema", "tool": "get-page", "args": {"schema-name": "Calls_FormPage"}},
+  {"label": "page mobile", "tool": "get-page", "args": {"schema-name": "MobileCalendar_ListPage"}},
+  {"label": "page unparsable body", "tool": "get-page", "args": {"schema-name": "OrderGeneratedWebFormPageV2"}},
+  {"label": "page unknown", "tool": "get-page", "args": {"schema-name": "ZzNoSuch_FormPage"}}
+]
