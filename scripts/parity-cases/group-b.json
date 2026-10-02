@@ -1,0 +1,13 @@
+[
+  {"label": "get-sys-setting SchemaNamePrefix", "tool": "get-sys-setting", "args": {"code": "SchemaNamePrefix"}, "clio-run": true},
+  {"label": "get-sys-setting boolean", "tool": "get-sys-setting", "args": {"code": "AllowSaveUnlockedSchema"}, "clio-run": true},
+  {"label": "get-sys-setting lookup", "tool": "get-sys-setting", "args": {"code": "PrimaryCurrency"}, "clio-run": true},
+  {"label": "get-sys-setting unknown code", "tool": "get-sys-setting", "args": {"code": "ZzNoSuchSetting"}, "clio-run": true},
+  {"label": "get-sys-setting empty code", "tool": "get-sys-setting", "args": {"code": ""}, "clio-run": true},
+  {"label": "get-sys-setting code of wrong type", "tool": "get-sys-setting", "args": {"code": 5}, "clio-run": true},
+  {"label": "list-sys-settings", "tool": "list-sys-settings", "clio-run": true},
+  {"label": "get-user-culture", "tool": "get-user-culture", "clio-run": true},
+  {"label": "get-user-culture target override", "tool": "get-user-culture", "args": {"uri": 5}, "clio-run": true},
+  {"label": "describe-environment", "tool": "describe-environment", "clio-run": true},
+  {"label": "describe-environment timeout of wrong type", "tool": "describe-environment", "args": {"timeout": "x"}, "clio-run": true}
+]
