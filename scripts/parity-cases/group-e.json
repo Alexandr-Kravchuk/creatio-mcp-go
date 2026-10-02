@@ -1,0 +1,15 @@
+[
+  {"label": "list-themes default", "tool": "list-themes", "clio-run": true},
+  {"label": "list-themes unknown argument", "tool": "list-themes", "args": {"foo": 1}, "clio-run": true},
+  {"label": "list-printables default", "tool": "list-printables", "clio-run": true},
+  {"label": "list-printables entity filter case-insensitive", "tool": "list-printables", "args": {"entity-name": "opportunity"}, "clio-run": true},
+  {"label": "list-printables module entity filter", "tool": "list-printables", "args": {"entity-name": " Contract "}, "clio-run": true},
+  {"label": "list-printables no match", "tool": "list-printables", "args": {"entity-name": "ZzNoSuchEntity"}, "clio-run": true},
+  {"label": "list-printables wrong argument type", "tool": "list-printables", "args": {"entity-name": 5}, "clio-run": true},
+  {"label": "list-user-tasks default", "tool": "list-user-tasks", "clio-run": true},
+  {"label": "list-user-tasks unknown argument", "tool": "list-user-tasks", "args": {"foo": 1}, "clio-run": true},
+  {"label": "list-page-templates default", "tool": "list-page-templates", "clio-run": true},
+  {"label": "list-page-templates web", "tool": "list-page-templates", "args": {"schema-type": "web"}, "clio-run": true},
+  {"label": "list-page-templates mobile alias", "tool": "list-page-templates", "args": {"schema-type": " MobilePage "}, "clio-run": true},
+  {"label": "list-page-templates unknown schema-type", "tool": "list-page-templates", "args": {"schema-type": "desktop"}, "clio-run": true}
+]

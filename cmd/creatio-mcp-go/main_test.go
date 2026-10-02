@@ -149,7 +149,7 @@ func TestTwoTierMCPExposesContractAndRunsHiddenToolByRawName(t *testing.T) {
 		t.Fatalf("get-tool-contract index = %#v, err = %v", contracts, err)
 	}
 	contractIndex, ok := contracts.StructuredContent.(map[string]any)
-	if !ok || !reflect.DeepEqual(contractIndex["tools"], []any{"execute-esq", "find-empty-iis-port", "get-entity-schema-properties", "get-package-file", "get-sql-schema", "list-app-sections", "list-package-files", "list-packages", "list-pages", "odata-read", "start-creatio"}) {
+	if !ok || !reflect.DeepEqual(builtInToolNames(contractIndex["tools"]), []any{"execute-esq", "find-empty-iis-port", "get-entity-schema-properties", "get-package-file", "get-sql-schema", "list-app-sections", "list-package-files", "list-packages", "list-pages", "odata-read", "start-creatio"}) {
 		t.Fatalf("contract index = %#v", contracts.StructuredContent)
 	}
 	startContract, err := session.CallTool(context.Background(), &mcp.CallToolParams{
@@ -426,10 +426,11 @@ func TestMCPResponsesIncludeOneTextCopyForEveryHiddenTool(t *testing.T) {
 		"odata-read":                   {"entity": "Contact"},
 		"start-creatio":                {"environmentName": "mock"},
 	}
-	if len(argsByName) != len(toolNames) {
-		t.Fatalf("test argument cases = %d, contract index names = %d", len(argsByName), len(toolNames))
+	// Self-registered tools are covered by their own test files; this table lists the built-in ones.
+	if len(argsByName) != len(builtInToolNames(toolNames)) {
+		t.Fatalf("test argument cases = %d, built-in contract index names = %d", len(argsByName), len(builtInToolNames(toolNames)))
 	}
-	for _, rawName := range toolNames {
+	for _, rawName := range builtInToolNames(toolNames) {
 		name, ok := rawName.(string)
 		if !ok {
 			t.Fatalf("contract tool name has type %T", rawName)
@@ -560,4 +561,16 @@ func connectTestClient(t *testing.T, server *mcp.Server, client *mcp.Client) *mc
 		cancel()
 	})
 	return session
+}
+
+// builtInToolNames drops self-registered tools from a get-tool-contract index, keeping its order.
+func builtInToolNames(names any) []any {
+	list, _ := names.([]any)
+	builtIn := []any{}
+	for _, name := range list {
+		if text, _ := name.(string); registeredTools[text].invoke == nil {
+			builtIn = append(builtIn, name)
+		}
+	}
+	return builtIn
 }
