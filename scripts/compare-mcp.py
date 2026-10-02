@@ -179,7 +179,8 @@ def main():
     try:
         for case in cases:
             name, arguments = case["tool"], case.get("args", {})
-            clio_arguments = {"environment-name": options.clio_env, **arguments}
+            # A few clio tools name the environment argument differently (get-fsm-mode: environmentName).
+            clio_arguments = {case.get("clio-environment-key", "environment-name"): options.clio_env, **arguments}
             if case.get("clio-run"):
                 clio_response, clio_seconds = clio.call("clio-run", {"command": name, "args": clio_arguments})
             else:

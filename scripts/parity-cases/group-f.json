@@ -17,5 +17,6 @@
   {"label": "verify-oauth-app half credential pair", "tool": "verify-oauth-app", "args": {"client-id": "example-client"}, "clio-run": true},
   {"label": "verify-oauth-app unreachable identity server", "tool": "verify-oauth-app", "args": {"client-id": "example-client", "client-secret": "replace-me", "identity-server-url": "https://identity.example.invalid"}, "clio-run": true},
   {"label": "verify-oauth-app identity url with query", "tool": "verify-oauth-app", "args": {"client-id": "example-client", "client-secret": "replace-me", "identity-server-url": "https://identity.example.invalid/?a=1"}, "clio-run": true},
-  {"label": "verify-oauth-app client-secret wrong type", "tool": "verify-oauth-app", "args": {"client-secret": 5}, "clio-run": true}
+  {"label": "verify-oauth-app client-secret wrong type", "tool": "verify-oauth-app", "args": {"client-secret": 5}, "clio-run": true},
+  {"label": "get-fsm-mode", "tool": "get-fsm-mode", "clio-run": true, "clio-environment-key": "environmentName", "known-differences": ["$.environmentname"], "why": "clio echoes the environment name; this server has none."}
 ]
