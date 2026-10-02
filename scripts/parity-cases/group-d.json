@@ -1,0 +1,21 @@
+[
+  {"label": "entity rules AccountAddress (apply-filter)", "tool": "read-entity-business-rules", "args": {"package-name": "CrtCustomer360App", "entity-schema-name": "AccountAddress"}, "clio-run": true},
+  {"label": "entity rules Activity (set-values)", "tool": "read-entity-business-rules", "args": {"package-name": "CrtUIv2", "entity-schema-name": "Activity"}, "clio-run": true},
+  {"label": "entity rules package case-insensitive", "tool": "read-entity-business-rules", "args": {"package-name": "crtbase", "entity-schema-name": "AccountAddress"}, "clio-run": true},
+  {"label": "entity rules unknown entity", "tool": "read-entity-business-rules", "args": {"package-name": "CrtBase", "entity-schema-name": "ZzNoEntity"}, "clio-run": true},
+  {"label": "entity rules unknown package", "tool": "read-entity-business-rules", "args": {"package-name": "ZzNoPkg", "entity-schema-name": "Account"}, "clio-run": true},
+  {"label": "page rules Accounts_FormPage", "tool": "read-page-business-rules", "args": {"package-name": "CrtCustomer360App", "page-schema-name": "Accounts_FormPage"}, "clio-run": true},
+  {"label": "page rules schema-name alias", "tool": "read-page-business-rules", "args": {"package-name": "CrtCustomer360App", "schema-name": "Accounts_FormPage"}, "clio-run": true},
+  {"label": "page rules mini page", "tool": "read-page-business-rules", "args": {"package-name": "CrtOrderContractInC360", "page-schema-name": "AccountBillingInfo_MiniPage"}, "clio-run": true},
+  {"label": "page rules unknown page", "tool": "read-page-business-rules", "args": {"package-name": "CrtCustomer360App", "page-schema-name": "ZzNoSuchPage"}, "clio-run": true},
+  {"label": "page rules missing page name", "tool": "read-page-business-rules", "args": {"package-name": "CrtCustomer360App"}, "clio-run": true},
+  {"label": "record rights contact", "tool": "get-record-rights", "args": {"entity": "Contact", "record-id": "6ae2bd8b-dc6a-46b0-b478-47e95d994cc0"}, "clio-run": true},
+  {"label": "record rights no rows", "tool": "get-record-rights", "args": {"entity": "Contact", "record-id": "00000000-0000-0000-0000-000000000001"}, "clio-run": true},
+  {"label": "record rights unknown entity", "tool": "get-record-rights", "args": {"entity": "ZzNoEntity", "record-id": "00000000-0000-0000-0000-000000000001"}, "clio-run": true},
+  {"label": "process signature by code", "tool": "get-process-signature", "args": {"process-name": "SearchingContact"}, "clio-run": true},
+  {"label": "process signature by caption", "tool": "get-process-signature", "args": {"process-name": "Get Opportunity Data"}, "clio-run": true},
+  {"label": "process signature unknown", "tool": "get-process-signature", "args": {"process-name": "ZzNoSuchProcess"}, "clio-run": true},
+  {"label": "process signature empty name", "tool": "get-process-signature", "args": {"process-name": ""}, "clio-run": true},
+  {"label": "process signature unknown argument", "tool": "get-process-signature", "args": {"process-name": "SearchingContact", "bogus": 1}, "clio-run": true},
+  {"label": "page rules ForecastSheet_FormPage", "tool": "read-page-business-rules", "args": {"package-name": "CrtForecastMgmtApp", "page-schema-name": "ForecastSheet_FormPage"}, "clio-run": true}
+]
