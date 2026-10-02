@@ -121,7 +121,7 @@ func newMCPServerWithHiddenTools(client *creatio.Client, hostTools hiddenToolSer
 			if input.Name == "" {
 				return nil, map[string]any{"tools": hiddenToolNames()}, nil
 			}
-			contract, ok := hiddenToolContracts[input.Name]
+			contract, ok := toolContract(input.Name)
 			if !ok {
 				return nil, nil, fmt.Errorf("unknown tool contract %q", input.Name)
 			}
@@ -154,8 +154,11 @@ func newMCPServerWithHiddenTools(client *creatio.Client, hostTools hiddenToolSer
 }
 
 func hiddenToolNames() []string {
-	names := make([]string, 0, len(hiddenToolContracts))
+	names := make([]string, 0, len(hiddenToolContracts)+len(registeredTools))
 	for name := range hiddenToolContracts {
+		names = append(names, name)
+	}
+	for name := range registeredTools {
 		names = append(names, name)
 	}
 	sort.Strings(names)
@@ -163,7 +166,7 @@ func hiddenToolNames() []string {
 }
 
 func isHiddenTool(name string) bool {
-	_, ok := hiddenToolContracts[name]
+	_, ok := toolContract(name)
 	return ok
 }
 
@@ -306,6 +309,9 @@ func invokeHiddenTool(ctx context.Context, client *creatio.Client, hostTools hid
 		}
 		return structuredToolResult(result), nil
 	default:
+		if tool, ok := registeredTools[name]; ok {
+			return tool.invoke(ctx, client, args)
+		}
 		return nil, fmt.Errorf("unknown tool %q; discover supported names with get-tool-contract", name)
 	}
 }

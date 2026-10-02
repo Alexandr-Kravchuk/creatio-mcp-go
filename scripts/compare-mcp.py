@@ -156,11 +156,13 @@ def main():
     parser.add_argument("--go-bin", required=True, help="built creatio-mcp-go binary")
     parser.add_argument("--clio-env", required=True, help="registered clio environment name")
     parser.add_argument("--clio-settings", help="clio appsettings.json (default: the platform location)")
-    parser.add_argument("--cases", default=str(REPO / "scripts/mcp-parity-cases.json"))
+    parser.add_argument("--cases", nargs="+", default=[str(REPO / "scripts/mcp-parity-cases.json")]
+                        + sorted(str(p) for p in (REPO / "scripts/parity-cases").glob("*.json")),
+                        help="case files; default: mcp-parity-cases.json plus scripts/parity-cases/*.json")
     parser.add_argument("--evidence", default=str(REPO / "evidence/mcp-latest.json"))
     options = parser.parse_args()
 
-    cases = json.loads(pathlib.Path(options.cases).read_text(encoding="utf-8"))
+    cases = [case for path in options.cases for case in json.loads(pathlib.Path(path).read_text(encoding="utf-8"))]
     clio = Server(["dotnet", options.clio_dll, "mcp-server"])
     go = Server([options.go_bin], env=go_environment(options.clio_env, options.clio_settings))
     results = []
