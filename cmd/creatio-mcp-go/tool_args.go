@@ -1,5 +1,8 @@
 package main
 
+// Shared argument helpers for self-registered tools: clio-compatible unknown-argument and type refusals,
+// and refusals for environment selectors this single-environment server does not honor.
+
 import (
 	"fmt"
 	"sort"
