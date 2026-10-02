@@ -152,7 +152,10 @@ func (c *Client) ListAppsResponse(ctx context.Context) AppListResponse {
 }
 
 func (c *Client) formsLogin(ctx context.Context, client *http.Client) error {
-	body, err := json.Marshal(map[string]any{"UserName": c.config.Login, "UserPassword": c.config.Password, "TimeZoneOffset": 0})
+	// Creatio keeps the session time zone from TimeZoneOffset and returns date values in it. clio sends the
+	// browser convention, minus the host's UTC offset in minutes; 0 would put the session on UTC instead.
+	_, offsetSeconds := time.Now().Zone()
+	body, err := json.Marshal(map[string]any{"UserName": c.config.Login, "UserPassword": c.config.Password, "TimeZoneOffset": -offsetSeconds / 60})
 	if err != nil {
 		return fmt.Errorf("encode forms login: %w", err)
 	}

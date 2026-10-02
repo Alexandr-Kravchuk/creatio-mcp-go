@@ -69,11 +69,17 @@ def payload(response):
     return value
 
 
+# clio stamps a fresh random correlation-id on many answers so its own log can be searched; it never
+# matches between two calls, and this server keeps no such log, so the key is left out of the comparison.
+IGNORED_KEYS = {"correlationid"}
+
+
 def normalize(value):
     """Ignore serializer conventions: key case, '-'/'_' and absent-versus-empty values."""
     if isinstance(value, dict):
-        return {key.lower().replace("-", "").replace("_", ""): normalize(item)
-                for key, item in value.items() if item not in (None, "", [])}
+        normalized = {key.lower().replace("-", "").replace("_", ""): item for key, item in value.items()}
+        return {key: normalize(item) for key, item in normalized.items()
+                if item not in (None, "", []) and key not in IGNORED_KEYS}
     if isinstance(value, list):
         return [normalize(item) for item in value]
     return value
