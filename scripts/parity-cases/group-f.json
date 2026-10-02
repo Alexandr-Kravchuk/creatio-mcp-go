@@ -1,0 +1,21 @@
+[
+  {"label": "compile-status latest", "tool": "compile-status", "clio-run": true, "known-differences": ["$.environmentname"], "why": "clio echoes its registered environment name; this server has none, its target is CREATIO_URL."},
+  {"label": "compile-status unknown operation-id", "tool": "compile-status", "args": {"operation-id": " zz-no-such-operation "}, "clio-run": true, "known-differences": ["$.environmentname"], "why": "clio echoes its registered environment name; this server has none, its target is CREATIO_URL."},
+  {"label": "compile-status operation-id wrong type", "tool": "compile-status", "args": {"operation-id": 5}, "clio-run": true},
+  {"label": "restart-status latest", "tool": "restart-status", "args": {"ignored": 1}, "clio-run": true, "known-differences": ["$.environmentname"], "why": "clio echoes its registered environment name; this server has none, its target is CREATIO_URL."},
+  {"label": "restart-status operation-id wrong type", "tool": "restart-status", "args": {"operation-id": true}, "clio-run": true},
+  {"label": "last-compilation-log", "tool": "last-compilation-log", "clio-run": true},
+  {"label": "last-compilation-log unknown argument", "tool": "last-compilation-log", "args": {"foo": 1}, "clio-run": true},
+  {"label": "get-fsm-mode environment selector wrong type", "tool": "get-fsm-mode", "args": {"environmentName": 5}, "clio-run": true},
+  {"label": "resolve-oauth-system-user default", "tool": "resolve-oauth-system-user", "clio-run": true},
+  {"label": "resolve-oauth-system-user name trimmed case-insensitive", "tool": "resolve-oauth-system-user", "args": {"name": " supervisor ", "ignored": 1}, "clio-run": true},
+  {"label": "resolve-oauth-system-user id wins over name", "tool": "resolve-oauth-system-user", "args": {"id": "7F3B869F-34F3-4F20-AB4D-7480A5FDF647", "name": "ZzNoSuchUser"}, "clio-run": true},
+  {"label": "resolve-oauth-system-user name not found", "tool": "resolve-oauth-system-user", "args": {"name": "ZzNoSuchUser"}, "clio-run": true},
+  {"label": "resolve-oauth-system-user malformed id", "tool": "resolve-oauth-system-user", "args": {"id": "not-a-guid"}, "clio-run": true},
+  {"label": "resolve-oauth-system-user name wrong type", "tool": "resolve-oauth-system-user", "args": {"name": 5}, "clio-run": true},
+  {"label": "verify-oauth-app configured credentials", "tool": "verify-oauth-app", "clio-run": true},
+  {"label": "verify-oauth-app half credential pair", "tool": "verify-oauth-app", "args": {"client-id": "example-client"}, "clio-run": true},
+  {"label": "verify-oauth-app unreachable identity server", "tool": "verify-oauth-app", "args": {"client-id": "example-client", "client-secret": "replace-me", "identity-server-url": "https://identity.example.invalid"}, "clio-run": true},
+  {"label": "verify-oauth-app identity url with query", "tool": "verify-oauth-app", "args": {"client-id": "example-client", "client-secret": "replace-me", "identity-server-url": "https://identity.example.invalid/?a=1"}, "clio-run": true},
+  {"label": "verify-oauth-app client-secret wrong type", "tool": "verify-oauth-app", "args": {"client-secret": 5}, "clio-run": true}
+]
