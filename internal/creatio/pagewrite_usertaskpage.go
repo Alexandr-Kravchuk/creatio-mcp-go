@@ -443,16 +443,16 @@ func userTaskPageValidateSVG(content []byte) error {
 			}
 		case xml.StartElement:
 			if depth == 0 {
-				if value.Name.Space != userTaskPageSvgNS || value.Name.Local != "svg" {
+				if value.Name.Space != userTaskPageSvgNS || xmlLocalName(value.Name) != "svg" {
 					return errors.New("An icon must be an SVG document.")
 				}
 				rootChecked = true
-			} else if value.Name.Space != userTaskPageSvgNS || !allowed[value.Name.Local] {
+			} else if value.Name.Space != userTaskPageSvgNS || !allowed[xmlLocalName(value.Name)] {
 				invalid = true
 			}
 			if depth > 0 {
 				for _, attribute := range value.Attr {
-					local := attribute.Name.Local
+					local := xmlLocalName(attribute.Name)
 					if (attribute.Name.Space == "xml" || attribute.Name.Space == "http://www.w3.org/XML/1998/namespace") && local == "base" ||
 						local == "style" || strings.Contains(strings.ToLower(attribute.Value), "url(") ||
 						strings.HasPrefix(strings.ToLower(local), "on") || (local == "href" && !strings.HasPrefix(attribute.Value, "#")) {
@@ -608,11 +608,14 @@ func (n *xmlNode) attr(name string) string {
 	return value
 }
 
+// xmlLocalName is the local part of an XML name.
+func xmlLocalName(name xml.Name) string { return (name).Local }
+
 func xmlRawName(name xml.Name) string {
 	if name.Space != "" {
-		return name.Space + ":" + name.Local
+		return name.Space + ":" + xmlLocalName(name)
 	}
-	return name.Local
+	return xmlLocalName(name)
 }
 
 // xmlParse loads a document as XDocument.Load with LoadOptions.None (whitespace-only text dropped) and
