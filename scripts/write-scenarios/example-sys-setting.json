@@ -1,22 +1,27 @@
 [
   {
     "label": "create-sys-setting text, read back, remove",
-    "why": "Example for the T7-T15 authors; argument names are clio master's CreateSysSettingArgs, GetSysSettingArgs, ODataReadArgs and ODataDeleteArgs. Not yet run live: no stand is approved for writes (decision D1).",
+    "why": "Creates only a run-owned setting; DataService cleanup is required because this stand returns HTTP 405 to OData DELETE.",
     "steps": [
-      {"kind": "write", "label": "create", "tool": "create-sys-setting",
+      {"kind": "write", "label": "create", "tool": "create-sys-setting", "clio-run": true,
        "creates": "UsrParity{run}{side}Setting",
-       "go-tool-missing": "create-sys-setting is not implemented in this server yet (T12); remove this key when it is",
        "args": {"code": "UsrParity{run}{side}Setting", "name": "Parity {run} {side}",
                 "value-type-name": "ShortText", "value": "parity-value",
                 "description": "Created by scripts/compare-mcp-writes.py; safe to delete"}},
       {"kind": "cleanup", "for": "UsrParity{run}{side}Setting", "server": "clio",
-       "why": "Neither server has a delete tool for system settings: find the row's Id, then delete the SysSettings row through clio's odata-delete. Unverified until a stand is approved: that deleting the SysSettings row also removes its SysSettingsValue rows; the T12 author must confirm it on the stand.",
+       "why": "Find the own row and delete it through native DataService. The T12 live run separately checks whether this cascades to SysSettingsValue.",
        "calls": [
-         {"tool": "odata-read",
-          "args": {"entity": "SysSettings", "select": ["Id"],
-                   "filters": {"all": [{"field": "Code", "op": "eq", "value": "UsrParity{run}{side}Setting"}]}},
-          "capture": {"id": "$.value[0].id"}},
-         {"tool": "odata-delete", "args": {"entity": "SysSettings", "id": "{id}", "confirm": true}}
+         {"tool": "execute-esq", "clio-run": true,
+          "args": {"query": {"rootSchemaName": "SysSettings", "operationType": 0, "rowCount": 1,
+            "columns": {"items": {"Id": {"expression": {"expressionType": 0, "columnPath": "Id"}}}},
+            "filters": {"filterType": 6, "logicalOperation": 0, "isEnabled": true,
+              "items": {"byCode": {"filterType": 1, "comparisonType": 3, "isEnabled": true,
+                "leftExpression": {"expressionType": 0, "columnPath": "Code"},
+                "rightExpression": {"expressionType": 2, "parameter": {"dataValueType": 1,
+                  "value": "UsrParity{run}{side}Setting"}}}}}}},
+          "capture": {"id": "$.rows[0].id"}},
+         {"tool": "execute-dataservice-batch", "clio-run": true,
+          "args": {"operations": [{"operation": "delete", "schema-name": "SysSettings", "record-id": "{id}"}]}}
        ]},
       {"kind": "read-back", "label": "read", "tool": "get-sys-setting",
        "args": {"code": "UsrParity{run}{side}Setting"}},

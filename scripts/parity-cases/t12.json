@@ -1,0 +1,6 @@
+[
+  {"label":"create-sys-setting missing code","tool":"create-sys-setting","clio-run":true,"args":{"name":"Example","value-type-name":"ShortText"}},
+  {"label":"create-sys-setting unsupported type","tool":"create-sys-setting","clio-run":true,"args":{"code":"UsrParityInvalid","name":"Example","value-type-name":"Unknown"}},
+  {"label":"update-sys-setting missing value","tool":"update-sys-setting","clio-run":true,"args":{"code":"UsrParityNotCreated"}},
+  {"label":"update-sys-setting contradictory sources","tool":"update-sys-setting","clio-run":true,"args":{"code":"UsrParityNotCreated","value":"x","value-file-path":"/tmp/x"}}
+]
