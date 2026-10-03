@@ -322,6 +322,10 @@ class Harness:
                 side_state["attempted"].append(step["creates"])
                 side_state["replacements"][name] = step["creates"]
             self.guard(step, arguments, side_state, None)
+            if step.get("settle-seconds"):
+                # Background work the previous call started (an OData rebuild after an application or section
+                # write) refuses the next write on the shared stand; let it finish first.
+                time.sleep(step["settle-seconds"])
             response, seconds[side] = self.call(side, step, arguments)
             answers[side] = normalize(payload(response))
             self.capture(step, answers[side], arguments, side_state)
@@ -383,6 +387,8 @@ def run_cleanup(harness, step, side, side_state):
         arguments = substitute(call.get("args", {}), side_state["variables"])
         try:
             harness.guard(call, arguments, side_state, step["for"])
+            if call.get("settle-seconds"):
+                time.sleep(call["settle-seconds"])
             response, _ = harness.call(server_side, call, arguments)
         except Refused as error:
             return [f"$: {error}"]

@@ -112,6 +112,12 @@ A file is a list of scenarios: `{"label", "why"?, "steps": [...]}`. Placeholders
 | `expect` | `step` (label of an earlier step), `path` (for example `$.value`), `equals`, `side` (`both`, `clio`, `go`) | Checks one field of the step's answer on each side. Paths use normalized keys (lowercase, no `-`/`_`); write names in `equals` as templates. |
 | `cleanup` | `for` (a `creates` template of an earlier write), `server` (`own` or `clio`), `calls` (`tool`, `args`, `capture`, `clio-run`) | Always runs, also after a failure, for every object whose write was attempted. Cleanup steps run in reverse order (last created, first removed); the calls inside one step run in order, so a lookup can precede the delete that uses its result. `server: clio` removes both sides' objects through clio, for when this server has no delete tool yet. A `capture` that finds nothing means the object is already gone. |
 
+`settle-seconds: N` on a write or read-back step (or on one call of a cleanup step) waits N seconds before each
+side's call. Use it after a write that starts background work on the stand: an application or section write
+starts an OData rebuild (90-120 s) that refuses the next application write with "Creatio is currently
+rebuilding the OData library" on either server, and this stand cannot report the rebuild
+(`IsODataBuildRunning` answers an HTML page).
+
 `go-tool-missing: "<reason>"` on a write or read-back step marks the scenario `skipped`: nothing runs until
 the Go tool exists and the key is removed.
 
