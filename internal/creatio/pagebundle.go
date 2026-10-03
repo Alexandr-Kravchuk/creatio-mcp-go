@@ -57,7 +57,8 @@ func parsePageBody(body string) (parsedPageBody, error) {
 	}
 	for _, section := range sections {
 		content, ok := readPageSection(body, section.markers...)
-		if !ok || strings.TrimSpace(content) == "" {
+		// A present but empty section is a parse error in clio too: JSONH reports "Expected token".
+		if !ok {
 			*section.target = section.fallback()
 			continue
 		}
