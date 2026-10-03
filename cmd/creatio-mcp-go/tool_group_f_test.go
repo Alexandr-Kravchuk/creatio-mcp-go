@@ -69,16 +69,19 @@ func TestGroupFToolsRefuseEnvironmentSelectorsAndWrongTypes(t *testing.T) {
 		isError bool
 		want    string
 	}{
-		{&mcp.CallToolParams{Name: "compile-status", Arguments: map[string]any{"environment-name": "other"}}, false, `"status":"invalid-request","note":"environment-name is not accepted`},
-		{&mcp.CallToolParams{Name: "restart-status", Arguments: map[string]any{"environmentName": "other"}}, false, `"success":false`},
+		{&mcp.CallToolParams{Name: "compile-status", Arguments: map[string]any{"environment-name": "Other"}}, false, `"status":"not-found","environment-name":"Other","note":`},
+		{&mcp.CallToolParams{Name: "restart-status", Arguments: map[string]any{"environmentName": "other"}}, false, `{"success":true,"status":"not-found","note":`},
 		{&mcp.CallToolParams{Name: "compile-status", Arguments: map[string]any{"operation-id": 5}}, true, "invalid-parameter-type: argument 'operation-id' for MCP tool 'compile-status' must be a string."},
 		{&mcp.CallToolParams{Name: "last-compilation-log", Arguments: map[string]any{"foo": 1}}, false, `"error":"Unknown args: 'foo'.`},
-		{&mcp.CallToolParams{Name: "last-compilation-log", Arguments: map[string]any{"uri": "elsewhere"}}, false, `"diagnostics":[]`},
-		{&mcp.CallToolParams{Name: "get-fsm-mode", Arguments: map[string]any{"environmentName": "other"}}, true, "MCP tool 'get-fsm-mode' failed: environment-name is not accepted"},
-		{&mcp.CallToolParams{Name: "clio-run", Arguments: map[string]any{"command": "get-fsm-mode", "args": map[string]any{"login": "x"}}}, true, "Error: tool 'get-fsm-mode' failed: uri, login and password are not accepted"},
-		{&mcp.CallToolParams{Name: "resolve-oauth-system-user", Arguments: map[string]any{"environment-name": "other"}}, false, `{"success":false,"error":"environment-name is not accepted`},
+		{&mcp.CallToolParams{Name: "last-compilation-log", Arguments: map[string]any{"uri": "elsewhere"}}, false, `"error":"Unknown args: 'uri'. Valid: environment-name."`},
+		{&mcp.CallToolParams{Name: "last-compilation-log", Arguments: map[string]any{"environment-name": "other"}}, false, `"diagnostics":[],"error":"Environment with key 'other' not found.`},
+		{&mcp.CallToolParams{Name: "get-fsm-mode", Arguments: map[string]any{"environmentName": "other"}}, true,
+			"MCP tool 'get-fsm-mode' failed: Environment with key 'other' not found. Check your clio configuration."},
+		{&mcp.CallToolParams{Name: "clio-run", Arguments: map[string]any{"command": "get-fsm-mode", "args": map[string]any{"environment-name": "other"}}}, true,
+			"Error: tool 'get-fsm-mode' failed: Environment with key 'other' not found. Check your clio configuration."},
+		{&mcp.CallToolParams{Name: "resolve-oauth-system-user", Arguments: map[string]any{"environment-name": "other"}}, false, `{"success":false,"error":"Environment with key 'other' not found.`},
 		{&mcp.CallToolParams{Name: "resolve-oauth-system-user", Arguments: map[string]any{"id": 5}}, true, "argument 'id' for MCP tool 'resolve-oauth-system-user' must be a string."},
-		{&mcp.CallToolParams{Name: "verify-oauth-app", Arguments: map[string]any{"password": "x"}}, false, `"error":"OAuth verification failed.`},
+		{&mcp.CallToolParams{Name: "verify-oauth-app", Arguments: map[string]any{"environment-name": "other"}}, false, `"error":"OAuth verification failed.`},
 		{&mcp.CallToolParams{Name: "verify-oauth-app", Arguments: map[string]any{"client-secret": 5}}, true, "argument 'client-secret' for MCP tool 'verify-oauth-app' must be a string."},
 	}
 	for _, c := range cases {

@@ -3,14 +3,13 @@ package main
 import (
 	"context"
 
-	"github.com/Alexandr-Kravchuk/creatio-mcp-go/internal/creatio"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
 func init() {
 	registerTool(map[string]any{
 		"name": "read-data-binding-db",
-		"description": "Reports what a DB-first package data binding on the single configured Creatio instance ships: entity schema, row count, the " +
+		"description": "Reports what a DB-first package data binding on the target Creatio environment ships: entity schema, row count, the " +
 			"bound column set, and each row's values. Only the columns a binding was created with transfer, so check this rather than the live " +
 			"record. Localizable columns appear inline here but in a Localization folder in a package export. Prints bound values — treat a " +
 			"binding over a settings or credential schema as sensitive output. Returns clio's command envelope { exit-code, execution-log-messages }.",
@@ -18,7 +17,7 @@ func init() {
 			"package-name": map[string]string{"type": "string", "description": "Target package name on the remote environment"},
 			"binding-name": map[string]string{"type": "string", "description": "Binding folder name, i.e. the SysPackageSchemaData.Name"},
 		}},
-	}, func(ctx context.Context, client *creatio.Client, args map[string]any) (*mcp.CallToolResult, error) {
+	}, func(ctx context.Context, envs *environments, args map[string]any) (*mcp.CallToolResult, error) {
 		packageName, err := optionalStringArg(args, "read-data-binding-db", "package-name")
 		if err != nil {
 			return nil, err
@@ -27,9 +26,13 @@ func init() {
 		if err != nil {
 			return nil, err
 		}
-		// clio ignores unknown keys for this tool, so only a selector of another environment is refused.
-		if refusal := refusesConnectionArgs(args); refusal != "" {
-			return structuredToolResult(creatio.NewUserTasksResult(1, "Error", refusal)), nil
+		// clio resolves the environment per call; a failure is reported inside the tool's own answer.
+		client, failure, bindErr := envs.resolve("read-data-binding-db", args, scopeName)
+		if bindErr != nil {
+			return nil, bindErr
+		}
+		if failure != nil {
+			return resolverFailureEnvelope(failure), nil
 		}
 		return structuredToolResult(client.ReadDataBinding(ctx, packageName, bindingName)), nil
 	})

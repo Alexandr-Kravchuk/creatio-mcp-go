@@ -17,6 +17,13 @@ python3 scripts/compare-mcp.py --clio-dll <path>/clio.dll --go-bin ./creatio-mcp
 Cases live in `scripts/mcp-parity-cases.json` and `scripts/parity-cases/*.json`; evidence goes to
 `evidence/mcp-latest.json`.
 
+The Go server starts without `CREATIO_*` variables and gets `environment-name` on every call, as clio
+does (`--go-env-mode=name`, the default). `--go-env-mode=variables` keeps the older mode: the named
+environment is copied into `CREATIO_*` variables and the calls carry no name. `--clio-env a,b` runs every
+case once per name against the same two processes, so one Go process serves both environments in
+alternation; the evidence numbers the environments instead of naming them. The write script below still
+starts Go in the variables mode.
+
 ## Write tools: `scripts/compare-mcp-writes.py`
 
 A write cannot be compared by sending both servers the same arguments. Each scenario creates one object

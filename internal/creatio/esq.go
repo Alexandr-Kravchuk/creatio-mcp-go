@@ -176,6 +176,10 @@ func selectQueryErrorMessage(response selectQueryEnvelope) string {
 	return "Creatio rejected the SelectQuery."
 }
 
+// ESQFailure is the execute-esq envelope for a call that never reached Creatio, such as an unknown
+// environment. clio attaches its ESQ guidance hint to that failure too.
+func ESQFailure(message string) ExecuteESQResult { return esqFailure(message, true) }
+
 func esqFailure(message string, guidance bool) ExecuteESQResult {
 	result := ExecuteESQResult{Success: false, Error: message}
 	if guidance {

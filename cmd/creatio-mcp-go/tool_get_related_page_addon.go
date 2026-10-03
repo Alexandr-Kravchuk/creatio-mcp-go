@@ -10,7 +10,7 @@ import (
 func init() {
 	registerTool(map[string]any{
 		"name": "get-related-page-addon",
-		"description": "Read an object's current RelatedPage configuration on the single configured Creatio instance: which Freedom UI pages are bound " +
+		"description": "Read an object's current RelatedPage configuration on the target Creatio environment: which Freedom UI pages are bound " +
 			"as the default and the add page, per audience (role) and per record type. Returns entitySchemaUId as the base/root entity identity " +
 			"resolved by Creatio, each entry's page-schema-uid + resolved page-schema-name, the role uid + resolved role-name (for the standard " +
 			"'All employees' / 'All external users' audiences), the is-default / is-add / is-ssp-default flags, any type-column-value, and the " +
@@ -21,7 +21,7 @@ func init() {
 			"package-name":       map[string]string{"type": "string", "description": "Package that owns the add-on configuration."},
 			"schema-type":        map[string]string{"type": "string", "description": "Which add-on to read: 'web' (RelatedPage, default) or 'mobile' (MobileRelatedPage — the object's default mobile edit page)."},
 		}},
-	}, func(ctx context.Context, client *creatio.Client, args map[string]any) (*mcp.CallToolResult, error) {
+	}, func(ctx context.Context, envs *environments, args map[string]any) (*mcp.CallToolResult, error) {
 		values := map[string]string{}
 		for _, name := range []string{"entity-schema-name", "package-name", "schema-type"} {
 			value, err := optionalStringArg(args, "get-related-page-addon", name)
@@ -30,9 +30,13 @@ func init() {
 			}
 			values[name] = value
 		}
-		// clio ignores unknown keys for this tool; its uri/login/password fallback would target another environment.
-		if refusal := refusesConnectionArgs(args); refusal != "" {
-			return structuredToolResult(creatio.RelatedPageAddonFailure(refusal)), nil
+		// clio ignores unknown keys for this tool and honours uri/login/password.
+		client, failure, err := envs.resolve("get-related-page-addon", args, scopeDirect)
+		if err != nil {
+			return nil, err
+		}
+		if failure != nil {
+			return structuredToolResult(creatio.RelatedPageAddonFailure(redacted(failure))), nil
 		}
 		return structuredToolResult(client.GetRelatedPageAddon(ctx, values["entity-schema-name"], values["package-name"], values["schema-type"])), nil
 	})

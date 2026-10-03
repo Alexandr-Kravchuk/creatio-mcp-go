@@ -14,11 +14,15 @@ func TestFindAppArgumentsRecoverAliasesAndRefuseUnknownKeys(t *testing.T) {
 	if input.SearchPattern != "bound" {
 		t.Fatalf("a bound argument must win over its alias: %#v", input)
 	}
-	if _, refusal := findAppArguments(map[string]any{"bogus": 1}); refusal != "Unknown args: 'bogus'. Valid: code, search-pattern. Use search-pattern for a substring filter." {
+	if _, refusal := findAppArguments(map[string]any{"bogus": 1}); refusal != "Unknown args: 'bogus'. Valid: environment-name, search-pattern, code. Use search-pattern for a substring filter." {
 		t.Fatalf("unknown key refusal = %q", refusal)
 	}
-	if _, refusal := findAppArguments(map[string]any{"environment-name": "dev"}); refusal != environmentNameRefusal {
+	if _, refusal := findAppArguments(map[string]any{"environment-name": "dev"}); refusal != "" {
 		t.Fatalf("environment-name refusal = %q", refusal)
+	}
+	// clio gives find-app an empty rename map, so the legacy spelling is an unknown key there.
+	if _, refusal := findAppArguments(map[string]any{"environmentName": "dev"}); refusal != "Unknown args: 'environmentName'. Valid: environment-name, search-pattern, code. Use search-pattern for a substring filter." {
+		t.Fatalf("environmentName refusal = %q", refusal)
 	}
 	if _, refusal := findAppArguments(map[string]any{"code": 5}); !strings.Contains(refusal, "invalid-parameter-type") {
 		t.Fatalf("type refusal = %q", refusal)

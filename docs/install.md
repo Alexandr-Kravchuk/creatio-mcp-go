@@ -22,9 +22,44 @@ signed: if Windows marks it as blocked, run `Unblock-File .\creatio-mcp-go.exe` 
 
 ## 2. Pick the connection settings
 
-One server process works with **one** Creatio environment, set through environment variables. Unlike
-clio, tools take no `environment-name`; to work with several environments, register the server
-several times under different names.
+One server process serves every environment registered in clio, the same way clio does: each call
+names its target with `environment-name` (`get-fsm-mode` takes `environmentName`, as in clio).
+
+**clio's settings file.** The server reads clio's `appsettings.json` and never writes it:
+
+| Platform | File |
+|---|---|
+| macOS, Linux | `$HOME/creatio/clio/appsettings.json` |
+| Windows | `%LOCALAPPDATA%\creatio\clio\appsettings.json` |
+| Any, when `CLIO_HOME` is set | `$CLIO_HOME/appsettings.json` |
+
+Register environments with clio (`clio reg-web-app <name> -u <url> -l <login> -p <password>`, or with
+`--client-id`, `--client-secret` and `--auth-app-uri` for OAuth). The server reads `Uri`, `Login`,
+`Password`, `ClientId`, `ClientSecret`, `AuthAppUri`, `IsNetCore` and `Safe` of each environment:
+
+- an environment with `ClientId` uses OAuth client credentials, otherwise forms login; for a
+  `*.creatio.com` site without `AuthAppUri` the token endpoint is the site's `-is` identity service,
+  as in clio;
+- names match ignoring case; an unknown name is answered with clio's text, which lists the registered
+  names;
+- the file is read again when it changes, so an environment registered while the server runs is
+  available on the next call;
+- each environment gets one authenticated session, reused by every call to it, also by parallel ones;
+- an environment marked `Safe` is refused, as clio refuses it without an interactive confirmation.
+
+The `list-environments` tool shows the registered environments, with passwords and client secrets
+masked, exactly as clio's tool does. The tools whose clio counterpart accepts `uri`, `login` and
+`password` (and `describe-environment` also `client-id`, `client-secret`, `auth-app-uri`) accept them
+too, for a one-off connection without a registered name.
+
+**A call without `environment-name`** goes to the default target:
+
+1. the environment set by the `CREATIO_*` variables below, when `CREATIO_URL` is set;
+2. otherwise clio's active environment (`ActiveEnvironmentKey` in `appsettings.json`).
+
+clio itself refuses such a call ("Either a configured environment name or an explicit URI is
+required..."); this server keeps the default so a registration with `CREATIO_*` variables, as in
+earlier releases, keeps working.
 
 | Variable | Value |
 |---|---|
@@ -40,6 +75,14 @@ into your shell history and into the client's config file in plain text, the sam
 in `appsettings.json`.
 
 ## 3. Claude Code
+
+With environments registered in clio, no variables are needed:
+
+```bash
+claude mcp add creatio-go -- /path/to/creatio-mcp-go
+```
+
+With one default environment set by variables:
 
 ```bash
 claude mcp add creatio-go --env CREATIO_URL=https://your-site.creatio.com --env CREATIO_LOGIN=example-user --env CREATIO_PASSWORD=replace-me -- /path/to/creatio-mcp-go
@@ -82,17 +125,19 @@ On Windows, use the full path to the executable in both clients, for example
 
 ## 5. Try a call
 
-Ask the agent, for example: *"Call list-apps of creatio-go and tell me how many applications there
-are."* A working setup answers with `success: true` and the list. A wrong URL, password or runtime
-setting does not stop the server from starting; the first call then fails with the reason, for
-example `forms login rejected credentials` or `DataService SelectQuery returned HTTP 404`.
+Ask the agent, for example: *"Call list-environments of creatio-go, then list-apps of the first
+environment and tell me how many applications there are."* A working setup answers with
+`success: true` and the list. A wrong URL, password or runtime setting does not stop the server from
+starting; the first call then fails with the reason, for example `forms login rejected credentials` or
+`DataService SelectQuery returned HTTP 404`.
 
-Only three tools are listed up front — `list-apps`, `clio-run` and `get-tool-contract`, as in clio.
-The rest are called by name, directly or through `clio-run`, and `get-tool-contract` returns their
-input schemas:
+Four tools are listed up front — `list-apps`, `list-environments`, `clio-run` and `get-tool-contract`,
+as in clio. The rest are called by name, directly or through `clio-run`, and `get-tool-contract`
+returns their input schemas:
 
 | Tool | What it reads |
 |---|---|
+| `list-environments` | Environments registered in clio's `appsettings.json`, secrets masked |
 | `list-apps` | Installed applications |
 | `list-packages` | Packages, with name filter and paging |
 | `list-app-sections` | Sections of one application |

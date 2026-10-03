@@ -49,7 +49,8 @@ func TestGroupJToolsAnswerByRawNameAndThroughClioRun(t *testing.T) {
 		{"inspect-license", map[string]any{"action": "role-assign"},
 			`{"exit-code":1,"execution-log-messages":[{"message-type":"Error","value":"This inspection tool accepts only: user-list, role-list."}]}`},
 		{"inspect-access", map[string]any{"action": "operations", "environment-name": "other"},
-			`{"exit-code":1,"execution-log-messages":[{"message-type":"Error","value":` + groupEJSON(t, environmentNameRefusal) + `}]}`},
+			`{"exit-code":1,"execution-log-messages":[{"message-type":"Error","value":` +
+				groupEJSON(t, "[EnvironmentResolutionException] "+environmentNotFoundMessage("other", creatio.ClioSettings{})) + `}]}`},
 		{"check-theming-access", map[string]any{},
 			`{"success":true,"canManageThemes":false,"canCustomizeBranding":false,"themeServiceMinVersion":"10.0.0"}`},
 		{"get-theme", map[string]any{"id": "00000000-0000-0000-0000-000000000001"},

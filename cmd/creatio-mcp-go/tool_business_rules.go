@@ -14,7 +14,7 @@ func init() {
 		"name": "read-entity-business-rules",
 		"description": "Reads ALL entity-level Freedom UI business rules persisted for an entity schema (full package hierarchy, so inherited rules are included). " +
 			"Each rule is returned in the create/update contract shape with 'name', 'enabled', and block 'uId's. " +
-			"apply-static-filter rules read back with the same friendly 'filter' shape used to create them. Targets the single configured Creatio instance.",
+			"apply-static-filter rules read back with the same friendly 'filter' shape used to create them. Targets the environment named by environment-name.",
 		"inputSchema": map[string]any{
 			"type":     "object",
 			"required": []string{"package-name", "entity-schema-name"},
@@ -23,13 +23,20 @@ func init() {
 				"entity-schema-name": map[string]string{"type": "string", "description": "Target entity schema name."},
 			},
 		},
-	}, func(ctx context.Context, client *creatio.Client, args map[string]any) (*mcp.CallToolResult, error) {
+	}, func(ctx context.Context, envs *environments, args map[string]any) (*mcp.CallToolResult, error) {
 		var input struct {
 			PackageName      string `json:"package-name"`
 			EntitySchemaName string `json:"entity-schema-name"`
 		}
-		if err := decodeStrictArgs(args, &input); err != nil {
+		if err := decodeStrictArgs(withoutEnvironmentArgs(args, scopeName), &input); err != nil {
 			return nil, fmt.Errorf("decode read-entity-business-rules arguments: %w", err)
+		}
+		client, refusal, err := envs.resolve("read-entity-business-rules", args, scopeName)
+		if err != nil {
+			return nil, err
+		}
+		if refusal != nil {
+			return resolverFailureEnvelope(refusal), nil
 		}
 		return structuredToolResult(client.ReadEntityBusinessRules(ctx, creatio.BusinessRulesReadRequest{
 			PackageName: input.PackageName, SchemaName: input.EntitySchemaName,
@@ -39,7 +46,7 @@ func init() {
 	registerTool(map[string]any{
 		"name": "read-page-business-rules",
 		"description": "Reads ALL page-level Freedom UI business rules persisted for a page schema (full package hierarchy, so inherited rules are included). " +
-			"Each rule is returned in the create/update contract shape with 'name', 'enabled', and block 'uId's. Targets the single configured Creatio instance.",
+			"Each rule is returned in the create/update contract shape with 'name', 'enabled', and block 'uId's. Targets the environment named by environment-name.",
 		"inputSchema": map[string]any{
 			"type":     "object",
 			"required": []string{"package-name"},
@@ -49,14 +56,21 @@ func init() {
 				"schema-name":      map[string]string{"type": "string", "description": "Alias for page-schema-name; page-schema-name wins when both are supplied."},
 			},
 		},
-	}, func(ctx context.Context, client *creatio.Client, args map[string]any) (*mcp.CallToolResult, error) {
+	}, func(ctx context.Context, envs *environments, args map[string]any) (*mcp.CallToolResult, error) {
 		var input struct {
 			PackageName    string `json:"package-name"`
 			PageSchemaName string `json:"page-schema-name"`
 			SchemaName     string `json:"schema-name"`
 		}
-		if err := decodeStrictArgs(args, &input); err != nil {
+		if err := decodeStrictArgs(withoutEnvironmentArgs(args, scopeName), &input); err != nil {
 			return nil, fmt.Errorf("decode read-page-business-rules arguments: %w", err)
+		}
+		client, refusal, err := envs.resolve("read-page-business-rules", args, scopeName)
+		if err != nil {
+			return nil, err
+		}
+		if refusal != nil {
+			return resolverFailureEnvelope(refusal), nil
 		}
 		schemaName := input.PageSchemaName
 		if strings.TrimSpace(schemaName) == "" {

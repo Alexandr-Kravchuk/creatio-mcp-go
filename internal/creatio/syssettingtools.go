@@ -279,6 +279,25 @@ func sysSettingToolClassify(err error, label string) SysSettingFailure {
 	return SysSettingFailure{"Failed " + label + ".", "Unknown", sysSettingToolUnknownCause, sysSettingToolUnknownRecovery}
 }
 
+// sysSettingToolConfigurationRecovery is clio's advice for an environment that cannot be resolved.
+const sysSettingToolConfigurationRecovery = "Register the environment with reg-web-app, or pick one from list-environments."
+
+// SysSettingConfigurationFailure is clio's classified failure for an environment that cannot be resolved:
+// errorText is the tool's own label ("Failed reading sys-setting."), cause the resolution message, cut at
+// 300 characters as clio cuts every cause.
+func SysSettingConfigurationFailure(errorText, cause string) SysSettingFailure {
+	return SysSettingFailure{errorText, "Configuration", sysSettingToolClamp(cause, sysSettingToolMaxCause), sysSettingToolConfigurationRecovery}
+}
+
+// SysSettingFailureLabel is the error text clio gives a sys-setting tool failure: "Failed reading sys-setting."
+// or "Failed listing sys-settings.".
+func SysSettingFailureLabel(list bool) string {
+	if list {
+		return "Failed " + sysSettingToolListLabel + "."
+	}
+	return "Failed " + sysSettingToolReadLabel + "."
+}
+
 func sysSettingToolClamp(text string, limit int) string {
 	runes := []rune(text)
 	if len(runes) <= limit {

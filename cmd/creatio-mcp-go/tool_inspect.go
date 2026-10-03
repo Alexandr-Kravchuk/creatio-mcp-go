@@ -86,19 +86,19 @@ const inspectGuidanceNote = " Read get-guidance name=administration before inter
 
 func init() {
 	registerInspectTool(creatio.InspectUserTool, inspectUserArgs,
-		"Inspect user administration of the single configured environment. Actions: list (SysAdminUnit users, types 4, 5 and 7, "+
+		"Inspect user administration of the target environment. Actions: list (SysAdminUnit users, types 4, 5 and 7, "+
 			"filtered by id or user-login, paged by offset/limit), lock-status ({id, blocked} from AdministrationService.GetIsUserBlocked). "+
 			"Returns clio's command envelope { exit-code, execution-log-messages }: one Info message holding the rows as JSON, or one Error.")
 	registerInspectTool(creatio.InspectRoleTool, inspectRoleArgs,
-		"Inspect role administration of the single configured environment. Actions: list (roles, types 0, 1, 2, 3 and 6, filtered by "+
+		"Inspect role administration of the target environment. Actions: list (roles, types 0, 1, 2, 3 and 6, filtered by "+
 			"id, name or type), memberships (a user's SysUserInRole rows, or SysAdminUnitInRole with effective), members (a role's users), "+
 			"functional-roles (SysFuncRoleInOrgRole of an organizational role). Returns clio's command envelope with the rows as JSON.")
 	registerInspectTool(creatio.InspectLicenseTool, inspectLicenseArgs,
-		"Inspect license administration of the single configured environment. Actions: user-list (license packages available to a user "+
+		"Inspect license administration of the target environment. Actions: user-list (license packages available to a user "+
 			"from AdministrationService.GetAvailableLicPackages), role-list (SysLicPackageInRole rows of a role). Returns clio's command "+
 			"envelope with the result as JSON.")
 	registerInspectTool(creatio.InspectAccessTool, inspectAccessArgs,
-		"Inspect access administration of the single configured environment. Actions: ip-list (SysAdminUnitIPRange rows of a user or "+
+		"Inspect access administration of the target environment. Actions: ip-list (SysAdminUnitIPRange rows of a user or "+
 			"role), delegations (SysAdminUnitGrantedRight rows granted to a user), operations (SysAdminOperation, optionally by exact code), "+
 			"operation-grants (SysAdminOperationGrantee rows of an operation). Returns clio's command envelope with the rows as JSON.")
 }
@@ -127,14 +127,18 @@ func registerInspectTool(tool creatio.InspectTool, specs []inspectArgSpec, descr
 		"name":        tool.Name,
 		"description": description + inspectGuidanceNote,
 		"inputSchema": map[string]any{"type": "object", "required": []string{"action"}, "properties": properties},
-	}, func(ctx context.Context, client *creatio.Client, args map[string]any) (*mcp.CallToolResult, error) {
-		// clio ignores unknown keys here; only an environment selector is refused, inside the envelope.
-		if refusal := refusesConnectionArgs(args); refusal != "" {
-			return structuredToolResult(creatio.InspectFailure(refusal)), nil
-		}
+	}, func(ctx context.Context, envs *environments, args map[string]any) (*mcp.CallToolResult, error) {
+		// clio ignores unknown keys here.
 		bound, err := bindInspectArgs(tool.Name, specs, args)
 		if err != nil {
 			return nil, err
+		}
+		client, failure, err := envs.resolve(tool.Name, args, scopeName)
+		if err != nil {
+			return nil, err
+		}
+		if failure != nil {
+			return resolverFailureEnvelope(failure), nil
 		}
 		return structuredToolResult(client.Inspect(ctx, tool, bound)), nil
 	})

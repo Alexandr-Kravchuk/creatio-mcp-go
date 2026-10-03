@@ -15,21 +15,28 @@ var themeGetLegacyAliases = []string{"outputFile", "output_file"}
 func init() {
 	registerTool(map[string]any{
 		"name": "check-theming-access",
-		"description": "Check whether the caller can manage custom themes on the single configured environment. Runs on any Creatio version: " +
+		"description": "Check whether the caller can manage custom themes on the target environment. Runs on any Creatio version: " +
 			"it reads only RightsService (the CanManageThemes system operation) and LicenseService (the CanCustomizeBranding license). " +
 			"Returns { success, canManageThemes, canCustomizeBranding, themeServiceMinVersion, error? }; themeServiceMinVersion is the " +
 			"Creatio version the theme write commands need. Advisory only.",
 		"inputSchema": map[string]any{"type": "object", "properties": map[string]any{}},
-	}, func(ctx context.Context, client *creatio.Client, args map[string]any) (*mcp.CallToolResult, error) {
+	}, func(ctx context.Context, envs *environments, args map[string]any) (*mcp.CallToolResult, error) {
 		// clio refuses unknown keys inside its envelope, so these failures stay success:false results.
-		if refusal := unknownArgumentError(args, nil); refusal != "" {
+		if refusal := unknownArgumentError(args, "environment-name"); refusal != "" {
 			return structuredToolResult(creatio.ThemingAccessFailure(refusal)), nil
+		}
+		client, failure, err := envs.resolve("check-theming-access", args, scopeName)
+		if err != nil {
+			return nil, err
+		}
+		if failure != nil {
+			return structuredToolResult(creatio.ThemingAccessFailure(redacted(failure))), nil
 		}
 		return structuredToolResult(client.CheckThemingAccess(ctx)), nil
 	})
 	registerTool(map[string]any{
 		"name": "get-theme",
-		"description": "Read the content (theme.css) and metadata of a custom Creatio theme by id on the single configured environment " +
+		"description": "Read the content (theme.css) and metadata of a custom Creatio theme by id on the target environment " +
 			"(Creatio 10.0.0 or later; the floor is not pre-checked). The theme is resolved through the GetAvailableThemes catalog and its CSS " +
 			"read from the catalog's cssFilePath. Returns { success, id, caption, cssClassName, cssFilePath, cssContent?, cssContentLength?, error? }. " +
 			"Set output-file to write the CSS to disk instead of the response: the path must be inside the workspace or the OS temp " +
@@ -41,7 +48,7 @@ func init() {
 	}, invokeGetTheme)
 }
 
-func invokeGetTheme(ctx context.Context, client *creatio.Client, args map[string]any) (*mcp.CallToolResult, error) {
+func invokeGetTheme(ctx context.Context, envs *environments, args map[string]any) (*mcp.CallToolResult, error) {
 	id, err := optionalStringArg(args, "get-theme", "id")
 	if err != nil {
 		return nil, err
@@ -55,11 +62,18 @@ func invokeGetTheme(ctx context.Context, client *creatio.Client, args map[string
 			return structuredToolResult(creatio.ThemeGetFailure(fmt.Sprintf("Rename: '%s' -> 'output-file'.", alias))), nil
 		}
 	}
-	if refusal := unknownArgumentError(args, map[string]bool{"id": true, "output-file": true}); refusal != "" {
+	if refusal := unknownArgumentError(args, "environment-name", "id", "output-file"); refusal != "" {
 		return structuredToolResult(creatio.ThemeGetResult{Error: refusal}), nil
 	}
 	if strings.TrimSpace(id) == "" {
 		return structuredToolResult(creatio.ThemeGetResult{Error: "id is required and cannot be empty."}), nil
+	}
+	client, failure, err := envs.resolve("get-theme", args, scopeName)
+	if err != nil {
+		return nil, err
+	}
+	if failure != nil {
+		return structuredToolResult(creatio.ThemeGetResult{Error: redacted(failure)}), nil
 	}
 	return structuredToolResult(client.GetTheme(ctx, id, outputFile)), nil
 }

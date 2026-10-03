@@ -38,7 +38,7 @@ func TestGroupDToolsAnswerByRawNameAndThroughClioRun(t *testing.T) {
 		"read-entity-business-rules": {map[string]any{"package-name": "Nope", "entity-schema-name": "Account"}, `{"count":0,"rules":[],"error":"Package 'Nope' was not found."}`},
 		"read-page-business-rules":   {map[string]any{"package-name": "Nope"}, `{"count":0,"rules":[],"error":"page-schema-name is required."}`},
 		"get-record-rights":          {map[string]any{"entity": "Contact", "record-id": "x"}, `{"success":true,"output":"No record rights found for Contact 'x'."}`},
-		"get-process-signature":      {map[string]any{"process-name": "P", "bogus": 1}, `{"success":false,"processResolutionFailed":false,"parameters":[],"error":"Unknown args: 'bogus'. Valid: culture, process-name."}`},
+		"get-process-signature":      {map[string]any{"process-name": "P", "bogus": 1}, `{"success":false,"processResolutionFailed":false,"parameters":[],"error":"Unknown args: 'bogus'. Valid: environment-name, process-name, culture, uri, login, password."}`},
 	}
 	for name, c := range cases {
 		for _, call := range []*mcp.CallToolParams{
@@ -54,11 +54,12 @@ func TestGroupDToolsAnswerByRawNameAndThroughClioRun(t *testing.T) {
 			}
 		}
 	}
-	result, err := session.CallTool(context.Background(), &mcp.CallToolParams{Name: "get-process-signature", Arguments: map[string]any{"process-name": "P", "uri": "http://example.com"}})
+	result, err := session.CallTool(context.Background(), &mcp.CallToolParams{Name: "get-process-signature", Arguments: map[string]any{"process-name": "P", "environment-name": "other"}})
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := `{"success":false,"processResolutionFailed":false,"parameters":[],"error":"` + directConnectionRefusal + `"}`
+	notFound := redacted(&environmentError{message: environmentNotFoundMessage("other", creatio.ClioSettings{})})
+	want := `{"success":false,"processResolutionFailed":false,"parameters":[],"error":` + groupEJSON(t, notFound) + `}`
 	if encoded := canonicalJSON(t, result.StructuredContent); encoded != canonicalJSON(t, json.RawMessage(want)) {
 		t.Fatalf("uri refusal = %s", encoded)
 	}

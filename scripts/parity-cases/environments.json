@@ -1,0 +1,16 @@
+[
+  {"label": "list-environments", "tool": "list-environments"},
+  {"label": "list-environments through clio-run", "tool": "list-environments", "args": {"ignored": 1}, "clio-run": true},
+  {"label": "list-apps unknown environment", "tool": "list-apps", "args": {"environment-name": "zz-no-such-environment"}},
+  {"label": "get-app-info unknown environment", "tool": "get-app-info", "args": {"environment-name": "zz-no-such-environment", "code": "CrtCustomer360App"}},
+  {"label": "find-app unknown environment", "tool": "find-app", "args": {"environment-name": "zz-no-such-environment"}},
+  {"label": "list-pages unknown environment", "tool": "list-pages", "args": {"environment-name": "zz-no-such-environment", "package-name": "CrtBase"}},
+  {"label": "get-sys-setting unknown environment", "tool": "get-sys-setting", "args": {"environment-name": "zz-no-such-environment", "code": "SchemaNamePrefix"}, "clio-run": true},
+  {"label": "get-schema-name-prefix unknown environment", "tool": "get-schema-name-prefix", "args": {"environment-name": "zz-no-such-environment"}, "clio-run": true},
+  {"label": "describe-environment unknown environment", "tool": "describe-environment", "args": {"environment-name": "zz-no-such-environment"}, "clio-run": true},
+  {"label": "get-record-rights unknown environment", "tool": "get-record-rights", "args": {"environment-name": "zz-no-such-environment", "entity": "Contact", "record-id": "00000000-0000-0000-0000-000000000001"}, "clio-run": true},
+  {"label": "dataforge-status unknown environment", "tool": "dataforge-status", "args": {"environment-name": "zz-no-such-environment"}, "clio-run": true},
+  {"label": "get-fsm-mode unknown environment", "tool": "get-fsm-mode", "args": {"environmentName": "zz-no-such-environment"}, "clio-run": true, "clio-environment-key": "environmentName"},
+  {"label": "compile-status echoes an unknown environment", "tool": "compile-status", "args": {"environment-name": "zz-no-such-environment"}, "clio-run": true},
+  {"label": "list-themes legacy environmentName spelling", "tool": "list-themes", "args": {"environmentName": "zz-no-such-environment"}, "clio-run": true}
+]

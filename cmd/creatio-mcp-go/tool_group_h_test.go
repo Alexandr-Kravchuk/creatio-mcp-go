@@ -77,7 +77,7 @@ func TestGroupHToolsRefuseWrongTypesAndForeignEnvironments(t *testing.T) {
 		}
 	}
 	result, err := session.CallTool(context.Background(), &mcp.CallToolParams{Name: "get-schema", Arguments: map[string]any{"environment-name": "other"}})
-	if err != nil || result.IsError || !strings.Contains(result.Content[0].(*mcp.TextContent).Text, "environment-name is not accepted") {
+	if err != nil || result.IsError || !strings.Contains(result.Content[0].(*mcp.TextContent).Text, "Environment with key 'other' not found.") {
 		t.Fatalf("get-schema environment = %#v, err = %v", result, err)
 	}
 }

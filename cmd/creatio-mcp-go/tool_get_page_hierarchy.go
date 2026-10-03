@@ -13,7 +13,7 @@ func init() {
 	registerTool(map[string]any{
 		"name": "get-page-hierarchy",
 		"description": "Return the FULL Freedom UI page replacing-schema chain (root first, ordered by hierarchy level) with each " +
-			"schema's raw body in ONE call, from the single configured Creatio instance. Use this instead of calling get-page / " +
+			"schema's raw body in ONE call, from the target Creatio environment. Use this instead of calling get-page / " +
 			"get-client-unit-schema once per schema when you need to inspect a whole replacing chain. For a single schema's editable " +
 			"body use get-page. Pass metadata-only for a lightweight chain listing, or offset/limit to page a very large chain; bodies " +
 			"are left out when the selected window exceeds 200000 characters.",
@@ -23,11 +23,7 @@ func init() {
 			"offset":        map[string]string{"type": "integer", "description": "Optional. Zero-based index of the first chain entry to return (root first). Default 0."},
 			"limit":         map[string]string{"type": "integer", "description": "Optional. Maximum number of chain entries to return; 0/omitted returns the whole chain from offset."},
 		}},
-	}, func(ctx context.Context, client *creatio.Client, args map[string]any) (*mcp.CallToolResult, error) {
-		// clio ignores unknown keys for this tool, so only a selector of another environment is refused.
-		if refusal := refusesConnectionArgs(args); refusal != "" {
-			return structuredToolResult(creatio.PageHierarchyResult{Error: refusal}), nil
-		}
+	}, func(ctx context.Context, envs *environments, args map[string]any) (*mcp.CallToolResult, error) {
 		var input creatio.PageHierarchyRequest
 		var err error
 		if input.SchemaName, err = optionalStringArg(args, "get-page-hierarchy", "schema-name"); err != nil {
@@ -41,6 +37,15 @@ func init() {
 		}
 		if input.Limit, err = hierarchyIntArg(args, "get-page-hierarchy", "limit"); err != nil {
 			return nil, err
+		}
+		// clio resolves the environment per call; a failure is reported inside the tool's own answer.
+		client, failure, bindErr := envs.resolve("get-page-hierarchy", args, scopeDirect)
+		if bindErr != nil {
+			return nil, bindErr
+		}
+		if failure != nil {
+			refusal := redacted(failure)
+			return structuredToolResult(creatio.PageHierarchyResult{Error: refusal}), nil
 		}
 		return structuredToolResult(client.GetPageHierarchy(ctx, input)), nil
 	})

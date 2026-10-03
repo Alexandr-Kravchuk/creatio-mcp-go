@@ -51,19 +51,17 @@ func main() {
 		time.Sleep(30 * time.Minute)
 		return
 	}
-	config, err := creatio.LoadConfig()
-	if err != nil {
-		fatal(err)
-	}
-	client, err := creatio.NewClient(config)
-	if err != nil {
-		fatal(err)
-	}
-	if *writeProbe {
-		runWriteProbe(client)
-		return
-	}
-	if *listJSON {
+	envs := newEnvironments(creatio.ClioSettingsPath())
+	if *writeProbe || *listJSON {
+		// The one-shot modes act on the default target: CREATIO_* when set, otherwise clio's active environment.
+		client, err := envs.client("", creatio.ConnectionOverrides{})
+		if err != nil {
+			fatal(err)
+		}
+		if *writeProbe {
+			runWriteProbe(client)
+			return
+		}
 		apps, err := client.ListApps(context.Background())
 		if err != nil {
 			fatal(err)
@@ -73,14 +71,15 @@ func main() {
 		}
 		return
 	}
-	server := newMCPServer(client)
+	server := newMCPServerWithHiddenTools(envs, defaultHiddenToolServices())
 	if err := server.Run(context.Background(), &mcp.StdioTransport{}); err != nil {
 		fatal(err)
 	}
 }
 
+// newMCPServer serves every call that names no environment with one client; tests use it.
 func newMCPServer(client *creatio.Client) *mcp.Server {
-	return newMCPServerWithHiddenTools(client, defaultHiddenToolServices())
+	return newMCPServerWithHiddenTools(staticEnvironments(client), defaultHiddenToolServices())
 }
 
 type hiddenToolServices struct {
@@ -99,18 +98,27 @@ func defaultHiddenToolServices() hiddenToolServices {
 	}
 }
 
-func newMCPServerWithHiddenTools(client *creatio.Client, hostTools hiddenToolServices) *mcp.Server {
+func newMCPServerWithHiddenTools(envs *environments, hostTools hiddenToolServices) *mcp.Server {
 	server := mcp.NewServer(&mcp.Implementation{Name: "creatio-mcp-go", Version: serverVersion()}, nil)
 	mcp.AddTool(server, &mcp.Tool{Name: "list-apps", Description: "List installed Creatio applications through DataService."},
-		func(ctx context.Context, _ *mcp.CallToolRequest, _ struct{}) (*mcp.CallToolResult, any, error) {
+		func(ctx context.Context, _ *mcp.CallToolRequest, input listAppsArgs) (*mcp.CallToolResult, any, error) {
+			client, err := envs.client(input.EnvironmentName, creatio.ConnectionOverrides{})
+			if err != nil {
+				return nil, creatio.AppListResponse{Error: redacted(err)}, nil
+			}
 			return nil, client.ListAppsResponse(ctx), nil
+		})
+	mcp.AddTool(server, &mcp.Tool{Name: "list-environments", Description: listEnvironmentsDescription,
+		Annotations: &mcp.ToolAnnotations{ReadOnlyHint: true, IdempotentHint: true, DestructiveHint: new(bool), OpenWorldHint: new(bool)}},
+		func(_ context.Context, _ *mcp.CallToolRequest, _ map[string]any) (*mcp.CallToolResult, any, error) {
+			return envs.listEnvironments(), nil, nil
 		})
 	// Hidden tools are deliberately omitted from tools/list. They remain directly callable by raw
 	// name and through clio-run, while get-tool-contract provides their schemas on demand.
 	mcp.AddTool(server, &mcp.Tool{Name: "clio-run", Description: "Invoke a supported Creatio MCP tool by name."},
 		func(ctx context.Context, req *mcp.CallToolRequest, input clioRunArgs) (*mcp.CallToolResult, any, error) {
 			command := strings.TrimSpace(input.Command)
-			result, err := invokeHiddenTool(ctx, client, hostTools, command, input.Args,
+			result, err := invokeHiddenTool(ctx, envs, hostTools, command, input.Args,
 				progressReporter(ctx, req.Session, req.Params.GetProgressToken()))
 			if err != nil {
 				// clio's clio-run dispatcher reports a failed inner tool with this prefix.
@@ -144,7 +152,7 @@ func newMCPServerWithHiddenTools(client *creatio.Client, hostTools hiddenToolSer
 					return toolError(err), nil
 				}
 			}
-			result, err := invokeHiddenTool(ctx, client, hostTools, call.Params.Name, args,
+			result, err := invokeHiddenTool(ctx, envs, hostTools, call.Params.Name, args,
 				progressReporter(ctx, call.Session, call.Params.GetProgressToken()))
 			if err != nil {
 				// clio's McpToolErrorFilter reports a failed direct call with this prefix.
@@ -184,15 +192,22 @@ func progressReporter(ctx context.Context, session *mcp.ServerSession, token any
 	}
 }
 
-func invokeHiddenTool(ctx context.Context, client *creatio.Client, hostTools hiddenToolServices, name string, args map[string]any,
+func invokeHiddenTool(ctx context.Context, envs *environments, hostTools hiddenToolServices, name string, args map[string]any,
 	progress func(float64, float64, string) error) (*mcp.CallToolResult, error) {
 	switch name {
 	case "get-sql-schema":
 		var input struct {
 			SchemaName string `json:"schema-name"`
 		}
-		if err := decodeStrictArgs(args, &input); err != nil {
+		if err := decodeStrictArgs(withoutEnvironmentArgs(args, scopeDirect), &input); err != nil {
 			return nil, fmt.Errorf("decode get-sql-schema arguments: %w", err)
+		}
+		client, failure, err := envs.resolve(name, args, scopeDirect)
+		if err != nil {
+			return nil, err
+		}
+		if failure != nil {
+			return structuredToolResult(creatio.SQLSchemaResult{Error: redacted(failure)}), nil
 		}
 		return structuredToolResult(client.GetSQLSchema(ctx, input.SchemaName)), nil
 	case "get-package-file":
@@ -200,16 +215,30 @@ func invokeHiddenTool(ctx context.Context, client *creatio.Client, hostTools hid
 			PackageName string `json:"package-name"`
 			FilePath    string `json:"file-path"`
 		}
-		if err := decodeStrictArgs(args, &input); err != nil {
+		if err := decodeStrictArgs(withoutEnvironmentArgs(args, scopeDirect), &input); err != nil {
 			return nil, fmt.Errorf("decode get-package-file arguments: %w", err)
+		}
+		client, failure, err := envs.resolve(name, args, scopeDirect)
+		if err != nil {
+			return nil, err
+		}
+		if failure != nil {
+			return structuredToolResult(creatio.PackageFileResult{Error: redacted(failure)}), nil
 		}
 		return structuredToolResult(client.GetPackageFile(ctx, input.PackageName, input.FilePath)), nil
 	case "list-package-files":
 		var input struct {
 			PackageName string `json:"package-name"`
 		}
-		if err := decodeStrictArgs(args, &input); err != nil {
+		if err := decodeStrictArgs(withoutEnvironmentArgs(args, scopeDirect), &input); err != nil {
 			return nil, fmt.Errorf("decode list-package-files arguments: %w", err)
+		}
+		client, failure, err := envs.resolve(name, args, scopeDirect)
+		if err != nil {
+			return nil, err
+		}
+		if failure != nil {
+			return structuredToolResult(creatio.PackageFilesResult{Files: []string{}, Error: redacted(failure)}), nil
 		}
 		return structuredToolResult(client.ListPackageFiles(ctx, input.PackageName)), nil
 	case "list-packages":
@@ -218,8 +247,12 @@ func invokeHiddenTool(ctx context.Context, client *creatio.Client, hostTools hid
 			Limit  *int   `json:"limit,omitempty"`
 			Offset int    `json:"offset,omitempty"`
 		}
-		if err := decodeStrictArgs(args, &input); err != nil {
+		if err := decodeStrictArgs(withoutEnvironmentArgs(args, scopeName), &input); err != nil {
 			return nil, fmt.Errorf("decode list-packages arguments: %w", err)
+		}
+		client, err := envs.target(name, args, scopeName)
+		if err != nil {
+			return nil, errors.New(redacted(err))
 		}
 		result, err := client.ListPackages(ctx, creatio.PackageListRequest{
 			Filter: input.Filter, Limit: input.Limit, Offset: input.Offset,
@@ -232,8 +265,15 @@ func invokeHiddenTool(ctx context.Context, client *creatio.Client, hostTools hid
 		var input struct {
 			ApplicationCode string `json:"application-code"`
 		}
-		if err := decodeStrictArgs(args, &input); err != nil {
+		if err := decodeStrictArgs(withoutEnvironmentArgs(args, scopeName), &input); err != nil {
 			return nil, fmt.Errorf("decode list-app-sections arguments: %w", err)
+		}
+		client, failure, err := envs.resolve(name, args, scopeName)
+		if err != nil {
+			return nil, err
+		}
+		if failure != nil {
+			return structuredToolResult(creatio.AppSectionsResult{Error: redacted(failure)}), nil
 		}
 		return structuredToolResult(client.ListAppSections(ctx, input.ApplicationCode)), nil
 	case "list-pages":
@@ -244,22 +284,34 @@ func invokeHiddenTool(ctx context.Context, client *creatio.Client, hostTools hid
 			Limit         *int   `json:"limit,omitempty"`
 			UID           string `json:"uid,omitempty"`
 		}
-		if err := decodeStrictArgs(args, &input); err != nil {
+		if err := decodeStrictArgs(withoutEnvironmentArgs(args, scopeDirect), &input); err != nil {
 			return nil, fmt.Errorf("decode list-pages arguments: %w", err)
+		}
+		client, failure, err := envs.resolve(name, args, scopeDirect)
+		if err != nil {
+			return nil, err
+		}
+		if failure != nil {
+			return structuredToolResult(creatio.PageListResult{Error: redacted(failure)}), nil
 		}
 		return structuredToolResult(client.ListPages(ctx, creatio.PageListRequest{
 			PackageName: input.PackageName, ApplicationCode: input.Code,
 			SearchPattern: input.SearchPattern, Limit: input.Limit, UID: input.UID,
 		})), nil
 	case "odata-read":
-		result, err := invokeODataRead(ctx, client, args)
+		client, err := envs.target(name, args, scopeName)
+		if err != nil {
+			return nil, errors.New(redacted(err))
+		}
+		result, err := invokeODataRead(ctx, client, withoutEnvironmentArgs(args, scopeName))
 		if err != nil {
 			return nil, err
 		}
 		return structuredToolResult(result), nil
 	case "find-empty-iis-port":
 		var input struct{}
-		if err := decodeStrictArgs(args, &input); err != nil {
+		// The port scan is local; clio ignores an environment selector here, and so does this server.
+		if err := decodeStrictArgs(withoutEnvironmentArgs(args, scopeName), &input); err != nil {
 			return nil, fmt.Errorf("decode find-empty-iis-port arguments: %w", err)
 		}
 		return structuredToolResult(hostTools.findEmptyIISPort(ctx)), nil
@@ -268,11 +320,18 @@ func invokeHiddenTool(ctx context.Context, client *creatio.Client, hostTools hid
 			Query     json.RawMessage `json:"query"`
 			TimeoutMS *int            `json:"timeout,omitempty"`
 		}
-		if err := decodeStrictArgs(args, &input); err != nil {
+		if err := decodeStrictArgs(withoutEnvironmentArgs(args, scopeName), &input); err != nil {
 			return nil, fmt.Errorf("decode execute-esq arguments: %w", err)
 		}
 		if len(input.Query) == 0 {
 			return nil, errors.New("query is required")
+		}
+		client, failure, err := envs.resolve(name, args, scopeName)
+		if err != nil {
+			return nil, err
+		}
+		if failure != nil {
+			return structuredToolResult(creatio.ESQFailure(redacted(failure))), nil
 		}
 		return structuredToolResult(client.ExecuteESQ(ctx, creatio.ExecuteESQRequest{
 			Query: input.Query, TimeoutMS: input.TimeoutMS,
@@ -283,11 +342,15 @@ func invokeHiddenTool(ctx context.Context, client *creatio.Client, hostTools hid
 			PackageName  string `json:"package-name,omitempty"`
 			RequiredOnly bool   `json:"required-only,omitempty"`
 		}
-		if err := decodeStrictArgs(args, &input); err != nil {
+		if err := decodeStrictArgs(withoutEnvironmentArgs(args, scopeName), &input); err != nil {
 			return nil, fmt.Errorf("decode get-entity-schema-properties arguments: %w", err)
 		}
 		if strings.TrimSpace(input.PackageName) != "" {
 			return nil, errors.New("package-name reads are not implemented; this probe supports only the merged runtime schema view")
+		}
+		client, err := envs.target(name, args, scopeName)
+		if err != nil {
+			return nil, errors.New(redacted(err))
 		}
 		result, err := client.GetEntitySchemaProperties(ctx, creatio.EntitySchemaPropertiesRequest{
 			SchemaName: input.SchemaName, RequiredOnly: input.RequiredOnly,
@@ -311,9 +374,11 @@ func invokeHiddenTool(ctx context.Context, client *creatio.Client, hostTools hid
 			return nil, err
 		}
 		return structuredToolResult(result), nil
+	case "list-environments":
+		return envs.listEnvironments(), nil
 	default:
 		if tool, ok := registeredTools[name]; ok {
-			return tool.invoke(ctx, client, args)
+			return tool.invoke(ctx, envs, args)
 		}
 		return nil, fmt.Errorf("unknown tool %q; discover supported names with get-tool-contract", name)
 	}
@@ -338,6 +403,11 @@ func decodeStrictArgs(args map[string]any, target any) error {
 	decoder := json.NewDecoder(bytes.NewReader(encoded))
 	decoder.DisallowUnknownFields()
 	return decoder.Decode(target)
+}
+
+// listAppsArgs is clio's flat list-apps argument; other keys are ignored, as clio's binder ignores them.
+type listAppsArgs struct {
+	EnvironmentName string `json:"environment-name,omitempty"`
 }
 
 type clioRunArgs struct {
@@ -392,7 +462,7 @@ var hiddenToolContracts = map[string]map[string]any{
 	},
 	"list-packages": {
 		"name":        "list-packages",
-		"description": "List packages from the single CREATIO_URL configured at process start. Filters by case-insensitive package-name substring, then pages the sorted result.",
+		"description": "List packages from the target Creatio environment. Filters by case-insensitive package-name substring, then pages the sorted result.",
 		"inputSchema": map[string]any{
 			"type": "object", "properties": map[string]any{
 				"filter": map[string]string{"type": "string"},
@@ -403,7 +473,7 @@ var hiddenToolContracts = map[string]map[string]any{
 	},
 	"list-app-sections": {
 		"name":        "list-app-sections",
-		"description": "List sections of an installed application by its code on the single configured Creatio instance.",
+		"description": "List sections of an installed application by its code on the target Creatio environment.",
 		"inputSchema": map[string]any{"type": "object", "required": []string{"application-code"}, "properties": map[string]any{
 			"application-code": map[string]string{"type": "string"},
 		}},
@@ -421,7 +491,7 @@ var hiddenToolContracts = map[string]map[string]any{
 	},
 	"execute-esq": {
 		"name":        "execute-esq",
-		"description": "Run a raw Creatio DataService SelectQuery against the single CREATIO_URL configured when the Go process starts. Query is forwarded without translation, including filters, relation paths, ordering and paging. Responses are capped at 200000 UTF-8 bytes.",
+		"description": "Run a raw Creatio DataService SelectQuery against the target Creatio environment. Query is forwarded without translation, including filters, relation paths, ordering and paging. Responses are capped at 200000 UTF-8 bytes.",
 		"inputSchema": map[string]any{
 			"type":     "object",
 			"required": []string{"query"},
@@ -433,7 +503,7 @@ var hiddenToolContracts = map[string]map[string]any{
 	},
 	"get-entity-schema-properties": {
 		"name":        "get-entity-schema-properties",
-		"description": "Read the merged runtime entity-schema metadata from Creatio. This prototype does not implement package-scoped designer reads; target is the single CREATIO_URL configured at process start.",
+		"description": "Read the merged runtime entity-schema metadata from Creatio. This prototype does not implement package-scoped designer reads; target is the target Creatio environment.",
 		"inputSchema": map[string]any{
 			"type":     "object",
 			"required": []string{"schema-name"},

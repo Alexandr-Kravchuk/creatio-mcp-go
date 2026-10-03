@@ -15,17 +15,13 @@ const schemaGetOutputFileDescription = "Optional absolute path to write the sche
 func init() {
 	registerTool(map[string]any{
 		"name": "get-schema",
-		"description": "Read the C# body and metadata of a source-code schema from the single configured Creatio instance. " +
+		"description": "Read the C# body and metadata of a source-code schema from the target Creatio environment. " +
 			"Use before update-schema to inspect current content. output-file writes the body to a local file instead of returning it.",
 		"inputSchema": map[string]any{"type": "object", "required": []string{"schema-name"}, "properties": map[string]any{
 			"schema-name": map[string]string{"type": "string", "description": "C# source-code schema name, e.g. 'UsrMyHelper'"},
 			"output-file": map[string]string{"type": "string", "description": schemaGetOutputFileDescription},
 		}},
-	}, func(ctx context.Context, client *creatio.Client, args map[string]any) (*mcp.CallToolResult, error) {
-		// clio ignores unknown keys for this tool, so only a selector of another environment is refused.
-		if refusal := refusesConnectionArgs(args); refusal != "" {
-			return structuredToolResult(creatio.SourceCodeSchemaResult{Error: refusal}), nil
-		}
+	}, func(ctx context.Context, envs *environments, args map[string]any) (*mcp.CallToolResult, error) {
 		schemaName, err := optionalStringArg(args, "get-schema", "schema-name")
 		if err != nil {
 			return nil, err
@@ -33,6 +29,15 @@ func init() {
 		outputFile, err := optionalStringArg(args, "get-schema", "output-file")
 		if err != nil {
 			return nil, err
+		}
+		// clio resolves the environment per call; a failure is reported inside the tool's own answer.
+		client, failure, bindErr := envs.resolve("get-schema", args, scopeDirect)
+		if bindErr != nil {
+			return nil, bindErr
+		}
+		if failure != nil {
+			refusal := redacted(failure)
+			return structuredToolResult(creatio.SourceCodeSchemaResult{Error: refusal}), nil
 		}
 		return structuredToolResult(client.GetSourceCodeSchema(ctx, creatio.SourceCodeSchemaRequest{
 			SchemaName: schemaName, OutputFile: outputFile,

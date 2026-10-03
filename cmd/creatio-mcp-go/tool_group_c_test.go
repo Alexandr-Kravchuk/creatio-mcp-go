@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"strings"
 	"testing"
+
+	"github.com/Alexandr-Kravchuk/creatio-mcp-go/internal/creatio"
 )
 
 // invokeRegistered calls a self-registered tool with no Creatio client; only argument refusals may run.
@@ -14,7 +16,7 @@ func invokeRegistered(t *testing.T, name string, args map[string]any) (map[strin
 	if !ok {
 		t.Fatalf("tool %q is not registered", name)
 	}
-	result, err := tool.invoke(context.Background(), nil, args)
+	result, err := tool.invoke(context.Background(), staticEnvironments(nil), args)
 	if err != nil {
 		return nil, err
 	}
@@ -30,21 +32,23 @@ func TestGetTargetPackageAnswersLegacyAliasLikeClio(t *testing.T) {
 		t.Fatal(err)
 	}
 	if result["success"] != false || result["resolutionFailed"] != false ||
-		result["error"] != "Rename: 'package-name' -> 'package'. Unknown args: 'zz'. Valid: package." {
+		result["error"] != "Rename: 'package-name' -> 'package'. Unknown args: 'zz'. Valid: environment-name, package." {
 		t.Fatalf("result = %#v", result)
 	}
 }
 
-func TestGroupCToolsRefuseEnvironmentSelectors(t *testing.T) {
-	for _, name := range []string{"get-schema-name-prefix", "get-target-package", "list-entity-client-schemas", "get-page"} {
+func TestGroupCToolsAnswerAnUnknownEnvironmentInsideTheEnvelope(t *testing.T) {
+	notFound := redacted(&environmentError{message: environmentNotFoundMessage("other", creatio.ClioSettings{})})
+	for _, name := range []string{"get-target-package", "list-entity-client-schemas", "get-page"} {
 		result, err := invokeRegistered(t, name, map[string]any{"environment-name": "other"})
-		if err != nil || result["success"] != false || result["error"] != environmentNameRefusal {
+		if err != nil || result["success"] != false || result["error"] != notFound {
 			t.Fatalf("%s result = %#v, err = %v", name, result, err)
 		}
 	}
-	result, err := invokeRegistered(t, "get-page", map[string]any{"schema-name": "Page", "uri": "http://other"})
-	if err != nil || result["error"] != directConnectionRefusal {
-		t.Fatalf("get-page uri result = %#v, err = %v", result, err)
+	result, err := invokeRegistered(t, "get-schema-name-prefix", map[string]any{"environment-name": "other"})
+	if err != nil || result["error"] != "Failed to read SchemaNamePrefix." || result["error-category"] != "Configuration" ||
+		result["cause"] != string([]rune(notFound)[:300])+"..." {
+		t.Fatalf("get-schema-name-prefix result = %#v, err = %v", result, err)
 	}
 }
 

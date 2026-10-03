@@ -16,14 +16,19 @@ func init() {
 		"inputSchema": map[string]any{"type": "object", "required": []string{"entity-name"}, "properties": map[string]any{
 			"entity-name": map[string]string{"type": "string", "description": "Entity schema name, e.g. 'Contract' or 'SupportUnit'"},
 		}},
-	}, func(ctx context.Context, client *creatio.Client, args map[string]any) (*mcp.CallToolResult, error) {
-		// clio ignores unknown keys for this tool, so only a selector of another environment is refused.
-		if refusal := refusesConnectionArgs(args); refusal != "" {
-			return structuredToolResult(creatio.EntityClientSchemasResult{Error: refusal}), nil
-		}
+	}, func(ctx context.Context, envs *environments, args map[string]any) (*mcp.CallToolResult, error) {
 		entityName, err := optionalStringArg(args, "list-entity-client-schemas", "entity-name")
 		if err != nil {
 			return nil, err
+		}
+		// clio resolves the environment per call; a failure is reported inside the tool's own answer.
+		client, failure, bindErr := envs.resolve("list-entity-client-schemas", args, scopeDirect)
+		if bindErr != nil {
+			return nil, bindErr
+		}
+		if failure != nil {
+			refusal := redacted(failure)
+			return structuredToolResult(creatio.EntityClientSchemasResult{Error: refusal}), nil
 		}
 		return structuredToolResult(client.ListEntityClientSchemas(ctx, entityName)), nil
 	})

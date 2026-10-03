@@ -125,7 +125,7 @@ func TestTwoTierMCPExposesContractAndRunsHiddenToolByRawName(t *testing.T) {
 	for _, tool := range listed.Tools {
 		names = append(names, tool.Name)
 	}
-	if strings.Join(names, ",") != "clio-run,get-tool-contract,list-apps" {
+	if strings.Join(names, ",") != "clio-run,get-tool-contract,list-apps,list-environments" {
 		t.Fatalf("resident tools = %v", names)
 	}
 	for _, tool := range listed.Tools {
@@ -400,7 +400,7 @@ func TestMCPResponsesIncludeOneTextCopyForEveryHiddenTool(t *testing.T) {
 			return hosttools.StartResult{Status: "started", Environment: environment, StartedBy: "mock", Summary: "mocked"}, nil
 		},
 	}
-	session := connectTestClient(t, newMCPServerWithHiddenTools(client, hostTools), mcp.NewClient(&mcp.Implementation{Name: "probe-client", Version: "test"}, nil))
+	session := connectTestClient(t, newMCPServerWithHiddenTools(staticEnvironments(client), hostTools), mcp.NewClient(&mcp.Implementation{Name: "probe-client", Version: "test"}, nil))
 	index, err := session.CallTool(context.Background(), &mcp.CallToolParams{Name: "get-tool-contract"})
 	if err != nil || index.IsError {
 		t.Fatalf("get-tool-contract index = %#v, err = %v", index, err)

@@ -23,12 +23,9 @@ func init() {
 			"known-containers": map[string]any{"type": "array", "items": map[string]string{"type": "string"},
 				"description": "Accepted for clio compatibility; the parent-container check is not run by this server."},
 		}},
-	}, func(_ context.Context, _ *creatio.Client, args map[string]any) (*mcp.CallToolResult, error) {
-		// clio ignores unknown keys for this tool. It never calls Creatio, so an environment selector changes
-		// nothing; it is refused anyway, so a caller is not led to believe it chose an environment.
-		if refusal := refusesConnectionArgs(args); refusal != "" {
-			return structuredToolResult(creatio.PageValidateResult{Validation: creatio.PageValidationOutcomes{Errors: []string{refusal}}}), nil
-		}
+	}, func(_ context.Context, _ *environments, args map[string]any) (*mcp.CallToolResult, error) {
+		// clio ignores unknown keys for this tool. It never calls Creatio, so an environment selector is
+		// ignored too, as in clio.
 		var input creatio.PageValidateRequest
 		var err error
 		if input.Body, err = optionalStringArg(args, "validate-page", "body"); err != nil {

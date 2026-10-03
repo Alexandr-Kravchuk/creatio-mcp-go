@@ -68,6 +68,7 @@ func TestGroupEToolsAnswerByRawNameAndThroughClioRun(t *testing.T) {
 func TestGroupEToolsRefuseForeignEnvironmentSelectors(t *testing.T) {
 	session := connectTestClient(t, newMCPServer(&creatio.Client{}), mcp.NewClient(&mcp.Implementation{Name: "probe-client", Version: "test"}, nil))
 	for _, call := range []*mcp.CallToolParams{
+		// A uri that is not an absolute http(s) address cannot be a direct connection.
 		{Name: "list-printables", Arguments: map[string]any{"uri": "elsewhere"}},
 		{Name: "list-page-templates", Arguments: map[string]any{"environment-name": "other"}},
 		{Name: "list-themes", Arguments: map[string]any{"foo": 1}},

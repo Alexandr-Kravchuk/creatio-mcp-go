@@ -6,7 +6,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/Alexandr-Kravchuk/creatio-mcp-go/internal/creatio"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
@@ -16,18 +15,14 @@ var sequenceContextGUID = regexp.MustCompile(`^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-
 func init() {
 	registerTool(map[string]any{
 		"name": "get-sequence-context",
-		"description": "Discover effective sequence fields, live lookup IDs and ruleset/schedule choices of the single configured Creatio instance in one " +
+		"description": "Discover effective sequence fields, live lookup IDs and ruleset/schedule choices of the target Creatio environment in one " +
 			"read-only call. Uses DataService; no OData fallback. Optional sequence-id inspects an existing definition. Check each section state: " +
 			"missing, failed or truncated sections are not complete context. Schema presence does not prove lifecycle-service availability or write " +
 			"permissions. Read get-guidance name=sequences before sequence work.",
 		"inputSchema": map[string]any{"type": "object", "properties": map[string]any{
 			"sequence-id": map[string]string{"type": "string", "description": "Optional sequence definition UUID."},
 		}},
-	}, func(ctx context.Context, client *creatio.Client, args map[string]any) (*mcp.CallToolResult, error) {
-		// clio ignores unknown keys for this tool, so only a selector of another environment is refused.
-		if refusal := refusesConnectionArgs(args); refusal != "" {
-			return nil, errors.New(refusal)
-		}
+	}, func(ctx context.Context, envs *environments, args map[string]any) (*mcp.CallToolResult, error) {
 		var sequenceID *string
 		switch value := args["sequence-id"].(type) {
 		case nil:
@@ -39,6 +34,14 @@ func init() {
 			sequenceID = &lower
 		default:
 			return nil, sequenceContextTypeError()
+		}
+		// clio resolves the environment per call; a failure is reported inside the tool's own answer.
+		client, failure, bindErr := envs.resolve("get-sequence-context", args, scopeName)
+		if bindErr != nil {
+			return nil, bindErr
+		}
+		if failure != nil {
+			return nil, errors.New(redacted(failure))
 		}
 		result, err := client.GetSequenceContext(ctx, sequenceID)
 		if err != nil {

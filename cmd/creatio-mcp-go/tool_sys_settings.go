@@ -10,7 +10,7 @@ import (
 func init() {
 	registerTool(map[string]any{
 		"name": "get-sys-setting",
-		"description": "Read the All-Users default value of a Creatio system setting by code on the single CREATIO_URL configured at process start. " +
+		"description": "Read the All-Users default value of a Creatio system setting by code on the target Creatio environment." +
 			"An unknown code or an unconfigured setting answers success:true with an empty value; SecureText values are masked as ***. " +
 			"Use list-sys-settings to discover codes.",
 		"inputSchema": map[string]any{"type": "object", "required": []string{"code"}, "properties": map[string]any{
@@ -25,22 +25,32 @@ func init() {
 	}, invokeListSysSettings)
 }
 
-// Both sys-setting tools are lenient in clio: unknown keys are ignored. Only an environment selector is
-// refused, because ignoring it would answer for a different environment than the caller named.
-func invokeGetSysSetting(ctx context.Context, client *creatio.Client, args map[string]any) (*mcp.CallToolResult, error) {
+// Both sys-setting tools are lenient in clio: unknown keys are ignored. A target that cannot be resolved is
+// classified as a Configuration failure.
+func invokeGetSysSetting(ctx context.Context, envs *environments, args map[string]any) (*mcp.CallToolResult, error) {
 	code, err := optionalStringArg(args, "get-sys-setting", "code")
 	if err != nil {
 		return nil, err
 	}
-	if refusal := refusesConnectionArgs(args); refusal != "" {
-		return structuredToolResult(creatio.SysSettingGetResult{Code: code, SysSettingFailure: creatio.SysSettingValidationFailure(refusal)}), nil
+	client, failure, err := envs.resolve("get-sys-setting", args, scopeName)
+	if err != nil {
+		return nil, err
+	}
+	if failure != nil {
+		return structuredToolResult(creatio.SysSettingGetResult{Code: code,
+			SysSettingFailure: creatio.SysSettingConfigurationFailure(creatio.SysSettingFailureLabel(false), redacted(failure))}), nil
 	}
 	return structuredToolResult(client.GetSysSetting(ctx, code)), nil
 }
 
-func invokeListSysSettings(ctx context.Context, client *creatio.Client, args map[string]any) (*mcp.CallToolResult, error) {
-	if refusal := refusesConnectionArgs(args); refusal != "" {
-		return structuredToolResult(creatio.SysSettingsListResult{Settings: []creatio.SysSettingItem{}, SysSettingFailure: creatio.SysSettingValidationFailure(refusal)}), nil
+func invokeListSysSettings(ctx context.Context, envs *environments, args map[string]any) (*mcp.CallToolResult, error) {
+	client, failure, err := envs.resolve("list-sys-settings", args, scopeName)
+	if err != nil {
+		return nil, err
+	}
+	if failure != nil {
+		return structuredToolResult(creatio.SysSettingsListResult{Settings: []creatio.SysSettingItem{},
+			SysSettingFailure: creatio.SysSettingConfigurationFailure(creatio.SysSettingFailureLabel(true), redacted(failure))}), nil
 	}
 	return structuredToolResult(client.ListSysSettings(ctx)), nil
 }

@@ -10,7 +10,7 @@ import (
 func init() {
 	registerTool(map[string]any{
 		"name": "get-classic-page-sources",
-		"description": "Collect the Classic page sources for a classic page schema on the single configured Creatio instance and WRITE them " +
+		"description": "Collect the Classic page sources for a classic page schema on the target Creatio environment and WRITE them " +
 			"to disk as a manifest the migration engine (migrate.mjs) folds: the whole replacing-schema layer chain (base->top), the " +
 			"parent-template seed, and resolution inputs (entityColumns/columnTitles/resources/resourceStrings, detailSchemas with " +
 			"each detail's entity, editPage and layer bodies, section, childPageSchemas, and the stand's own enumVocabulary). The " +
@@ -23,11 +23,7 @@ func init() {
 			"output-file": map[string]string{"type": "string", "description": "Manifest output path (absolute path recommended). Must resolve inside the workspace or the OS " +
 				"temp directory, and an existing file is never overwritten. Default: <workspace-root>/.clio-migration/<schema>/manifest.json."},
 		}},
-	}, func(ctx context.Context, client *creatio.Client, args map[string]any) (*mcp.CallToolResult, error) {
-		// clio ignores unknown keys for this tool, so only a selector of another environment is refused.
-		if refusal := refusesConnectionArgs(args); refusal != "" {
-			return structuredToolResult(creatio.ClassicPageSourcesResult{Error: refusal}), nil
-		}
+	}, func(ctx context.Context, envs *environments, args map[string]any) (*mcp.CallToolResult, error) {
 		var input creatio.ClassicPageSourcesRequest
 		var err error
 		if input.SchemaName, err = optionalStringArg(args, "get-classic-page-sources", "schema-name"); err != nil {
@@ -38,6 +34,15 @@ func init() {
 		}
 		if input.OutputFile, err = optionalStringArg(args, "get-classic-page-sources", "output-file"); err != nil {
 			return nil, err
+		}
+		// clio resolves the environment per call; a failure is reported inside the tool's own answer.
+		client, failure, bindErr := envs.resolve("get-classic-page-sources", args, scopeDirect)
+		if bindErr != nil {
+			return nil, bindErr
+		}
+		if failure != nil {
+			refusal := redacted(failure)
+			return structuredToolResult(creatio.ClassicPageSourcesResult{Error: refusal}), nil
 		}
 		return structuredToolResult(client.GetClassicPageSources(ctx, input)), nil
 	})

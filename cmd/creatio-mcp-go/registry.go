@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Alexandr-Kravchuk/creatio-mcp-go/internal/creatio"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
@@ -13,14 +12,14 @@ import (
 // without touching shared code.
 type registeredTool struct {
 	contract map[string]any
-	invoke   func(ctx context.Context, client *creatio.Client, args map[string]any) (*mcp.CallToolResult, error)
+	invoke   func(ctx context.Context, envs *environments, args map[string]any) (*mcp.CallToolResult, error)
 }
 
 var registeredTools = map[string]registeredTool{}
 
 // registerTool adds a hidden tool. Its contract must carry "name", "description" and "inputSchema",
 // the same shape get-tool-contract returns for the built-in hidden tools.
-func registerTool(contract map[string]any, invoke func(context.Context, *creatio.Client, map[string]any) (*mcp.CallToolResult, error)) {
+func registerTool(contract map[string]any, invoke func(context.Context, *environments, map[string]any) (*mcp.CallToolResult, error)) {
 	name, _ := contract["name"].(string)
 	if name == "" {
 		panic("registerTool: contract has no name")
@@ -31,7 +30,40 @@ func registerTool(contract map[string]any, invoke func(context.Context, *creatio
 	if _, exists := registeredTools[name]; exists {
 		panic(fmt.Sprintf("registerTool: %q registered twice", name))
 	}
+	addEnvironmentNameProperty(contract)
 	registeredTools[name] = registeredTool{contract: contract, invoke: invoke}
+}
+
+// toolsWithoutEnvironmentName never contact Creatio, or name their environment differently, so their
+// contract does not advertise environment-name.
+var toolsWithoutEnvironmentName = map[string]bool{
+	"validate-page": true, "get-fsm-mode": true, "start-creatio": true, "find-empty-iis-port": true,
+}
+
+// environmentNameProperty is clio's description of the argument (McpToolDescriptions.EnvironmentName).
+var environmentNameProperty = map[string]string{"type": "string", "description": "Registered clio environment name. Preferred."}
+
+// addEnvironmentNameProperty advertises environment-name in a contract's input schema, where clio accepts it.
+func addEnvironmentNameProperty(contract map[string]any) {
+	name, _ := contract["name"].(string)
+	schema, _ := contract["inputSchema"].(map[string]any)
+	if toolsWithoutEnvironmentName[name] || schema == nil {
+		return
+	}
+	properties, _ := schema["properties"].(map[string]any)
+	if properties == nil {
+		properties = map[string]any{}
+		schema["properties"] = properties
+	}
+	if _, ok := properties["environment-name"]; !ok {
+		properties["environment-name"] = environmentNameProperty
+	}
+}
+
+func init() {
+	for _, contract := range hiddenToolContracts {
+		addEnvironmentNameProperty(contract)
+	}
 }
 
 func toolContract(name string) (map[string]any, bool) {

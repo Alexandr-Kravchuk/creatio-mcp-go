@@ -7,10 +7,10 @@ Measured on 2026-10-03 against clio master `914dab286`:
 
 | | clio | this server |
 |---|---|---|
-| MCP tools | about 217 | 64, all read-only |
+| MCP tools | about 217 | 65, all read-only (`list-environments` added in T1) |
 | MCP prompts and resources | about 125 attributes (`get-guidance`, `docs://help/...`) | none |
-| Environments per process | any, per call (`environment-name`) | one, from `CREATIO_*` variables |
-| Live parity | — | 302 calls, 0 data differences (clio 8.1.0.134) |
+| Environments per process | any, per call (`environment-name`) | any, per call, from clio's `appsettings.json` (T1); `CREATIO_*` as the default |
+| Live parity | — | 302 calls, 0 data differences (clio 8.1.0.134); after T1 302 cases per stand, and 632 calls with both stands served by one process (incl. 14 environment cases), 0 mismatches |
 
 ## What "done" means
 
@@ -30,6 +30,25 @@ Read clio's settings file (same locations, same keys, forms and OAuth), keep one
 environment, make `environment-name` accepted where clio accepts it, keep `CREATIO_*` as the default
 environment when no name is given. Add `list-environments` (read-only) since it is the entry point agents
 use. Touches every tool's argument handling, so it goes first and alone.
+
+**Done (T1, 2026-10-03).** Every tool takes `environment-name` (`get-fsm-mode`: `environmentName`), the
+tools whose clio counterpart takes `uri`/`login`/`password` (and `describe-environment` the OAuth trio)
+build a one-off connection the way clio's `EnvironmentSettings.Fill` does, and each tool reports an
+unknown name in its own clio envelope with clio's text. `list-environments` matches clio byte for byte.
+Live parity with `--go-env-mode=name` (no `CREATIO_*`): on-premises forms stand 302 cases, cloud OAuth
+stand 302 cases, and one Go process serving both stands in alternation 632 calls — 0 mismatches each;
+the remaining known differences are `validate-page` warnings and one page's `modifiedOn`. Left as they
+are, on purpose or for later tasks:
+- a call without `environment-name` goes to `CREATIO_*`, then clio's active environment; clio refuses it;
+- `get-fsm-mode` also honours `environment-name`, so a caller using the common spelling is never served
+  by another environment (clio ignores that key and then refuses for the missing `environmentName`);
+- tools that clio checks for a missing `environment-name` ("environment-name is required...") use the
+  default target instead; `compile-status`/`restart-status` without a name answer not-found;
+- order of checks: where clio validates its own arguments before resolving (e.g. `get-app-info`'s "exactly
+  one identifier", the inspect tools' `action`), a call with both problems reports the environment first;
+- unknown argument keys are listed sorted, clio lists them in request order (Go maps keep none);
+- `start-creatio` still reads the settings through `internal/hosttools`, its own reader (T16);
+- the not-found text advises `clio-run reg-web-app`, which this server does not offer yet.
 
 ### W2. Shared infrastructure for the remaining tools
 - Error-text redaction like clio's `SensitiveErrorTextRedactor`, applied in one place to every failure.
@@ -93,7 +112,7 @@ for live checks; several may be deliberately left to clio.
 
 | ID | Task | Depends on | Stage |
 |---|---|---|---|
-| T1 | Multiple environments per process (W1) | — | 1 |
+| T1 | Multiple environments per process (W1) — **done** 2026-10-03 | — | 1 |
 | T2 | Write-parity harness (W3) — **done**, see [parity.md](parity.md) | — | 1 |
 | T3 | CI on GitHub and release automation (W8, first half) — **done**, see [releasing.md](releasing.md) | — | 1 |
 | T4 | Shared infrastructure: redaction, envelope type, write safety, long-running operations, `rest/` helper (W2) | T1 | 2 |
@@ -127,7 +146,7 @@ splits into independent areas once the write harness and shared infrastructure e
 
 | Task | Count | Tools |
 |---|---|---|
-| T1 environments | 1 | `list-environments` |
+| T1 environments | 1 | `list-environments` (done) |
 | T4 shared infrastructure | 1 | `clio-run-destructive` |
 | T6 guidance and knowledge | 25 | `add-knowledge-source`, `configure-knowledge-feedback-policy`, `delete-knowledge`, `delete-toolkit`, `disable-knowledge-source`, `enable-knowledge-source`, `experimental`, `export-component-registry`, `get-component-info`, `get-component-info-to-file`, `get-guidance`, `get-knowledge-feedback-policy`, `get-mobile-page-conversion-guide`, `get-request-info`, `get-request-info-to-file`, `get-telemetry-consent`, `info-knowledge`, `install-knowledge`, `list-knowledge-examples`, `list-knowledge-sources`, `merge-creatio-artifact`, `remove-knowledge-source`, `send-telemetry`, `update-knowledge`, `withdraw-telemetry-consent` |
 | T7 applications | 6 | `create-app`, `create-app-section`, `delete-app`, `delete-app-section`, `install-application`, `update-app-section` |

@@ -64,11 +64,15 @@ func TestGroupBToolsRefuseForeignEnvironmentSelectorsInsideTheEnvelope(t *testin
 		call *mcp.CallToolParams
 		want string
 	}{
-		{&mcp.CallToolParams{Name: "get-sys-setting", Arguments: map[string]any{"code": "X", "environment-name": "other"}}, `"error-category":"Validation"`},
-		{&mcp.CallToolParams{Name: "list-sys-settings", Arguments: map[string]any{"uri": "elsewhere"}}, `"settings":[]`},
-		{&mcp.CallToolParams{Name: "get-user-culture", Arguments: map[string]any{"foo": 1}}, `"reason":"Unknown args: 'foo'.`},
-		{&mcp.CallToolParams{Name: "describe-environment", Arguments: map[string]any{"client-id": "x"}}, `"exit-code":1`},
-		{&mcp.CallToolParams{Name: "describe-environment", Arguments: map[string]any{"environmentName": "x"}}, "environment-name is not accepted"},
+		{&mcp.CallToolParams{Name: "get-sys-setting", Arguments: map[string]any{"code": "X", "environment-name": "other"}},
+			`"error":"Failed reading sys-setting.","error-category":"Configuration","cause":"Environment with key 'other' not found. No environments are registered.`},
+		{&mcp.CallToolParams{Name: "list-sys-settings", Arguments: map[string]any{"environment-name": "other"}},
+			`"recovery-action":"Register the environment with reg-web-app, or pick one from list-environments."`},
+		{&mcp.CallToolParams{Name: "get-user-culture", Arguments: map[string]any{"foo": 1}}, `"reason":"Unknown args: 'foo'. Valid: environment-name, uri, login, password."`},
+		{&mcp.CallToolParams{Name: "get-user-culture", Arguments: map[string]any{"environment-name": "other"}}, `"resolvedFrom":"failed","reason":"Environment with key 'other' not found.`},
+		{&mcp.CallToolParams{Name: "describe-environment", Arguments: map[string]any{"environment-name": "other"}},
+			`"value":"[EnvironmentResolutionException] Environment with key 'other' not found.`},
+		{&mcp.CallToolParams{Name: "describe-environment", Arguments: map[string]any{"environmentName": "x"}}, `"value":"Rename: 'environmentName' -`},
 	}
 	for _, c := range cases {
 		result, err := session.CallTool(context.Background(), c.call)

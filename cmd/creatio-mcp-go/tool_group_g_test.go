@@ -114,7 +114,7 @@ func TestGroupGToolsRefuseWrongTypesAndForeignEnvironments(t *testing.T) {
 			} `json:"error"`
 		}
 		if err := json.Unmarshal([]byte(result.Content[0].(*mcp.TextContent).Text), &envelope); err != nil || envelope.Success ||
-			envelope.Error.Code != code || envelope.Error.Message != environmentNameRefusal {
+			envelope.Error.Code != code || envelope.Error.Message != redacted(&environmentError{message: environmentNotFoundMessage("other", creatio.ClioSettings{})}) {
 			t.Errorf("%s envelope = %#v, err = %v", name, envelope, err)
 		}
 	}

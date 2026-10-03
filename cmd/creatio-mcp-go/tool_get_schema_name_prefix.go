@@ -10,13 +10,17 @@ import (
 func init() {
 	registerTool(map[string]any{
 		"name": "get-schema-name-prefix",
-		"description": "Returns the active SchemaNamePrefix system setting of the single configured Creatio instance. " +
+		"description": "Returns the active SchemaNamePrefix system setting of the target Creatio environment." +
 			"Returns an empty string with success:true when no prefix is configured (use no prefix then). Default Creatio environments return 'Usr'.",
 		"inputSchema": map[string]any{"type": "object", "properties": map[string]any{}},
-	}, func(ctx context.Context, client *creatio.Client, args map[string]any) (*mcp.CallToolResult, error) {
-		// clio ignores unknown keys for this tool, so only a selector of another environment is refused.
-		if refusal := refusesConnectionArgs(args); refusal != "" {
-			return structuredToolResult(creatio.SchemaNamePrefixResult{Error: refusal}), nil
+	}, func(ctx context.Context, envs *environments, args map[string]any) (*mcp.CallToolResult, error) {
+		// clio ignores unknown keys for this tool and classifies a resolution failure as Configuration.
+		client, failure, err := envs.resolve("get-schema-name-prefix", args, scopeName)
+		if err != nil {
+			return nil, err
+		}
+		if failure != nil {
+			return structuredToolResult(creatio.SchemaNamePrefixConfigurationFailure(redacted(failure))), nil
 		}
 		return structuredToolResult(client.GetSchemaNamePrefix(ctx)), nil
 	})

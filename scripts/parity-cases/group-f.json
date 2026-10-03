@@ -1,8 +1,8 @@
 [
-  {"label": "compile-status latest", "tool": "compile-status", "clio-run": true, "known-differences": ["$.environmentname"], "why": "clio echoes its registered environment name; this server has none, its target is CREATIO_URL."},
-  {"label": "compile-status unknown operation-id", "tool": "compile-status", "args": {"operation-id": " zz-no-such-operation "}, "clio-run": true, "known-differences": ["$.environmentname"], "why": "clio echoes its registered environment name; this server has none, its target is CREATIO_URL."},
+  {"label": "compile-status latest", "tool": "compile-status", "clio-run": true},
+  {"label": "compile-status unknown operation-id", "tool": "compile-status", "args": {"operation-id": " zz-no-such-operation "}, "clio-run": true},
   {"label": "compile-status operation-id wrong type", "tool": "compile-status", "args": {"operation-id": 5}, "clio-run": true},
-  {"label": "restart-status latest", "tool": "restart-status", "args": {"ignored": 1}, "clio-run": true, "known-differences": ["$.environmentname"], "why": "clio echoes its registered environment name; this server has none, its target is CREATIO_URL."},
+  {"label": "restart-status latest", "tool": "restart-status", "args": {"ignored": 1}, "clio-run": true},
   {"label": "restart-status operation-id wrong type", "tool": "restart-status", "args": {"operation-id": true}, "clio-run": true},
   {"label": "last-compilation-log", "tool": "last-compilation-log", "clio-run": true},
   {"label": "last-compilation-log unknown argument", "tool": "last-compilation-log", "args": {"foo": 1}, "clio-run": true},
@@ -18,5 +18,5 @@
   {"label": "verify-oauth-app unreachable identity server", "tool": "verify-oauth-app", "args": {"client-id": "example-client", "client-secret": "replace-me", "identity-server-url": "https://identity.example.invalid"}, "clio-run": true},
   {"label": "verify-oauth-app identity url with query", "tool": "verify-oauth-app", "args": {"client-id": "example-client", "client-secret": "replace-me", "identity-server-url": "https://identity.example.invalid/?a=1"}, "clio-run": true},
   {"label": "verify-oauth-app client-secret wrong type", "tool": "verify-oauth-app", "args": {"client-secret": 5}, "clio-run": true},
-  {"label": "get-fsm-mode", "tool": "get-fsm-mode", "clio-run": true, "clio-environment-key": "environmentName", "known-differences": ["$.environmentname"], "why": "clio echoes the environment name; this server has none."}
+  {"label": "get-fsm-mode", "tool": "get-fsm-mode", "clio-run": true, "clio-environment-key": "environmentName"}
 ]

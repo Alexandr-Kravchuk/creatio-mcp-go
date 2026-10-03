@@ -24,8 +24,8 @@ func init() {
 			"search-pattern": map[string]string{"type": "string", "description": "Case-insensitive substring to search in entity schema names (use instead of schema-name or uid)"},
 			"uid":            map[string]string{"type": "string", "description": "Entity schema UId (Guid) for exact lookup (use instead of schema-name or search-pattern)"},
 		}},
-	}, func(ctx context.Context, client *creatio.Client, args map[string]any) (*mcp.CallToolResult, error) {
-		if refusal := unknownArgumentError(args, map[string]bool{"schema-name": true, "search-pattern": true, "uid": true}); refusal != "" {
+	}, func(ctx context.Context, envs *environments, args map[string]any) (*mcp.CallToolResult, error) {
+		if refusal := unknownArgumentError(args, "environment-name", "schema-name", "search-pattern", "uid"); refusal != "" {
 			return nil, errors.New(refusal)
 		}
 		var input struct {
@@ -33,8 +33,12 @@ func init() {
 			SearchPattern string `json:"search-pattern"`
 			UID           string `json:"uid"`
 		}
-		if err := decodeStrictArgs(args, &input); err != nil {
+		if err := decodeStrictArgs(withoutEnvironmentArgs(args, scopeName), &input); err != nil {
 			return nil, fmt.Errorf("decode find-entity-schema arguments: %w", err)
+		}
+		client, err := envs.target("find-entity-schema", args, scopeName)
+		if err != nil {
+			return nil, errors.New(redacted(err))
 		}
 		results, err := client.FindEntitySchemas(ctx, creatio.EntitySchemaSearchRequest{
 			SchemaName: input.SchemaName, SearchPattern: input.SearchPattern, UID: input.UID,
@@ -56,8 +60,8 @@ func init() {
 			"schema-name":  map[string]string{"type": "string", "description": "Entity schema name"},
 			"column-name":  map[string]string{"type": "string", "description": "Column name"},
 		}},
-	}, func(ctx context.Context, client *creatio.Client, args map[string]any) (*mcp.CallToolResult, error) {
-		if refusal := unknownArgumentError(args, map[string]bool{"package-name": true, "schema-name": true, "column-name": true}); refusal != "" {
+	}, func(ctx context.Context, envs *environments, args map[string]any) (*mcp.CallToolResult, error) {
+		if refusal := unknownArgumentError(args, "environment-name", "package-name", "schema-name", "column-name"); refusal != "" {
 			return nil, errors.New(refusal)
 		}
 		var input struct {
@@ -65,8 +69,12 @@ func init() {
 			SchemaName  string `json:"schema-name"`
 			ColumnName  string `json:"column-name"`
 		}
-		if err := decodeStrictArgs(args, &input); err != nil {
+		if err := decodeStrictArgs(withoutEnvironmentArgs(args, scopeName), &input); err != nil {
 			return nil, fmt.Errorf("decode get-entity-schema-column-properties arguments: %w", err)
+		}
+		client, err := envs.target("get-entity-schema-column-properties", args, scopeName)
+		if err != nil {
+			return nil, errors.New(redacted(err))
 		}
 		result, err := client.GetEntitySchemaColumnProperties(ctx, creatio.EntitySchemaColumnPropertiesRequest{
 			PackageName: input.PackageName, SchemaName: input.SchemaName, ColumnName: input.ColumnName,

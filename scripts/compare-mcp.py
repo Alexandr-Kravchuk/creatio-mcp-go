@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 """Call the same MCP tools on clio's MCP server and on this Go server, then compare the answers.
 
-Both servers run over stdio against ONE Creatio environment. clio receives it per call as
-`environment-name`; the Go server receives it through CREATIO_* variables, which --clio-env copies
-from clio's appsettings.json into the Go child process only.
+Both servers run over stdio and read the same clio appsettings.json. By default (--go-env-mode=name)
+the Go server starts with no CREATIO_* variables and receives `environment-name` per call exactly as clio
+does. --go-env-mode=variables keeps the older mode: the named environment is copied from clio's
+appsettings.json into CREATIO_* variables of the Go child process, and Go calls carry no environment-name.
+
+--clio-env takes one name or several separated by commas. With several, every case runs once per name
+against the SAME two server processes, which checks that one Go process serves many environments.
 
 Printed and persisted: verdicts, timings, and the JSON paths that differ. Never values, URLs,
 environment names or credentials, so the evidence file is safe to share.
@@ -145,8 +149,15 @@ def settings_candidates():
     return paths
 
 
-def go_environment(clio_env, settings_path):
+def go_environment(clio_env, settings_path, mode="variables"):
     env = dict(os.environ)
+    if mode == "name":
+        # Only clio's settings file names the targets; inherited CREATIO_* would become a default target.
+        for key in [key for key in env if key.startswith("CREATIO_")]:
+            env.pop(key)
+        if settings_path:
+            env["CLIO_HOME"] = clio_home(settings_path)
+        return env
     if not clio_env:
         return env
     candidates = [pathlib.Path(settings_path)] if settings_path else settings_candidates()
@@ -169,11 +180,23 @@ def go_environment(clio_env, settings_path):
     return env
 
 
+def clio_home(settings_path):
+    """CLIO_HOME that makes clio and the Go server read the given appsettings.json."""
+    path = pathlib.Path(settings_path).resolve()
+    if path.name.lower() != "appsettings.json":
+        sys.exit("--clio-settings must name an appsettings.json file")
+    return str(path.parent)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--clio-dll", required=True, help="clio.dll that serves `mcp-server`")
     parser.add_argument("--go-bin", required=True, help="built creatio-mcp-go binary")
-    parser.add_argument("--clio-env", required=True, help="registered clio environment name")
+    parser.add_argument("--clio-env", required=True,
+                        help="registered clio environment name; several names separated by commas run every case per name")
+    parser.add_argument("--go-env-mode", choices=("name", "variables"), default="name",
+                        help="name: Go reads clio's settings and gets environment-name per call (default); "
+                             "variables: Go gets one environment through CREATIO_* variables")
     parser.add_argument("--clio-settings", help="clio appsettings.json (default: the platform location)")
     parser.add_argument("--cases", nargs="+", default=[str(REPO / "scripts/mcp-parity-cases.json")]
                         + sorted(str(p) for p in (REPO / "scripts/parity-cases").glob("*.json")),
@@ -182,16 +205,29 @@ def main():
     options = parser.parse_args()
 
     cases = [case for path in options.cases for case in json.loads(pathlib.Path(path).read_text(encoding="utf-8"))]
-    clio = Server(["dotnet", options.clio_dll, "mcp-server"])
-    go = Server([options.go_bin], env=go_environment(options.clio_env, options.clio_settings))
+    names = [name.strip() for name in options.clio_env.split(",") if name.strip()]
+    if not names:
+        sys.exit("--clio-env names no environment")
+    if options.go_env_mode == "variables" and len(names) != 1:
+        sys.exit("--go-env-mode=variables serves exactly one environment")
+    clio_process_env = dict(os.environ)
+    if options.clio_settings:
+        clio_process_env["CLIO_HOME"] = clio_home(options.clio_settings)
+    clio = Server(["dotnet", options.clio_dll, "mcp-server"], env=clio_process_env)
+    go = Server([options.go_bin], env=go_environment(names[0], options.clio_settings, options.go_env_mode))
     results = []
+    # With several environments each case runs for every name in turn, so consecutive calls of one Go
+    # process alternate between targets.
+    runs = [(case, index) for case in cases for index in range(len(names))]
     try:
-        for case in cases:
+        for case, index in runs:
             name, arguments = case["tool"], case.get("args", {})
             # A few clio tools name the environment argument differently (get-fsm-mode: environmentName).
-            clio_arguments = {case.get("clio-environment-key", "environment-name"): options.clio_env,
-                              **with_side(arguments, "clio")}
+            selector = {case.get("clio-environment-key", "environment-name"): names[index]}
+            clio_arguments = {**selector, **with_side(arguments, "clio")}
             arguments = with_side(arguments, "go")
+            if options.go_env_mode == "name":
+                arguments = {**selector, **arguments}
             if case.get("clio-run"):
                 clio_response, clio_seconds = clio.call("clio-run", {"command": name, "args": clio_arguments})
             else:
@@ -199,13 +235,18 @@ def main():
             go_response, go_seconds = go.call(name, arguments)
             outcome, paths = verdict(normalize(payload(clio_response)), normalize(payload(go_response)))
             known = set(case.get("known-differences", []))
+            if options.go_env_mode == "variables":
+                # Go is given no name in this mode, so it cannot echo one (compile-status, get-fsm-mode, ...).
+                known.add("$.environmentname")
             if outcome == "mismatch" and paths and all(path.split(":")[0] in known for path in paths):
                 # Listed in the case file with the reason; reported, but not counted as a regression.
                 outcome = "known-diff"
-            results.append({"tool": name, "case": case.get("label", name), "verdict": outcome,
+            # Environments are numbered, not named, so the evidence file stays free of environment names.
+            label = case.get("label", name) + (f" [env {index + 1}]" if len(names) > 1 else "")
+            results.append({"tool": name, "case": label, "verdict": outcome,
                             "clio_seconds": round(clio_seconds, 2), "go_seconds": round(go_seconds, 2),
                             "differences": paths})
-            print(f"{outcome:12} {case.get('label', name):45} clio {clio_seconds:5.2f}s  go {go_seconds:5.2f}s")
+            print(f"{outcome:12} {label:45} clio {clio_seconds:5.2f}s  go {go_seconds:5.2f}s")
             for path in paths:
                 print(f"{'':12} {path}")
     finally:

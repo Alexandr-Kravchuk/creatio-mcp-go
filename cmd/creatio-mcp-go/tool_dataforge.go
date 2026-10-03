@@ -31,9 +31,10 @@ func init() {
 	registerTool(dataForgeContract("dataforge-status",
 		"Checks whether Data Forge is ready to provide schema, lookup, relation, and maintenance context for the configured Creatio environment.",
 		map[string]any{}),
-		func(ctx context.Context, client *creatio.Client, args map[string]any) (*mcp.CallToolResult, error) {
-			if message := refusesConnectionArgs(args); message != "" {
-				return structuredToolResult(creatio.DataForgeFailure("dataforge-status", message)), nil
+		func(ctx context.Context, envs *environments, args map[string]any) (*mcp.CallToolResult, error) {
+			client, failure, err := dataForgeTarget(envs, "dataforge-status", args)
+			if client == nil {
+				return failure, err
 			}
 			return structuredToolResult(client.DataForgeStatus(ctx)), nil
 		})
@@ -42,11 +43,8 @@ func init() {
 		"Finds existing Creatio tables that semantically match a business concept, so callers can reuse or compare schemas before creating new ones.",
 		map[string]any{"query": map[string]string{"type": "string", "description": "Business concept to search for."}, "limit": dataForgeLimitProperty},
 		"query"),
-		func(ctx context.Context, client *creatio.Client, args map[string]any) (*mcp.CallToolResult, error) {
+		func(ctx context.Context, envs *environments, args map[string]any) (*mcp.CallToolResult, error) {
 			const tool = "dataforge-find-tables"
-			if message := refusesConnectionArgs(args); message != "" {
-				return structuredToolResult(creatio.DataForgeFailure(tool, message)), nil
-			}
 			query, err := optionalStringArg(args, tool, "query")
 			if err != nil {
 				return nil, err
@@ -54,6 +52,10 @@ func init() {
 			limit, err := dataForgeLimitArg(args, tool)
 			if err != nil {
 				return nil, err
+			}
+			client, failure, err := dataForgeTarget(envs, tool, args)
+			if client == nil {
+				return failure, err
 			}
 			return structuredToolResult(client.DataForgeFindTables(ctx, query, limit)), nil
 		})
@@ -65,11 +67,8 @@ func init() {
 			"schema-name": map[string]string{"type": "string", "description": "Optional lookup schema to search in."},
 			"limit":       dataForgeLimitProperty,
 		}, "query"),
-		func(ctx context.Context, client *creatio.Client, args map[string]any) (*mcp.CallToolResult, error) {
+		func(ctx context.Context, envs *environments, args map[string]any) (*mcp.CallToolResult, error) {
 			const tool = "dataforge-find-lookups"
-			if message := refusesConnectionArgs(args); message != "" {
-				return structuredToolResult(creatio.DataForgeFailure(tool, message)), nil
-			}
 			query, err := optionalStringArg(args, tool, "query")
 			if err != nil {
 				return nil, err
@@ -82,6 +81,10 @@ func init() {
 			if err != nil {
 				return nil, err
 			}
+			client, failure, err := dataForgeTarget(envs, tool, args)
+			if client == nil {
+				return failure, err
+			}
 			return structuredToolResult(client.DataForgeFindLookups(ctx, query, schemaName, limit)), nil
 		})
 
@@ -92,11 +95,8 @@ func init() {
 			"target-table": map[string]string{"type": "string", "description": "Table the path ends at."},
 			"limit":        dataForgeLimitProperty,
 		}, "source-table", "target-table"),
-		func(ctx context.Context, client *creatio.Client, args map[string]any) (*mcp.CallToolResult, error) {
+		func(ctx context.Context, envs *environments, args map[string]any) (*mcp.CallToolResult, error) {
 			const tool = "dataforge-get-relations"
-			if message := refusesConnectionArgs(args); message != "" {
-				return structuredToolResult(creatio.DataForgeFailure(tool, message)), nil
-			}
 			source, err := optionalStringArg(args, tool, "source-table")
 			if err != nil {
 				return nil, err
@@ -109,6 +109,10 @@ func init() {
 			if err != nil {
 				return nil, err
 			}
+			client, failure, err := dataForgeTarget(envs, tool, args)
+			if client == nil {
+				return failure, err
+			}
 			return structuredToolResult(client.DataForgeGetRelations(ctx, source, target, limit)), nil
 		})
 
@@ -116,14 +120,15 @@ func init() {
 		"Returns the logical columns of a Creatio table, including captions, data types, required flags, and lookup targets.",
 		map[string]any{"table-name": map[string]string{"type": "string", "description": "Entity schema name, sent as given."}},
 		"table-name"),
-		func(ctx context.Context, client *creatio.Client, args map[string]any) (*mcp.CallToolResult, error) {
+		func(ctx context.Context, envs *environments, args map[string]any) (*mcp.CallToolResult, error) {
 			const tool = "dataforge-get-table-columns"
-			if message := refusesConnectionArgs(args); message != "" {
-				return structuredToolResult(creatio.DataForgeFailure(tool, message)), nil
-			}
 			tableName, err := optionalStringArg(args, tool, "table-name")
 			if err != nil {
 				return nil, err
+			}
+			client, failure, err := dataForgeTarget(envs, tool, args)
+			if client == nil {
+				return failure, err
 			}
 			return structuredToolResult(client.DataForgeGetTableColumns(ctx, tableName)), nil
 		})
@@ -141,11 +146,8 @@ func init() {
 					"target-table": map[string]string{"type": "string"},
 				}}},
 		}),
-		func(ctx context.Context, client *creatio.Client, args map[string]any) (*mcp.CallToolResult, error) {
+		func(ctx context.Context, envs *environments, args map[string]any) (*mcp.CallToolResult, error) {
 			const tool = "dataforge-context"
-			if message := refusesConnectionArgs(args); message != "" {
-				return structuredToolResult(creatio.DataForgeFailure(tool, message)), nil
-			}
 			summary, err := optionalStringArg(args, tool, "requirement-summary")
 			if err != nil {
 				return nil, err
@@ -162,9 +164,26 @@ func init() {
 			if err != nil {
 				return nil, err
 			}
+			client, failure, err := dataForgeTarget(envs, tool, args)
+			if client == nil {
+				return failure, err
+			}
 			return structuredToolResult(client.DataForgeContext(ctx, creatio.DataForgeContextRequest{
 				RequirementSummary: summary, CandidateTerms: terms, LookupHints: hints, RelationPairs: pairs})), nil
 		})
+}
+
+// dataForgeTarget resolves the call's environment after the tool's own arguments are validated, as clio
+// checks environment-name last. A failure is reported inside the tool's envelope with its error code.
+func dataForgeTarget(envs *environments, tool string, args map[string]any) (*creatio.Client, *mcp.CallToolResult, error) {
+	client, refusal, err := envs.resolve(tool, args, scopeName)
+	if err != nil {
+		return nil, nil, err
+	}
+	if refusal != nil {
+		return nil, structuredToolResult(creatio.DataForgeFailure(tool, redacted(refusal))), nil
+	}
+	return client, nil, nil
 }
 
 func dataForgeTypeError(tool, name, expected string) error {

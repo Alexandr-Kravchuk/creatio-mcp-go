@@ -18,6 +18,16 @@ type SchemaNamePrefixResult struct {
 	Success          bool   `json:"success"`
 	SchemaNamePrefix string `json:"schema-name-prefix"`
 	Error            string `json:"error,omitempty"`
+	// The classification clio adds when the environment itself cannot be resolved.
+	ErrorCategory  string `json:"error-category,omitempty"`
+	Cause          string `json:"cause,omitempty"`
+	RecoveryAction string `json:"recovery-action,omitempty"`
+}
+
+// SchemaNamePrefixConfigurationFailure is clio's answer when the environment cannot be resolved.
+func SchemaNamePrefixConfigurationFailure(cause string) SchemaNamePrefixResult {
+	failure := SysSettingConfigurationFailure(genericSchemaNamePrefixRead, cause)
+	return SchemaNamePrefixResult{Error: failure.Error, ErrorCategory: failure.ErrorCategory, Cause: failure.Cause, RecoveryAction: failure.RecoveryAction}
 }
 
 // GetSchemaNamePrefix reads the SchemaNamePrefix system setting the way clio does: the value is trimmed,

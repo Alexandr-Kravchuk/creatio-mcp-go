@@ -9,14 +9,14 @@ import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// oauthConnectionRefusal answers clio's emergency OAuth target arguments, which describe-environment takes
-// in addition to uri/login/password. Honoring them would describe a different environment.
-const oauthConnectionRefusal = "client-id, client-secret and auth-app-uri are not accepted; this server targets the environment configured by the CREATIO_* variables."
+// describeEnvironmentKnownArgs is clio's accepted list, in the order its unknown-argument hint names it.
+// describe-environment is the one tool that also takes OAuth client credentials for a direct connection.
+var describeEnvironmentKnownArgs = []string{"environment-name", "uri", "login", "password", "client-id", "client-secret", "auth-app-uri", "timeout"}
 
 func init() {
 	registerTool(map[string]any{
 		"name": "describe-environment",
-		"description": "Describe the single CREATIO_URL configured at process start as one JSON report, returned as the None message of " +
+		"description": "Describe the target Creatio environment as one JSON report, returned as the None message of " +
 			"execution-log-messages. Always: coreVersion plus user, culture, workspace, maintainer and environmentType metadata from " +
 			"ApplicationInfoService. With CanManageSolution: dbEngineType, frameworkKind and frameworkDescription. With cliogate " +
 			"2.0.0.32+: productName and licenseInfo; without it a Warning message says so and the rest is still reported. " +
@@ -27,24 +27,23 @@ func init() {
 	}, invokeDescribeEnvironment)
 }
 
-func invokeDescribeEnvironment(ctx context.Context, client *creatio.Client, args map[string]any) (*mcp.CallToolResult, error) {
+func invokeDescribeEnvironment(ctx context.Context, envs *environments, args map[string]any) (*mcp.CallToolResult, error) {
 	// clio reports argument refusals as an exit-code-1 envelope, not as a protocol error.
-	if refusal := refusesConnectionArgs(args); refusal != "" {
-		return structuredToolResult(creatio.DescribeFailure(refusal)), nil
-	}
-	for _, key := range []string{"client-id", "client-secret", "auth-app-uri"} {
-		if _, ok := args[key]; ok {
-			return structuredToolResult(creatio.DescribeFailure(oauthConnectionRefusal)), nil
-		}
-	}
-	if refusal := unknownArgumentError(args, map[string]bool{"timeout": true}); refusal != "" {
+	if refusal := unknownArgumentError(args, describeEnvironmentKnownArgs...); refusal != "" {
 		return structuredToolResult(creatio.DescribeFailure(refusal)), nil
 	}
 	var input struct {
 		Timeout *int `json:"timeout,omitempty"`
 	}
-	if err := decodeStrictArgs(args, &input); err != nil {
+	if err := decodeStrictArgs(withoutEnvironmentArgs(args, scopeDirectOAuth), &input); err != nil {
 		return nil, errors.New("invalid-parameter-type: argument 'timeout' for MCP tool 'describe-environment' must be an integer. Received an incompatible JSON value.")
+	}
+	client, refusal, err := envs.resolve("describe-environment", args, scopeDirectOAuth)
+	if err != nil {
+		return nil, err
+	}
+	if refusal != nil {
+		return resolverFailureEnvelope(refusal), nil
 	}
 	timeout := time.Duration(0)
 	// clio ignores a zero or negative timeout and keeps its default; so does this server.

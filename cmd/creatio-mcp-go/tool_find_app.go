@@ -27,11 +27,18 @@ func init() {
 			"search-pattern": map[string]string{"type": "string", "description": "Case-insensitive substring matched against application name, code, description, and section captions/codes. Omit to return all applications."},
 			"code":           map[string]string{"type": "string", "description": "Exact installed application code to match. Optional."},
 		}},
-	}, func(ctx context.Context, client *creatio.Client, args map[string]any) (*mcp.CallToolResult, error) {
+	}, func(ctx context.Context, envs *environments, args map[string]any) (*mcp.CallToolResult, error) {
 		input, refusal := findAppArguments(args)
 		if refusal != "" {
 			// clio reports argument problems inside its envelope, so they stay success:false results.
 			return structuredToolResult(creatio.FindAppResponse{Error: refusal}), nil
+		}
+		client, failure, err := envs.resolve("find-app", args, scopeName)
+		if err != nil {
+			return nil, err
+		}
+		if failure != nil {
+			return structuredToolResult(creatio.FindAppResponse{Error: redacted(failure)}), nil
 		}
 		return structuredToolResult(client.FindApp(ctx, input)), nil
 	})
@@ -40,9 +47,6 @@ func init() {
 // findAppArguments binds search-pattern and code, recovers their known synonyms, and returns clio's
 // "Unknown args" message for anything else.
 func findAppArguments(args map[string]any) (creatio.FindAppRequest, string) {
-	if _, ok := args["environment-name"]; ok {
-		return creatio.FindAppRequest{}, environmentNameRefusal
-	}
 	var input creatio.FindAppRequest
 	var err error
 	if input.SearchPattern, err = optionalStringArg(args, "find-app", "search-pattern"); err != nil {
@@ -79,14 +83,16 @@ func findAppArguments(args map[string]any) (creatio.FindAppRequest, string) {
 	input.Code = recoverAlias(input.Code, findAppCodeAliases)
 	var unknown []string
 	for key := range args {
-		if key == "search-pattern" || key == "code" || isAlias(findAppSearchPatternAliases, key) || isAlias(findAppCodeAliases, key) {
+		if key == "environment-name" || key == "search-pattern" || key == "code" ||
+			isAlias(findAppSearchPatternAliases, key) || isAlias(findAppCodeAliases, key) {
 			continue
 		}
-		unknown = append(unknown, fmt.Sprintf("'%s'", strings.NewReplacer("'", "", "\"", "").Replace(key)))
+		// clio passes find-app an empty rename map, so a legacy environmentName spelling is listed as unknown.
+		unknown = append(unknown, fmt.Sprintf("'%s'", describeCallerKey(key)))
 	}
 	if len(unknown) > 0 {
 		sort.Strings(unknown)
-		return input, "Unknown args: " + joinCallerKeys(unknown) + ". Valid: code, search-pattern. Use search-pattern for a substring filter."
+		return input, "Unknown args: " + joinCallerKeys(unknown) + ". Valid: environment-name, search-pattern, code. Use search-pattern for a substring filter."
 	}
 	return input, ""
 }

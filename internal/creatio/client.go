@@ -320,7 +320,10 @@ func (c *Client) currentSession(ctx context.Context) (*authSession, error) {
 
 		var session *authSession
 		var err error
-		if c.config.ClientID != "" {
+		if c.config.AccessToken != "" {
+			// A bearer token stored in clio's settings is used as is; nothing can refresh it.
+			session = &authSession{token: c.config.AccessToken}
+		} else if c.config.ClientID != "" {
 			session, err = c.acquireToken(ctx)
 		} else {
 			session, err = c.formsSession(ctx)

@@ -8,15 +8,23 @@ import (
 	"strings"
 )
 
-// Config is deliberately environment-only: no connection information is read from files.
+// Config is one environment's connection: forms credentials, OAuth client credentials, or a stored bearer
+// token. It comes from CREATIO_* variables (LoadConfig) or from a clio environment (ClioEnvironment.Config).
 type Config struct {
-	BaseURL   string
-	Login     string
-	Password  string
-	ClientID  string
-	Secret    string
-	TokenURL  string
-	IsNetCore bool
+	BaseURL     string
+	Login       string
+	Password    string
+	ClientID    string
+	Secret      string
+	TokenURL    string
+	AccessToken string
+	IsNetCore   bool
+}
+
+// EnvConfigPresent reports whether the CREATIO_* variables name an environment at all. When they do not,
+// the server serves clio's registered environments only.
+func EnvConfigPresent() bool {
+	return firstEnv("CREATIO_URL", "CREATIO_MCP_BASE_URL") != ""
 }
 
 // LoadConfig reads the pilot's connection configuration without exposing its values.

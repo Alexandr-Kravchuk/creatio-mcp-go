@@ -10,7 +10,7 @@ import (
 func init() {
 	registerTool(map[string]any{
 		"name": "get-client-unit-schema",
-		"description": "Read the JavaScript body and metadata of a client unit schema from the single configured Creatio instance. " +
+		"description": "Read the JavaScript body and metadata of a client unit schema from the target Creatio environment. " +
 			"Use before update-client-unit-schema to inspect current content. A schema name that exists in several packages resolves " +
 			"deterministically to the top (most-derived) layer. Pass full-hierarchy=true to ALSO return the localizable strings merged " +
 			"across the whole inheritance/package chain (with parentSchemaUId provenance); the body still reflects this schema's own top layer. " +
@@ -22,11 +22,7 @@ func init() {
 			"schema-uid":  map[string]string{"type": "string", "description": "Fetch this exact schema UId directly, bypassing name resolution. Default null."},
 			"output-file": map[string]string{"type": "string", "description": schemaGetOutputFileDescription},
 		}},
-	}, func(ctx context.Context, client *creatio.Client, args map[string]any) (*mcp.CallToolResult, error) {
-		// clio ignores unknown keys for this tool, so only a selector of another environment is refused.
-		if refusal := refusesConnectionArgs(args); refusal != "" {
-			return structuredToolResult(creatio.ClientUnitSchemaResult{Error: refusal}), nil
-		}
+	}, func(ctx context.Context, envs *environments, args map[string]any) (*mcp.CallToolResult, error) {
 		var input creatio.ClientUnitSchemaRequest
 		var err error
 		if input.SchemaName, err = optionalStringArg(args, "get-client-unit-schema", "schema-name"); err != nil {
@@ -40,6 +36,15 @@ func init() {
 		}
 		if input.OutputFile, err = optionalStringArg(args, "get-client-unit-schema", "output-file"); err != nil {
 			return nil, err
+		}
+		// clio resolves the environment per call; a failure is reported inside the tool's own answer.
+		client, failure, bindErr := envs.resolve("get-client-unit-schema", args, scopeDirect)
+		if bindErr != nil {
+			return nil, bindErr
+		}
+		if failure != nil {
+			refusal := redacted(failure)
+			return structuredToolResult(creatio.ClientUnitSchemaResult{Error: refusal}), nil
 		}
 		return structuredToolResult(client.GetClientUnitSchema(ctx, input)), nil
 	})
