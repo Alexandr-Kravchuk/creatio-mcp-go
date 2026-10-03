@@ -3,7 +3,7 @@ package creatio
 // Data Forge reads, ported from clio's DataForgeTool and the Common/DataForge clients it resolves. Data Forge
 // is never called directly: clio reaches it through Creatio's own DataForgeMaintenanceService and
 // DataForgeSchemaReadService REST endpoints with the ordinary Creatio session, so no microservice URL, token
-// or system setting is read here. The initialize and update endpoints schedule index writes and are not ported.
+// or system setting is read here. Maintenance writes schedule index work on fixed service routes.
 
 import (
 	"bytes"
@@ -23,6 +23,8 @@ import (
 const (
 	dataForgeSource             = "clio+dataforge-service"
 	dataForgeStatusRoute        = "rest/DataForgeMaintenanceService/GetServiceStatus"
+	dataForgeInitializeRoute    = "rest/DataForgeMaintenanceService/InitializeDataStructuresAndLookups"
+	dataForgeUpdateRoute        = "rest/DataForgeMaintenanceService/UpdateDataStructuresAndLookups"
 	dataForgeTablesRoute        = "rest/DataForgeSchemaReadService/GetSimilarTableNames"
 	dataForgeLookupsRoute       = "rest/DataForgeSchemaReadService/GetLookupValues"
 	dataForgeRelationsRoute     = "rest/DataForgeSchemaReadService/GetTableRelationships"
@@ -111,6 +113,31 @@ type DataForgeStatusResponse struct {
 	Status *DataForgeMaintenanceStatus `json:"status,omitempty"`
 }
 
+// DataForgeMaintenanceResponse is the write tool envelope, including a failed status on transport errors.
+type DataForgeMaintenanceResponse struct {
+	dataForgeEnvelope
+	Status DataForgeMaintenanceStatus `json:"status"`
+}
+
+func (c *Client) DataForgeMaintain(ctx context.Context, initialize bool) DataForgeMaintenanceResponse {
+	route, code := dataForgeUpdateRoute, "update_error"
+	if initialize {
+		route, code = dataForgeInitializeRoute, "initialize_error"
+	}
+	_, err := (&dataForgeSession{client: c}).post(ctx, route, []byte("{}"))
+	if err != nil {
+		message := err.Error()
+		return DataForgeMaintenanceResponse{
+			dataForgeEnvelope: dataForgeHead(false, code, err),
+			Status:            DataForgeMaintenanceStatus{Status: "Failed", Error: &message},
+		}
+	}
+	return DataForgeMaintenanceResponse{
+		dataForgeEnvelope: dataForgeHead(true, "", nil),
+		Status:            DataForgeMaintenanceStatus{Success: true, Status: "Scheduled"},
+	}
+}
+
 type DataForgeFindTablesResponse struct {
 	dataForgeEnvelope
 	SimilarTables []DataForgeSimilarTable `json:"similar-tables"`
@@ -170,6 +197,13 @@ func dataForgeHead(success bool, code string, err error) dataForgeEnvelope {
 func DataForgeFailure(tool, message string) any {
 	err := errors.New(message)
 	switch tool {
+	case "dataforge-initialize", "dataforge-update":
+		code := "update_error"
+		if tool == "dataforge-initialize" {
+			code = "initialize_error"
+		}
+		return DataForgeMaintenanceResponse{dataForgeEnvelope: dataForgeHead(false, code, err),
+			Status: DataForgeMaintenanceStatus{Status: "Failed", Error: &message}}
 	case "dataforge-status":
 		return DataForgeStatusResponse{dataForgeEnvelope: dataForgeHead(false, "status_error", err)}
 	case "dataforge-find-tables":
@@ -227,7 +261,8 @@ type dataForgeSession struct {
 // reports that as an unreadable (empty) answer rather than as a failed call.
 func (s *dataForgeSession) post(ctx context.Context, route string, body []byte) ([]byte, error) {
 	switch route {
-	case dataForgeStatusRoute, dataForgeTablesRoute, dataForgeLookupsRoute, dataForgeRelationsRoute:
+	case dataForgeStatusRoute, dataForgeTablesRoute, dataForgeLookupsRoute, dataForgeRelationsRoute,
+		dataForgeInitializeRoute, dataForgeUpdateRoute:
 	default:
 		return nil, fmt.Errorf("unsupported Data Forge route %q", route)
 	}
