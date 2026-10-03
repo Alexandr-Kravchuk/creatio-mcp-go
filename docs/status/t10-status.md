@@ -40,7 +40,7 @@ From clio's `BusinessRuleTool.cs` and the services behind it (`internal/creatio/
 
 - Read/validation parity: `scripts/parity-cases/t10.json`, **67 match, 0 mismatches** against clio 8.1.0.134
   on `s16123120` (binding and request-shape refusals, unknown environment, and validator failures against the
-  stock `Contact` entity and `Contacts_FormPage` page that fail before any save, including the page candidate
+  stock `Contact` entity and `Contacts_FormPage` page that fail before any save (each such case carries a `why` saying it must stay invalid), including the page candidate
   lists, system-setting, lookup-record, formula, apply-filter and static-filter failures).
 - Write payload parity without writing: both servers were pointed at a local forwarding proxy that answered
   `SaveSchema`, `ResetScriptCache` and `BuildConfiguration` with HTTP 403 and kept the request body (clio via
@@ -66,7 +66,7 @@ stand-wide static-content rebuild broadcast to all online users, so live success
 page create/read/update/read). The scenarios need a package, an entity and a page the run creates; they are
 marked `go-tool-missing` until `create-package` (T15; also not in clio 8.1.0.134, only in clio master),
 `create-entity-schema` (T8) and `create-page` (T9) are ported. The created packages have no delete tool and
-will stay on the stand after that run. `--plan-only` validates the file.
+will stay on the stand after that run; the window operator should also check whether `delete-schema` `remote` on the run's entity/page leaves the separate `BusinessRule` add-on schema behind in the run's package. `--plan-only` validates the file.
 
 No object was created on the stand by T10 in this round; the write ledger holds no T10 entries.
 

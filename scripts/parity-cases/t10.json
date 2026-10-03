@@ -904,7 +904,8 @@
         }
       ]
     },
-    "label": "create-entity-business-rules stock entity validation: unknown attribute"
+    "label": "create-entity-business-rules stock entity validation: unknown attribute",
+    "why": "Targets a stock entity/page in the stock Base package: every rule in this case must fail validation before SaveSchema. A rule that passes would write to a stock package, so never make these rules valid."
   },
   {
     "tool": "create-entity-business-rules",
@@ -938,7 +939,8 @@
         }
       ]
     },
-    "label": "create-entity-business-rules stock entity validation: forward path in condition"
+    "label": "create-entity-business-rules stock entity validation: forward path in condition",
+    "why": "Targets a stock entity/page in the stock Base package: every rule in this case must fail validation before SaveSchema. A rule that passes would write to a stock package, so never make these rules valid."
   },
   {
     "tool": "create-entity-business-rules",
@@ -976,7 +978,8 @@
         }
       ]
     },
-    "label": "create-entity-business-rules stock entity validation: lookup record not found"
+    "label": "create-entity-business-rules stock entity validation: lookup record not found",
+    "why": "Targets a stock entity/page in the stock Base package: every rule in this case must fail validation before SaveSchema. A rule that passes would write to a stock package, so never make these rules valid."
   },
   {
     "tool": "create-entity-business-rules",
@@ -1014,7 +1017,8 @@
         }
       ]
     },
-    "label": "create-entity-business-rules stock entity validation: system setting not found"
+    "label": "create-entity-business-rules stock entity validation: system setting not found",
+    "why": "Targets a stock entity/page in the stock Base package: every rule in this case must fail validation before SaveSchema. A rule that passes would write to a stock package, so never make these rules valid."
   },
   {
     "tool": "create-entity-business-rules",
@@ -1052,7 +1056,8 @@
         }
       ]
     },
-    "label": "create-entity-business-rules stock entity validation: relational on text"
+    "label": "create-entity-business-rules stock entity validation: relational on text",
+    "why": "Targets a stock entity/page in the stock Base package: every rule in this case must fail validation before SaveSchema. A rule that passes would write to a stock package, so never make these rules valid."
   },
   {
     "tool": "create-entity-business-rules",
@@ -1086,7 +1091,8 @@
         }
       ]
     },
-    "label": "create-entity-business-rules stock entity validation: static filter unknown column"
+    "label": "create-entity-business-rules stock entity validation: static filter unknown column",
+    "why": "Targets a stock entity/page in the stock Base package: every rule in this case must fail validation before SaveSchema. A rule that passes would write to a stock package, so never make these rules valid."
   },
   {
     "tool": "create-entity-business-rules",
@@ -1120,7 +1126,8 @@
         }
       ]
     },
-    "label": "create-entity-business-rules stock entity validation: static filter relational on text"
+    "label": "create-entity-business-rules stock entity validation: static filter relational on text",
+    "why": "Targets a stock entity/page in the stock Base package: every rule in this case must fail validation before SaveSchema. A rule that passes would write to a stock package, so never make these rules valid."
   },
   {
     "tool": "create-entity-business-rules",
@@ -1163,7 +1170,8 @@
         }
       ]
     },
-    "label": "create-entity-business-rules stock entity validation: formula on text target"
+    "label": "create-entity-business-rules stock entity validation: formula on text target",
+    "why": "Targets a stock entity/page in the stock Base package: every rule in this case must fail validation before SaveSchema. A rule that passes would write to a stock package, so never make these rules valid."
   },
   {
     "tool": "create-entity-business-rules",
@@ -1200,7 +1208,8 @@
         }
       ]
     },
-    "label": "create-entity-business-rules stock entity validation: apply-filter schema mismatch"
+    "label": "create-entity-business-rules stock entity validation: apply-filter schema mismatch",
+    "why": "Targets a stock entity/page in the stock Base package: every rule in this case must fail validation before SaveSchema. A rule that passes would write to a stock package, so never make these rules valid."
   },
   {
     "tool": "create-entity-business-rules",
@@ -1238,7 +1247,8 @@
         }
       ]
     },
-    "label": "create-entity-business-rules stock entity validation: sys value lookup mismatch"
+    "label": "create-entity-business-rules stock entity validation: sys value lookup mismatch",
+    "why": "Targets a stock entity/page in the stock Base package: every rule in this case must fail validation before SaveSchema. A rule that passes would write to a stock package, so never make these rules valid."
   },
   {
     "tool": "create-entity-business-rules",
@@ -1281,7 +1291,8 @@
         }
       ]
     },
-    "label": "create-entity-business-rules stock entity validation: set-values lookup record not found"
+    "label": "create-entity-business-rules stock entity validation: set-values lookup record not found",
+    "why": "Targets a stock entity/page in the stock Base package: every rule in this case must fail validation before SaveSchema. A rule that passes would write to a stock package, so never make these rules valid."
   },
   {
     "tool": "create-entity-business-rules",
@@ -1295,7 +1306,8 @@
         }
       ]
     },
-    "label": "create-entity-business-rules stock entity validation: entity schema not found"
+    "label": "create-entity-business-rules stock entity validation: entity schema not found",
+    "why": "Targets a stock entity/page in the stock Base package: every rule in this case must fail validation before SaveSchema. A rule that passes would write to a stock package, so never make these rules valid."
   },
   {
     "tool": "update-entity-business-rules",
@@ -1315,7 +1327,8 @@
         }
       ]
     },
-    "label": "update-entity-business-rules stock entity validation: update rule not found"
+    "label": "update-entity-business-rules stock entity validation: update rule not found",
+    "why": "Targets a stock entity/page in the stock Base package: every rule in this case must fail validation before SaveSchema. A rule that passes would write to a stock package, so never make these rules valid."
   },
   {
     "tool": "create-page-business-rules",
@@ -1329,7 +1342,8 @@
         }
       ]
     },
-    "label": "create-page-business-rules stock entity validation: page schema not found"
+    "label": "create-page-business-rules stock entity validation: page schema not found",
+    "why": "Targets a stock entity/page in the stock Base package: every rule in this case must fail validation before SaveSchema. A rule that passes would write to a stock package, so never make these rules valid."
   },
   {
     "tool": "create-entity-business-rules",
@@ -1363,7 +1377,8 @@
         }
       ]
     },
-    "label": "create-entity-business-rules stock entity validation: static filter lookup name not found"
+    "label": "create-entity-business-rules stock entity validation: static filter lookup name not found",
+    "why": "Targets a stock entity/page in the stock Base package: every rule in this case must fail validation before SaveSchema. A rule that passes would write to a stock package, so never make these rules valid."
   },
   {
     "tool": "create-page-business-rules",
@@ -1397,7 +1412,8 @@
         }
       ]
     },
-    "label": "create-page-business-rules stock page validation: unknown attribute with candidates"
+    "label": "create-page-business-rules stock page validation: unknown attribute with candidates",
+    "why": "Targets a stock entity/page in the stock Base package: every rule in this case must fail validation before SaveSchema. A rule that passes would write to a stock package, so never make these rules valid."
   },
   {
     "tool": "create-page-business-rules",
@@ -1431,7 +1447,8 @@
         }
       ]
     },
-    "label": "create-page-business-rules stock page validation: unknown element with candidates"
+    "label": "create-page-business-rules stock page validation: unknown element with candidates",
+    "why": "Targets a stock entity/page in the stock Base package: every rule in this case must fail validation before SaveSchema. A rule that passes would write to a stock package, so never make these rules valid."
   },
   {
     "tool": "create-page-business-rules",
@@ -1458,7 +1475,8 @@
         }
       ]
     },
-    "label": "create-page-business-rules stock page validation: static filter unsupported on page"
+    "label": "create-page-business-rules stock page validation: static filter unsupported on page",
+    "why": "Targets a stock entity/page in the stock Base package: every rule in this case must fail validation before SaveSchema. A rule that passes would write to a stock package, so never make these rules valid."
   },
   {
     "tool": "create-page-business-rules",
@@ -1490,7 +1508,8 @@
         }
       ]
     },
-    "label": "create-page-business-rules stock page validation: scoped path not found"
+    "label": "create-page-business-rules stock page validation: scoped path not found",
+    "why": "Targets a stock entity/page in the stock Base package: every rule in this case must fail validation before SaveSchema. A rule that passes would write to a stock package, so never make these rules valid."
   },
   {
     "tool": "update-page-business-rules",
@@ -1505,6 +1524,7 @@
         }
       ]
     },
-    "label": "update-page-business-rules stock page validation: update rule not found"
+    "label": "update-page-business-rules stock page validation: update rule not found",
+    "why": "Targets a stock entity/page in the stock Base package: every rule in this case must fail validation before SaveSchema. A rule that passes would write to a stock package, so never make these rules valid."
   }
 ]
