@@ -24,10 +24,11 @@ All nine registrations use clio annotations, environment resolution, structured 
 ## T8 second round: incident on the shared stand (2026-10-03, about 19:27 CEST)
 
 While measuring clio's refusal texts for the new entity-schema tools, an ad-hoc driver (not the write
-harness) sent clio 8.1.0.134 a batch of cases chosen from clio master's source. Two of them were not
-refusals on the installed clio:
+harness) sent clio 8.1.0.134 a batch of cases chosen from a misreading of clio's source. Two of them were
+not refusals:
 
-- `create-entity-schema` with the legacy scalar `title` (master refuses it; 8.1.0.134 accepts it) created
+- `create-entity-schema` with the legacy scalar `title` (both master and 8.1.0.134 derive the en-US
+  caption from it; the case had been taken for a refusal) created
   the entity schema `UsrParityNoSuchEntity` in the stock package `Custom`, ran the configuration publish
   (`SchemaDesignerRequest` with buildWorkspace/buildChangedConfiguration) and requested an OData rebuild
   (`WorkspaceExplorerService.svc/RunODataBuild`).
@@ -47,9 +48,75 @@ at the package lookup, and runs only through `scripts/compare-mcp.py`.
 A package probe through the harness (run `tmcdjb`) also showed that `odata-create` on `SysPackage` is
 refused ("Current user does not have sufficient permissions to use OData"); nothing was created.
 
+## T8 second round: the entity-schema tools
+
+Ported from clio master (EntitySchemaTool.cs, SchemaSyncTool.cs, the commands they run and the
+EntitySchemaDesigner services); clio 8.1.0.134 differs from master here only in master's culture
+availability guard (below) and the CLI-only operation parser of update-entity-schema.
+
+- `create-entity-schema`, `create-lookup`: Data Forge enrichment first (also on refusals, as clio), then
+  the tool's options (title-localizations with derived en-US, column identity/type, script guard), then
+  CreateEntitySchemaCommand: CheckUniqueSchemaName → SysPackage → CreateNewSchema → CheckUniqueSchemaName →
+  GetAvailableParentSchemas → AssignParentSchema → profile culture → GetAvailableReferenceSchemas (lookups)
+  → SysCulture guard → SaveSchema → SaveSchemaDbStructure → IsODataBuildRunning gate → publish
+  (SchemaDesignerRequest buildWorkspace/buildChangedConfiguration, 60 min, one attempt) → RunODataBuild →
+  design-item reload (runtime fallback on markup). Requests carry clio's DTO shape: a designer field
+  clio does not model is not sent back. create-lookup adds the Lookup catalog row (Insert/UpdateQuery)
+  and the `Lookup_<schema>` package data binding (SchemaDataDesignerService SaveSchema).
+- `update-entity-schema`, `modify-entity-schema-column`: RemoteEntitySchemaColumnManager — load the
+  package design item (with the dependency diagnosis of a failed load), add/modify/remove with clio's
+  validation, cross-package name check, default-value resolution (Const record check, Settings and
+  SystemValue resolution), culture guard, save, publish (OData rebuild only when the contract changes),
+  reload and verify; inherited columns take only caption/description overrides. update-entity-schema
+  answers `note: compile-creatio not required` on success.
+- `set-entity-schema-properties`: primary-display column, schema caption per culture, is-db-view; saved,
+  published without an OData rebuild, verified on reload.
+- `sync-schemas`: top-level and per-operation shape checks, convergence (find-entity-schema +
+  merged runtime columns: created / reconciled / already-satisfied / collision with collision-info),
+  transient-failure retries (3 attempts, 30 s budget), inline seed skipped on already-satisfied, resume
+  plan, stage progress and heartbeat.
+
+Verification:
+
+- Refusal parity, `scripts/parity-cases/t8-schema-writes.json` (56 new cases, 67 in the file): **67
+  match, 0 mismatches, 0 both-failed** against clio 8.1.0.134 on s16123120. Every new case names a package
+  that does not exist or fails in the tool's own validation; the only stand calls are reads.
+- `compare-contracts.py`: 232 match, 0 unexplained.
+- Mocked stand tests (`internal/creatio/schemawrite_entity_test.go`): request order and payloads of
+  create, lookup registration, update, modify (inherited override), set-properties (caption merge,
+  readback failure), the OData build gate, the dependency diagnosis, sync convergence/collision/resume
+  plan; MCP tests: raw-name confirmation gate, `clio-run` and `clio-run-destructive`, binding failure.
+- No successful write was run live (window-only, below).
+
+Window-only (scenarios in `scripts/write-scenarios/window/t8.json`): all six tools. Each publishes the
+configuration (a build) and create/add/remove/rename/type changes start an OData rebuild, which the
+brief forbids while other agents write. The scenarios create their own application package with
+`create-app` and are marked `go-tool-missing` until T7 ports it: at clio 8.1.0.134 no tool both servers
+share creates a package (`create-package` is newer; `odata-create` on SysPackage is refused). The
+first-round create-schema/SQL scenarios (`scripts/write-scenarios/t8-schema-writes.json`) were moved off
+the stock `Custom` package the same way; a run of that file now skips both scenarios and writes nothing.
+
+Differences from clio (T8 second round):
+
+- `sync-schemas` `seed-data` (standalone or inline seed-rows) is not run: it needs
+  `create-data-binding-db` (T11). The operation fails with "seed-data is not supported by this server
+  yet" and the batch stops there, with clio's resume plan.
+- Culture names are validated by shape plus a list of ISO 639 language subtags; .NET also rejects a
+  well-formed tag it has no data for (for example an unknown region).
+- Localization objects lose their key order in Go's argument map: cultures are read with en-US first,
+  then in ordinal order. This only changes the order of Data Forge candidate terms and of a fallback
+  title when neither the effective culture nor en-US is present.
+- Retries: clio's HTTP client retries a designer call up to its MaxAttempts; this port sends each call
+  once (publish, RunODataBuild and IsODataBuildRunning are single-attempt in clio as well). Transport
+  failure texts are Go's; sync-schemas also treats Go's "no such host", "i/o timeout", "EOF" wording as
+  transient.
+- The supported-types list in an unsupported-type message is sorted with an approximation of .NET's
+  culture-aware ordering; it was not compared live (that message is only reachable with an existing
+  package).
+
 ## Remaining work and differences
 
-T8 still lacks `create-entity-schema`, `create-lookup`, `modify-entity-schema-column`, `set-entity-schema-properties`, `sync-schemas`, and `update-entity-schema`. T7 still lacks `create-app`, `create-app-section`, `delete-app-section`, `install-application`, and `update-app-section`.
+T8 tools are all implemented; their successful writes await the window run and T7's create-app. T7 still lacks `create-app`, `create-app-section`, `delete-app-section`, `install-application`, and `update-app-section`.
 
 Successful live writes/read-backs remain unverified for every implemented tool. Export/import require ClioGate 2.0.0.46 and are only covered with mock services; no live bundle transfer was attempted. SQL installation and application deletion were not run live. No global operations were run.
 
