@@ -51,15 +51,15 @@ func TestRuleWriteDeleteIntegration(t *testing.T) {
 			defer server.Close()
 			result := newFormsTestClient(t, server.URL).DeleteBusinessRules(context.Background(), false, BusinessRulesReadRequest{PackageName: "Own", SchemaName: "OwnEntity"}, []string{"delete", "missing", "", "delete"})
 			if saveFailure {
-				if result.Succeeded != 0 || result.Failed != 4 || result.Results[0].Error != "save rejected" {
+				if result.Succeeded != 0 || result.Failed != 4 || *result.Results[0].Error != "save rejected" {
 					t.Fatalf("%#v", result)
 				}
 			} else {
-				if result.Succeeded != 1 || result.Failed != 3 || result.Results[0].RuleName != "delete" {
+				if result.Succeeded != 1 || result.Failed != 3 || *result.Results[0].RuleName != "delete" {
 					t.Fatalf("%#v", result)
 				}
 			}
-			if !strings.Contains(saved["metaData"].(string), `"integer":9007199254740993`) || !strings.Contains(saved["metaData"].(string), `"decimal":10.50`) {
+			if !strings.Contains(saved["metaData"].(string), `"integer": 9007199254740993`) || !strings.Contains(saved["metaData"].(string), `"decimal": 10.50`) {
 				t.Fatalf("numeric constants changed %s", saved["metaData"])
 			}
 			if saved["extension"] != "preserve" {
@@ -107,7 +107,7 @@ func TestRuleWriteDeleteNoSaveForAmbiguousOrMissing(t *testing.T) {
 	}))
 	defer server.Close()
 	result := newFormsTestClient(t, server.URL).DeleteBusinessRules(context.Background(), false, BusinessRulesReadRequest{PackageName: "Own", SchemaName: "OwnEntity"}, []string{"duplicate", "missing"})
-	if result.Failed != 2 || saves != 0 || !strings.Contains(result.Results[0].Error, "more than one rule") {
+	if result.Failed != 2 || saves != 0 || !strings.Contains(*result.Results[0].Error, "more than one rule") {
 		t.Fatalf("%#v", result)
 	}
 }
