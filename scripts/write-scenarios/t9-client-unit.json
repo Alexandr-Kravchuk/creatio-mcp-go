@@ -1,8 +1,46 @@
 [
   {
     "label": "Own helper module create update read delete",
-    "why": "Prepared, not run: disposable stand DNS unavailable. Creates only a UsrParity schema in Custom; deletes only this schema. No compilation.",
+    "why": "The helper is created in the package of an app this run creates (through clio on both sides until this server has create-app); the helper and the app are removed afterwards. No compilation.",
     "steps": [
+      {
+        "kind": "write",
+        "label": "create app",
+        "tool": "create-app",
+        "server": "clio",
+        "clio-run": true,
+        "creates": "UsrParity{run}{side}Cu",
+        "retry-while": "temporarily unavailable",
+        "retry-seconds": 300,
+        "args": {
+          "name": "Parity {run} {side} Cu",
+          "code": "Parity{run}{side}Cu",
+          "template-code": "AppFreedomUI",
+          "with-mobile-pages": false
+        },
+        "capture": {
+          "pkg": "$.packagename",
+          "pkguid": "$.packageuid",
+          "appuid": "$.applicationid"
+        },
+        "known-differences": ["$.applicationname", "$.entities[0].caption", "$.entities[0].uid", "$.pages[0].uid",
+                              "$.pages[1].uid", "$.pages[2].uid", "$.dataforge.warnings[0]", "$.dataforge.warnings[1]"],
+        "why": "Setup through clio on both sides; ids and the display name differ per side."
+      },
+      {
+        "kind": "cleanup",
+        "for": "UsrParity{run}{side}Cu",
+        "server": "clio",
+        "calls": [
+          {
+            "tool": "delete-app",
+            "clio-run": true,
+            "args": {
+              "app-name": "UsrParity{run}{side}Cu"
+            }
+          }
+        ]
+      },
       {
         "kind": "write",
         "label": "create helper",
@@ -11,11 +49,11 @@
         "creates": "UsrParity{run}{side}Helper",
         "args": {
           "schema-name": "UsrParity{run}{side}Helper",
-          "package-name": "Custom",
+          "package-name": "{pkg}",
           "caption": "Parity helper"
         },
         "capture": {
-          "schemaUID": "$.schemaUId"
+          "schemaUID": "$.schemauid"
         }
       },
       {
@@ -47,6 +85,7 @@
         "kind": "read-back",
         "label": "read helper",
         "tool": "get-client-unit-schema",
+        "clio-run": true,
         "args": {
           "schema-name": "UsrParity{run}{side}Helper"
         }
