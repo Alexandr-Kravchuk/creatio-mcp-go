@@ -98,9 +98,9 @@ for live checks; several may be deliberately left to clio.
 | T3 | CI on GitHub and release automation (W8, first half) — **done**, see [releasing.md](releasing.md) | — | 1 |
 | T4 | Shared infrastructure: redaction, envelope type, write safety, long-running operations, `rest/` helper (W2) | T1 | 2 |
 | T5 | Contract and resident-list parity (W4) | T1 | 2 |
-| T6 | Guidance, prompts, resources, knowledge tools (W5) | T1, decision D2 | 2 |
+| T6 | Guidance, prompts, resources, knowledge tools from clio-knowledge bundles (W5, D2) | — (rebase after T1) | 2, started early |
 | T7–T15 | Write tools, one task per W6 area | T1, T2, T4, decision D1 | 3 (in parallel) |
-| T16 | Local machine, infrastructure and workspace tools (W7) | T1, T4 | 3 |
+| T16 | Local machine, infrastructure and workspace tools (W7) — deferred (D3) | T1, T4 | later |
 | T17 | Full parity run, docs, release `v0.2.0` | T5–T16 | 4 |
 | T18 | CAADT plugin switch, pilot, default switch (W8, second half) | T17 | 5 |
 
@@ -108,14 +108,18 @@ Stage 1 runs in parallel because T1 changes Go code, T2 only the comparison scri
 Stage 2 waits for T1 because it touches the same argument handling. Stage 3 is the bulk of the work and
 splits into independent areas once the write harness and shared infrastructure exist.
 
-## Decisions needed
+## Decisions (2026-10-03)
 
-- **D1. Stand for write tests.** Write tools must create and delete real objects. Which stand may be
-  changed, and may test objects stay there if a cleanup fails?
-- **D2. Guidance texts.** Serve clio's guidance and help texts from this server (agents keep working
-  unchanged; texts must be synced with each clio release), or keep clio running alongside for them.
-- **D3. Local and infrastructure tools (W7).** Port them, or leave them to clio and drop them from the
-  "done" definition.
+- **D1. Stand for write tests: `s16123120`** (on-premises, owned by the project owner). Write scenarios
+  create and delete only objects named with the `UsrParity{run}{side}` pattern; leftovers from a failed
+  cleanup stay there until the next `--cleanup-ledger` run.
+- **D2. Guidance comes from clio-knowledge, the same way clio gets it.** clio does not bundle guidance texts:
+  its `Knowledge/` runtime installs and updates a versioned knowledge bundle (Git source, GitHub release or
+  NuGet), verifies it against a trust store, caches it and selects a compatible version. This server
+  implements the same runtime and reads the same bundles, so a guidance fix in clio-knowledge reaches both
+  servers without a binary release.
+- **D3. Local machine, infrastructure and workspace tools (W7, T16) are deferred.** They stay in clio for
+  now and are outside "done" until revisited.
 
 ## Appendix: every clio tool not yet ported, by task
 
