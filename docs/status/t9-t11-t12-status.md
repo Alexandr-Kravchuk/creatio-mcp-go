@@ -32,9 +32,7 @@ agent ran no write harness or ledger-producing run.
 
 ## Exact remaining scope
 
-T9 unimplemented: `create-page`, `update-page`, `sync-pages`,
-`create-related-page-addon`, `create-user-task-page`; component-registry/request/merge
-items mentioned in T6 remain unimplemented by this checkpoint.
+T9: see "T9 pages, second round" below.
 
 T11 unimplemented: `execute-dataservice-batch`, `execute-sql-script`, `run-process`,
 `create-data-binding`, `add-data-binding-row`, `remove-data-binding-row`,
@@ -68,3 +66,52 @@ by IIS HTTP 405 on both servers. Authenticated read-back confirmed the records
 remained before native DataService deletion, which succeeded for both. The new
 `t11-odata.json` scenario uses exact-name lookup plus captured ID for baseline
 DataService cleanup. This does not verify successful OData deletion on this stand.
+
+## T9 pages, second round (2026-10-03)
+
+All seven remaining T9 tools are served; `merge-creatio-artifact` without clio's semantic
+resolver (see gaps). Code: `internal/creatio/pagewrite_*.go`, `cmd/creatio-mcp-go/tool_page_*.go`,
+`tool_related_page_addon_write.go`, `tool_user_task_page.go`, `tool_merge_creatio_artifact.go`.
+
+| Tool | Read cases (`scripts/parity-cases/t9.json`) | Live writes | Verdict |
+|---|---|---|---|
+| create-page | 5 match | `t9-pages.json`: two pages per side in an app the run creates (plain, and with entity, description, caption culture, optional properties) — match | done |
+| update-page | 6 match | `t9-pages.json`: replace with resources, append, dry-run append projection, stale pinned checksum (conflict), and saves on the other server's `.clio-pages` baseline in both directions — known-diff only (checksums, modifiedOn text, body length by side name, Go's gap warning) | done, validation partial |
+| sync-pages | 2 match | `t9-pages.json`: sync with verify (read-back body and meta written) — known-diff only | done, validation partial |
+| create-related-page-addon | 10 match | window only: `scripts/write-scenarios/window/t9.json` (BuildConfiguration rebuilds static content for the whole stand) | done, not run live |
+| create-user-task-page | 6 match | offline (workspace files): a golden test compares every file with clio 8.1.0.134's scaffold of the same workspace | done |
+| merge-creatio-artifact | 19 cases: 2 match, 17 known-diff (resolver-version; one also the unported merge) | read-only | classification only |
+| get-component-info | see below | read-only | see below |
+
+`t9-client-unit.json` now creates an app (through clio on both sides) and writes its helper into
+that app's package instead of `Custom`; live run: every step matches.
+
+Harness changes (shared, separate commits): a write/read-back step may set `server: clio` (both
+sides' objects made through clio, used for create-app until this server has it) and
+`retry-while`/`retry-seconds` (a second create-app is refused while Creatio rebuilds its OData
+library).
+
+`.clio-pages` interop: get-page now records the call's environment name (and direct URI) in the
+baseline exactly as clio does — before, it recorded only the configured URL, so clio's
+update-page never armed its conflict check from a baseline this server wrote. The live scenario
+saves through each server on a baseline the other one captured, both directions, and a stale
+pinned checksum is refused identically.
+
+Not ported, with reasons:
+- update-page / sync-pages content validation beyond the structural floor: clio's
+  SchemaValidationService (5,900 lines), the Acornima AST linter, chart-widget and mobile
+  component catalogs, run-process signature checks, inserted-widget caption gate,
+  insert-downgrade and inert-operation warnings. The JavaScript syntax gate is the structural
+  reader of `classicpagejs.go` (Acornima's line/column can differ). A validated save carries
+  `PageWriteValidationGapWarning` naming what was not checked; failures do not.
+- Designer Presence notification after update-page (best effort in clio; no answer change).
+- merge-creatio-artifact semantic merge (clio's Creatio.ConflictResolver, ~9,500 lines): a shape
+  clio merges is answered `not-implemented` here; `resolver-version` names this server.
+- caption-culture validity is checked by shape (.NET checks the ICU culture list); transport
+  failure wording of SelectQuery differs from clio's classified texts (as elsewhere).
+
+Stand side effects: update-page and sync-pages call `WorkplaceService/ResetScriptCache` after a
+save, as clio and the page designer do; the live scenario ran it (both servers). No compile,
+restart or static-content rebuild was run. Ledger: every object of this agent's runs is removed
+(two app creations refused during the OData rebuild never existed and were marked removed after
+checking the stand).
