@@ -339,6 +339,23 @@ func TestCreateLookupRegistersInLookupCatalog(t *testing.T) {
 	}
 }
 
+func TestCreateLookupReportsRegistrationFailureAfterCreate(t *testing.T) {
+	fake, client := newSchemaWriteEntFake(t)
+	fake.override["InsertQuery"] = func(w http.ResponseWriter, _ []byte) bool {
+		io.WriteString(w, `{"success":false,"errorInfo":{"message":"denied"}}`)
+		return true
+	}
+	result := client.CreateLookup(context.Background(), SchemaWriteEntCreateArgs{PackageName: "UsrParityPkg",
+		SchemaName: "UsrParityKind", TitleLocalizations: schemaWriteEntTestTitles("Parity kind")}, nil)
+	text := schemaWriteEntTestMessages(result)
+	if result.ExitCode != 1 || !strings.Contains(text, "Info: Done") || !strings.HasSuffix(text, "Error: InsertQuery failed: denied") {
+		t.Fatalf("%d\n%s", result.ExitCode, text)
+	}
+	if fake.count("SaveSchemaData") != 0 {
+		t.Fatal("no binding after a failed catalog insert")
+	}
+}
+
 func schemaWriteEntSeedSchema(fake *schemaWriteEntFake) {
 	fake.schemas["UsrParityThing"] = map[string]any{"uId": "22222222-2222-2222-2222-222222222222", "name": "UsrParityThing",
 		"caption":      []any{map[string]any{"cultureName": "en-US", "value": "Thing"}, map[string]any{"cultureName": "uk-UA", "value": "Річ"}},
