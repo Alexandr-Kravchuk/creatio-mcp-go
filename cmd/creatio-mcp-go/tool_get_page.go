@@ -50,6 +50,7 @@ func init() {
 		if !result.Success {
 			return structuredToolResult(result), nil
 		}
-		return structuredToolResult(client.WritePageFiles(result, schemaName, outputDirectory)), nil
+		return structuredToolResult(client.WritePageFilesFor(result, schemaName, outputDirectory,
+			pageWriteArgText(args, "environment-name"), pageWriteArgText(args, "uri"))), nil
 	}, withAnnotations(localWriteAnnotations))
 }
