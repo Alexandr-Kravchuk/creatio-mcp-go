@@ -145,16 +145,27 @@
         },
         "known-differences": [
           "$.sections[0].id",
+          "$.sections[0].code",
+          "$.sections[0].caption",
+          "$.sections[0].description",
+          "$.sections[0].entityschemaname",
           "$.sections[0].iconid",
+          "$.sections[0].iconbackground",
           "$.sections[0].sectionschemauid",
+          "$.sections[0].packageid",
+          "$.sections[0].clienttypeid",
           "$.sections[1].id",
+          "$.sections[1].code",
+          "$.sections[1].caption",
+          "$.sections[1].description",
+          "$.sections[1].entityschemaname",
           "$.sections[1].iconid",
+          "$.sections[1].iconbackground",
           "$.sections[1].sectionschemauid",
-          "$.sections[2].id",
-          "$.sections[2].iconid",
-          "$.sections[2].sectionschemauid"
+          "$.sections[1].packageid",
+          "$.sections[1].clienttypeid"
         ],
-        "why": "The application's own main section is not captured, and icon ids (random SysAppIcons pick on both servers) and section schema UIds are generated per side."
+        "why": "The two sections (the application's main section and the created one) come in the server's row order, which differs between the two applications; the written values are compared in the write steps, and icon ids and section schema UIds are per side."
       },
       {
         "kind": "write",
@@ -206,16 +217,27 @@
         },
         "known-differences": [
           "$.sections[0].id",
+          "$.sections[0].code",
+          "$.sections[0].caption",
+          "$.sections[0].description",
+          "$.sections[0].entityschemaname",
           "$.sections[0].iconid",
+          "$.sections[0].iconbackground",
           "$.sections[0].sectionschemauid",
+          "$.sections[0].packageid",
+          "$.sections[0].clienttypeid",
           "$.sections[1].id",
+          "$.sections[1].code",
+          "$.sections[1].caption",
+          "$.sections[1].description",
+          "$.sections[1].entityschemaname",
           "$.sections[1].iconid",
+          "$.sections[1].iconbackground",
           "$.sections[1].sectionschemauid",
-          "$.sections[2].id",
-          "$.sections[2].iconid",
-          "$.sections[2].sectionschemauid"
+          "$.sections[1].packageid",
+          "$.sections[1].clienttypeid"
         ],
-        "why": "As after create."
+        "why": "The two sections (the application's main section and the created one) come in the server's row order, which differs between the two applications; the written values are compared in the write steps, and icon ids and section schema UIds are per side."
       },
       {
         "kind": "write",
