@@ -190,9 +190,9 @@ func TestVerifyOAuthAppDoesNotFollowTokenRedirects(t *testing.T) {
 		http.Redirect(w, r, target.URL+"/connect/token", http.StatusTemporaryRedirect)
 	}))
 	defer redirecting.Close()
-	id, secret := "app", "right"
+	id, key := "app", "right"
 	result := newFormsTestClient(t, redirecting.URL).VerifyOAuthApp(context.Background(),
-		VerifyOAuthAppRequest{ClientID: &id, ClientSecret: &secret, IdentityServerURL: redirecting.URL})
+		VerifyOAuthAppRequest{ClientID: &id, ClientSecret: &key, IdentityServerURL: redirecting.URL})
 	if received || (result.Success && result.Result.TokenAcquired) {
 		t.Fatalf("token redirect followed: result = %#v, received = %v", result, received)
 	}
