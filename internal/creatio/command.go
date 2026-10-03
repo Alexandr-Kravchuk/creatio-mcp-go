@@ -6,6 +6,7 @@ package creatio
 type CommandResult struct {
 	ExitCode int          `json:"exit-code"`
 	Messages []LogMessage `json:"execution-log-messages"`
+	Note     string       `json:"note,omitempty"`
 }
 
 // LogMessage is one entry of the execution-log-messages channel. MessageType is clio's LogDecoratorType
