@@ -44,6 +44,8 @@ use. Touches every tool's argument handling, so it goes first and alone.
 Writes cannot be compared by calling both servers with the same arguments. Each case creates its object
 under a per-server name (`{side}`), reads it back through both servers, compares the read-backs, then
 deletes it. A run against a non-disposable stand is refused. Without this, write tools cannot be verified.
+Done (T2): `scripts/compare-mcp-writes.py`, scenarios in `scripts/write-scenarios/`, usage and format in
+[parity.md](parity.md).
 
 ### W4. Tool contract and resident list
 `tools/list`, `get-tool-contract` descriptions and input schemas must match clio, because agents call
@@ -92,7 +94,7 @@ for live checks; several may be deliberately left to clio.
 | ID | Task | Depends on | Stage |
 |---|---|---|---|
 | T1 | Multiple environments per process (W1) | — | 1 |
-| T2 | Write-parity harness (W3) | — | 1 |
+| T2 | Write-parity harness (W3) — done | — | 1 |
 | T3 | CI on GitHub and release automation (W8, first half) | — | 1 |
 | T4 | Shared infrastructure: redaction, envelope type, write safety, long-running operations, `rest/` helper (W2) | T1 | 2 |
 | T5 | Contract and resident-list parity (W4) | T1 | 2 |

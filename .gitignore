@@ -4,6 +4,7 @@
 !.env.example
 evidence/latest.json
 evidence/mcp-latest.json
+evidence/mcp-writes-latest.json
 bin/
 coverage.out
 __pycache__/

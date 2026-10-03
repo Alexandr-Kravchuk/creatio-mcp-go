@@ -1,0 +1,27 @@
+[
+  {
+    "label": "create-sys-setting text, read back, remove",
+    "why": "Example for the T7-T15 authors; argument names are clio master's CreateSysSettingArgs, GetSysSettingArgs, ODataReadArgs and ODataDeleteArgs. Not yet run live: no stand is approved for writes (decision D1).",
+    "steps": [
+      {"kind": "write", "label": "create", "tool": "create-sys-setting",
+       "creates": "UsrParity{run}{side}Setting",
+       "go-tool-missing": "create-sys-setting is not implemented in this server yet (T12); remove this key when it is",
+       "args": {"code": "UsrParity{run}{side}Setting", "name": "Parity {run} {side}",
+                "value-type-name": "ShortText", "value": "parity-value",
+                "description": "Created by scripts/compare-mcp-writes.py; safe to delete"}},
+      {"kind": "cleanup", "for": "UsrParity{run}{side}Setting", "server": "clio",
+       "why": "Neither server has a delete tool for system settings: find the row's Id, then delete the SysSettings row through clio's odata-delete. Unverified until a stand is approved: that deleting the SysSettings row also removes its SysSettingsValue rows; the T12 author must confirm it on the stand.",
+       "calls": [
+         {"tool": "odata-read",
+          "args": {"entity": "SysSettings", "select": ["Id"],
+                   "filters": {"all": [{"field": "Code", "op": "eq", "value": "UsrParity{run}{side}Setting"}]}},
+          "capture": {"id": "$.value[0].id"}},
+         {"tool": "odata-delete", "args": {"entity": "SysSettings", "id": "{id}", "confirm": true}}
+       ]},
+      {"kind": "read-back", "label": "read", "tool": "get-sys-setting",
+       "args": {"code": "UsrParity{run}{side}Setting"}},
+      {"kind": "expect", "step": "read", "path": "$.value", "equals": "parity-value"},
+      {"kind": "expect", "step": "read", "path": "$.code", "equals": "UsrParity{run}{side}Setting"}
+    ]
+  }
+]
