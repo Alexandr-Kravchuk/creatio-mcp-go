@@ -32,6 +32,8 @@ func TestPageWriteToolsAreGatedAndAnswerThroughTheExecutors(t *testing.T) {
 			`"dryRun":true,"error":"Either 'body' or 'body-file' must provide page body content."`},
 		"create-related-page-addon": {map[string]any{"package-name": "p", "pages": []any{}},
 			`"error":"entity-schema-name is required."`},
+		"create-user-task-page": {map[string]any{"workspace-path": "/no/such/workspace", "package-name": "UsrPkg", "page-name": "UsrPage", "caption": "c"},
+			`"value":"workspace-path, user-task-uid and caption are required."`},
 		"sync-pages": {map[string]any{"pages": []any{map[string]any{"schema-name": "UsrP", "body": "define("}}},
 			`"error":"JavaScript syntax error at line 1, column 8: Unexpected end of input. The body was NOT sent to Creatio."`},
 	}
