@@ -150,6 +150,8 @@ def validate(scenario, path):
             if "{side}" not in created or "{run}" not in created:
                 raise SystemExit(f"{path}: {label}: creates must contain {{run}} and {{side}}: {created}")
             creates.add(created)
+        if kind in ("write", "read-back") and step.get("server", "own") not in ("own", "clio"):
+            raise SystemExit(f"{path}: {label}: {kind} server must be 'own' or 'clio'")
         if kind == "expect" and not (step.get("step") and step.get("path") and "equals" in step):
             raise SystemExit(f"{path}: {label}: an expect step needs step, path and equals")
         if kind == "cleanup":
@@ -326,14 +328,16 @@ class Harness:
                 # Background work the previous call started (an OData rebuild after an application or section
                 # write) refuses the next write on the shared stand; let it finish first.
                 time.sleep(step["settle-seconds"])
-            response, seconds[side] = self.call(side, step, arguments)
+            # server: clio makes both sides' objects through clio, for a setup this server has no tool for yet.
+            server_side = side if step.get("server", "own") == "own" else "clio"
+            response, seconds[side] = self.call(server_side, step, arguments)
             for _ in range(step.get("retry-attempts", 0)):
                 # A refusal the stand gives before it writes anything (its own background work) is retried
                 # on either side alike; the answer that counts is the last one.
-                if step.get("retry-while", "\0") not in json.dumps(payload(response), ensure_ascii=False):
+                if step.get("retry-while", " ") not in json.dumps(payload(response), ensure_ascii=False):
                     break
                 time.sleep(step.get("retry-delay-seconds", 30))
-                response, seconds[side] = self.call(side, step, arguments)
+                response, seconds[side] = self.call(server_side, step, arguments)
             answers[side] = normalize(payload(response))
             self.capture(step, answers[side], arguments, side_state)
             side_state["answers"][label] = answers[side]

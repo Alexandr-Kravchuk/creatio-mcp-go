@@ -99,6 +99,16 @@ class WriteHarnessTest(unittest.TestCase):
         self.assertNotIn("go:odata-delete", self.stand()["_calls"])
         self.assert_evidence_is_clean()
 
+    def test_write_with_server_clio_makes_both_objects_through_clio(self):
+        scenario = json.loads(json.dumps(SCENARIO))
+        scenario[0]["steps"][0]["server"] = "clio"
+        result = self.run_harness(scenarios=scenario)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        calls = self.stand()["_calls"]
+        self.assertNotIn("go:create-sys-setting", calls)
+        self.assertEqual(calls.count("clio:create-sys-setting"), 2)
+        self.assertEqual(self.stand()["settings"], {})
+
     def test_variables_mode_gives_go_one_environment_and_no_name(self):
         result = self.run_harness("--go-env-mode=variables")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
