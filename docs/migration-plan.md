@@ -209,7 +209,7 @@ from five sibling worktrees was preserved and integrated. This checkpoint adds
 | T7 applications | 1 | 5 | [T7/T8 status](status/t7-t8-t10-status.md) |
 | T8 schemas | 8 | 6 | [T7/T8 status](status/t7-t8-t10-status.md) |
 | T9 pages | 2 | 5, plus the T6 component/merge leftovers | [T9/T11/T12 status](status/t9-t11-t12-status.md) |
-| T10 business rules | 2 | 4 | [T10 status](status/t10-status.md) |
+| T10 business rules | 2, then 4 in the second round (all 6 done; live success parity is window-only) | 0 | [T10 status](status/t10-status.md) |
 | T11 data | 3 | 9 | [T9/T11/T12 status](status/t9-t11-t12-status.md) |
 | T12 settings/access | 1 | 12 | [T9/T11/T12 status](status/t9-t11-t12-status.md) |
 | T13 processes | 1 | 10 | [T13/T14/T15 status](status/t13-t14-t15-status.md) |
