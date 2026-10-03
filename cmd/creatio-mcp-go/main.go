@@ -99,7 +99,8 @@ func defaultHiddenToolServices() hiddenToolServices {
 }
 
 func newMCPServerWithHiddenTools(envs *environments, hostTools hiddenToolServices) *mcp.Server {
-	server := mcp.NewServer(&mcp.Implementation{Name: "creatio-mcp-go", Version: serverVersion()}, nil)
+	server := mcp.NewServer(&mcp.Implementation{Name: "creatio-mcp-go", Version: serverVersion()}, knowledgeServerOptions())
+	addKnowledgeHandlers(server)
 	mcp.AddTool(server, &mcp.Tool{Name: "list-apps", Description: "List installed Creatio applications through DataService."},
 		func(ctx context.Context, _ *mcp.CallToolRequest, input listAppsArgs) (*mcp.CallToolResult, any, error) {
 			client, err := envs.client(input.EnvironmentName, creatio.ConnectionOverrides{})

@@ -8,7 +8,7 @@ Measured on 2026-10-03 against clio master `914dab286`:
 | | clio | this server |
 |---|---|---|
 | MCP tools | about 217 | 65, all read-only (`list-environments` added in T1) |
-| MCP prompts and resources | about 125 attributes (`get-guidance`, `docs://help/...`) | none |
+| MCP prompts and resources | about 125 attributes (`get-guidance`, `docs://help/...`) | 74 prompts, 5 resource templates, the knowledge catalog (T6) |
 | Environments per process | any, per call (`environment-name`) | any, per call, from clio's `appsettings.json` (T1); `CREATIO_*` as the default |
 | Live parity | — | 302 calls, 0 data differences (clio 8.1.0.134); after T1 302 cases per stand, and 632 calls with both stands served by one process (incl. 14 environment cases), 0 mismatches |
 
@@ -76,6 +76,44 @@ knowledge tools (`list-knowledge-sources`, `info-knowledge`, ...), `get-componen
 `merge-creatio-artifact`, `get-mobile-page-conversion-guide`, telemetry consent tools. Decision needed: serve
 the same texts (bundled from clio-knowledge at build time) or leave these tools to clio running alongside.
 
+T6 status (2026-10-03). Done: `internal/knowledge` reads and verifies the bundles clio installed (same cache,
+same trust stores, signature and digest checks, compatibility selection, fallback to the previous
+generation, topic pins and priorities); `get-guidance`, the `initialize` instructions, the 74 prompts,
+`resources/list` / `resources/templates/list` / `resources/read`, `list-knowledge-sources`,
+`info-knowledge`, `list-knowledge-examples`, `get-knowledge-feedback-policy`, `get-telemetry-consent`.
+Live, against clio 8.1.0.134 and the installed curated library 1.15.95: `scripts/parity-cases/knowledge.json`
+33 cases, 31 match, 2 known differences, 0 mismatches; the full case set 349 cases, 0 mismatches; every
+prompt rendered for every captured argument combination equals clio's text.
+
+Remaining, in clio only for now:
+- Install, update and bootstrap of the curated library (`install-knowledge`, `update-knowledge`, the
+  GitHub-release / NuGet / Git transports), `delete-knowledge`, and the source tools `add-`, `remove-`,
+  `enable-`, `disable-knowledge-source`, `configure-knowledge-feedback-policy`. They write clio's
+  `appsettings.json` and the installation store under clio's file locks (`.locks`, high-water marks,
+  staging, pruning), which clio's hourly autoupdate also writes; a partial port risks the user's cache.
+- `send-telemetry`, `withdraw-telemetry-consent` (clio's TelemetryService: outbox, flush, consent writes).
+- `get-component-info(-to-file)`, `export-component-registry`, `get-request-info(-to-file)`,
+  `merge-creatio-artifact`, `get-mobile-page-conversion-guide`: none of them reads the knowledge runtime
+  (they use clio's component registry client, embedded catalogs and Creatio probes), so they belong with the
+  Creatio-side tasks, not here. `delete-toolkit` and `experimental` are toolkit/feature commands (W7).
+
+Known differences, each with its reason:
+- clio 8.1.0.134 run as `dotnet clio.dll` answers every `docs://help/command/*` with its no-documentation
+  fallback and `docs://help/restart|flushdb` with an exception text; this server serves the help text of
+  the installed clio tool.
+- clio prints both paths of a failed `info-knowledge` as `[redacted-path]` (shared redaction, T4);
+  `knowledgeUntrusted` fences and flattens repository-controlled diagnostics like clio but does not run
+  clio's secret-scrubbing rules (T4).
+- `info-knowledge checkUpdates: true` reports `unknown` instead of contacting the publisher.
+- Git-type knowledge sources are not read.
+- An activation marker that lags the library's accepted sequence is reported, not reconciled (clio
+  rewrites `current.json` and prunes generations; a reader must not).
+- clio binds a bool prompt argument only from a JSON boolean, which the Go SDK's string-typed prompt
+  arguments cannot carry, so `restart-by-credentials` (required `isNetCore`) cannot be rendered here.
+- This server answers bundle compatibility as clio `8.1.0` and declares clio's 218-tool catalog as its
+  capability set (`knowledge_tool_catalog.go`), because that catalog is what the migration targets; both
+  follow the clio release used as the parity baseline.
+
 ### W6. Write tools by area (after W1–W3)
 | Area | Tools |
 |---|---|
@@ -117,7 +155,7 @@ for live checks; several may be deliberately left to clio.
 | T3 | CI on GitHub and release automation (W8, first half) — **done**, see [releasing.md](releasing.md) | — | 1 |
 | T4 | Shared infrastructure: redaction, envelope type, write safety, long-running operations, `rest/` helper (W2) | T1 | 2 |
 | T5 | Contract and resident-list parity (W4) | T1 | 2 |
-| T6 | Guidance, prompts, resources, knowledge tools from clio-knowledge bundles (W5, D2) | — (rebase after T1) | 2, started early |
+| T6 | Guidance, prompts, resources, knowledge tools from clio-knowledge bundles (W5, D2) — **read side done**, see below | — (rebase after T1) | 2, started early |
 | T7–T15 | Write tools, one task per W6 area | T1, T2, T4, decision D1 | 3 (in parallel) |
 | T16 | Local machine, infrastructure and workspace tools (W7) — deferred (D3) | T1, T4 | later |
 | T17 | Full parity run, docs, release `v0.2.0` | T5–T16 | 4 |

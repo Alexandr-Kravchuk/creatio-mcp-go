@@ -24,6 +24,15 @@ case once per name against the same two processes, so one Go process serves both
 alternation; the evidence numbers the environments instead of naming them. The write script below still
 starts Go in the variables mode.
 
+A case with `method` instead of `tool` sends that MCP method (`resources/list`, `resources/read`,
+`resources/templates/list`, `prompts/list`, `prompts/get`) with its `params` unchanged to both servers: no
+`args` wrapper, no environment name. `"method": "initialize"` compares the answers both servers gave at
+startup. `fields` narrows the result to the named keys (for `initialize`: `instructions`,
+`capabilities`, because `serverInfo` names the server). `unordered` lists result keys compared without
+regard to order: clio lists resource templates and its two static help resources from a hash set, so
+their order changes between clio processes. A protocol error is compared as
+`{success: false, code, error}`. The cases are in `scripts/parity-cases/knowledge.json`.
+
 ## Write tools: `scripts/compare-mcp-writes.py`
 
 A write cannot be compared by sending both servers the same arguments. Each scenario creates one object

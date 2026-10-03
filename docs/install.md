@@ -181,3 +181,39 @@ arguments. To compare many calls at once, run `scripts/compare-mcp.py` against a
 registered in clio; write tools are compared with `scripts/compare-mcp-writes.py` on an allow-listed
 disposable stand (see [parity.md](parity.md)). How releases are built, signed and published:
 [releasing.md](releasing.md).
+
+## 6. Guidance, prompts and resources
+
+The server sends clio's `initialize` instructions, which tell the agent to read `get-guidance`
+`core-rules` and `routing` before any operation. The guidance comes from the clio-knowledge bundle that
+**clio** installed; this server reads the same cache and never downloads, updates, repairs or prunes it.
+
+- Where: clio's home — `CLIO_HOME`, else `~/creatio/clio` (macOS, Linux) or `%LOCALAPPDATA%\creatio\clio`
+  (Windows) — its `appsettings.json` section `knowledge` (sources, `root-path`, `topic-pins`) and the
+  installed generations under `knowledge/sources/`.
+- Prerequisite: run clio once so it installs the curated library — start `clio mcp-server` or run
+  `clio install-knowledge`. Until then `get-guidance` answers `success: false` with
+  `errorCode: guidance-unavailable` and a `diagnostics` text saying why. `clio update-knowledge` brings a
+  newer generation; this server picks it up on the next call, without a restart.
+- Trust: every generation is verified on activation exactly as clio verifies it — the ECDSA P-256 manifest
+  signature (the built-in `com.creatio.clio` library only with the key pinned in clio, other libraries
+  with the key file their source configures), the SHA-256 and length of every file, no unsigned files,
+  the compatibility range (this server answers it as clio `8.1.0`, MCP tool contract `1.1.0`) and the
+  required tools. A refused generation falls back to the previous one, as in clio.
+- Not read: Git-type sources (clio reads their checkout directly). `info-knowledge` with
+  `checkUpdates: true` reports `unknown`; use `clio info-knowledge --check-updates`.
+
+Served from the bundle: `get-guidance`, the `docs://knowledge/{libraryId}/{itemId}` and legacy
+`docs://mcp/guides/...`, `docs://mcp/references/...` resources (`resources/list` pages them 100 at a
+time, as clio does), `list-knowledge-sources`, `info-knowledge`, `list-knowledge-examples`,
+`get-knowledge-feedback-policy`. `get-telemetry-consent` reads clio's `telemetry/consent.json`. These
+tools ignore `environment-name`: they read only local clio state.
+
+The 74 MCP prompts are clio's, with the same names, arguments and text. `docs://help/command/{name}` is
+clio's CLI help: it is read from `help/en` of the newest clio installed as a .NET tool
+(`~/.dotnet/tools/.store/clio/...`); without one the answer is "`<name>` command does not provide
+documentation.".
+
+Still only in clio: installing, updating and deleting knowledge (`install-knowledge`, `update-knowledge`,
+`delete-knowledge`), managing sources (`add-`, `remove-`, `enable-`, `disable-knowledge-source`),
+`configure-knowledge-feedback-policy`, `send-telemetry`, `withdraw-telemetry-consent`.

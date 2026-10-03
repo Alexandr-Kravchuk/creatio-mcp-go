@@ -24,8 +24,8 @@ class Server:
                                         encoding="utf-8")
         self.next_id = 0
         started = time.monotonic()
-        self.request("initialize", {"protocolVersion": "2025-06-18", "capabilities": {},
-                                    "clientInfo": {"name": "compare-mcp", "version": "1"}})
+        self.initialize_response = self.request("initialize", {"protocolVersion": "2025-06-18", "capabilities": {},
+                                                               "clientInfo": {"name": "compare-mcp", "version": "1"}})
         self.startup_seconds = time.monotonic() - started
         self.send({"jsonrpc": "2.0", "method": "notifications/initialized", "params": {}})
 
@@ -77,6 +77,32 @@ def payload(response):
 # matches between two calls, and this server keeps no such log, so the key is left out of the comparison.
 # get-page's files.fetchedAt is the time of the call itself, so it differs between any two calls too.
 IGNORED_KEYS = {"correlationid", "fetchedat"}
+
+
+def protocol_call(server, case):
+    """A case with "method" sends that MCP method with its "params" as they are: no args wrapper and no
+    environment selector. "initialize" is not sent again; the answer recorded at startup is compared.
+    "fields" narrows the result to those keys (initialize: instructions and capabilities, not serverInfo)
+    and "unordered" lists result keys compared without regard to order."""
+    started = time.monotonic()
+    if case["method"] == "initialize":
+        response = server.initialize_response
+    else:
+        response = server.request(case["method"], case.get("params", {}))
+    seconds = time.monotonic() - started
+    if "error" in response:
+        error = response["error"]
+        return {"success": False, "code": error.get("code"), "error": error.get("message", "")}, seconds
+    result = response.get("result") or {}
+    fields = case.get("fields")
+    if fields:
+        result = {key: result.get(key) for key in fields}
+    # "unordered" names result lists whose order carries no meaning (clio lists resource templates from a
+    # hash set, so their order changes from one clio process to the next); they are compared sorted.
+    for key in case.get("unordered", []):
+        if isinstance(result.get(key), list):
+            result = {**result, key: sorted(result[key], key=lambda item: json.dumps(item, sort_keys=True))}
+    return result, seconds
 
 
 def normalize(value):
@@ -219,21 +245,31 @@ def main():
     # With several environments each case runs for every name in turn, so consecutive calls of one Go
     # process alternate between targets.
     runs = [(case, index) for case in cases for index in range(len(names))]
+
+    def call_tool(case, index):
+        name, arguments = case["tool"], case.get("args", {})
+        # A few clio tools name the environment argument differently (get-fsm-mode: environmentName).
+        selector = {case.get("clio-environment-key", "environment-name"): names[index]}
+        clio_arguments = {**selector, **with_side(arguments, "clio")}
+        arguments = with_side(arguments, "go")
+        if options.go_env_mode == "name":
+            arguments = {**selector, **arguments}
+        if case.get("clio-run"):
+            clio_response, clio_seconds = clio.call("clio-run", {"command": name, "args": clio_arguments})
+        else:
+            clio_response, clio_seconds = clio.call(name, {"args": clio_arguments})
+        go_response, go_seconds = go.call(name, arguments)
+        return name, payload(clio_response), clio_seconds, payload(go_response), go_seconds
+
     try:
         for case, index in runs:
-            name, arguments = case["tool"], case.get("args", {})
-            # A few clio tools name the environment argument differently (get-fsm-mode: environmentName).
-            selector = {case.get("clio-environment-key", "environment-name"): names[index]}
-            clio_arguments = {**selector, **with_side(arguments, "clio")}
-            arguments = with_side(arguments, "go")
-            if options.go_env_mode == "name":
-                arguments = {**selector, **arguments}
-            if case.get("clio-run"):
-                clio_response, clio_seconds = clio.call("clio-run", {"command": name, "args": clio_arguments})
+            if "method" in case:
+                name = case["method"]
+                clio_value, clio_seconds = protocol_call(clio, case)
+                go_value, go_seconds = protocol_call(go, case)
             else:
-                clio_response, clio_seconds = clio.call(name, {"args": clio_arguments})
-            go_response, go_seconds = go.call(name, arguments)
-            outcome, paths = verdict(normalize(payload(clio_response)), normalize(payload(go_response)))
+                name, clio_value, clio_seconds, go_value, go_seconds = call_tool(case, index)
+            outcome, paths = verdict(normalize(clio_value), normalize(go_value))
             known = set(case.get("known-differences", []))
             if options.go_env_mode == "variables":
                 # Go is given no name in this mode, so it cannot echo one (compile-status, get-fsm-mode, ...).
