@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/Alexandr-Kravchuk/creatio-mcp-go/internal/creatio"
+	"github.com/Alexandr-Kravchuk/creatio-mcp-go/internal/redact"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
@@ -77,6 +78,11 @@ func init() {
 				return structuredToolResult(creatio.SchemaWriteEntFailure(message, dataForge)), nil
 			}
 			if failure != nil {
+				if lookup {
+					// create-lookup resolves the environment inside its own try block, so the failure is
+					// its caught, redacted message rather than the resolver envelope.
+					return structuredToolResult(creatio.SchemaWriteEntFailure(redact.Text(failureText), dataForge)), nil
+				}
 				return schemaWriteEntResolverResult(failure, dataForge), nil
 			}
 			if lookup {
@@ -155,18 +161,17 @@ func init() {
 		if rejection := creatio.SchemaSyncValidateTopLevel(parsed); rejection != nil {
 			return structuredToolResult(*rejection), nil
 		}
-		client, failure, failureText, err := schemaWriteEntResolve(envs, "sync-schemas", args)
+		client, _, failureText, err := schemaWriteEntResolve(envs, "sync-schemas", args)
 		if err != nil {
 			return nil, err
 		}
 		terms, hints := creatio.SchemaSyncTerms(parsed)
 		dataForge := schemaWriteEntEnrich(ctx, client, failureText, terms, hints)
-		if failure != nil {
-			return nil, failure
-		}
+		// Without an environment clio still runs the batch: each operation fails where it first needs the
+		// environment, with the resolution failure as its error.
 		result, _, err := runLongOperation(ctx, "sync-schemas", 24*time.Hour,
 			func(workCtx context.Context, stage func(string)) creatio.SchemaSyncResponse {
-				return client.SchemaSync(workCtx, parsed, dataForge, stage)
+				return creatio.SchemaSync(workCtx, client, failureText, parsed, dataForge, stage)
 			})
 		if err != nil {
 			return nil, err

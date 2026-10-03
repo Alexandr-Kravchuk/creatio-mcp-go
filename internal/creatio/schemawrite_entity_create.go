@@ -172,8 +172,16 @@ func schemaWriteEntColumnSpecText(spec schemaWriteEntColumnSpec) string {
 			{"source-resolution", spec.defaultConfig.SourceResolution}}
 	}
 	return string(toJNode(orderedFields{{"name", spec.name}, {"type", spec.typeName}, {"title-localizations", titles},
-		{"reference-schema-name", reference}, {"required", spec.required}, {"default-value-source", spec.defaultValueSource},
-		{"default-value", spec.defaultVal}, {"default-value-config", config}, {"masked", spec.masked}}).stjJSON())
+		{"reference-schema-name", reference}, {"required", schemaWriteEntOptionalBool(spec.required)}, {"default-value-source", spec.defaultValueSource},
+		{"default-value", spec.defaultVal}, {"default-value-config", config}, {"masked", schemaWriteEntOptionalBool(spec.masked)}}).stjJSON())
+}
+
+// schemaWriteEntOptionalBool is a nullable bool as toJNode takes it: nil for null.
+func schemaWriteEntOptionalBool(value *bool) any {
+	if value == nil {
+		return nil
+	}
+	return *value
 }
 
 // ---------------------------------------------------------------------------------------------- command

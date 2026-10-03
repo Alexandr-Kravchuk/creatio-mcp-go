@@ -78,5 +78,793 @@
     "args": {},
     "clio-run": true,
     "label": "delete-app empty input"
+  },
+  {
+    "tool": "create-entity-schema",
+    "args": {
+      "package-name": "UsrParityNoSuchPkg",
+      "schema-name": "UsrParityNoSuchEntity",
+      "title-localizations": {
+        "en-US": "Parity"
+      }
+    },
+    "clio-run": true,
+    "label": "ces package missing"
+  },
+  {
+    "tool": "create-entity-schema",
+    "args": {
+      "package-name": "UsrParityNoSuchPkg",
+      "schema-name": "UsrParityNoSuchEntity",
+      "title": "Parity"
+    },
+    "clio-run": true,
+    "label": "ces legacy title package missing"
+  },
+  {
+    "tool": "create-entity-schema",
+    "args": {
+      "package-name": "UsrParityNoSuchPkg",
+      "schema-name": "UsrParityNoSuchEntity"
+    },
+    "clio-run": true,
+    "label": "ces no title"
+  },
+  {
+    "tool": "create-entity-schema",
+    "args": {
+      "schema-name": "UsrParityNoSuchEntity",
+      "title-localizations": {
+        "en-US": "Parity"
+      }
+    },
+    "clio-run": true,
+    "label": "ces no package-name"
+  },
+  {
+    "tool": "create-entity-schema",
+    "args": {
+      "package-name": "UsrParityNoSuchPkg",
+      "schema-name": "UsrParityNoSuchEntity",
+      "title-localizations": {
+        "en-US": "Parity"
+      },
+      "columns": [
+        {
+          "type": "Text"
+        }
+      ]
+    },
+    "clio-run": true,
+    "label": "ces column no name"
+  },
+  {
+    "tool": "create-entity-schema",
+    "args": {
+      "package-name": "UsrParityNoSuchPkg",
+      "schema-name": "UsrParityNoSuchEntity",
+      "title-localizations": {
+        "en-US": "Parity"
+      },
+      "columns": [
+        {
+          "name": "UsrA"
+        }
+      ]
+    },
+    "clio-run": true,
+    "label": "ces column no type"
+  },
+  {
+    "tool": "create-entity-schema",
+    "args": {
+      "package-name": "UsrParityNoSuchPkg",
+      "schema-name": "UsrParityNoSuchEntity",
+      "title-localizations": {
+        "en-US": "Parity"
+      },
+      "columns": [
+        {
+          "name": "UsrA",
+          "type": "Enum"
+        }
+      ]
+    },
+    "clio-run": true,
+    "label": "ces column bad type package missing"
+  },
+  {
+    "tool": "create-entity-schema",
+    "args": {
+      "package-name": "UsrParityNoSuchPkg",
+      "schema-name": "UsrParityNoSuchEntity",
+      "title-localizations": {
+        "en-US": "Parity"
+      },
+      "extend-parent": true,
+      "parent-schema-name": "Contact"
+    },
+    "clio-run": true,
+    "label": "ces extend mismatch"
+  },
+  {
+    "tool": "create-entity-schema",
+    "args": {
+      "package-name": "UsrParityNoSuchPkg",
+      "schema-name": "UsrParityNoSuchEntity",
+      "title-localizations": {
+        "en-US": "Мова"
+      }
+    },
+    "clio-run": true,
+    "label": "ces cyrillic en-US"
+  },
+  {
+    "tool": "create-entity-schema",
+    "args": {
+      "package-name": "UsrParityNoSuchPkg",
+      "schema-name": "UsrParityNoSuchEntity",
+      "title-localizations": {
+        "en-US": "Parity"
+      },
+      "columns": [
+        {
+          "name": "UsrA",
+          "type": "Text",
+          "title-localizations": {
+            "en-US": "Мова"
+          }
+        }
+      ]
+    },
+    "clio-run": true,
+    "label": "ces column cyrillic caption"
+  },
+  {
+    "tool": "create-entity-schema",
+    "args": {
+      "package-name": "UsrParityNoSuchPkg",
+      "schema-name": "UsrParityNoSuchEntity",
+      "title-localizations": {
+        "en-US": "Parity",
+        "uk-UA": " "
+      }
+    },
+    "clio-run": true,
+    "label": "ces empty culture value"
+  },
+  {
+    "tool": "create-entity-schema",
+    "args": {
+      "environment-name": "UsrParityNoSuchEnv",
+      "package-name": "UsrParityNoSuchPkg",
+      "schema-name": "UsrParityNoSuchEntity",
+      "title-localizations": {
+        "en-US": "Parity"
+      }
+    },
+    "clio-run": true,
+    "label": "ces unknown env"
+  },
+  {
+    "tool": "create-lookup",
+    "args": {
+      "package-name": "UsrParityNoSuchPkg",
+      "schema-name": "UsrParityNoSuchEntity",
+      "title-localizations": {
+        "en-US": "Parity"
+      },
+      "columns": [
+        {
+          "column-name": "Name",
+          "type": "Text"
+        }
+      ]
+    },
+    "clio-run": true,
+    "label": "lookup shadow Name"
+  },
+  {
+    "tool": "create-lookup",
+    "args": {
+      "package-name": "UsrParityNoSuchPkg",
+      "schema-name": "UsrParityNoSuchEntity",
+      "title-localizations": {
+        "en-US": "Parity"
+      },
+      "columns": [
+        {
+          "name": "Name",
+          "type": "Text"
+        },
+        {
+          "name": "description",
+          "type": "Text"
+        }
+      ]
+    },
+    "clio-run": true,
+    "label": "lookup shadow both"
+  },
+  {
+    "tool": "create-lookup",
+    "args": {
+      "package-name": "UsrParityNoSuchPkg",
+      "schema-name": "UsrParityNoSuchEntity",
+      "title-localizations": {
+        "en-US": "Parity"
+      }
+    },
+    "clio-run": true,
+    "label": "lookup package missing"
+  },
+  {
+    "tool": "create-lookup",
+    "args": {
+      "environment-name": "UsrParityNoSuchEnv",
+      "package-name": "UsrParityNoSuchPkg",
+      "schema-name": "UsrParityNoSuchEntity",
+      "title-localizations": {
+        "en-US": "Parity"
+      }
+    },
+    "clio-run": true,
+    "label": "lookup unknown env"
+  },
+  {
+    "tool": "update-entity-schema",
+    "args": {
+      "package-name": "UsrParityNoSuchPkg",
+      "schema-name": "UsrParityNoSuchEntity",
+      "operations": []
+    },
+    "clio-run": true,
+    "label": "ues no operations"
+  },
+  {
+    "tool": "update-entity-schema",
+    "args": {
+      "package-name": "UsrParityNoSuchPkg",
+      "schema-name": "UsrParityNoSuchEntity"
+    },
+    "clio-run": true,
+    "label": "ues operations absent"
+  },
+  {
+    "tool": "update-entity-schema",
+    "args": {
+      "package-name": "UsrParityNoSuchPkg",
+      "schema-name": "UsrParityNoSuchEntity",
+      "operations": [
+        {
+          "action": "remove",
+          "column-name": "UsrA",
+          "title-localizations": {
+            "en-US": "A"
+          }
+        }
+      ]
+    },
+    "clio-run": true,
+    "label": "ues remove with title"
+  },
+  {
+    "tool": "update-entity-schema",
+    "args": {
+      "package-name": "UsrParityNoSuchPkg",
+      "schema-name": "UsrParityNoSuchEntity",
+      "operations": [
+        {
+          "action": "modify",
+          "column-name": "UsrA",
+          "title": "A"
+        }
+      ]
+    },
+    "clio-run": true,
+    "label": "ues modify legacy title"
+  },
+  {
+    "tool": "update-entity-schema",
+    "args": {
+      "package-name": "UsrParityNoSuchPkg",
+      "schema-name": "UsrParityNoSuchEntity",
+      "operations": [
+        {
+          "action": "modify",
+          "column-name": "UsrA"
+        }
+      ]
+    },
+    "clio-run": true,
+    "label": "ues modify nothing"
+  },
+  {
+    "tool": "update-entity-schema",
+    "args": {
+      "package-name": "UsrParityNoSuchPkg",
+      "schema-name": "UsrParityNoSuchEntity",
+      "operations": [
+        {
+          "action": "rename",
+          "column-name": "UsrA",
+          "type": "Text"
+        }
+      ]
+    },
+    "clio-run": true,
+    "label": "ues bad action"
+  },
+  {
+    "tool": "update-entity-schema",
+    "args": {
+      "package-name": "UsrParityNoSuchPkg",
+      "schema-name": "UsrParityNoSuchEntity",
+      "operations": [
+        {
+          "action": "add",
+          "type": "Text"
+        }
+      ]
+    },
+    "clio-run": true,
+    "label": "ues no column"
+  },
+  {
+    "tool": "update-entity-schema",
+    "args": {
+      "package-name": "UsrParityNoSuchPkg",
+      "schema-name": "UsrParityNoSuchEntity",
+      "operations": [
+        {
+          "action": "add",
+          "column-name": "UsrA"
+        }
+      ]
+    },
+    "clio-run": true,
+    "label": "ues add no type"
+  },
+  {
+    "tool": "update-entity-schema",
+    "args": {
+      "package-name": "UsrParityNoSuchPkg",
+      "schema-name": "UsrParityNoSuchEntity",
+      "operations": [
+        {
+          "action": "add",
+          "column-name": "UsrA",
+          "type": "Text"
+        }
+      ]
+    },
+    "clio-run": true,
+    "label": "ues package missing"
+  },
+  {
+    "tool": "update-entity-schema",
+    "args": {
+      "environment-name": "UsrParityNoSuchEnv",
+      "package-name": "UsrParityNoSuchPkg",
+      "schema-name": "UsrParityNoSuchEntity",
+      "operations": [
+        {
+          "action": "add",
+          "column-name": "UsrA",
+          "type": "Text"
+        }
+      ]
+    },
+    "clio-run": true,
+    "label": "ues unknown env"
+  },
+  {
+    "tool": "modify-entity-schema-column",
+    "args": {
+      "package-name": "UsrParityNoSuchPkg",
+      "schema-name": "UsrParityNoSuchEntity",
+      "action": "remove",
+      "column-name": "UsrA",
+      "title-localizations": {
+        "en-US": "A"
+      }
+    },
+    "clio-run": true,
+    "label": "mesc remove with title"
+  },
+  {
+    "tool": "modify-entity-schema-column",
+    "args": {
+      "package-name": "UsrParityNoSuchPkg",
+      "schema-name": "UsrParityNoSuchEntity",
+      "action": "add",
+      "column-name": "UsrA"
+    },
+    "clio-run": true,
+    "label": "mesc add no type"
+  },
+  {
+    "tool": "modify-entity-schema-column",
+    "args": {
+      "package-name": "UsrParityNoSuchPkg",
+      "schema-name": "UsrParityNoSuchEntity",
+      "action": "rename",
+      "column-name": "UsrA",
+      "type": "Text"
+    },
+    "clio-run": true,
+    "label": "mesc bad action"
+  },
+  {
+    "tool": "modify-entity-schema-column",
+    "args": {
+      "package-name": "UsrParityNoSuchPkg",
+      "schema-name": "UsrParityNoSuchEntity",
+      "action": "add",
+      "type": "Text"
+    },
+    "clio-run": true,
+    "label": "mesc no column"
+  },
+  {
+    "tool": "modify-entity-schema-column",
+    "args": {
+      "package-name": "UsrParityNoSuchPkg",
+      "schema-name": "UsrParityNoSuchEntity",
+      "action": "modify",
+      "column-name": "UsrA"
+    },
+    "clio-run": true,
+    "label": "mesc modify nothing"
+  },
+  {
+    "tool": "modify-entity-schema-column",
+    "args": {
+      "package-name": "UsrParityNoSuchPkg",
+      "schema-name": "UsrParityNoSuchEntity",
+      "action": "remove",
+      "column-name": "UsrA",
+      "indexed": true
+    },
+    "clio-run": true,
+    "label": "mesc remove with flag"
+  },
+  {
+    "tool": "modify-entity-schema-column",
+    "args": {
+      "package-name": "UsrParityNoSuchPkg",
+      "schema-name": "UsrParityNoSuchEntity",
+      "action": "add",
+      "column-name": "UsrA",
+      "type": "Text"
+    },
+    "clio-run": true,
+    "label": "mesc package missing"
+  },
+  {
+    "tool": "modify-entity-schema-column",
+    "args": {
+      "environment-name": "UsrParityNoSuchEnv",
+      "package-name": "UsrParityNoSuchPkg",
+      "schema-name": "UsrParityNoSuchEntity",
+      "action": "add",
+      "column-name": "UsrA",
+      "type": "Text"
+    },
+    "clio-run": true,
+    "label": "mesc unknown env"
+  },
+  {
+    "tool": "set-entity-schema-properties",
+    "args": {
+      "package-name": "UsrParityNoSuchPkg",
+      "schema-name": "UsrParityNoSuchEntity"
+    },
+    "clio-run": true,
+    "label": "sesp nothing"
+  },
+  {
+    "tool": "set-entity-schema-properties",
+    "args": {
+      "package-name": "UsrParityNoSuchPkg",
+      "schema-name": "UsrParityNoSuchEntity",
+      "title-localizations": {
+        "xx-YY": "A"
+      }
+    },
+    "clio-run": true,
+    "label": "sesp bad culture"
+  },
+  {
+    "tool": "set-entity-schema-properties",
+    "args": {
+      "package-name": "UsrParityNoSuchPkg",
+      "schema-name": "UsrParityNoSuchEntity",
+      "title-localizations": {
+        "en-US": "Мова"
+      }
+    },
+    "clio-run": true,
+    "label": "sesp script mismatch"
+  },
+  {
+    "tool": "set-entity-schema-properties",
+    "args": {
+      "schema-name": "UsrParityNoSuchEntity",
+      "primary-display-column": "Name"
+    },
+    "clio-run": true,
+    "label": "sesp no package-name"
+  },
+  {
+    "tool": "set-entity-schema-properties",
+    "args": {
+      "package-name": "UsrParityNoSuchPkg",
+      "schema-name": "UsrParityNoSuchEntity",
+      "primary-display-column": "Name"
+    },
+    "clio-run": true,
+    "label": "sesp package missing"
+  },
+  {
+    "tool": "set-entity-schema-properties",
+    "args": {
+      "environment-name": "UsrParityNoSuchEnv",
+      "package-name": "UsrParityNoSuchPkg",
+      "schema-name": "UsrParityNoSuchEntity",
+      "primary-display-column": "Name"
+    },
+    "clio-run": true,
+    "label": "sesp unknown env"
+  },
+  {
+    "tool": "sync-schemas",
+    "args": {
+      "package-name": "UsrParityNoSuchPkg"
+    },
+    "clio-run": true,
+    "label": "sync no operations"
+  },
+  {
+    "tool": "sync-schemas",
+    "args": {
+      "package-name": "UsrParityNoSuchPkg",
+      "operations": []
+    },
+    "clio-run": true,
+    "label": "sync empty operations"
+  },
+  {
+    "tool": "sync-schemas",
+    "args": {
+      "packageName": "UsrParityNoSuchPkg",
+      "operations": [
+        {
+          "type": "create-entity",
+          "schema-name": "UsrParityNoSuchEntity"
+        }
+      ]
+    },
+    "clio-run": true,
+    "label": "sync top-level alias"
+  },
+  {
+    "tool": "sync-schemas",
+    "args": {
+      "package-name": "UsrParityNoSuchPkg",
+      "operations": [
+        {
+          "type": "create-entity",
+          "name": "UsrParityNoSuchEntity"
+        }
+      ]
+    },
+    "clio-run": true,
+    "label": "sync alias field"
+  },
+  {
+    "tool": "sync-schemas",
+    "args": {
+      "package-name": "UsrParityNoSuchPkg",
+      "operations": [
+        {
+          "type": "drop-entity",
+          "schema-name": "UsrParityNoSuchEntity"
+        },
+        {
+          "type": "create-entity",
+          "schema-name": "UsrParityNoSuchEntity2"
+        }
+      ]
+    },
+    "clio-run": true,
+    "label": "sync unknown type"
+  },
+  {
+    "tool": "sync-schemas",
+    "args": {
+      "package-name": "UsrParityNoSuchPkg",
+      "operations": [
+        {
+          "schema-name": "UsrParityNoSuchEntity"
+        }
+      ]
+    },
+    "clio-run": true,
+    "label": "sync missing type"
+  },
+  {
+    "tool": "sync-schemas",
+    "args": {
+      "package-name": "UsrParityNoSuchPkg",
+      "operations": [
+        {
+          "type": "seed-data",
+          "schema-name": "UsrParityNoSuchEntity"
+        }
+      ]
+    },
+    "clio-run": true,
+    "label": "sync seed no rows"
+  },
+  {
+    "tool": "sync-schemas",
+    "args": {
+      "package-name": "UsrParityNoSuchPkg",
+      "operations": [
+        {
+          "type": "create-lookup",
+          "schema-name": "UsrParityNoSuchEntity",
+          "seed-rows": [
+            {}
+          ]
+        }
+      ]
+    },
+    "clio-run": true,
+    "label": "sync seed row without values"
+  },
+  {
+    "tool": "sync-schemas",
+    "args": {
+      "package-name": "UsrParityNoSuchPkg",
+      "operations": [
+        {
+          "type": "update-entity",
+          "schema-name": "UsrParityNoSuchEntity",
+          "is-db-view": true
+        }
+      ]
+    },
+    "clio-run": true,
+    "label": "sync dbview update"
+  },
+  {
+    "tool": "sync-schemas",
+    "args": {
+      "package-name": "UsrParityNoSuchPkg",
+      "operations": [
+        {
+          "type": "create-entity",
+          "schema-name": "UsrParityNoSuchEntity",
+          "is-virtual": true,
+          "seed-rows": [
+            {
+              "values": {
+                "Name": "A"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "clio-run": true,
+    "label": "sync virtual with seed"
+  },
+  {
+    "tool": "sync-schemas",
+    "args": {
+      "package-name": "UsrParityNoSuchPkg",
+      "operations": [
+        {
+          "operation": "create-entity",
+          "schema-name": "UsrParityNoSuchEntity"
+        }
+      ]
+    },
+    "clio-run": true,
+    "label": "sync legacy op key"
+  },
+  {
+    "tool": "sync-schemas",
+    "args": {
+      "package-name": "UsrParityNoSuchPkg",
+      "operations": [
+        {
+          "type": "update-entity",
+          "schema-name": "UsrParityNoSuchEntity"
+        }
+      ]
+    },
+    "clio-run": true,
+    "label": "sync update no ops"
+  },
+  {
+    "tool": "sync-schemas",
+    "args": {
+      "package-name": "UsrParityNoSuchPkg",
+      "operations": [
+        {
+          "type": "create-entity",
+          "schema-name": "UsrParityNoSuchEntity",
+          "title-localizations": {
+            "en-US": "Parity"
+          }
+        }
+      ]
+    },
+    "clio-run": true,
+    "label": "sync create package missing"
+  },
+  {
+    "tool": "sync-schemas",
+    "args": {
+      "package-name": "UsrParityNoSuchPkg",
+      "operations": [
+        {
+          "type": "update-entity",
+          "schema-name": "UsrParityNoSuchEntity",
+          "columns": [
+            {
+              "name": "UsrA",
+              "type": "Text"
+            }
+          ]
+        }
+      ]
+    },
+    "clio-run": true,
+    "label": "sync update schema missing"
+  },
+  {
+    "tool": "sync-schemas",
+    "args": {
+      "package-name": "UsrParityNoSuchPkg",
+      "operations": [
+        {
+          "type": "create-lookup",
+          "schema-name": "UsrParityNoSuchEntity",
+          "title-localizations": {
+            "en-US": "Parity"
+          },
+          "columns": [
+            {
+              "name": "Name",
+              "type": "Text"
+            }
+          ]
+        }
+      ]
+    },
+    "clio-run": true,
+    "label": "sync lookup shadow"
+  },
+  {
+    "tool": "sync-schemas",
+    "args": {
+      "environment-name": "UsrParityNoSuchEnv",
+      "package-name": "UsrParityNoSuchPkg",
+      "operations": [
+        {
+          "type": "create-entity",
+          "schema-name": "UsrParityNoSuchEntity",
+          "title-localizations": {
+            "en-US": "Parity"
+          }
+        }
+      ]
+    },
+    "clio-run": true,
+    "label": "sync unknown env"
   }
 ]

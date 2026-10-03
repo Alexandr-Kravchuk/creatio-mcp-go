@@ -7,6 +7,7 @@ package creatio
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"sort"
 	"strings"
@@ -333,6 +334,9 @@ type schemaWriteSyncState struct {
 	deferredIndexes []int
 	deferredSeedOps []*orderedObject
 	budgetRemaining time.Duration
+	// envFailure is the environment resolution failure; with it every operation fails where it first
+	// needs the environment, as clio's command resolution does.
+	envFailure string
 }
 
 func (s *schemaWriteSyncState) abort(index int, operation SchemaSyncOperation, resume *orderedObject, resubmittable bool) {
@@ -352,11 +356,11 @@ var schemaWriteSyncSleep = func(ctx context.Context, interval time.Duration) {
 
 // SchemaSync is SchemaSyncTool.ExecuteBatch after the top-level checks and the enrichment; stage reports a
 // per-operation progress line.
-func (c *Client) SchemaSync(ctx context.Context, args SchemaSyncArgs, dataForge *SchemaWriteEntDataForge, stage func(string)) SchemaSyncResponse {
+func SchemaSync(ctx context.Context, c *Client, envFailure string, args SchemaSyncArgs, dataForge *SchemaWriteEntDataForge, stage func(string)) SchemaSyncResponse {
 	if stage == nil {
 		stage = func(string) {}
 	}
-	state := &schemaWriteSyncState{abortedAt: -1, resubmittable: true, budgetRemaining: 30 * time.Second}
+	state := &schemaWriteSyncState{abortedAt: -1, resubmittable: true, budgetRemaining: 30 * time.Second, envFailure: envFailure}
 	total := len(args.Operations)
 	for index, operation := range args.Operations {
 		if ctx.Err() != nil {
@@ -433,7 +437,7 @@ func (c *Client) schemaWriteSyncRunOperation(ctx context.Context, args SchemaSyn
 		return true
 	}
 	stage(fmt.Sprintf("%d/%d: seed-data %s", index+1, total, operation.SchemaName))
-	seed := schemaWriteSyncClassify(c.schemaWriteSyncSeed(seedOperation), index)
+	seed := schemaWriteSyncClassify(c.schemaWriteSyncSeed(seedOperation, state), index)
 	state.results = append(state.results, seed)
 	if seed.Success {
 		return true
@@ -512,7 +516,7 @@ func (c *Client) schemaWriteSyncExecute(ctx context.Context, args SchemaSyncArgs
 	case schemaWriteSyncUpdate:
 		return c.schemaWriteSyncUpdateEntity(ctx, args, operation, state)
 	case schemaWriteSyncSeed:
-		return c.schemaWriteSyncSeed(operation)
+		return c.schemaWriteSyncSeed(operation, state)
 	}
 	var text string
 	if strings.TrimSpace(operation.Type) == "" {
@@ -529,7 +533,12 @@ func (c *Client) schemaWriteSyncExecute(ctx context.Context, args SchemaSyncArgs
 
 // schemaWriteSyncSeed reports the seed-data step this server does not run yet: clio applies it with
 // create-data-binding-db, which is ported with the data tools (T11).
-func (c *Client) schemaWriteSyncSeed(operation SchemaSyncOperation) SchemaSyncOperationResult {
+func (c *Client) schemaWriteSyncSeed(operation SchemaSyncOperation, state *schemaWriteSyncState) SchemaSyncOperationResult {
+	if c == nil {
+		text := schemaWriteEntRedact(state.envFailure)
+		return SchemaSyncOperationResult{Type: schemaWriteSyncSeed, SchemaName: schemaWriteSyncName(operation.SchemaName), Status: schemaWriteSyncFailed,
+			Error: &text, Messages: schemaWriteSyncMessages(nil)}
+	}
 	text := "seed-data failed with exit code 1: seed-data is not supported by this server yet; it needs create-data-binding-db, which is not ported."
 	return SchemaSyncOperationResult{Type: schemaWriteSyncSeed, SchemaName: schemaWriteSyncName(operation.SchemaName), Status: schemaWriteSyncFailed,
 		Error: &text, Messages: schemaWriteSyncMessages([]LogMessage{{MessageType: "Error", Value: "seed-data is not supported by this server yet; it needs create-data-binding-db, which is not ported."}})}
@@ -746,10 +755,22 @@ func schemaWriteSyncOptional(value string) *string {
 
 // schemaWriteSyncReadColumns is ReadColumns: the merged schema's columns by name with their friendly type.
 func (c *Client) schemaWriteSyncReadColumns(ctx context.Context, schemaName string) (map[string]string, error) {
-	properties, err := c.GetEntitySchemaProperties(ctx, EntitySchemaPropertiesRequest{SchemaName: schemaName})
+	body, _ := json.Marshal(map[string]string{"Name": strings.TrimSpace(schemaName)})
+	payload, err := c.postDataServiceJSON(ctx, "RuntimeEntitySchemaRequest", body, schemaWriteEntTimeout, maxResponseBytes)
 	if err != nil {
 		return nil, err
 	}
+	var response runtimeSchemaResponse
+	if err := json.Unmarshal(payload, &response); err != nil {
+		return nil, err
+	}
+	if !response.Success || response.Schema == nil {
+		if response.ErrorInfo != nil && response.ErrorInfo.Message != "" {
+			return nil, schemaWriteEntError(response.ErrorInfo.Message)
+		}
+		return nil, fmt.Errorf("Runtime schema '%s' was not returned by Creatio.", strings.TrimSpace(schemaName))
+	}
+	properties := mapRuntimeSchema(*response.Schema, schemaName, false)
 	columns := map[string]string{}
 	for _, column := range properties.Columns {
 		if strings.TrimSpace(column.Name) != "" {
@@ -798,6 +819,9 @@ func (c *Client) schemaWriteSyncCreate(ctx context.Context, args SchemaSyncArgs,
 	var plan schemaWriteSyncPlan
 	execution := c.schemaWriteSyncRunAttempts(ctx, state, func(log *schemaWriteEntLog) (int, error) {
 		var err error
+		if c == nil {
+			return 1, schemaWriteEntError(state.envFailure)
+		}
 		if plan, err = c.schemaWriteSyncConverge(ctx, args, operation, targetParent, isLookup, extend, isDBView); err != nil {
 			return 1, err
 		}
@@ -893,6 +917,9 @@ func (c *Client) schemaWriteSyncUpdateEntity(ctx context.Context, args SchemaSyn
 	outcome := ""
 	var collisions []string
 	execution := c.schemaWriteSyncRunAttempts(ctx, state, func(log *schemaWriteEntLog) (int, error) {
+		if c == nil {
+			return 1, schemaWriteEntError(state.envFailure)
+		}
 		existing, err := c.schemaWriteSyncReadColumns(ctx, operation.SchemaName)
 		if err != nil {
 			return 1, err
