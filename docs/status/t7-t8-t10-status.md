@@ -21,6 +21,32 @@ All nine registrations use clio annotations, environment resolution, structured 
 - Write parity was attempted before unit checks with the C# scenario in `scripts/write-scenarios/t8-schema-writes.json`. The registered disposable stand fails DNS resolution. Clio rejected creation before any server object was created; update/read-back were skipped. Cleanup and a separate `--cleanup-ledger` retry also failed DNS. This is not successful write parity.
 - Tentative ledger entries remain: `UsrParitytmbymjclioSource`, `UsrParitytmbymjgoSource`. No creation was confirmed. Retry cleanup-ledger when the registered stand answers; do not clear these records without checking.
 
+## T8 second round: incident on the shared stand (2026-10-03, about 19:27 CEST)
+
+While measuring clio's refusal texts for the new entity-schema tools, an ad-hoc driver (not the write
+harness) sent clio 8.1.0.134 a batch of cases chosen from clio master's source. Two of them were not
+refusals on the installed clio:
+
+- `create-entity-schema` with the legacy scalar `title` (master refuses it; 8.1.0.134 accepts it) created
+  the entity schema `UsrParityNoSuchEntity` in the stock package `Custom`, ran the configuration publish
+  (`SchemaDesignerRequest` with buildWorkspace/buildChangedConfiguration) and requested an OData rebuild
+  (`WorkspaceExplorerService.svc/RunODataBuild`).
+- `update-entity-schema` on that schema then added column `UsrA`, publishing and requesting an OData
+  rebuild again.
+
+This broke three rules of the brief: a stock package was written, the object name carried no
+`{run}{side}`, and two stand-wide builds ran while other agents were active. Cleanup: `delete-schema`
+(remote) removed the schema from `Custom`; `find-entity-schema` with `UsrParity` now returns nothing.
+**Left on the stand:** the database table `UsrParityNoSuchEntity` (with column `UsrA`) that
+`SaveSchemaDbStructure` created; `delete-schema` does not drop tables and no DDL was attempted.
+
+Since then every live case for these tools is checked against the clio 8.1.0.134 source (tag
+`8.1.0.134`), names a package that does not exist so that a validation that 8.1.0.134 lacks still stops
+at the package lookup, and runs only through `scripts/compare-mcp.py`.
+
+A package probe through the harness (run `tmcdjb`) also showed that `odata-create` on `SysPackage` is
+refused ("Current user does not have sufficient permissions to use OData"); nothing was created.
+
 ## Remaining work and differences
 
 T8 still lacks `create-entity-schema`, `create-lookup`, `modify-entity-schema-column`, `set-entity-schema-properties`, `sync-schemas`, and `update-entity-schema`. T7 still lacks `create-app`, `create-app-section`, `delete-app-section`, `install-application`, and `update-app-section`.
