@@ -146,7 +146,9 @@ func TestThemeGetOutputConfinementRefusesClioHomeAndSymlinkEscapes(t *testing.T)
 		t.Fatalf("clio home err = %v", err)
 	}
 	link := filepath.Join(t.TempDir(), "escape")
-	if err := os.Symlink("/etc", link); err != nil {
+	// The filesystem root is outside every allowed location on every platform ("/etc" is relative on Windows).
+	root := filepath.VolumeName(link) + string(filepath.Separator)
+	if err := os.Symlink(root, link); err != nil {
 		t.Skip("symlinks unavailable:", err)
 	}
 	if _, err := themeGetResolveOutputFile(filepath.Join(link, "x.css")); err == nil || !strings.Contains(err.Error(), "resolves outside the allowed locations") {

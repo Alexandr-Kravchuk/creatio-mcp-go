@@ -38,10 +38,10 @@ jobs:
           gh api "repos/$GH_REPO/git/ref/tags/$TAG" >/dev/null || { echo "tag $TAG is not pushed" >&2; exit 1; }
           is_draft=$(gh release view "$TAG" --json isDraft --jq .isDraft) || { echo "no release for $TAG; create a draft first" >&2; exit 1; }
           [[ $is_draft == true ]] || { echo "release $TAG is already published; this workflow only fills drafts" >&2; exit 1; }
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: refs/tags/${{ inputs.tag }}
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
           cache: true

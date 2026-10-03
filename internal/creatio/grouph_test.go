@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -99,7 +100,8 @@ func TestSchemaGetOutputRefusesPathsOutsideAllowedRoots(t *testing.T) {
 func TestStjIndentedJSONWritesSystemTextJSONLayout(t *testing.T) {
 	node := toJNode(orderedFields{{"a", "<é>"}, {"list", []any{}}, {"nested", orderedFields{{"b", true}, {"c", (*string)(nil)}}}})
 	want := "{\n  \"a\": \"\\u003C\\u00E9\\u003E\",\n  \"list\": [],\n  \"nested\": {\n    \"b\": true,\n    \"c\": null\n  }\n}"
-	if got := string(node.stjIndentedJSON()); got != want {
+	// .NET writes Environment.NewLine, so the expected layout uses CRLF on Windows.
+	if got := string(node.stjIndentedJSON()); got != testPlatformNewlines(want) {
 		t.Fatalf("got %s", got)
 	}
 }
@@ -237,10 +239,10 @@ func TestValidatePageRunsMarkerAndSectionChecks(t *testing.T) {
 		t.Fatalf("markers = %#v", markers)
 	}
 	for request, want := range map[PageValidateRequest]string{
-		{}:                                 "Either 'body' or 'body-file' must provide page body content.",
-		{BodyFile: "relative.js"}:          "body-file must be an absolute local path.",
-		{BodyFile: "/nonexistent/body.js"}: "body-file was not found.",
-		{Body: `{"viewConfigDiff": []}`}:   PageValidateMobileUnsupported,
+		{}:                        "Either 'body' or 'body-file' must provide page body content.",
+		{BodyFile: "relative.js"}: "body-file must be an absolute local path.",
+		{BodyFile: filepath.Join(t.TempDir(), "missing", "body.js")}: "body-file was not found.",
+		{Body: `{"viewConfigDiff": []}`}:                             PageValidateMobileUnsupported,
 	} {
 		if result := ValidatePage(request); result.Valid || result.Validation.Errors[0] != want {
 			t.Errorf("%#v = %#v", request, result)
@@ -265,7 +267,7 @@ func TestClassicPageSourcesHelpersMatchClio(t *testing.T) {
 		t.Fatalf("tables = %#v, warnings = %v", tables, warnings)
 	}
 	indented := string(classicPageNewtonsoftIndented(toJNode(orderedFields{{"a", "é "}, {"b", []any{}}, {"c", false}})))
-	if indented != "{\n  \"a\": \"é\\u2028\",\n  \"b\": [],\n  \"c\": false\n}" {
+	if indented != testPlatformNewlines("{\n  \"a\": \"é\\u2028\",\n  \"b\": [],\n  \"c\": false\n}") {
 		t.Fatalf("indented = %s", indented)
 	}
 }
@@ -309,4 +311,12 @@ func TestClassicPageTokenizerReadsDivisionAfterPostfixUpdate(t *testing.T) {
 	if _, err := classicPageTokenize([]rune("var r = x ? /a/ : /b/;")); err != nil {
 		t.Fatal(err)
 	}
+}
+
+// testPlatformNewlines turns an LF layout into the platform's Environment.NewLine equivalent.
+func testPlatformNewlines(text string) string {
+	if runtime.GOOS == "windows" {
+		return strings.ReplaceAll(text, "\n", "\r\n")
+	}
+	return text
 }
