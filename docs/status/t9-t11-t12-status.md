@@ -81,7 +81,7 @@ resolver (see gaps). Code: `internal/creatio/pagewrite_*.go`, `cmd/creatio-mcp-g
 | create-related-page-addon | 10 match | window only: `scripts/write-scenarios/window/t9.json` (BuildConfiguration rebuilds static content for the whole stand) | done, not run live |
 | create-user-task-page | 6 match | offline (workspace files): a golden test compares every file with clio 8.1.0.134's scaffold of the same workspace | done |
 | merge-creatio-artifact | 19 cases: 2 match, 17 known-diff (resolver-version; one also the unported merge) | read-only | classification only |
-| get-component-info | see below | read-only | see below |
+| get-component-info | `t9-component-info.json`: 20 match, 6 known-diff (documentation cache source), 0 mismatch | read-only | done |
 
 `t9-client-unit.json` now creates an app (through clio on both sides) and writes its helper into
 that app's package instead of `Custom`; live run: every step matches.
@@ -115,3 +115,21 @@ save, as clio and the page designer do; the live scenario ran it (both servers).
 restart or static-content rebuild was run. Ledger: every object of this agent's runs is removed
 (two app creations refused during the OData rebuild never existed and were marked removed after
 checking the stand).
+
+## T9 verification after rebasing onto main (2026-10-03)
+
+The page read cases returned 31 matches, 17 documented merge differences and no
+unexpected mismatches. `get-component-info` returned 20 matches, six documentation
+cache-source differences and no unexpected mismatches. The own-app `t9-pages.json`
+scenario passed every create, read-back, update, sync, cross-server baseline and cleanup
+step; its overall verdict is `known-diff` for the documented per-side checksums, times,
+body lengths and validation warning. The own-app `t9-client-unit.json` scenario also
+passed every write, read-back and cleanup step; its only differences are in the clio
+`create-app` setup response for each side's own app. Both runs' ledger entries are all
+removed (10 objects created, zero leftovers). The related-page add-on scenario remains
+window-only because it calls `BuildConfiguration` for the whole stand.
+
+Checks after rebase: `gofmt -l` empty, `go vet ./...`, `go test -race ./...`, Windows
+build, 23 Python script tests, contract comparison (256 matches, zero unexplained),
+and the public-safety script all pass. The semantic merge, full page content validation,
+and best-effort Designer Presence notification remain the explicit gaps above.
