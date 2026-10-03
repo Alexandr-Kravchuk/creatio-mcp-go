@@ -30,6 +30,8 @@ func TestPageWriteToolsAreGatedAndAnswerThroughTheExecutors(t *testing.T) {
 			`"error":"schema-name must start with a letter and contain only letters, digits, or underscores"`},
 		"update-page": {map[string]any{"schema-name": "UsrP", "body": "", "dry-run": true},
 			`"dryRun":true,"error":"Either 'body' or 'body-file' must provide page body content."`},
+		"create-related-page-addon": {map[string]any{"package-name": "p", "pages": []any{}},
+			`"error":"entity-schema-name is required."`},
 		"sync-pages": {map[string]any{"pages": []any{map[string]any{"schema-name": "UsrP", "body": "define("}}},
 			`"error":"JavaScript syntax error at line 1, column 8: Unexpected end of input. The body was NOT sent to Creatio."`},
 	}
