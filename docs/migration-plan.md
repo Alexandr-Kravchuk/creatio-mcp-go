@@ -206,8 +206,8 @@ from five sibling worktrees was preserved and integrated. This checkpoint adds
 
 | Task | Implemented in this checkpoint | Remaining task tools | Details |
 |---|---:|---:|---|
-| T7 applications | 1 | 5 | [T7/T8 status](status/t7-t8-t10-status.md) |
-| T8 schemas | 8, then 6 in the second round (all 14) | 0; successful writes await the window run and T7's create-app | [T7/T8 status](status/t7-t8-t10-status.md) |
+| T7 applications | 1, then 5 in the second round (all 6) | 0; `install-application` awaits the window run | [T7/T8 status](status/t7-t8-t10-status.md) |
+| T8 schemas | 8, then 6 in the second round (all 14) | 0; successful writes await the window run | [T7/T8 status](status/t7-t8-t10-status.md) |
 | T9 pages | 2 | 5, plus the T6 component/merge leftovers | [T9/T11/T12 status](status/t9-t11-t12-status.md) |
 | T10 business rules | 2, then 4 in the second round (all 6 done; live success parity is window-only) | 0 | [T10 status](status/t10-status.md) |
 | T11 data | 3 | 9 | [T9/T11/T12 status](status/t9-t11-t12-status.md) |
@@ -254,7 +254,7 @@ this checkpoint table and linked reports describe current implementation status.
 | T4 | Shared infrastructure: redaction, envelope type, write safety, long-running operations, `rest/` helper (W2) — **done** 2026-10-03, see W2 | T1 | 2 |
 | T5 | Contract and resident-list parity (W4) — **done** 2026-10-03, see W4 | T1 | 2 |
 | T6 | Guidance, prompts, resources, knowledge tools from clio-knowledge bundles (W5, D2) — **read side done**, see below | — (rebase after T1) | 2, started early |
-| T7–T15 | Write tools, one task per W6 area — **partial**, 30 tools added in the recovery checkpoint. T7 applications **done** in the second round (all 6 tools; `install-application` waits for the window run), see [T7/T8 status](status/t7-t8-t10-status.md) | T1, T2, T4, decision D1 | 3 (in parallel) |
+| T7–T15 | Write tools, one task per W6 area — **partial**, 30 tools added in the recovery checkpoint. T7 applications **done** in the second round (all 6 tools); create/section update/delete and app delete passed a live paired scenario; `install-application` waits for the window run, see [T7/T8 status](status/t7-t8-t10-status.md) | T1, T2, T4, decision D1 | 3 (in parallel) |
 | T16 | Local machine, infrastructure and workspace tools (W7) — deferred (D3) | T1, T4 | later |
 | T17 | Full parity run, docs, release `v0.2.0` | T5–T16 | 4 |
 | T18 | CAADT plugin switch, pilot, default switch (W8, second half) | T17 | 5 |

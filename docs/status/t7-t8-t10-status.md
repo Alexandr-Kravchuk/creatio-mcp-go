@@ -91,10 +91,10 @@ Verification:
 Window-only (scenarios in `scripts/write-scenarios/window/t8.json`): all six tools. Each publishes the
 configuration (a build) and create/add/remove/rename/type changes start an OData rebuild, which the
 brief forbids while other agents write. The scenarios create their own application package with
-`create-app` and are marked `go-tool-missing` until T7 ports it: at clio 8.1.0.134 no tool both servers
+`create-app` and are marked `go-tool-missing` pending removal of that flag: at clio 8.1.0.134 no other tool both servers
 share creates a package (`create-package` is newer; `odata-create` on SysPackage is refused). The
 first-round create-schema/SQL scenarios (`scripts/write-scenarios/t8-schema-writes.json`) were moved off
-the stock `Custom` package the same way; a run of that file now skips both scenarios and writes nothing.
+the stock `Custom` package the same way; those scenarios currently skip until their T8 owner removes the flag.
 
 Differences from clio (T8 second round):
 
@@ -118,7 +118,7 @@ Differences from clio (T8 second round):
 
 T8 and T7 tools are all implemented. T8's successful writes await the window run; T7's live write scenario passed (see "T7 second round" below).
 
-Successful live writes/read-backs remain unverified for every implemented tool. Export/import require ClioGate 2.0.0.46 and are only covered with mock services; no live bundle transfer was attempted. SQL installation and application deletion were not run live. No global operations were run.
+T8 successful live writes/read-backs remain unverified. Export/import require ClioGate 2.0.0.46 and are only covered with mock services; no live bundle transfer was attempted. SQL installation was not run live. T7 application deletion passed the paired live scenario. No global operations were run.
 
 Known implementation limits to close with live parity:
 
@@ -142,9 +142,9 @@ All six application tools are registered: `create-app`, `create-app-section`, `u
 Verification:
 
 - Read parity `scripts/parity-cases/t7.json` (validation and refusals, unknown application/section reads): **37 match, 0 mismatches**.
-- Contract comparison: 230 match, 0 unexplained.
+- Contract comparison after rebase: 250 match, 0 unexplained.
 - Unit tests with mocked Creatio for each tool (request shapes, success, failure); MCP tests for each tool by raw name (confirmation gate), `clio-run` and `clio-run-destructive`.
-- Write scenario `scripts/write-scenarios/t7.json` on s16123120: create-app → get-app-info → create-app-section → list → update-app-section → list → delete-app-section → list → delete-app (Go's, own server). Result: see the last line of this section.
+- Write scenario `scripts/write-scenarios/t7.json` on s16123120, run `tmciyt`: paired clio and Go create-app → get-app-info → create-app-section → list → update-app-section → list → delete-app-section → list → delete-app cleanup. **Zero mismatches**; all seven explicit expectations and both cleanups matched. The scenario verdict is `known-diff` for generated IDs and master-only fields documented below. Earlier interrupted run `tmchnn` was also cleaned up. No T7 ledger objects remain.
 - Stand facts found on the way: this stand answers `IsODataBuildRunning` with an HTML page, so the OData build gate is inert on clio and Go alike; every application or section write starts an OData rebuild (90–120 s) that refuses the next application write with "Creatio is currently rebuilding the OData library" on both servers, and other agents' writes start rebuilds too. The harness gained `settle-seconds` and `retry-while` for this (shared change, two commits). `WorkspaceExplorerService.GetWorkspaceItems` answers more than 4 MB here: delete-app-section now reads up to 128 MB; T8's `delete-schema` (`schemadelete.go`) still uses the 4 MB default and will fail the same way.
 - Debug objects outside the ledger, all removed: `UsrParitydbg1goApp` (created and deleted through Go), `UsrParitydbg2clioApp` (created and deleted through clio); `UsrParitydbg2goApp` was refused by the stand (OData rebuild) and never existed. Ledger entries of runs tmcec6 (go), tmcekp (clio) and tmcf4e (clio) were marked removed by hand after their absence was confirmed with get-app-info: those creates were refused by the stand.
 
