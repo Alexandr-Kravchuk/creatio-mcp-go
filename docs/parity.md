@@ -33,6 +33,22 @@ regard to order: clio lists resource templates and its two static help resources
 their order changes between clio processes. A protocol error is compared as
 `{success: false, code, error}`. The cases are in `scripts/parity-cases/knowledge.json`.
 
+### Prompt table
+
+`cmd/creatio-mcp-go/knowledge_prompt_table.go` reproduces clio's MCP prompts and is generated, not edited.
+After a clio update, regenerate it from that clio and a clio checkout at the same version (the checkout
+supplies which prompt arguments are bool or int):
+
+```sh
+python3 scripts/generate-prompts.py --clio-dll <path>/clio.dll --clio-source <clio checkout>
+```
+
+The script renders every prompt through `clio mcp-server` with a placeholder in each argument and with
+each optional argument absent, empty or blank (and every pair absent), derives what each state changes
+in the text, and writes the file only when that model reproduces every captured render, errors
+included. It needs no Creatio environment. Then run `go test ./...` and the `prompts/*` cases of
+`scripts/parity-cases/knowledge.json`.
+
 ## Write tools: `scripts/compare-mcp-writes.py`
 
 A write cannot be compared by sending both servers the same arguments. Each scenario creates one object
