@@ -327,6 +327,13 @@ class Harness:
                 # write) refuses the next write on the shared stand; let it finish first.
                 time.sleep(step["settle-seconds"])
             response, seconds[side] = self.call(side, step, arguments)
+            for _ in range(step.get("retry-attempts", 0)):
+                # A refusal the stand gives before it writes anything (its own background work) is retried
+                # on either side alike; the answer that counts is the last one.
+                if step.get("retry-while", "\0") not in json.dumps(payload(response), ensure_ascii=False):
+                    break
+                time.sleep(step.get("retry-delay-seconds", 30))
+                response, seconds[side] = self.call(side, step, arguments)
             answers[side] = normalize(payload(response))
             self.capture(step, answers[side], arguments, side_state)
             side_state["answers"][label] = answers[side]

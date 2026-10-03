@@ -116,7 +116,10 @@ A file is a list of scenarios: `{"label", "why"?, "steps": [...]}`. Placeholders
 side's call. Use it after a write that starts background work on the stand: an application or section write
 starts an OData rebuild (90-120 s) that refuses the next application write with "Creatio is currently
 rebuilding the OData library" on either server, and this stand cannot report the rebuild
-(`IsODataBuildRunning` answers an HTML page).
+(`IsODataBuildRunning` answers an HTML page). Other agents' writes start rebuilds too, so a write step can also
+carry `retry-while: "<text>"`, `retry-attempts: N` and `retry-delay-seconds: S`: while a side's answer contains
+the text, that side's call is repeated (at most N times, S seconds apart). Use it only for a refusal the stand
+gives before writing anything, such as "rebuilding the OData library".
 
 `go-tool-missing: "<reason>"` on a write or read-back step marks the scenario `skipped`: nothing runs until
 the Go tool exists and the key is removed.
