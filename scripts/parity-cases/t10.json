@@ -36,5 +36,1475 @@
       "environment-name": "__missing_parity_env__"
     },
     "label": "delete-page-business-rules unknown"
+  },
+  {
+    "tool": "create-entity-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "NoSuchPkgParityX",
+      "entity-schema-name": "Contact",
+      "rules": [
+        {
+          "caption": "x",
+          "condition": {
+            "logicalOperation": "AND",
+            "conditions": []
+          },
+          "actions": [
+            {
+              "type": "bogus",
+              "items": [
+                "A"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "label": "create-entity-business-rules binding: unknown action type"
+  },
+  {
+    "tool": "create-entity-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "NoSuchPkgParityX",
+      "entity-schema-name": "Contact",
+      "rules": [
+        {
+          "caption": "x",
+          "condition": {
+            "logicalOperation": "AND",
+            "conditions": []
+          },
+          "actions": [
+            {
+              "items": [
+                "A"
+              ],
+              "type": "make-required"
+            }
+          ]
+        }
+      ]
+    },
+    "label": "create-entity-business-rules binding: action type out of order"
+  },
+  {
+    "tool": "create-entity-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "NoSuchPkgParityX",
+      "entity-schema-name": "Contact",
+      "rules": [
+        null
+      ]
+    },
+    "label": "create-entity-business-rules binding: null rule"
+  },
+  {
+    "tool": "create-entity-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "NoSuchPkgParityX",
+      "entity-schema-name": "Contact",
+      "rules": [
+        {
+          "caption": "x",
+          "zzz": 1,
+          "condition": {
+            "logicalOperation": "AND",
+            "conditions": []
+          },
+          "actions": [
+            {
+              "type": "make-required",
+              "items": [
+                "A"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "label": "create-entity-business-rules binding: unknown rule property"
+  },
+  {
+    "tool": "create-entity-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "NoSuchPkgParityX",
+      "entity-schema-name": "Contact",
+      "rules": [
+        {
+          "caption": "x",
+          "condition": {
+            "logicalOperation": "AND",
+            "conditions": []
+          },
+          "actions": [
+            {
+              "type": "make-required",
+              "items": [
+                "A"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "label": "create-entity-business-rules binding: package not found"
+  },
+  {
+    "tool": "create-entity-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "NoSuchPkgParityX",
+      "entity-schema-name": "Contact",
+      "rules": [
+        {
+          "caption": "x",
+          "condition": {
+            "logicalOperation": "AND",
+            "conditions": []
+          },
+          "actions": [
+            {
+              "type": "hide-element",
+              "items": [
+                "A"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "label": "create-entity-business-rules binding: page action on entity tool"
+  },
+  {
+    "tool": "create-entity-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "NoSuchPkgParityX",
+      "entity-schema-name": "Contact",
+      "rules": [
+        {
+          "caption": "x",
+          "condition": {
+            "logicalOperation": "AND",
+            "conditions": []
+          },
+          "actions": [
+            {
+              "items": [
+                "A"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "label": "create-entity-business-rules binding: missing discriminator"
+  },
+  {
+    "tool": "create-entity-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "NoSuchPkgParityX",
+      "entity-schema-name": "Contact",
+      "rules": "abc"
+    },
+    "label": "create-entity-business-rules binding: rules not an array"
+  },
+  {
+    "tool": "create-entity-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "NoSuchPkgParityX",
+      "entity-schema-name": "Contact",
+      "rules": []
+    },
+    "label": "create-entity-business-rules binding: empty rules"
+  },
+  {
+    "tool": "create-entity-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "NoSuchPkgParityX",
+      "rules": [
+        {
+          "caption": "x"
+        }
+      ]
+    },
+    "label": "create-entity-business-rules binding: missing entity schema"
+  },
+  {
+    "tool": "update-page-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "NoSuchPkgParityX",
+      "schema-name": "X",
+      "rules": [
+        {
+          "caption": "x",
+          "condition": {
+            "logicalOperation": "AND",
+            "conditions": []
+          },
+          "actions": [
+            {
+              "type": "apply-filter"
+            }
+          ]
+        }
+      ]
+    },
+    "label": "update-page-business-rules binding: page-only shape"
+  },
+  {
+    "tool": "create-entity-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "NoSuchPkgParityX",
+      "entity-schema-name": "Contact",
+      "rules": [
+        {
+          "caption": "x",
+          "enabled": "yes",
+          "condition": {
+            "logicalOperation": "AND",
+            "conditions": []
+          },
+          "actions": []
+        }
+      ]
+    },
+    "label": "create-entity-business-rules binding: enabled not a bool"
+  },
+  {
+    "tool": "create-entity-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "NoSuchPkgParityX",
+      "entity-schema-name": "Contact",
+      "rules": [
+        {
+          "caption": "x",
+          "condition": {
+            "logicalOperation": "AND",
+            "conditions": [
+              {
+                "leftExpression": {
+                  "type": "Const",
+                  "value": null
+                },
+                "comparisonType": "equal"
+              }
+            ]
+          },
+          "actions": [
+            {
+              "type": "make-required",
+              "items": [
+                "A"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "label": "create-entity-business-rules binding: null const value"
+  },
+  {
+    "tool": "create-entity-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "NoSuchPkgParityX",
+      "entity-schema-name": "Contact",
+      "zz": 1,
+      "rules": [
+        {
+          "caption": "x"
+        }
+      ]
+    },
+    "label": "create-entity-business-rules binding: unknown top-level key"
+  },
+  {
+    "tool": "create-page-business-rules",
+    "clio-run": true,
+    "args": {
+      "rules": [
+        {
+          "caption": "x"
+        }
+      ]
+    },
+    "label": "create-page-business-rules binding: page missing fields"
+  },
+  {
+    "tool": "create-page-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "NoSuchPkgParityX",
+      "page-schema-name": "X",
+      "rules": [
+        {
+          "caption": "x",
+          "condition": {
+            "logicalOperation": "AND",
+            "conditions": []
+          },
+          "actions": [
+            {
+              "type": "set-values",
+              "items": []
+            }
+          ]
+        }
+      ]
+    },
+    "label": "create-page-business-rules binding: set-values on page"
+  },
+  {
+    "tool": "create-entity-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "NoSuchPkgParityX",
+      "entity-schema-name": "Contact",
+      "rules": [
+        {
+          "caption": 5,
+          "condition": {
+            "logicalOperation": "AND",
+            "conditions": []
+          },
+          "actions": []
+        }
+      ]
+    },
+    "label": "create-entity-business-rules binding: caption not a string"
+  },
+  {
+    "tool": "create-entity-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "NoSuchPkgParityX",
+      "entity-schema-name": "Contact",
+      "rules": [
+        {
+          "caption": "x",
+          "condition": {
+            "logicalOperation": "AND",
+            "conditions": []
+          },
+          "actions": [
+            {
+              "type": "make-required",
+              "items": "A"
+            }
+          ]
+        }
+      ]
+    },
+    "label": "create-entity-business-rules binding: items not an array"
+  },
+  {
+    "tool": "create-entity-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "NoSuchPkgParityX",
+      "entity-schema-name": "Contact",
+      "rules": [
+        {
+          "caption": "x",
+          "condition": {
+            "logicalOperation": "AND",
+            "conditions": []
+          },
+          "actions": [
+            {
+              "type": "apply-filter",
+              "clearValue": "true"
+            }
+          ]
+        }
+      ]
+    },
+    "label": "create-entity-business-rules binding: clearValue not a bool"
+  },
+  {
+    "tool": "create-entity-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "NoSuchPkgParityX",
+      "entity-schema-name": "Contact",
+      "rules": [
+        {
+          "caption": "x",
+          "condition": {
+            "logicalOperation": "AND",
+            "conditions": []
+          },
+          "actions": [
+            {
+              "type": "apply-filter",
+              "clearValue": null
+            }
+          ]
+        }
+      ]
+    },
+    "label": "create-entity-business-rules binding: clearValue null"
+  },
+  {
+    "tool": "create-entity-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "NoSuchPkgParityX",
+      "entity-schema-name": "Contact",
+      "rules": [
+        {
+          "caption": "x",
+          "condition": {
+            "logicalOperation": "AND",
+            "conditions": []
+          },
+          "actions": [
+            {
+              "type": "make-required",
+              "uId": 5,
+              "items": [
+                "A"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "label": "create-entity-business-rules binding: uId not a string"
+  },
+  {
+    "tool": "create-entity-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "NoSuchPkgParityX",
+      "entity-schema-name": "Contact",
+      "rules": [
+        {
+          "Caption": "x",
+          "Condition": {
+            "LogicalOperation": "AND",
+            "conditions": []
+          },
+          "actions": [
+            {
+              "Type": "make-required",
+              "items": [
+                "A"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "label": "create-entity-business-rules binding: discriminator name case"
+  },
+  {
+    "tool": "create-entity-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "NoSuchPkgParityX",
+      "entity-schema-name": "Contact",
+      "rules": [
+        {
+          "Caption": "x",
+          "actions": [
+            {
+              "type": "Make-Required",
+              "items": [
+                "A"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "label": "create-entity-business-rules binding: discriminator value case"
+  },
+  {
+    "tool": "create-entity-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": 5,
+      "entity-schema-name": "Contact",
+      "rules": [
+        {
+          "caption": "x"
+        }
+      ]
+    },
+    "label": "create-entity-business-rules binding: package-name not a string"
+  },
+  {
+    "tool": "create-entity-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "NoSuchPkgParityX",
+      "entity-schema-name": "Contact",
+      "rules": [
+        5
+      ]
+    },
+    "label": "create-entity-business-rules binding: rule not an object"
+  },
+  {
+    "tool": "create-entity-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "NoSuchPkgParityX",
+      "entity-schema-name": "Contact",
+      "rules": [
+        {
+          "caption": "x",
+          "condition": "AND"
+        }
+      ]
+    },
+    "label": "create-entity-business-rules binding: condition not an object"
+  },
+  {
+    "tool": "create-entity-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "NoSuchPkgParityX",
+      "entity-schema-name": "Contact",
+      "rules": [
+        {
+          "caption": "x",
+          "condition": {
+            "conditions": [
+              null
+            ]
+          },
+          "actions": [
+            null
+          ]
+        }
+      ]
+    },
+    "label": "create-entity-business-rules binding: null condition and action"
+  },
+  {
+    "tool": "create-entity-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "NoSuchPkgParityX",
+      "entity-schema-name": "Contact",
+      "rules": [
+        {
+          "caption": "x",
+          "actions": [
+            {
+              "type": "set-values",
+              "items": [
+                {
+                  "expression": {
+                    "type": "AttributeValue",
+                    "path": 5
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "label": "create-entity-business-rules binding: path not a string"
+  },
+  {
+    "tool": "create-entity-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "NoSuchPkgParityX",
+      "entity-schema-name": "Contact",
+      "rules": [
+        {
+          "caption": "x",
+          "actions": [
+            {
+              "type": "set-values",
+              "items": [
+                "A"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "label": "create-entity-business-rules binding: set-values item not an object"
+  },
+  {
+    "tool": "create-entity-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "NoSuchPkgParityX",
+      "entity-schema-name": "Contact",
+      "rules": [
+        {
+          "caption": "x",
+          "actions": [
+            {
+              "type": "make-required",
+              "items": [
+                5
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "label": "create-entity-business-rules binding: item not a string"
+  },
+  {
+    "tool": "create-entity-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "NoSuchPkgParityX",
+      "entity-schema-name": "Contact",
+      "rules": [
+        {
+          "caption": "x",
+          "actions": [
+            {
+              "type": "make-required",
+              "items": [
+                null
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "label": "create-entity-business-rules binding: null item"
+  },
+  {
+    "tool": "create-entity-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "NoSuchPkgParityX",
+      "entity-schema-name": "Contact",
+      "rules": [
+        {
+          "caption": "x",
+          "actions": [
+            {
+              "type": 5,
+              "items": [
+                "A"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "label": "create-entity-business-rules binding: type not a string"
+  },
+  {
+    "tool": "create-entity-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "NoSuchPkgParityX",
+      "entity-schema-name": "Contact",
+      "rules": [
+        {
+          "caption": "x",
+          "actions": [
+            {
+              "type": null,
+              "items": [
+                "A"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "label": "create-entity-business-rules binding: type null"
+  },
+  {
+    "tool": "create-entity-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "NoSuchPkgParityX",
+      "entity-schema-name": "Contact",
+      "rules": [
+        {
+          "caption": "x",
+          "actions": [
+            "x"
+          ]
+        }
+      ]
+    },
+    "label": "create-entity-business-rules binding: action not an object"
+  },
+  {
+    "tool": "create-entity-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "NoSuchPkgParityX",
+      "entity-schema-name": "Contact",
+      "rules": null
+    },
+    "label": "create-entity-business-rules binding: rules null"
+  },
+  {
+    "tool": "create-entity-business-rules",
+    "clio-run": true,
+    "args": {
+      "rules": [
+        {
+          "caption": "x"
+        }
+      ]
+    },
+    "label": "create-entity-business-rules binding: missing package and schema"
+  },
+  {
+    "tool": "update-entity-business-rules",
+    "clio-run": true,
+    "args": {
+      "rules": [
+        {
+          "caption": "x"
+        }
+      ]
+    },
+    "label": "update-entity-business-rules binding: update missing package and schema"
+  },
+  {
+    "tool": "update-entity-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "NoSuchPkgParityX",
+      "entity-schema-name": "Contact",
+      "rules": [
+        null
+      ]
+    },
+    "label": "update-entity-business-rules binding: update null rule"
+  },
+  {
+    "tool": "update-page-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "NoSuchPkgParityX",
+      "page-schema-name": "X",
+      "rules": [
+        {
+          "caption": "x"
+        }
+      ]
+    },
+    "label": "update-page-business-rules binding: update page package not found"
+  },
+  {
+    "tool": "delete-entity-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "NoSuchPkgParityX",
+      "entity-schema-name": "Contact",
+      "rule-names": [
+        "a"
+      ],
+      "zz": 1
+    },
+    "label": "delete-entity-business-rules binding: delete unknown key"
+  },
+  {
+    "tool": "create-entity-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "NoSuchPkgParityX",
+      "entity-schema-name": "Contact",
+      "rules": [
+        {
+          "caption": "x",
+          "actions": [
+            {
+              "type": "apply-static-filter",
+              "filter": "abc"
+            }
+          ]
+        }
+      ]
+    },
+    "label": "create-entity-business-rules binding: static filter string"
+  },
+  {
+    "tool": "create-entity-business-rules",
+    "clio-run": true,
+    "args": {
+      "environment-name": "__missing_parity_env__",
+      "package-name": "NoSuchPkgParityX",
+      "entity-schema-name": "Contact",
+      "rules": [
+        {
+          "caption": "x"
+        }
+      ]
+    },
+    "label": "create-entity-business-rules binding: create unknown environment"
+  },
+  {
+    "tool": "update-entity-business-rules",
+    "clio-run": true,
+    "args": {
+      "environment-name": "__missing_parity_env__",
+      "package-name": "NoSuchPkgParityX",
+      "entity-schema-name": "Contact",
+      "rules": [
+        {
+          "caption": "x"
+        }
+      ]
+    },
+    "label": "update-entity-business-rules binding: update unknown environment"
+  },
+  {
+    "tool": "create-entity-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "Base",
+      "entity-schema-name": "Contact",
+      "rules": [
+        {
+          "caption": "p1",
+          "condition": {
+            "logicalOperation": "AND",
+            "conditions": [
+              {
+                "leftExpression": {
+                  "type": "AttributeValue",
+                  "path": "NoSuchColumnX"
+                },
+                "comparisonType": "is-filled-in"
+              }
+            ]
+          },
+          "actions": [
+            {
+              "type": "make-required",
+              "items": [
+                "Name"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "label": "create-entity-business-rules stock entity validation: unknown attribute"
+  },
+  {
+    "tool": "create-entity-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "Base",
+      "entity-schema-name": "Contact",
+      "rules": [
+        {
+          "caption": "p2",
+          "condition": {
+            "logicalOperation": "AND",
+            "conditions": [
+              {
+                "leftExpression": {
+                  "type": "AttributeValue",
+                  "path": "Account.Country"
+                },
+                "comparisonType": "is-filled-in"
+              }
+            ]
+          },
+          "actions": [
+            {
+              "type": "make-required",
+              "items": [
+                "Name"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "label": "create-entity-business-rules stock entity validation: forward path in condition"
+  },
+  {
+    "tool": "create-entity-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "Base",
+      "entity-schema-name": "Contact",
+      "rules": [
+        {
+          "caption": "p3",
+          "condition": {
+            "logicalOperation": "AND",
+            "conditions": [
+              {
+                "leftExpression": {
+                  "type": "AttributeValue",
+                  "path": "Account"
+                },
+                "comparisonType": "equal",
+                "rightExpression": {
+                  "type": "Const",
+                  "value": "11111111-2222-3333-4444-555555555555"
+                }
+              }
+            ]
+          },
+          "actions": [
+            {
+              "type": "make-required",
+              "items": [
+                "Name"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "label": "create-entity-business-rules stock entity validation: lookup record not found"
+  },
+  {
+    "tool": "create-entity-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "Base",
+      "entity-schema-name": "Contact",
+      "rules": [
+        {
+          "caption": "p4",
+          "condition": {
+            "logicalOperation": "AND",
+            "conditions": [
+              {
+                "leftExpression": {
+                  "type": "SysSetting",
+                  "sysSettingName": "NoSuchSettingParityX"
+                },
+                "comparisonType": "equal",
+                "rightExpression": {
+                  "type": "Const",
+                  "value": true
+                }
+              }
+            ]
+          },
+          "actions": [
+            {
+              "type": "make-required",
+              "items": [
+                "Name"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "label": "create-entity-business-rules stock entity validation: system setting not found"
+  },
+  {
+    "tool": "create-entity-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "Base",
+      "entity-schema-name": "Contact",
+      "rules": [
+        {
+          "caption": "p5",
+          "condition": {
+            "logicalOperation": "AND",
+            "conditions": [
+              {
+                "leftExpression": {
+                  "type": "AttributeValue",
+                  "path": "Name"
+                },
+                "comparisonType": "greater-than",
+                "rightExpression": {
+                  "type": "Const",
+                  "value": "x"
+                }
+              }
+            ]
+          },
+          "actions": [
+            {
+              "type": "make-required",
+              "items": [
+                "Name"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "label": "create-entity-business-rules stock entity validation: relational on text"
+  },
+  {
+    "tool": "create-entity-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "Base",
+      "entity-schema-name": "Contact",
+      "rules": [
+        {
+          "caption": "p6",
+          "condition": {
+            "logicalOperation": "AND",
+            "conditions": []
+          },
+          "actions": [
+            {
+              "type": "apply-static-filter",
+              "targetAttribute": "Account",
+              "filter": {
+                "logicalOperation": "AND",
+                "filters": [
+                  {
+                    "columnPath": "NoSuchColX",
+                    "comparisonType": "EQUAL",
+                    "value": "a"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "label": "create-entity-business-rules stock entity validation: static filter unknown column"
+  },
+  {
+    "tool": "create-entity-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "Base",
+      "entity-schema-name": "Contact",
+      "rules": [
+        {
+          "caption": "p7",
+          "condition": {
+            "logicalOperation": "AND",
+            "conditions": []
+          },
+          "actions": [
+            {
+              "type": "apply-static-filter",
+              "targetAttribute": "Account",
+              "filter": {
+                "logicalOperation": "AND",
+                "filters": [
+                  {
+                    "columnPath": "Name",
+                    "comparisonType": "GREATER",
+                    "value": "a"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "label": "create-entity-business-rules stock entity validation: static filter relational on text"
+  },
+  {
+    "tool": "create-entity-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "Base",
+      "entity-schema-name": "Contact",
+      "rules": [
+        {
+          "caption": "p8",
+          "condition": {
+            "logicalOperation": "AND",
+            "conditions": [
+              {
+                "leftExpression": {
+                  "type": "AttributeValue",
+                  "path": "Name"
+                },
+                "comparisonType": "is-filled-in"
+              }
+            ]
+          },
+          "actions": [
+            {
+              "type": "set-values",
+              "items": [
+                {
+                  "expression": {
+                    "type": "AttributeValue",
+                    "path": "Name"
+                  },
+                  "value": {
+                    "type": "Formula",
+                    "expression": "Age + 1"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "label": "create-entity-business-rules stock entity validation: formula on text target"
+  },
+  {
+    "tool": "create-entity-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "Base",
+      "entity-schema-name": "Contact",
+      "rules": [
+        {
+          "caption": "p9",
+          "condition": {
+            "logicalOperation": "AND",
+            "conditions": [
+              {
+                "leftExpression": {
+                  "type": "AttributeValue",
+                  "path": "Name"
+                },
+                "comparisonType": "is-filled-in"
+              }
+            ]
+          },
+          "actions": [
+            {
+              "type": "apply-filter",
+              "target": "Account",
+              "targetFilterPath": "Country",
+              "source": "Country",
+              "clearValue": true,
+              "populateValue": true,
+              "sourceFilterPath": "TimeZone"
+            }
+          ]
+        }
+      ]
+    },
+    "label": "create-entity-business-rules stock entity validation: apply-filter schema mismatch"
+  },
+  {
+    "tool": "create-entity-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "Base",
+      "entity-schema-name": "Contact",
+      "rules": [
+        {
+          "caption": "p10",
+          "condition": {
+            "logicalOperation": "AND",
+            "conditions": [
+              {
+                "leftExpression": {
+                  "type": "SysValue",
+                  "sysValueName": "currentuser"
+                },
+                "comparisonType": "equal",
+                "rightExpression": {
+                  "type": "AttributeValue",
+                  "path": "Account"
+                }
+              }
+            ]
+          },
+          "actions": [
+            {
+              "type": "make-required",
+              "items": [
+                "Name"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "label": "create-entity-business-rules stock entity validation: sys value lookup mismatch"
+  },
+  {
+    "tool": "create-entity-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "Base",
+      "entity-schema-name": "Contact",
+      "rules": [
+        {
+          "caption": "p11",
+          "condition": {
+            "logicalOperation": "AND",
+            "conditions": [
+              {
+                "leftExpression": {
+                  "type": "AttributeValue",
+                  "path": "Name"
+                },
+                "comparisonType": "is-filled-in"
+              }
+            ]
+          },
+          "actions": [
+            {
+              "type": "set-values",
+              "items": [
+                {
+                  "expression": {
+                    "type": "AttributeValue",
+                    "path": "Account"
+                  },
+                  "value": {
+                    "type": "Const",
+                    "value": "11111111-2222-3333-4444-555555555555"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "label": "create-entity-business-rules stock entity validation: set-values lookup record not found"
+  },
+  {
+    "tool": "create-entity-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "Base",
+      "entity-schema-name": "NoSuchEntityParityX",
+      "rules": [
+        {
+          "caption": "p12"
+        }
+      ]
+    },
+    "label": "create-entity-business-rules stock entity validation: entity schema not found"
+  },
+  {
+    "tool": "update-entity-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "Base",
+      "entity-schema-name": "Contact",
+      "rules": [
+        {
+          "name": "NoSuchRuleParityX",
+          "caption": "p13",
+          "condition": {
+            "logicalOperation": "AND",
+            "conditions": []
+          },
+          "actions": []
+        }
+      ]
+    },
+    "label": "update-entity-business-rules stock entity validation: update rule not found"
+  },
+  {
+    "tool": "create-page-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "Base",
+      "page-schema-name": "NoSuchPageParityX",
+      "rules": [
+        {
+          "caption": "p14"
+        }
+      ]
+    },
+    "label": "create-page-business-rules stock entity validation: page schema not found"
+  },
+  {
+    "tool": "create-entity-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "Base",
+      "entity-schema-name": "Contact",
+      "rules": [
+        {
+          "caption": "p15",
+          "condition": {
+            "logicalOperation": "AND",
+            "conditions": []
+          },
+          "actions": [
+            {
+              "type": "apply-static-filter",
+              "targetAttribute": "Account",
+              "filter": {
+                "logicalOperation": "AND",
+                "filters": [
+                  {
+                    "columnPath": "Type",
+                    "comparisonType": "EQUAL",
+                    "value": "No such type parity X"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "label": "create-entity-business-rules stock entity validation: static filter lookup name not found"
+  },
+  {
+    "tool": "create-page-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "Base",
+      "page-schema-name": "Contacts_FormPage",
+      "rules": [
+        {
+          "caption": "q1",
+          "condition": {
+            "logicalOperation": "AND",
+            "conditions": [
+              {
+                "leftExpression": {
+                  "type": "AttributeValue",
+                  "path": "NoSuchAttrParityX"
+                },
+                "comparisonType": "is-filled-in"
+              }
+            ]
+          },
+          "actions": [
+            {
+              "type": "hide-element",
+              "items": [
+                "NoSuchElementParityX"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "label": "create-page-business-rules stock page validation: unknown attribute with candidates"
+  },
+  {
+    "tool": "create-page-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "Base",
+      "page-schema-name": "Contacts_FormPage",
+      "rules": [
+        {
+          "caption": "q2",
+          "condition": {
+            "logicalOperation": "OR",
+            "conditions": [
+              {
+                "leftExpression": {
+                  "type": "SysValue",
+                  "sysValueName": "CurrentUser"
+                },
+                "comparisonType": "is-filled-in"
+              }
+            ]
+          },
+          "actions": [
+            {
+              "type": "hide-element",
+              "items": [
+                "NoSuchElementParityX"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "label": "create-page-business-rules stock page validation: unknown element with candidates"
+  },
+  {
+    "tool": "create-page-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "Base",
+      "page-schema-name": "Contacts_FormPage",
+      "rules": [
+        {
+          "caption": "q3",
+          "condition": {
+            "logicalOperation": "AND",
+            "conditions": []
+          },
+          "actions": [
+            {
+              "type": "apply-static-filter",
+              "targetAttribute": "Account",
+              "filter": {
+                "logicalOperation": "AND"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "label": "create-page-business-rules stock page validation: static filter unsupported on page"
+  },
+  {
+    "tool": "create-page-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "Base",
+      "page-schema-name": "Contacts_FormPage",
+      "rules": [
+        {
+          "caption": "q4",
+          "condition": {
+            "logicalOperation": "AND",
+            "conditions": [
+              {
+                "leftExpression": {
+                  "type": "AttributeValue",
+                  "path": "PDS.NoSuchColParityX"
+                },
+                "comparisonType": "is-filled-in"
+              }
+            ]
+          },
+          "actions": [
+            {
+              "type": "show-element",
+              "items": []
+            }
+          ]
+        }
+      ]
+    },
+    "label": "create-page-business-rules stock page validation: scoped path not found"
+  },
+  {
+    "tool": "update-page-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "Base",
+      "page-schema-name": "Contacts_FormPage",
+      "rules": [
+        {
+          "name": "NoSuchRuleParityX",
+          "caption": "q5"
+        }
+      ]
+    },
+    "label": "update-page-business-rules stock page validation: update rule not found"
   }
 ]
