@@ -1,0 +1,36 @@
+[
+  {
+    "label": "install-application of a run-named package folder, read back, uninstall",
+    "why": "T7, window-only: install-application installs into the configuration and, on a .NET Core or developer-mode environment, restarts the application, so it runs only when no other agent uses the stand. Before the run, the window operator creates two package folders, /tmp/creatio-mcp-go-window/UsrParity<run>clioPkg and /tmp/creatio-mcp-go-window/UsrParity<run>goPkg (for example with clio new-pkg; each with descriptor.json naming that package), and passes the same id with --run-id. Both sides pack the folder, upload it, back it up and install it with AppInstallerService InstallAppFromFile; the answers are command envelopes whose log lines carry each side's temporary directory, so only the exit code and the closing line are compared. Unverified until the window run: that InstallAppFromFile registers the package as an installed application that delete-app can uninstall.",
+    "steps": [
+      {
+        "kind": "write",
+        "label": "install-application",
+        "tool": "install-application",
+        "clio-run": true,
+        "settle-seconds": 120,
+        "creates": "UsrParity{run}{side}Pkg",
+        "args": {"name": "/tmp/creatio-mcp-go-window/UsrParity{run}{side}Pkg"},
+        "known-differences": ["$.executionlogmessages", "$.correlationid"],
+        "why": "The log carries per-side temporary directories and the streamed installation log."
+      },
+      {
+        "kind": "cleanup",
+        "for": "UsrParity{run}{side}Pkg",
+        "server": "own",
+        "calls": [
+          {"tool": "delete-app", "clio-run": true, "settle-seconds": 120, "args": {"app-name": "UsrParity{run}{side}Pkg"}}
+        ]
+      },
+      {"kind": "expect", "step": "install-application", "path": "$.exitCode", "equals": 0},
+      {
+        "kind": "read-back",
+        "label": "list-packages",
+        "tool": "list-packages",
+        "args": {"filter": "UsrParity{run}{side}Pkg"},
+        "known-differences": ["$.packages[0].uid"],
+        "why": "Each side's package gets its own UId."
+      }
+    ]
+  }
+]
