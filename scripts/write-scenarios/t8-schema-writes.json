@@ -1,7 +1,42 @@
 [
   {
     "label": "C# source designer create update read delete",
+    "why": "T8 (create-schema, update-schema). Writes into a package the run creates; never into a stock package.",
     "steps": [
+      {
+        "kind": "write",
+        "label": "create-app",
+        "tool": "create-app",
+        "clio-run": true,
+        "creates": "UsrParity{run}{side}App",
+        "go-tool-missing": "create-app is not implemented in this server yet (T7). No primitive both servers share at clio 8.1.0.134 creates a package: create-package is newer than 8.1.0.134, and odata-create on SysPackage is refused for OData. Remove this key when create-app is ported.",
+        "why": "The schema needs a package of its own.",
+        "args": {
+          "name": "UsrParity{run}{side}App",
+          "code": "UsrParity{run}{side}App",
+          "template-code": "AppFreedomUI",
+          "with-mobile-pages": false,
+          "description": "Created by scripts/compare-mcp-writes.py; safe to delete"
+        },
+        "capture": {
+          "pkg": "$.package-name"
+        }
+      },
+      {
+        "kind": "cleanup",
+        "for": "UsrParity{run}{side}App",
+        "server": "clio",
+        "why": "Uninstalling the application removes its package and everything left in it.",
+        "calls": [
+          {
+            "tool": "delete-app",
+            "clio-run": true,
+            "args": {
+              "app-name": "UsrParity{run}{side}App"
+            }
+          }
+        ]
+      },
       {
         "kind": "write",
         "label": "create",
@@ -10,7 +45,7 @@
         "creates": "UsrParity{run}{side}Source",
         "args": {
           "schema-name": "UsrParity{run}{side}Source",
-          "package-name": "Custom"
+          "package-name": "{pkg}"
         }
       },
       {
@@ -56,7 +91,42 @@
   },
   {
     "label": "SQL designer create update read delete",
+    "why": "T8 (create-sql-schema, update-sql-schema). Writes into a package the run creates.",
     "steps": [
+      {
+        "kind": "write",
+        "label": "create-app",
+        "tool": "create-app",
+        "clio-run": true,
+        "creates": "UsrParity{run}{side}App",
+        "go-tool-missing": "create-app is not implemented in this server yet (T7). No primitive both servers share at clio 8.1.0.134 creates a package: create-package is newer than 8.1.0.134, and odata-create on SysPackage is refused for OData. Remove this key when create-app is ported.",
+        "why": "The SQL script needs a package of its own.",
+        "args": {
+          "name": "UsrParity{run}{side}App",
+          "code": "UsrParity{run}{side}App",
+          "template-code": "AppFreedomUI",
+          "with-mobile-pages": false,
+          "description": "Created by scripts/compare-mcp-writes.py; safe to delete"
+        },
+        "capture": {
+          "pkg": "$.package-name"
+        }
+      },
+      {
+        "kind": "cleanup",
+        "for": "UsrParity{run}{side}App",
+        "server": "clio",
+        "why": "Uninstalling the application removes its package and everything left in it.",
+        "calls": [
+          {
+            "tool": "delete-app",
+            "clio-run": true,
+            "args": {
+              "app-name": "UsrParity{run}{side}App"
+            }
+          }
+        ]
+      },
       {
         "kind": "write",
         "label": "create",
@@ -65,7 +135,7 @@
         "creates": "UsrParity{run}{side}Sql",
         "args": {
           "schema-name": "UsrParity{run}{side}Sql",
-          "package-name": "Custom"
+          "package-name": "{pkg}"
         }
       },
       {

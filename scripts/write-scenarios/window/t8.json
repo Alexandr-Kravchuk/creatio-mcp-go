@@ -1,0 +1,675 @@
+[
+  {
+    "label": "create-entity-schema, update-entity-schema, modify-entity-schema-column, set-entity-schema-properties",
+    "why": "Every entity-schema write publishes the configuration (SchemaDesignerRequest buildWorkspace + buildChangedConfiguration) and, when the OData contract changes, starts WorkspaceExplorerService RunODataBuild: stand-wide builds, so this runs only in the dedicated window.",
+    "steps": [
+      {
+        "kind": "write",
+        "label": "create-app",
+        "tool": "create-app",
+        "clio-run": true,
+        "creates": "UsrParity{run}{side}App",
+        "go-tool-missing": "create-app is not implemented in this server yet (T7). No primitive both servers share at clio 8.1.0.134 creates a package: create-package is newer than 8.1.0.134, and odata-create on SysPackage is refused for OData. Remove this key when create-app is ported.",
+        "why": "The entity needs a package of its own.",
+        "args": {
+          "name": "UsrParity{run}{side}App",
+          "code": "UsrParity{run}{side}App",
+          "template-code": "AppFreedomUI",
+          "with-mobile-pages": false,
+          "description": "Created by scripts/compare-mcp-writes.py; safe to delete"
+        },
+        "capture": {
+          "pkg": "$.package-name"
+        }
+      },
+      {
+        "kind": "cleanup",
+        "for": "UsrParity{run}{side}App",
+        "server": "clio",
+        "why": "Uninstalling the application removes its package and everything left in it.",
+        "calls": [
+          {
+            "tool": "delete-app",
+            "clio-run": true,
+            "args": {
+              "app-name": "UsrParity{run}{side}App"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "write",
+        "label": "create",
+        "tool": "create-entity-schema",
+        "clio-run": true,
+        "creates": "UsrParity{run}{side}Ent",
+        "known-differences": [
+          "$.dataforge"
+        ],
+        "args": {
+          "package-name": "{pkg}",
+          "schema-name": "UsrParity{run}{side}Ent",
+          "title-localizations": {
+            "en-US": "Parity entity"
+          },
+          "columns": [
+            {
+              "name": "UsrParityCode",
+              "type": "ShortText",
+              "title-localizations": {
+                "en-US": "Code"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "kind": "cleanup",
+        "for": "UsrParity{run}{side}Ent",
+        "server": "clio",
+        "calls": [
+          {
+            "tool": "delete-schema",
+            "clio-run": true,
+            "args": {
+              "schema-name": "UsrParity{run}{side}Ent",
+              "remote": true
+            }
+          }
+        ]
+      },
+      {
+        "kind": "read-back",
+        "label": "find",
+        "tool": "find-entity-schema",
+        "args": {
+          "schema-name": "UsrParity{run}{side}Ent"
+        }
+      },
+      {
+        "kind": "expect",
+        "step": "find",
+        "path": "$[0].packagename",
+        "equals": "{pkg}"
+      },
+      {
+        "kind": "read-back",
+        "label": "code",
+        "tool": "get-entity-schema-column-properties",
+        "args": {
+          "schema-name": "UsrParity{run}{side}Ent",
+          "package-name": "{pkg}",
+          "column-name": "UsrParityCode"
+        }
+      },
+      {
+        "kind": "expect",
+        "step": "code",
+        "path": "$.type",
+        "equals": "ShortText"
+      },
+      {
+        "kind": "expect",
+        "step": "code",
+        "path": "$.title",
+        "equals": "Code"
+      },
+      {
+        "kind": "write",
+        "label": "update",
+        "tool": "update-entity-schema",
+        "clio-run": true,
+        "known-differences": [
+          "$.dataforge"
+        ],
+        "args": {
+          "package-name": "{pkg}",
+          "schema-name": "UsrParity{run}{side}Ent",
+          "operations": [
+            {
+              "action": "add",
+              "column-name": "UsrParityDue",
+              "type": "DateTime",
+              "title-localizations": {
+                "en-US": "Due"
+              }
+            },
+            {
+              "action": "modify",
+              "column-name": "UsrParityCode",
+              "required": true
+            }
+          ]
+        }
+      },
+      {
+        "kind": "read-back",
+        "label": "due",
+        "tool": "get-entity-schema-column-properties",
+        "args": {
+          "schema-name": "UsrParity{run}{side}Ent",
+          "package-name": "{pkg}",
+          "column-name": "UsrParityDue"
+        }
+      },
+      {
+        "kind": "expect",
+        "step": "due",
+        "path": "$.type",
+        "equals": "DateTime"
+      },
+      {
+        "kind": "read-back",
+        "label": "code-required",
+        "tool": "get-entity-schema-column-properties",
+        "args": {
+          "schema-name": "UsrParity{run}{side}Ent",
+          "package-name": "{pkg}",
+          "column-name": "UsrParityCode"
+        }
+      },
+      {
+        "kind": "expect",
+        "step": "code-required",
+        "path": "$.required",
+        "equals": true
+      },
+      {
+        "kind": "write",
+        "label": "modify",
+        "tool": "modify-entity-schema-column",
+        "clio-run": true,
+        "args": {
+          "package-name": "{pkg}",
+          "schema-name": "UsrParity{run}{side}Ent",
+          "action": "modify",
+          "column-name": "UsrParityCode",
+          "title-localizations": {
+            "en-US": "Code renamed"
+          }
+        }
+      },
+      {
+        "kind": "read-back",
+        "label": "code-renamed",
+        "tool": "get-entity-schema-column-properties",
+        "args": {
+          "schema-name": "UsrParity{run}{side}Ent",
+          "package-name": "{pkg}",
+          "column-name": "UsrParityCode"
+        }
+      },
+      {
+        "kind": "expect",
+        "step": "code-renamed",
+        "path": "$.title",
+        "equals": "Code renamed"
+      },
+      {
+        "kind": "write",
+        "label": "set-properties",
+        "tool": "set-entity-schema-properties",
+        "clio-run": true,
+        "args": {
+          "package-name": "{pkg}",
+          "schema-name": "UsrParity{run}{side}Ent",
+          "primary-display-column": "UsrParityCode",
+          "title-localizations": {
+            "en-US": "Parity entity renamed"
+          }
+        }
+      },
+      {
+        "kind": "read-back",
+        "label": "properties",
+        "tool": "get-entity-schema-properties",
+        "args": {
+          "schema-name": "UsrParity{run}{side}Ent"
+        }
+      },
+      {
+        "kind": "expect",
+        "step": "properties",
+        "path": "$.title",
+        "equals": "Parity entity renamed"
+      },
+      {
+        "kind": "expect",
+        "step": "properties",
+        "path": "$.primarydisplaycolumnname",
+        "equals": "UsrParityCode"
+      },
+      {
+        "kind": "write",
+        "label": "remove",
+        "tool": "modify-entity-schema-column",
+        "clio-run": true,
+        "args": {
+          "package-name": "{pkg}",
+          "schema-name": "UsrParity{run}{side}Ent",
+          "action": "remove",
+          "column-name": "UsrParityDue"
+        }
+      },
+      {
+        "kind": "read-back",
+        "label": "after-remove",
+        "tool": "get-entity-schema-properties",
+        "args": {
+          "schema-name": "UsrParity{run}{side}Ent"
+        }
+      },
+      {
+        "kind": "expect",
+        "step": "after-remove",
+        "path": "$.owncolumncount",
+        "equals": 1
+      }
+    ]
+  },
+  {
+    "label": "create-lookup with catalog registration",
+    "why": "Every entity-schema write publishes the configuration (SchemaDesignerRequest buildWorkspace + buildChangedConfiguration) and, when the OData contract changes, starts WorkspaceExplorerService RunODataBuild: stand-wide builds, so this runs only in the dedicated window. create-lookup also adds a Lookup catalog row and a package data binding: the binding goes with the package, the row is removed through DataService.",
+    "steps": [
+      {
+        "kind": "write",
+        "label": "create-app",
+        "tool": "create-app",
+        "clio-run": true,
+        "creates": "UsrParity{run}{side}App",
+        "go-tool-missing": "create-app is not implemented in this server yet (T7). No primitive both servers share at clio 8.1.0.134 creates a package: create-package is newer than 8.1.0.134, and odata-create on SysPackage is refused for OData. Remove this key when create-app is ported.",
+        "why": "The lookup needs a package of its own.",
+        "args": {
+          "name": "UsrParity{run}{side}App",
+          "code": "UsrParity{run}{side}App",
+          "template-code": "AppFreedomUI",
+          "with-mobile-pages": false,
+          "description": "Created by scripts/compare-mcp-writes.py; safe to delete"
+        },
+        "capture": {
+          "pkg": "$.package-name"
+        }
+      },
+      {
+        "kind": "cleanup",
+        "for": "UsrParity{run}{side}App",
+        "server": "clio",
+        "why": "Uninstalling the application removes its package and everything left in it.",
+        "calls": [
+          {
+            "tool": "delete-app",
+            "clio-run": true,
+            "args": {
+              "app-name": "UsrParity{run}{side}App"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "write",
+        "label": "create",
+        "tool": "create-lookup",
+        "clio-run": true,
+        "creates": "UsrParity{run}{side}Kind",
+        "known-differences": [
+          "$.dataforge"
+        ],
+        "args": {
+          "package-name": "{pkg}",
+          "schema-name": "UsrParity{run}{side}Kind",
+          "title-localizations": {
+            "en-US": "Parity kind {run} {side}"
+          }
+        }
+      },
+      {
+        "kind": "cleanup",
+        "for": "UsrParity{run}{side}Kind",
+        "server": "clio",
+        "calls": [
+          {
+            "tool": "execute-esq",
+            "clio-run": true,
+            "args": {
+              "query": {
+                "rootSchemaName": "Lookup",
+                "operationType": 0,
+                "rowCount": 1,
+                "columns": {
+                  "items": {
+                    "Id": {
+                      "expression": {
+                        "expressionType": 0,
+                        "columnPath": "Id"
+                      }
+                    }
+                  }
+                },
+                "filters": {
+                  "filterType": 6,
+                  "isEnabled": true,
+                  "logicalOperation": 0,
+                  "items": {
+                    "own": {
+                      "filterType": 1,
+                      "comparisonType": 3,
+                      "isEnabled": true,
+                      "leftExpression": {
+                        "expressionType": 0,
+                        "columnPath": "Name"
+                      },
+                      "rightExpression": {
+                        "expressionType": 2,
+                        "parameter": {
+                          "dataValueType": 1,
+                          "value": "Parity kind {run} {side}"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "capture": {
+              "lookupRowId": "$.rows[0].id"
+            }
+          },
+          {
+            "tool": "execute-dataservice-batch",
+            "clio-run": true,
+            "args": {
+              "operations": [
+                {
+                  "operation": "delete",
+                  "schema-name": "Lookup",
+                  "record-id": "{lookupRowId}"
+                }
+              ]
+            }
+          },
+          {
+            "tool": "delete-schema",
+            "clio-run": true,
+            "args": {
+              "schema-name": "UsrParity{run}{side}Kind",
+              "remote": true
+            }
+          }
+        ]
+      },
+      {
+        "kind": "read-back",
+        "label": "properties",
+        "tool": "get-entity-schema-properties",
+        "args": {
+          "schema-name": "UsrParity{run}{side}Kind"
+        }
+      },
+      {
+        "kind": "expect",
+        "step": "properties",
+        "path": "$.title",
+        "equals": "Parity kind {run} {side}"
+      },
+      {
+        "kind": "read-back",
+        "label": "binding",
+        "tool": "read-data-binding-db",
+        "args": {
+          "package-name": "{pkg}",
+          "binding-name": "Lookup_UsrParity{run}{side}Kind"
+        }
+      }
+    ]
+  },
+  {
+    "label": "sync-schemas create-lookup, create-entity, update-entity, replay",
+    "why": "Every entity-schema write publishes the configuration (SchemaDesignerRequest buildWorkspace + buildChangedConfiguration) and, when the OData contract changes, starts WorkspaceExplorerService RunODataBuild: stand-wide builds, so this runs only in the dedicated window. The second call replays the batch verbatim and must converge to already-satisfied.",
+    "steps": [
+      {
+        "kind": "write",
+        "label": "create-app",
+        "tool": "create-app",
+        "clio-run": true,
+        "creates": "UsrParity{run}{side}App",
+        "go-tool-missing": "create-app is not implemented in this server yet (T7). No primitive both servers share at clio 8.1.0.134 creates a package: create-package is newer than 8.1.0.134, and odata-create on SysPackage is refused for OData. Remove this key when create-app is ported.",
+        "why": "The batch needs a package of its own.",
+        "args": {
+          "name": "UsrParity{run}{side}App",
+          "code": "UsrParity{run}{side}App",
+          "template-code": "AppFreedomUI",
+          "with-mobile-pages": false,
+          "description": "Created by scripts/compare-mcp-writes.py; safe to delete"
+        },
+        "capture": {
+          "pkg": "$.package-name"
+        }
+      },
+      {
+        "kind": "cleanup",
+        "for": "UsrParity{run}{side}App",
+        "server": "clio",
+        "why": "Uninstalling the application removes its package and everything left in it.",
+        "calls": [
+          {
+            "tool": "delete-app",
+            "clio-run": true,
+            "args": {
+              "app-name": "UsrParity{run}{side}App"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "write",
+        "label": "sync",
+        "tool": "sync-schemas",
+        "clio-run": true,
+        "creates": "UsrParity{run}{side}Sync",
+        "known-differences": [
+          "$.dataforge"
+        ],
+        "args": {
+          "package-name": "{pkg}",
+          "operations": [
+            {
+              "type": "create-lookup",
+              "schema-name": "UsrParity{run}{side}SyncKind",
+              "title-localizations": {
+                "en-US": "Parity sync kind {run} {side}"
+              }
+            },
+            {
+              "type": "create-entity",
+              "schema-name": "UsrParity{run}{side}Sync",
+              "title-localizations": {
+                "en-US": "Parity sync"
+              },
+              "columns": [
+                {
+                  "name": "UsrParityKind",
+                  "type": "Lookup",
+                  "reference-schema-name": "UsrParity{run}{side}SyncKind"
+                }
+              ]
+            },
+            {
+              "type": "update-entity",
+              "schema-name": "UsrParity{run}{side}Sync",
+              "update-operations": [
+                {
+                  "action": "add",
+                  "column-name": "UsrParityNote",
+                  "type": "MediumText",
+                  "title-localizations": {
+                    "en-US": "Note"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "kind": "cleanup",
+        "for": "UsrParity{run}{side}Sync",
+        "server": "clio",
+        "calls": [
+          {
+            "tool": "delete-schema",
+            "clio-run": true,
+            "args": {
+              "schema-name": "UsrParity{run}{side}Sync",
+              "remote": true
+            }
+          },
+          {
+            "tool": "execute-esq",
+            "clio-run": true,
+            "args": {
+              "query": {
+                "rootSchemaName": "Lookup",
+                "operationType": 0,
+                "rowCount": 1,
+                "columns": {
+                  "items": {
+                    "Id": {
+                      "expression": {
+                        "expressionType": 0,
+                        "columnPath": "Id"
+                      }
+                    }
+                  }
+                },
+                "filters": {
+                  "filterType": 6,
+                  "isEnabled": true,
+                  "logicalOperation": 0,
+                  "items": {
+                    "own": {
+                      "filterType": 1,
+                      "comparisonType": 3,
+                      "isEnabled": true,
+                      "leftExpression": {
+                        "expressionType": 0,
+                        "columnPath": "Name"
+                      },
+                      "rightExpression": {
+                        "expressionType": 2,
+                        "parameter": {
+                          "dataValueType": 1,
+                          "value": "Parity sync kind {run} {side}"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "capture": {
+              "lookupRowId": "$.rows[0].id"
+            }
+          },
+          {
+            "tool": "execute-dataservice-batch",
+            "clio-run": true,
+            "args": {
+              "operations": [
+                {
+                  "operation": "delete",
+                  "schema-name": "Lookup",
+                  "record-id": "{lookupRowId}"
+                }
+              ]
+            }
+          },
+          {
+            "tool": "delete-schema",
+            "clio-run": true,
+            "args": {
+              "schema-name": "UsrParity{run}{side}SyncKind",
+              "remote": true
+            }
+          }
+        ]
+      },
+      {
+        "kind": "expect",
+        "step": "sync",
+        "path": "$.success",
+        "equals": true
+      },
+      {
+        "kind": "write",
+        "label": "replay",
+        "tool": "sync-schemas",
+        "clio-run": true,
+        "known-differences": [
+          "$.dataforge"
+        ],
+        "args": {
+          "package-name": "{pkg}",
+          "operations": [
+            {
+              "type": "create-lookup",
+              "schema-name": "UsrParity{run}{side}SyncKind",
+              "title-localizations": {
+                "en-US": "Parity sync kind {run} {side}"
+              }
+            },
+            {
+              "type": "create-entity",
+              "schema-name": "UsrParity{run}{side}Sync",
+              "title-localizations": {
+                "en-US": "Parity sync"
+              },
+              "columns": [
+                {
+                  "name": "UsrParityKind",
+                  "type": "Lookup",
+                  "reference-schema-name": "UsrParity{run}{side}SyncKind"
+                }
+              ]
+            },
+            {
+              "type": "update-entity",
+              "schema-name": "UsrParity{run}{side}Sync",
+              "update-operations": [
+                {
+                  "action": "add",
+                  "column-name": "UsrParityNote",
+                  "type": "MediumText",
+                  "title-localizations": {
+                    "en-US": "Note"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "kind": "expect",
+        "step": "replay",
+        "path": "$.results[1].outcome",
+        "equals": "already-satisfied"
+      },
+      {
+        "kind": "read-back",
+        "label": "kind",
+        "tool": "get-entity-schema-column-properties",
+        "args": {
+          "schema-name": "UsrParity{run}{side}Sync",
+          "package-name": "{pkg}",
+          "column-name": "UsrParityKind"
+        }
+      },
+      {
+        "kind": "expect",
+        "step": "kind",
+        "path": "$.referenceschemaname",
+        "equals": "UsrParity{run}{side}SyncKind"
+      }
+    ]
+  }
+]
