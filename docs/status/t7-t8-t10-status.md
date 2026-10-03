@@ -116,7 +116,7 @@ Differences from clio (T8 second round):
 
 ## Remaining work and differences
 
-T8 tools are all implemented; their successful writes await the window run and T7's create-app. T7 still lacks `create-app`, `create-app-section`, `delete-app-section`, `install-application`, and `update-app-section`.
+T8 and T7 tools are all implemented. T8's successful writes await the window run; T7's live write scenario passed (see "T7 second round" below).
 
 Successful live writes/read-backs remain unverified for every implemented tool. Export/import require ClioGate 2.0.0.46 and are only covered with mock services; no live bundle transfer was attempted. SQL installation and application deletion were not run live. No global operations were run.
 
@@ -128,3 +128,30 @@ Known implementation limits to close with live parity:
 - Export projection I/O diagnostics currently use shorter warnings than clio; no partial authoritative bundle is left after its writes fail.
 - Application uninstall failure text uses Go transport errors rather than the reference command's exception/log decoration. The reference command ignores service JSON on a successful HTTP response, which the port preserves.
 - The contract inventory may lag master for create-schema body/body-file and SQL engine/installation-phase keys; handlers support those keys without changing the shared contract inventory.
+
+## T7 second round (2026-10-03)
+
+All six application tools are registered: `create-app`, `create-app-section`, `update-app-section`, `delete-app-section` and `install-application` were added to the existing `delete-app`. They follow clio master (`ApplicationTool.cs`, `InstallApplicationTool.cs` and the services they call): code in `internal/creatio/appwrite_*.go`, registrations in `cmd/creatio-mcp-go/tool_app_write.go` and `tool_install_application.go`.
+
+- `create-app`: argument checks and optional template data before the environment, Data Forge enrichment (a failure becomes a `dataforge:` warning), profile-culture script guard, SchemaNamePrefix applied once to the code, random palette color and SysAppIcons icon unless given, `with-mobile-pages: false` pins the web client type, OData build gate, `CreateApp`, polling on the App Installer timeout text, readback 15 × 2 s, navigation cache reset (`warnings`, `next-step`). The answer carries `package-name`, `package-u-id`, `application-code` and `schema-name-prefix` for the other areas' scenarios; pass `template-code: "AppFreedomUI"` explicitly, because clio 8.1.0.134 lists it as required (master defaults it).
+- `create-app-section`: section code from the caption or an explicit code, entity existence checks, per-application serialization, `InsertQuery` with clio's recovery (detail-less rejection verified and retried once, timeout verified with 2–8 s backoff within 40 s), failure classes `transport` / `creatio-timeout` / `server-error` / `contention` with `section-created` and `retry-guidance`, readback with the icon-background `UpdateQuery`, and clio's in-progress envelope after the response deadline.
+- `update-app-section`: master's localization-aware update — `caption-culture` through SysCulture, snapshot of the section's other cultures and their restore through `UpdateLocalizationQuery` (the platform deletes them on an ApplicationSection update), package data binding refresh (warning only), verification, `preserved-cultures`.
+- `delete-app-section`: pages by declared UId only, the form page and the entity kept unless `delete-entity-schema`, shared-artifact refusals, clio's delete order.
+- `install-application` (window-only): pack a folder into clio's .gz stream, chunked upload, backup, `InstallAppFromFile` with the installation log followed every 3 s, InstallLogAnalyzer's verdicts, report file, developer-mode unlock and restart. Mocked tests only; scenario in `scripts/write-scenarios/window/t7.json` (needs operator-made package folders, see its `why`).
+
+Verification:
+
+- Read parity `scripts/parity-cases/t7.json` (validation and refusals, unknown application/section reads): **37 match, 0 mismatches**.
+- Contract comparison: 230 match, 0 unexplained.
+- Unit tests with mocked Creatio for each tool (request shapes, success, failure); MCP tests for each tool by raw name (confirmation gate), `clio-run` and `clio-run-destructive`.
+- Write scenario `scripts/write-scenarios/t7.json` on s16123120: create-app → get-app-info → create-app-section → list → update-app-section → list → delete-app-section → list → delete-app (Go's, own server). Result: see the last line of this section.
+- Stand facts found on the way: this stand answers `IsODataBuildRunning` with an HTML page, so the OData build gate is inert on clio and Go alike; every application or section write starts an OData rebuild (90–120 s) that refuses the next application write with "Creatio is currently rebuilding the OData library" on both servers, and other agents' writes start rebuilds too. The harness gained `settle-seconds` and `retry-while` for this (shared change, two commits). `WorkspaceExplorerService.GetWorkspaceItems` answers more than 4 MB here: delete-app-section now reads up to 128 MB; T8's `delete-schema` (`schemadelete.go`) still uses the 4 MB default and will fail the same way.
+- Debug objects outside the ledger, all removed: `UsrParitydbg1goApp` (created and deleted through Go), `UsrParitydbg2clioApp` (created and deleted through clio); `UsrParitydbg2goApp` was refused by the stand (OData rebuild) and never existed. Ledger entries of runs tmcec6 (go), tmcekp (clio) and tmcf4e (clio) were marked removed by hand after their absence was confirmed with get-app-info: those creates were refused by the stand.
+
+Gaps against clio:
+
+- The installed clio 8.1.0.134 lacks master's `warnings`/`next-step` (navigation cache reset) on the three mutating tools and `caption-culture`, `caption-culture-value`, `preserved-cultures` on update-app-section; the scenario lists them as known differences.
+- .NET exception wording is not reproduced where clio surfaces it: invalid optional-template-data-json parser text, transport failures, install-application's `exception.ToString()` stack traces.
+- install-application does not apply `.clioignore` files when packing; its temporary directory is `clio-*` under the OS temp folder instead of `clio/<guid>`.
+- create-app's unreachable-through-MCP branches (name derived from code, code generated from name) are not ported: the tool requires both.
+- The section-create serialization guard has no waiter caps (clio: 8 per application, 32 in total).
