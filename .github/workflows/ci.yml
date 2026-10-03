@@ -63,7 +63,7 @@ jobs:
         run: UNSIGNED=1 scripts/build-release.sh v0.0.0-ci
       - name: Verify SHA256SUMS
         run: cd dist && shasum -a 256 -c SHA256SUMS
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.x"
       - name: Script unit tests (skipped while there are none)
