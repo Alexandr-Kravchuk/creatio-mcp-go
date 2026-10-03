@@ -57,6 +57,10 @@ type iterationConfig struct {
 
 type applierOptions struct {
 	applyMoveIfIndirectParentMoved bool
+	// rejectUnresolvedParents is clio's RejectUnresolvedParents (update-page's parent check): an insert, move
+	// or set whose parent is not in the tree fails with PageParentNameValidation's diagnostic instead of
+	// being dropped.
+	rejectUnresolvedParents bool
 }
 
 // jsonDiffApplier applies Creatio view-config diffs; pathMode switches it to the path applier used for
@@ -407,6 +411,10 @@ func (a *jsonDiffApplier) applyUnsuccessfulInserts(unsuccessful []*jnode, previo
 	for index := 0; index < len(unsuccessful); index++ {
 		unsuccessful[index].set("operation", newString("move"))
 		if a.findItemInfoInSourceObject(optionalText(unsuccessful[index], "parentName")) == nil {
+			if a.options != nil && a.options.rejectUnresolvedParents {
+				diffFault("%s", pageWriteParentDiagnostic(textOrEmpty(optionalText(unsuccessful[index], "name")),
+					textOrEmpty(optionalText(unsuccessful[index], "parentName")), pageWriteTreeNames(a.source)))
+			}
 			unsuccessful = append(unsuccessful[:index], unsuccessful[index+1:]...)
 		}
 	}
@@ -806,6 +814,10 @@ func (a *jsonDiffApplier) setOperation(config *jnode) bool {
 		config.set("nameTo", toJNode(parentName))
 		config.set("parentName", toJNode(parentName))
 		config.set("propertyName", removed.get("propertyName").clone())
+	}
+	if a.options != nil && a.options.rejectUnresolvedParents && textOrEmpty(parentName) != "" &&
+		a.findItemInfoInSourceObject(parentName) == nil {
+		diffFault("%s", pageWriteParentDiagnostic(textOrEmpty(optionalText(config, "name")), *parentName, pageWriteTreeNames(a.source)))
 	}
 	a.insert(config)
 	return parentExists
