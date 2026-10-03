@@ -303,6 +303,17 @@ func themeGetAbs(path string) string {
 // themeGetRealPath resolves symlinks in the deepest existing ancestor of an absolute path (a dangling link
 // counts as existing, so its target is checked too) and re-appends the part that does not exist yet.
 func themeGetRealPath(full string) (string, error) {
+	return themeGetRealPathDepth(full, 0)
+}
+
+// themeGetMaxLinkHops bounds dangling-link resolution; a cycle such as a -> a/child would otherwise recurse
+// until the stack is exhausted and the server dies. 40 matches the Linux ELOOP limit.
+const themeGetMaxLinkHops = 40
+
+func themeGetRealPathDepth(full string, hops int) (string, error) {
+	if hops > themeGetMaxLinkHops {
+		return "", fmt.Errorf("too many levels of symbolic links resolving %q", full)
+	}
 	tail := []string{}
 	current := full
 	for {
@@ -327,7 +338,7 @@ func themeGetRealPath(full string) (string, error) {
 			if !filepath.IsAbs(target) {
 				target = filepath.Join(filepath.Dir(current), target)
 			}
-			parentReal, parentErr := themeGetRealPath(filepath.Dir(target))
+			parentReal, parentErr := themeGetRealPathDepth(filepath.Dir(target), hops+1)
 			if parentErr != nil {
 				return "", parentErr
 			}

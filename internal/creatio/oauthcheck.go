@@ -195,7 +195,8 @@ func (c *Client) VerifyOAuthApp(ctx context.Context, request VerifyOAuthAppReque
 
 func (c *Client) oauthCheckVerify(ctx context.Context, request VerifyOAuthAppRequest) (VerifyOAuthAppOutcome, error) {
 	clientID, clientKey := c.config.ClientID, c.config.Secret
-	if request.ClientID != nil || request.ClientSecret != nil {
+	explicitCredentials := request.ClientID != nil || request.ClientSecret != nil
+	if explicitCredentials {
 		clientID, clientKey = "", ""
 		if request.ClientID != nil {
 			clientID = *request.ClientID
@@ -210,6 +211,12 @@ func (c *Client) oauthCheckVerify(ctx context.Context, request VerifyOAuthAppReq
 	identityURL := c.oauthCheckIdentityServerURL(ctx, request.IdentityServerURL)
 	if !oauthCheckValidBaseURL(identityURL) {
 		return VerifyOAuthAppOutcome{}, errors.New("a valid IdentityService base URL is required")
+	}
+	// The configured secret goes only to the configured IdentityService. clio trusts its caller here; an MCP
+	// caller that names any other host must bring its own credentials, or the secret would be sent there.
+	if !explicitCredentials && strings.TrimSpace(request.IdentityServerURL) != "" &&
+		!strings.EqualFold(identityURL, c.oauthCheckIdentityServerURL(ctx, "")) {
+		return VerifyOAuthAppOutcome{}, errors.New("configured OAuth credentials are sent only to the configured IdentityService")
 	}
 	token, err := c.oauthCheckAcquireToken(ctx, identityURL, clientID, clientKey)
 	if err != nil {
@@ -295,7 +302,11 @@ func (c *Client) oauthCheckAcquireToken(ctx context.Context, identityURL, client
 		return "", fmt.Errorf("build OAuth token request: %w", err)
 	}
 	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	response, err := c.requestClient().Do(request)
+	// A redirect would carry the client secret to wherever the IdentityService points it, so none is followed.
+	client := &http.Client{Transport: c.http.Transport, CheckRedirect: func(*http.Request, []*http.Request) error {
+		return http.ErrUseLastResponse
+	}}
+	response, err := client.Do(request)
 	if err != nil {
 		return "", errors.New("OAuth token request failed")
 	}

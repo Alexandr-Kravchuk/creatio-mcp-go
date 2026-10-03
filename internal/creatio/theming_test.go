@@ -153,3 +153,14 @@ func TestThemeGetOutputConfinementRefusesClioHomeAndSymlinkEscapes(t *testing.T)
 		t.Fatalf("symlink err = %v", err)
 	}
 }
+
+func TestThemeGetRealPathRefusesCyclicLinks(t *testing.T) {
+	dir := t.TempDir()
+	link := filepath.Join(dir, "a")
+	if err := os.Symlink(filepath.Join(link, "child"), link); err != nil {
+		t.Skipf("symlinks unavailable: %v", err)
+	}
+	if _, err := themeGetRealPath(filepath.Join(link, "theme.css")); err == nil {
+		t.Fatal("a cyclic link resolved instead of being refused")
+	}
+}

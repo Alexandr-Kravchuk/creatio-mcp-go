@@ -164,7 +164,33 @@ func classicPageRegexAllowed(tokens []classicPageToken) bool {
 	case classicPageIdent:
 		return classicPageRegexAfter[previous.text]
 	case classicPagePunct:
+		if classicPagePostfixUpdate(tokens) {
+			// count++ / total: the operand ends with a postfix ++ or --, so the slash divides.
+			return false
+		}
 		return previous.text != ")" && previous.text != "]"
+	}
+	return false
+}
+
+// classicPagePostfixUpdate reports whether the tokens end with ++ or -- applied to an operand. The tokenizer
+// emits each + or - separately, so the pair is checked together with what precedes it.
+func classicPagePostfixUpdate(tokens []classicPageToken) bool {
+	if len(tokens) < 3 {
+		return false
+	}
+	first, second, operand := tokens[len(tokens)-2], tokens[len(tokens)-1], tokens[len(tokens)-3]
+	if first.kind != classicPagePunct || second.kind != classicPagePunct || first.text != second.text ||
+		(first.text != "+" && first.text != "-") || second.offset != first.offset+1 {
+		return false
+	}
+	switch operand.kind {
+	case classicPageIdent:
+		return !classicPageRegexAfter[operand.text]
+	case classicPageNumber, classicPageString, classicPageTemplate:
+		return true
+	case classicPagePunct:
+		return operand.text == ")" || operand.text == "]"
 	}
 	return false
 }

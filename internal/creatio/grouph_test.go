@@ -284,3 +284,29 @@ func TestGetClassicPageSourcesReportsMissingPage(t *testing.T) {
 		t.Fatalf("result = %#v", result)
 	}
 }
+
+func TestClassicPageTokenizerReadsDivisionAfterPostfixUpdate(t *testing.T) {
+	for _, source := range []string{
+		"var ratio = count++ / total; var next = /x/g;",
+		"var ratio = items[0]-- / 2;",
+		"var ratio = (a)++ / 2;",
+	} {
+		tokens, err := classicPageTokenize([]rune(source))
+		if err != nil {
+			t.Fatalf("%q: %v", source, err)
+		}
+		regexes := 0
+		for _, token := range tokens {
+			if token.kind == classicPageRegex {
+				regexes++
+			}
+		}
+		if want := strings.Count(source, "/x/"); regexes != want {
+			t.Fatalf("%q: %d regex tokens, want %d", source, regexes, want)
+		}
+	}
+	// A slash after a punctuator that is not a postfix update still opens a regex.
+	if _, err := classicPageTokenize([]rune("var r = x ? /a/ : /b/;")); err != nil {
+		t.Fatal(err)
+	}
+}

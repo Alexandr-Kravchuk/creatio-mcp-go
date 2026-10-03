@@ -159,3 +159,41 @@ func TestOAuthCheckDeriveIdentityURLInsertsSuffixIntoFirstLabel(t *testing.T) {
 		}
 	}
 }
+
+func TestVerifyOAuthAppKeepsTheConfiguredSecretOnTheConfiguredIdentityService(t *testing.T) {
+	identity, creatioServer, _ := oauthCheckServers(t, http.StatusOK, `{"success":true,"rows":[]}`)
+	defer identity.Close()
+	defer creatioServer.Close()
+	received := false
+	foreign := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		received = true
+		w.WriteHeader(http.StatusBadRequest)
+	}))
+	defer foreign.Close()
+	client, err := NewClient(Config{BaseURL: creatioServer.URL, ClientID: "app", Secret: "right", TokenURL: identity.URL + "/connect/token"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result := client.VerifyOAuthApp(context.Background(), VerifyOAuthAppRequest{IdentityServerURL: foreign.URL}); result.Success || received {
+		t.Fatalf("configured secret sent to a caller-chosen host: result = %#v, received = %v", result, received)
+	}
+	if result := client.VerifyOAuthApp(context.Background(), VerifyOAuthAppRequest{IdentityServerURL: identity.URL + "/"}); !result.Success || !result.Result.OK {
+		t.Fatalf("naming the configured IdentityService = %#v", result)
+	}
+}
+
+func TestVerifyOAuthAppDoesNotFollowTokenRedirects(t *testing.T) {
+	received := false
+	target := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { received = true }))
+	defer target.Close()
+	redirecting := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, target.URL+"/connect/token", http.StatusTemporaryRedirect)
+	}))
+	defer redirecting.Close()
+	id, secret := "app", "right"
+	result := newFormsTestClient(t, redirecting.URL).VerifyOAuthApp(context.Background(),
+		VerifyOAuthAppRequest{ClientID: &id, ClientSecret: &secret, IdentityServerURL: redirecting.URL})
+	if received || (result.Success && result.Result.TokenAcquired) {
+		t.Fatalf("token redirect followed: result = %#v, received = %v", result, received)
+	}
+}
