@@ -18,10 +18,10 @@ import (
 )
 
 // residentBuiltIns are the resident tools with their own handler in main.go; every other served tool is
-// dispatched by name through invokeHiddenTool, after unwrapArgs. A tool whose own arguments include
-// "args" (clio-run-destructive) must be added here with its own handler, like clio-run.
+// dispatched by name through invokeHiddenTool, after unwrapArgs. clio-run and clio-run-destructive have
+// their own handler because their own arguments include "args".
 var residentBuiltIns = map[string]bool{
-	"list-apps": true, "list-environments": true, "clio-run": true, "get-tool-contract": true,
+	"list-apps": true, "list-environments": true, "clio-run": true, "clio-run-destructive": true, "get-tool-contract": true,
 }
 
 // servedToolNames is every tool this server answers, sorted.
@@ -438,21 +438,39 @@ func residentHandler(envs *environments, hostTools hiddenToolServices) mcp.ToolH
 		if err != nil {
 			return toolError(err), nil
 		}
-		return callHiddenTool(ctx, envs, hostTools, req.Params.Name, args, req.Session, req.Params.GetProgressToken()), nil
+		return callHiddenTool(ctx, envs, hostTools, req.Params.Name, args,
+			progressReporter(ctx, req.Session, req.Params.GetProgressToken()), false, "MCP tool '"+req.Params.Name+"' failed: "), nil
 	}
 }
 
-// callHiddenTool is a direct call of a served tool by its own name, in either of clio's argument shapes.
+// callHiddenTool is the one path every call of a served tool takes, directly by its own name (in either of
+// clio's argument shapes) or through clio-run / clio-run-destructive. A direct call to a tool that is not
+// read-only answers confirmation-required without running it; a raised failure is reported with the
+// caller's prefix and redacted; a failed result is redacted (failure_redaction.go); an executor call records
+// what it dispatched in _meta.
 func callHiddenTool(ctx context.Context, envs *environments, hostTools hiddenToolServices, name string, args map[string]any,
-	session *mcp.ServerSession, token any) *mcp.CallToolResult {
-	args, err := unwrapArgs(name, args)
-	if err != nil {
-		return toolError(err)
+	progress func(float64, float64, string) error, viaExecutor bool, failurePrefix string) *mcp.CallToolResult {
+	known := isHiddenTool(name)
+	if !viaExecutor {
+		if known && requiresConfirmation(name) {
+			return confirmationRequired(name, args)
+		}
+		var err error
+		if args, err = unwrapArgs(name, args); err != nil {
+			return toolError(err)
+		}
 	}
-	result, err := invokeHiddenTool(ctx, envs, hostTools, name, args, progressReporter(ctx, session, token))
+	result, err := invokeHiddenTool(ctx, envs, hostTools, name, args, progress)
 	if err != nil {
-		// clio's McpToolErrorFilter reports a failed direct call with this prefix.
-		return toolError(clioFailure("MCP tool '"+name+"' failed: ", err))
+		result = toolError(clioFailure(failurePrefix, err))
+	}
+	// clio's backstop runs on executor calls and on direct calls to tools absent from its tools/list; a tool
+	// clio lists answers a direct call with its own text.
+	if viaExecutor || !isClioResident(name) {
+		redactFailureContent(result)
+	}
+	if known && viaExecutor {
+		attachDispatchAudit(result, name)
 	}
 	return result
 }

@@ -45,7 +45,7 @@ func init() {
 			"id":          map[string]string{"type": "string", "description": "Id (a GUID) of the theme to read (see list-themes)."},
 			"output-file": map[string]string{"type": "string", "description": "Optional path to write the theme CSS to; when set, cssContent is omitted from the result."},
 		}},
-	}, invokeGetTheme)
+	}, invokeGetTheme, withAnnotations(localWriteAnnotations))
 }
 
 func invokeGetTheme(ctx context.Context, envs *environments, args map[string]any) (*mcp.CallToolResult, error) {

@@ -42,13 +42,13 @@ type processDescribeLibRow struct {
 // DescribeBusinessProcess is clio's describe-business-process: the CrtProcessBuilder package gate, the
 // one-identity rule, the server-side ProcessDesignService.DescribeProcess read, then the process library's
 // version facts overlaid on the graph. Like clio the graph is returned as one indented JSON Info line.
-func (c *Client) DescribeBusinessProcess(ctx context.Context, request ProcessDescribeRequest) UserTasksResult {
+func (c *Client) DescribeBusinessProcess(ctx context.Context, request ProcessDescribeRequest) CommandResult {
 	installed, err := c.userTasksPackageInstalled(ctx, processBuilderPackageName)
 	if err != nil {
-		return NewUserTasksResult(-1, "Error", err.Error())
+		return NewCommandResult(-1, "Error", err.Error())
 	}
 	if !installed {
-		return NewUserTasksResult(1, "Error", processBuilderMissingMessage)
+		return NewCommandResult(1, "Error", processBuilderMissingMessage)
 	}
 	identities := 0
 	for _, identity := range []string{request.ProcessName, request.ProcessUID, request.ProcessCaption} {
@@ -57,7 +57,7 @@ func (c *Client) DescribeBusinessProcess(ctx context.Context, request ProcessDes
 		}
 	}
 	if identities != 1 {
-		return NewUserTasksResult(1, "Error", "Error: provide exactly one of --process-name, --process-uid, or --process-caption.")
+		return NewCommandResult(1, "Error", "Error: provide exactly one of --process-name, --process-uid, or --process-caption.")
 	}
 	culture := "en-US"
 	if request.Culture != nil {
@@ -65,9 +65,9 @@ func (c *Client) DescribeBusinessProcess(ctx context.Context, request ProcessDes
 	}
 	text, err := c.describeProcessGraph(ctx, request, culture)
 	if err != nil {
-		return NewUserTasksResult(1, "Error", "Error: "+err.Error()+".")
+		return NewCommandResult(1, "Error", "Error: "+err.Error()+".")
 	}
-	return NewUserTasksResult(0, "Info", text)
+	return NewCommandResult(0, "Info", text)
 }
 
 func (c *Client) describeProcessGraph(ctx context.Context, request ProcessDescribeRequest, culture string) (string, error) {
@@ -91,7 +91,7 @@ func (c *Client) describeProcessGraph(ctx context.Context, request ProcessDescri
 	}
 	body := newObject()
 	body.set("request", identity)
-	payload, err := c.postCreatioJSON(ctx, processDescribeRoute, body.newtonsoftJSON(), 10*time.Second, maxResponseBytes)
+	payload, err := c.callService(ctx, serviceCall{Route: processDescribeRoute, Body: body.newtonsoftJSON(), Timeout: 10 * time.Second, Limit: maxResponseBytes})
 	if err != nil {
 		return "", err
 	}

@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/Alexandr-Kravchuk/creatio-mcp-go/internal/creatio"
+	"github.com/Alexandr-Kravchuk/creatio-mcp-go/internal/redact"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
@@ -99,10 +100,11 @@ func (e *environments) resolve(tool string, args map[string]any, scope connectio
 	return client, nil, err
 }
 
-// redacted is a resolution failure as clio's SensitiveErrorTextRedactor leaves it, which most tools apply
-// before reporting: the password placeholder of the suggested reg-web-app call reads [redacted].
+// redacted is a failure as clio's SensitiveErrorTextRedactor leaves it. Tools whose clio counterpart redacts
+// the failure it reports use it for a failure they put into their own envelope; the hidden-tool dispatcher
+// redacts failed results again (failure_redaction.go), which changes nothing already redacted.
 func redacted(err error) string {
-	return strings.ReplaceAll(err.Error(), `"password":"<password>"`, `"password":"[redacted]"`)
+	return redact.Text(err.Error())
 }
 
 // resolverErrorText is clio's CommandExecutionResult text for a failed resolution in the command-style
@@ -123,8 +125,7 @@ func resolverFailureEnvelope(err error) *mcp.CallToolResult {
 	if errors.As(err, &target) {
 		exitCode = target.exitCode()
 	}
-	return structuredToolResult(creatio.InspectResult{ExitCode: exitCode,
-		Messages: []creatio.InspectLogMessage{{MessageType: "Error", Value: resolverErrorText(err)}}})
+	return structuredToolResult(creatio.NewCommandResult(exitCode, "Error", resolverErrorText(err)))
 }
 
 // unknownArgumentError mirrors clio's McpToolArgumentSupport.BuildLegacyAliasError for tools that refuse

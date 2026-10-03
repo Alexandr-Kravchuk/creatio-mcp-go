@@ -51,5 +51,5 @@ func init() {
 			return structuredToolResult(result), nil
 		}
 		return structuredToolResult(client.WritePageFiles(result, schemaName, outputDirectory)), nil
-	})
+	}, withAnnotations(localWriteAnnotations))
 }

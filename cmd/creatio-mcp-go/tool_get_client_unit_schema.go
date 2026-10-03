@@ -47,5 +47,5 @@ func init() {
 			return structuredToolResult(creatio.ClientUnitSchemaResult{Error: refusal}), nil
 		}
 		return structuredToolResult(client.GetClientUnitSchema(ctx, input)), nil
-	})
+	}, withAnnotations(localWriteAnnotations))
 }

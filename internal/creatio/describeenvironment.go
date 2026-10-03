@@ -149,46 +149,29 @@ func canonicalCultureName(name string) (string, bool) {
 	return strings.Join(parts, "-"), true
 }
 
-// DescribeLogMessage is one entry of clio's execution-log-messages channel.
-type DescribeLogMessage struct {
-	MessageType string `json:"message-type"`
-	Value       string `json:"value"`
-}
-
-// DescribeResult is clio's command envelope: exit code 0 on success, 1 on an expected failure.
-type DescribeResult struct {
-	ExitCode int                  `json:"exit-code"`
-	Messages []DescribeLogMessage `json:"execution-log-messages"`
-}
-
-// DescribeFailure is an exit-code-1 envelope with one Error message.
-func DescribeFailure(message string) DescribeResult {
-	return DescribeResult{ExitCode: 1, Messages: []DescribeLogMessage{{MessageType: "Error", Value: message}}}
-}
-
 // DescribeEnvironment reports the environment the way clio's describe-environment does: the
 // ApplicationInfoService sysValues object, enriched best-effort with the database engine and framework
 // (admin-gated GetSystemEnvironmentInfo) and with productName/licenseInfo when cliogate answers GetSysInfo.
 // The report keeps Creatio's key order and is printed in Newtonsoft's indented layout, because clio
 // returns it as one pre-formatted string.
-func (c *Client) DescribeEnvironment(ctx context.Context, timeout time.Duration) DescribeResult {
+func (c *Client) DescribeEnvironment(ctx context.Context, timeout time.Duration) CommandResult {
 	if timeout <= 0 {
 		timeout = DefaultDescribeTimeout
 	}
 	report, failure := c.baseEnvironmentReport(ctx, timeout)
 	if failure != "" {
-		return DescribeFailure(failure)
+		return CommandFailure(failure)
 	}
 	c.enrichWithSystemEnvironmentInfo(ctx, report, timeout)
-	messages := []DescribeLogMessage{}
+	messages := []LogMessage{}
 	if warning := c.enrichFromClioGate(ctx, report, timeout); warning != "" {
-		messages = append(messages, DescribeLogMessage{MessageType: "Warning", Value: warning})
+		messages = append(messages, LogMessage{MessageType: "Warning", Value: warning})
 	}
 	text, err := report.indented()
 	if err != nil {
-		return DescribeFailure("The Creatio ApplicationInfoService returned an unexpected response.")
+		return CommandFailure("The Creatio ApplicationInfoService returned an unexpected response.")
 	}
-	return DescribeResult{ExitCode: 0, Messages: append(messages, DescribeLogMessage{MessageType: "None", Value: text})}
+	return CommandResult{ExitCode: 0, Messages: append(messages, LogMessage{MessageType: "None", Value: text})}
 }
 
 func (c *Client) baseEnvironmentReport(ctx context.Context, timeout time.Duration) (*describeOrderedObject, string) {

@@ -2,7 +2,10 @@ module github.com/Alexandr-Kravchuk/creatio-mcp-go
 
 go 1.24.0
 
-require github.com/modelcontextprotocol/go-sdk v1.0.0
+require (
+	github.com/dlclark/regexp2 v1.12.0
+	github.com/modelcontextprotocol/go-sdk v1.0.0
+)
 
 require (
 	github.com/google/jsonschema-go v0.3.0 // indirect

@@ -223,9 +223,16 @@ func TestHiddenR1ToolsDispatchByRawNameAndStartProgress(t *testing.T) {
 		t.Fatalf("raw find-empty-iis-port content = %#v", portResult.StructuredContent)
 	}
 
+	// start-creatio changes local state, so a direct call is refused the way clio refuses it, and clio-run runs it.
+	refused, err := session.CallTool(context.Background(), &mcp.CallToolParams{
+		Name: "start-creatio", Arguments: map[string]any{"environmentName": "dev"},
+	})
+	if err != nil || !refused.IsError || startedEnvironment != "" {
+		t.Fatalf("direct start-creatio must answer confirmation-required without running: %#v, err = %v", refused, err)
+	}
 	startResult, err := session.CallTool(context.Background(), &mcp.CallToolParams{
-		Name: "start-creatio", Meta: mcp.Meta{"progressToken": "start-probe-token"},
-		Arguments: map[string]any{"environmentName": "dev"},
+		Name: "clio-run", Meta: mcp.Meta{"progressToken": "start-probe-token"},
+		Arguments: map[string]any{"command": "start-creatio", "args": map[string]any{"environmentName": "dev"}},
 	})
 	if err != nil || startResult.IsError {
 		t.Fatalf("raw start-creatio result = %#v, err = %v", startResult, err)
@@ -242,7 +249,8 @@ func TestHiddenR1ToolsDispatchByRawNameAndStartProgress(t *testing.T) {
 		t.Fatal("start-creatio did not emit correlated progress")
 	}
 
-	missingEnvironment, err := session.CallTool(context.Background(), &mcp.CallToolParams{Name: "start-creatio"})
+	missingEnvironment, err := session.CallTool(context.Background(), &mcp.CallToolParams{Name: "clio-run",
+		Arguments: map[string]any{"command": "start-creatio"}})
 	if err != nil || !missingEnvironment.IsError {
 		t.Fatalf("start-creatio without required environmentName = %#v, err = %v", missingEnvironment, err)
 	}
@@ -317,7 +325,7 @@ func TestStageTwoReadToolsDispatchByRawName(t *testing.T) {
 	for _, call := range []*mcp.CallToolParams{
 		{Name: "list-package-files", Arguments: map[string]any{"package-name": "UsrPackage"}},
 		{Name: "get-package-file", Arguments: map[string]any{"package-name": "UsrPackage", "file-path": "Files/a.cs"}},
-		{Name: "get-sql-schema", Arguments: map[string]any{"schema-name": "UsrQuery"}},
+		{Name: "clio-run", Arguments: map[string]any{"command": "get-sql-schema", "args": map[string]any{"schema-name": "UsrQuery"}}},
 		{Name: "list-packages", Arguments: map[string]any{"filter": "usr"}},
 		{Name: "list-app-sections", Arguments: map[string]any{"application-code": "Contacts"}},
 		{Name: "list-pages", Arguments: map[string]any{"package-name": "UsrPackage"}},
@@ -424,9 +432,9 @@ func TestMCPResponsesIncludeOneTextCopyForEveryHiddenTool(t *testing.T) {
 		if !ok {
 			t.Fatalf("missing test arguments for contract tool %q", name)
 		}
-		calls := []*mcp.CallToolParams{
-			{Name: name, Arguments: args},
-			{Name: "clio-run", Arguments: map[string]any{"command": name, "args": args}},
+		calls := []*mcp.CallToolParams{{Name: "clio-run", Arguments: map[string]any{"command": name, "args": args}}}
+		if !requiresConfirmation(name) {
+			calls = append(calls, &mcp.CallToolParams{Name: name, Arguments: args})
 		}
 		for _, call := range calls {
 			t.Run(name+"/"+call.Name, func(t *testing.T) {

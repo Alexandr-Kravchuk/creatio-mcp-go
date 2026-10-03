@@ -12,6 +12,8 @@ import (
 	"runtime"
 	"strings"
 	"time"
+
+	"github.com/Alexandr-Kravchuk/creatio-mcp-go/internal/redact"
 )
 
 // themeGetMaxCSSBytes is clio's ThemeParameterValidator.MaxCssContentBytes.
@@ -40,7 +42,7 @@ func ThemeGetFailure(message string) ThemeGetResult {
 	if strings.TrimSpace(message) == "" {
 		return ThemeGetResult{Error: "unknown"}
 	}
-	return ThemeGetResult{Error: themingRedact(message)}
+	return ThemeGetResult{Error: redact.Text(message)}
 }
 
 // themeGetEntry is one catalog entry as GetAvailableThemes returns it. get-theme reports id, caption and

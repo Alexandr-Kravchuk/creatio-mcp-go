@@ -45,5 +45,5 @@ func init() {
 			return structuredToolResult(creatio.ClassicPageSourcesResult{Error: refusal}), nil
 		}
 		return structuredToolResult(client.GetClassicPageSources(ctx, input)), nil
-	})
+	}, withAnnotations(localWriteAnnotations))
 }

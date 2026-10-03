@@ -44,10 +44,7 @@ func TestGroupHToolsAnswerByRawNameAndThroughClioRun(t *testing.T) {
 			`"errors":["Either 'body' or 'body-file' must provide page body content."]}}`},
 	}
 	for name, c := range cases {
-		for _, call := range []*mcp.CallToolParams{
-			{Name: name, Arguments: c.args},
-			{Name: "clio-run", Arguments: map[string]any{"command": name, "args": c.args}},
-		} {
+		for _, call := range callPaths(name, c.args) {
 			result, err := session.CallTool(context.Background(), call)
 			if err != nil || result.IsError {
 				t.Fatalf("call %q via %q = %#v, err = %v", name, call.Name, result, err)
@@ -68,7 +65,7 @@ func TestGroupHToolsRefuseWrongTypesAndForeignEnvironments(t *testing.T) {
 	}{
 		{&mcp.CallToolParams{Name: "get-page-hierarchy", Arguments: map[string]any{"schema-name": "X", "offset": 1.5}},
 			"invalid-parameter-type: argument 'offset' for MCP tool 'get-page-hierarchy' must be a number. Received an incompatible JSON value."},
-		{&mcp.CallToolParams{Name: "get-client-unit-schema", Arguments: map[string]any{"full-hierarchy": "yes"}},
+		{&mcp.CallToolParams{Name: "clio-run", Arguments: map[string]any{"command": "get-client-unit-schema", "args": map[string]any{"full-hierarchy": "yes"}}},
 			"invalid-parameter-type: argument 'full-hierarchy' for MCP tool 'get-client-unit-schema' must be a boolean. Received an incompatible JSON value."},
 	} {
 		result, err := session.CallTool(context.Background(), call.params)
@@ -76,7 +73,7 @@ func TestGroupHToolsRefuseWrongTypesAndForeignEnvironments(t *testing.T) {
 			t.Fatalf("%s = %#v, err = %v", call.params.Name, result, err)
 		}
 	}
-	result, err := session.CallTool(context.Background(), &mcp.CallToolParams{Name: "get-schema", Arguments: map[string]any{"environment-name": "other"}})
+	result, err := session.CallTool(context.Background(), &mcp.CallToolParams{Name: "clio-run", Arguments: map[string]any{"command": "get-schema", "args": map[string]any{"environment-name": "other"}}})
 	if err != nil || result.IsError || !strings.Contains(result.Content[0].(*mcp.TextContent).Text, "Environment with key 'other' not found.") {
 		t.Fatalf("get-schema environment = %#v, err = %v", result, err)
 	}

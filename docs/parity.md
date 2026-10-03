@@ -21,8 +21,12 @@ The Go server starts without `CREATIO_*` variables and gets `environment-name` o
 does (`--go-env-mode=name`, the default). `--go-env-mode=variables` keeps the older mode: the named
 environment is copied into `CREATIO_*` variables and the calls carry no name. `--clio-env a,b` runs every
 case once per name against the same two processes, so one Go process serves both environments in
-alternation; the evidence numbers the environments instead of naming them. The write script below still
-starts Go in the variables mode.
+alternation; the evidence numbers the environments instead of naming them. The write script below takes
+the same `--go-env-mode` with the same default.
+
+A case with `"clio-run": true` reaches both servers through `clio-run`. Use it for a tool that is not
+read-only: called directly by raw name, both servers answer `confirmation-required` instead of running it
+(see [writing-tools.md](writing-tools.md)).
 
 A case with `method` instead of `tool` sends that MCP method (`resources/list`, `resources/read`,
 `resources/templates/list`, `prompts/list`, `prompts/get`) with its `params` unchanged to both servers: no

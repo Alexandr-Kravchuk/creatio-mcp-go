@@ -41,10 +41,7 @@ func TestGroupDToolsAnswerByRawNameAndThroughClioRun(t *testing.T) {
 		"get-process-signature":      {map[string]any{"process-name": "P", "bogus": 1}, `{"success":false,"processResolutionFailed":false,"parameters":[],"error":"Unknown args: 'bogus'. Valid: environment-name, process-name, culture, uri, login, password."}`},
 	}
 	for name, c := range cases {
-		for _, call := range []*mcp.CallToolParams{
-			{Name: name, Arguments: c.args},
-			{Name: "clio-run", Arguments: map[string]any{"command": name, "args": c.args}},
-		} {
+		for _, call := range callPaths(name, c.args) {
 			result, err := session.CallTool(context.Background(), call)
 			if err != nil {
 				t.Fatalf("%s via %s: %v", name, call.Name, err)

@@ -222,3 +222,17 @@ func sortOrdinalIgnoreCase(names []string) {
 		return strings.ToUpper(names[i]) < strings.ToUpper(names[j])
 	})
 }
+
+// tenantKey is the key clio's ToolCommandResolver.GetTenantKey gives an environment: the resolved target, so
+// two names of one environment share their tracked operations; a name that does not resolve keeps a key of
+// its own ("unresolved:<name>"). Nothing is sent to Creatio.
+func (e *environments) tenantKey(name string) string {
+	if e == nil {
+		return "unresolved:" + strings.TrimSpace(name)
+	}
+	client, err := e.client(name, creatio.ConnectionOverrides{})
+	if err != nil {
+		return "unresolved:" + strings.TrimSpace(name)
+	}
+	return client.TargetKey()
+}

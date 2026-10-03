@@ -6,7 +6,7 @@ sys-setting and OData tools, backed by one JSON state file both fakes share (one
 --flavor go expects flat arguments and answers with camelCase keys, like this server would.
 --fault fail-create | mangle-read injects the failure a test needs.
 """
-import argparse, json, pathlib, sys, uuid
+import argparse, json, os, pathlib, sys, uuid
 
 
 def load(path):
@@ -81,7 +81,13 @@ def main():
                 else:
                     answer = handle(params["name"], args, options)
             else:
-                answer = handle(params["name"], args, options)
+                # Like this server: CREATIO_* names one environment and calls carry no name; without them every
+                # call names its environment.
+                named = args.pop("environment-name", None)
+                if bool(named) == bool(os.environ.get("CREATIO_URL")):
+                    answer = {"success": False, "error": "environment-name does not match the server's environment mode"}
+                else:
+                    answer = handle(params["name"], args, options)
             result = {"content": [{"type": "text", "text": json.dumps(answer)}], "isError": not answer["success"]}
         else:
             result = {}

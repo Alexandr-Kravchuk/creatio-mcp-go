@@ -74,23 +74,6 @@ type InspectRequest struct {
 	Limit       int
 }
 
-// InspectLogMessage is one entry of clio's execution-log-messages channel.
-type InspectLogMessage struct {
-	MessageType string `json:"message-type"`
-	Value       string `json:"value"`
-}
-
-// InspectResult is clio's command envelope: exit code 0 with one Info message, or 1 with one Error.
-type InspectResult struct {
-	ExitCode int                 `json:"exit-code"`
-	Messages []InspectLogMessage `json:"execution-log-messages"`
-}
-
-// InspectFailure is an exit-code-1 envelope with one Error message.
-func InspectFailure(message string) InspectResult {
-	return InspectResult{ExitCode: 1, Messages: []InspectLogMessage{{MessageType: "Error", Value: message}}}
-}
-
 // inspectRefusal is a message clio shows verbatim: its ArgumentException and AdministrationStateException.
 // Every other failure becomes the tool's generic message.
 type inspectRefusal string
@@ -107,19 +90,19 @@ type inspectFilter struct {
 
 // Inspect runs one inspection action. The action check comes first, as clio's tool method runs it before
 // the command; everything after it fails into the command's own messages.
-func (c *Client) Inspect(ctx context.Context, tool InspectTool, request InspectRequest) InspectResult {
+func (c *Client) Inspect(ctx context.Context, tool InspectTool, request InspectRequest) CommandResult {
 	if !inspectAccepts(tool, request.Action) {
-		return InspectFailure("This inspection tool accepts only: " + strings.Join(tool.actions, ", ") + ".")
+		return CommandFailure("This inspection tool accepts only: " + strings.Join(tool.actions, ", ") + ".")
 	}
 	result, err := c.inspectAction(ctx, tool, request)
 	if err != nil {
 		var refusal inspectRefusal
 		if errors.As(err, &refusal) {
-			return InspectFailure(refusal.Error())
+			return CommandFailure(refusal.Error())
 		}
-		return InspectFailure(tool.failure)
+		return CommandFailure(tool.failure)
 	}
-	return InspectResult{ExitCode: 0, Messages: []InspectLogMessage{{MessageType: "Info", Value: string(result.stjJSON())}}}
+	return CommandResult{ExitCode: 0, Messages: []LogMessage{{MessageType: "Info", Value: string(result.stjJSON())}}}
 }
 
 func inspectAccepts(tool InspectTool, action string) bool {
@@ -445,7 +428,7 @@ func inspectRequireSuccess(root *jnode) error {
 // returned as a JSON boolean node; an array result arrives as a JSON string holding the array.
 func (c *Client) inspectPost(ctx context.Context, route, resultProperty, userID string, arrayResult bool) (*jnode, error) {
 	body := toJNode(orderedFields{{"userId", userID}})
-	response, err := c.postCreatioJSON(ctx, route, body.stjJSON(), inspectSelectTimeout, inspectMaxResponseBytes)
+	response, err := c.callService(ctx, serviceCall{Route: route, Body: body.stjJSON(), Timeout: inspectSelectTimeout, Limit: inspectMaxResponseBytes})
 	if err != nil {
 		return nil, err
 	}

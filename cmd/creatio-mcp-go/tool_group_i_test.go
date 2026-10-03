@@ -46,10 +46,7 @@ func TestGroupIToolsAnswerByRawNameAndThroughClioRun(t *testing.T) {
 			`{"success":false,"availability":"absent","sections":{"schema-presence":{"state":"complete","data":[]}},"limitations":["Metadata presence does not prove permission to activate, enroll or send email.","Required fields describe schema metadata, not dynamic rules or defaults.","Choices are capped at 100 rows; use targeted execute-esq reads for truncated sections.","Use native sequence enrollment; do not create Active participants or their activities manually."]}`},
 	}
 	for name, c := range cases {
-		for _, call := range []*mcp.CallToolParams{
-			{Name: name, Arguments: c.args},
-			{Name: "clio-run", Arguments: map[string]any{"command": name, "args": c.args}},
-		} {
+		for _, call := range callPaths(name, c.args) {
 			result, err := session.CallTool(context.Background(), call)
 			if err != nil {
 				t.Fatalf("%s via %s: %v", name, call.Name, err)

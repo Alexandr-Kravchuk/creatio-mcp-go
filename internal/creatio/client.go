@@ -525,3 +525,9 @@ func versionOrNone(version string) string {
 func compareOrdinalIgnoreCase(left, right string) int {
 	return strings.Compare(strings.ToUpper(left), strings.ToUpper(right))
 }
+
+// TargetKey identifies the environment this client acts on (address and identity, never a secret), for
+// keying per-environment state such as tracked operations.
+func (c *Client) TargetKey() string {
+	return strings.ToLower(strings.TrimRight(c.config.BaseURL, "/")) + "|" + c.config.Login + "|" + c.config.ClientID
+}

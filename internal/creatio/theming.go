@@ -4,9 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"regexp"
 	"strings"
 	"time"
+
+	"github.com/Alexandr-Kravchuk/creatio-mcp-go/internal/redact"
 )
 
 // themingServiceMinVersion is clio's ThemeServiceRequirement.MinVersion: the Creatio core that ships the
@@ -44,11 +45,11 @@ func ThemingAccessFailure(message string) ThemingAccessResult {
 func (c *Client) CheckThemingAccess(ctx context.Context) ThemingAccessResult {
 	canManage, err := c.themingCanExecuteOperation(ctx, themingManageOperation)
 	if err != nil {
-		return ThemingAccessFailure(themingRedact(err.Error()))
+		return ThemingAccessFailure(redact.Text(err.Error()))
 	}
 	canBrand, err := c.themingLicenseGranted(ctx, themingBrandingLicenseCode)
 	if err != nil {
-		return ThemingAccessFailure(themingRedact(err.Error()))
+		return ThemingAccessFailure(redact.Text(err.Error()))
 	}
 	return ThemingAccessResult{Success: true, CanManageThemes: &canManage, CanCustomizeBranding: &canBrand,
 		ThemeServiceMinVersion: themingServiceMinVersion}
@@ -100,7 +101,7 @@ func (c *Client) themingLicenseGranted(ctx context.Context, code string) (bool, 
 // themingPostAndDecode is clio's CreatioServiceClient.PostAndDeserialize. clio names the full URL in its
 // messages; this server names the route so the environment address stays out of the transcript.
 func (c *Client) themingPostAndDecode(ctx context.Context, route string, body []byte, target any) error {
-	response, err := c.postCreatioJSON(ctx, route, body, 100*time.Second, maxResponseBytes)
+	response, err := c.callService(ctx, serviceCall{Route: route, Body: body, Timeout: 100 * time.Second, Limit: maxResponseBytes})
 	if err != nil {
 		return err
 	}
@@ -111,23 +112,4 @@ func (c *Client) themingPostAndDecode(ctx context.Context, route string, body []
 		return fmt.Errorf("Unexpected response from %s: %s", route, sanitizeThemeText(string(response), themeDisplayMaxLength))
 	}
 	return nil
-}
-
-// The patterns below are the address and path rules of clio's SensitiveErrorTextRedactor, which clio runs
-// over every theme-tool failure before it reaches the MCP client. clio's credential-pair, e-mail and
-// host:port rules are not reproduced; the messages built here never carry those.
-var (
-	themingURIPattern     = regexp.MustCompile(`\b[a-zA-Z][a-zA-Z0-9+.\-]*://[^\s"'<>)\\]+`)
-	themingJWTPattern     = regexp.MustCompile(`\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+`)
-	themingBearerPattern  = regexp.MustCompile(`(?i)\bBearer\s+[^\s,;"']+`)
-	themingWindowsPattern = regexp.MustCompile(`(?:[A-Za-z]:\\|\\\\)[^\s"'<>|]*`)
-	themingPosixPattern   = regexp.MustCompile(`/(?:Users|home|root|var|etc|opt|usr|tmp|private|mnt|srv|Library|Applications|System|app|data|config)(?:/[^\s"'<>:]*)+`)
-)
-
-func themingRedact(text string) string {
-	text = themingURIPattern.ReplaceAllString(text, "[redacted-uri]")
-	text = themingJWTPattern.ReplaceAllString(text, "[redacted]")
-	text = themingBearerPattern.ReplaceAllString(text, "[redacted]")
-	text = themingWindowsPattern.ReplaceAllString(text, "[redacted-path]")
-	return themingPosixPattern.ReplaceAllString(text, "[redacted-path]")
 }

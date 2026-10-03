@@ -35,7 +35,7 @@ func (c *Client) GetRecordRights(ctx context.Context, entity, recordID string) R
 	if err != nil {
 		return RecordRightsResponse{Error: "Error: " + err.Error()}
 	}
-	payload, err := c.postCreatioJSON(ctx, recordRightsRoute, body, 45*time.Second, maxResponseBytes)
+	payload, err := c.callService(ctx, serviceCall{Route: recordRightsRoute, Body: body, Timeout: 45 * time.Second, Limit: maxResponseBytes})
 	if err != nil {
 		return RecordRightsResponse{Error: "Error: " + err.Error()}
 	}

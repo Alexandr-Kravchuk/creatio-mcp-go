@@ -13,16 +13,16 @@ import (
 // ReadDataBinding is clio's read-data-binding-db: the binding's entity schema, UId, bound column set and each
 // row's values, read through SysPackageSchemaData and SchemaDataDesignerService.GetBoundSchemaData. Like clio
 // it answers with its command log; any failure is one Error line with exit code 1.
-func (c *Client) ReadDataBinding(ctx context.Context, packageName, bindingName string) UserTasksResult {
+func (c *Client) ReadDataBinding(ctx context.Context, packageName, bindingName string) CommandResult {
 	lines, err := c.readDataBindingLines(ctx, packageName, bindingName)
 	if err != nil {
-		return NewUserTasksResult(1, "Error", err.Error())
+		return NewCommandResult(1, "Error", err.Error())
 	}
-	messages := make([]UserTaskLogMessage, 0, len(lines))
+	messages := make([]LogMessage, 0, len(lines))
 	for _, line := range lines {
-		messages = append(messages, UserTaskLogMessage{MessageType: "Info", Value: line})
+		messages = append(messages, LogMessage{MessageType: "Info", Value: line})
 	}
-	return UserTasksResult{ExitCode: 0, Messages: messages}
+	return CommandResult{ExitCode: 0, Messages: messages}
 }
 
 func (c *Client) readDataBindingLines(ctx context.Context, packageName, bindingName string) ([]string, error) {

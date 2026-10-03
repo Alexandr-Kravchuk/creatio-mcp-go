@@ -29360,7 +29360,7 @@
   "clear-redis-db-by-environment": "T16 local, infrastructure, workspace",
   "clear-themes-cache": "T14 themes, branding, email",
   "clio-run": "done (served by creatio-mcp-go)",
-  "clio-run-destructive": "T4 shared infrastructure",
+  "clio-run-destructive": "done (served by creatio-mcp-go)",
   "compile-creatio": "T15 packages, compile, restart",
   "compile-status": "done (served by creatio-mcp-go)",
   "configure-knowledge-feedback-policy": "T6 guidance and knowledge",

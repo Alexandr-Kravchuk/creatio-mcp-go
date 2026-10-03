@@ -27,7 +27,7 @@ func TestEveryServedToolHasClioContract(t *testing.T) {
 // named args would be misread.
 func TestNoServedToolTakesAnArgsArgument(t *testing.T) {
 	for _, name := range servedToolNames() {
-		if name == "clio-run" || name == "get-tool-contract" || name == "list-apps" {
+		if name == "clio-run" || name == "clio-run-destructive" || name == "get-tool-contract" || name == "list-apps" {
 			continue // read their arguments themselves
 		}
 		var contract struct {

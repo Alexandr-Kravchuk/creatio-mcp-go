@@ -13,6 +13,7 @@ import (
 
 	"github.com/Alexandr-Kravchuk/creatio-mcp-go/internal/creatio"
 	"github.com/Alexandr-Kravchuk/creatio-mcp-go/internal/hosttools"
+	"github.com/Alexandr-Kravchuk/creatio-mcp-go/internal/redact"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
@@ -124,26 +125,29 @@ func newMCPServerWithHiddenTools(envs *environments, hostTools hiddenToolService
 				if err != nil {
 					return structuredToolResult(creatio.AppListResponse{Error: redacted(err)}), nil
 				}
-				return structuredToolResult(client.ListAppsResponse(ctx)), nil
+				response := client.ListAppsResponse(ctx)
+				// clio's list-apps redacts every failure it reports.
+				response.Error = redact.Text(response.Error)
+				return structuredToolResult(response), nil
 			})
 		case "list-environments":
 			server.AddTool(tool, func(context.Context, *mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 				return envs.listEnvironments(), nil
 			})
-		case "clio-run":
+		case "clio-run", "clio-run-destructive":
+			// One executor under two names, as in clio: both run any tool (write_safety.go).
 			server.AddTool(tool, func(ctx context.Context, req *mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 				input, err := clioRunInput(req.Params.Arguments)
 				if err != nil {
 					return toolError(err), nil
 				}
-				command := strings.TrimSpace(input.Command)
-				result, err := invokeHiddenTool(ctx, envs, hostTools, command, input.Args,
-					progressReporter(ctx, req.Session, req.Params.GetProgressToken()))
+				command, args, err := clioRunTarget(input)
 				if err != nil {
-					// clio's clio-run dispatcher reports a failed inner tool with this prefix.
-					return toolError(clioFailure("Error: tool '"+command+"' failed: ", err)), nil
+					return toolError(err), nil
 				}
-				return result, nil
+				// clio's clio-run dispatcher reports a failed inner tool with this prefix.
+				return callHiddenTool(ctx, envs, hostTools, command, args,
+					progressReporter(ctx, req.Session, req.Params.GetProgressToken()), true, "Error: tool '"+command+"' failed: "), nil
 			})
 		case "get-tool-contract":
 			server.AddTool(tool, func(_ context.Context, req *mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -182,7 +186,8 @@ func newMCPServerWithHiddenTools(envs *environments, hostTools hiddenToolService
 			if err != nil {
 				return toolError(err), nil
 			}
-			return callHiddenTool(ctx, envs, hostTools, call.Params.Name, args, call.Session, call.Params.GetProgressToken()), nil
+			return callHiddenTool(ctx, envs, hostTools, call.Params.Name, args,
+				progressReporter(ctx, call.Session, call.Params.GetProgressToken()), false, "MCP tool '"+call.Params.Name+"' failed: "), nil
 		}
 	})
 	return server
@@ -225,6 +230,16 @@ func clioRunInput(raw json.RawMessage) (clioRunArgs, error) {
 	if inner, ok := args["args"].(map[string]any); ok && len(args) == 1 {
 		if _, wrapped := inner["command"]; wrapped {
 			args = inner
+			if _, nested := inner["args"]; !nested {
+				// The flat wrapped shape {"args": {"command": "x", ...target arguments}}.
+				rest := map[string]any{}
+				for key, value := range inner {
+					if key != "command" {
+						rest[key] = value
+					}
+				}
+				args = map[string]any{"command": inner["command"], "args": rest}
+			}
 		}
 	}
 	var input clioRunArgs
@@ -252,6 +267,7 @@ func progressReporter(ctx context.Context, session *mcp.ServerSession, token any
 
 func invokeHiddenTool(ctx context.Context, envs *environments, hostTools hiddenToolServices, name string, args map[string]any,
 	progress func(float64, float64, string) error) (*mcp.CallToolResult, error) {
+	ctx = withProgress(ctx, progress)
 	switch name {
 	case "get-sql-schema":
 		var input struct {
@@ -463,9 +479,10 @@ func decodeStrictArgs(args map[string]any, target any) error {
 	return decoder.Decode(target)
 }
 
+// clioRunArgs are clio-run's arguments; both are optional in clio, which recovers a command sent inside args.
 type clioRunArgs struct {
-	Command string         `json:"command"`
-	Args    map[string]any `json:"args"`
+	Command string         `json:"command,omitempty"`
+	Args    map[string]any `json:"args,omitempty"`
 }
 
 var odataReadContract = map[string]any{
@@ -598,7 +615,8 @@ func clioFailure(prefix string, err error) error {
 	if strings.HasPrefix(err.Error(), "invalid-parameter-type:") {
 		return err
 	}
-	return fmt.Errorf("%s%w", prefix, err)
+	// Redacted as clio's McpToolErrorFilter and clio-run catch blocks redact a raised failure.
+	return errors.New(prefix + redact.Text(err.Error()))
 }
 
 func toolError(err error) *mcp.CallToolResult {

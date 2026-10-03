@@ -59,6 +59,31 @@ are, on purpose or for later tasks:
   `compile-status` / `restart-status` read, so those two return real states.
 - One HTTP helper for `rest/...` service routes (today some tools call internal helpers directly).
 
+**Done (T4, 2026-10-03).** How to use all of it: [writing-tools.md](writing-tools.md).
+- Redaction: `internal/redact` ports `SensitiveErrorTextRedactor.Redact` rule for rule (regexp2, the .NET
+  engine, for its lookbehinds and backreferences); 1072 input/output pairs produced by clio's own redactor
+  match byte for byte. Applied where clio applies it: every raised failure, and every failed result
+  (`isError`, `success:false` or a top-level `error` string) of a call through the executors or of a direct
+  call to a tool clio does not list, clio's `RedactFailureContent`; a tool clio lists answers a direct call
+  with only its own redaction. The
+  command envelope stays unredacted, as in clio (measured: clio-run returns `[EnvironmentResolutionException]
+  ... "password":"<password>"` as is). The theming tools' partial redactor is gone.
+- `creatio.CommandResult` / `LogMessage` replace the three envelope copies; output unchanged.
+- Write safety, measured against clio 8.1.0.134: `clio-run` and `clio-run-destructive` are one executor and
+  **both run any tool** — clio no longer refuses a destructive tool through `clio-run` — recording
+  `_meta["clio-run"] = {dispatchedTool, destructive}`. The refusal clio does have is for a direct call by raw
+  name to a hidden tool that is not read-only: `confirmation-required`, pointing at `clio-run`; reproduced.
+  Hints come from clio's inventory (resident tools, index `destructive`); `readOnly` of a hidden tool, which
+  clio does not publish, from `registerTool(..., withAnnotations(...))`. Parity cases for such tools run
+  through `clio-run` on both servers.
+- Operations: `runLongOperation` (progress per stage plus a 15 s heartbeat, clio's 150 s response deadline
+  with the work continuing, cancellation), and the operation registry `compile-status` / `restart-status`
+  read (clio's states, fields, 5 min / 50 records retention, per-environment scoping).
+- HTTP: `callService` / `serviceRequest` for `rest/`, `ServiceModel/`, `DataService/` routes; the direct
+  callers (record rights, user tasks, inspect, process describe, theming), Data Forge and ClioGate use it.
+- `scripts/compare-mcp-writes.py` takes `--go-env-mode` (default `name`).
+- Live parity after T4 (rebased on T5/T6): 706 calls on both stands served by one Go process, 657 match, 22 both-failed, 27 known-diff, 0 mismatches (an earlier run had one `dataforge-context` score differing on the cloud stand, where scores vary between calls; alone it matched 3 of 3); before the rebase 632 calls, 0 mismatches; contract comparison 160 match, 0 unexplained.
+
 ### W3. Parity harness for writes
 Writes cannot be compared by calling both servers with the same arguments. Each case creates its object
 under a per-server name (`{side}`), reads it back through both servers, compares the read-backs, then
@@ -177,7 +202,7 @@ for live checks; several may be deliberately left to clio.
 | T1 | Multiple environments per process (W1) — **done** 2026-10-03 | — | 1 |
 | T2 | Write-parity harness (W3) — **done**, see [parity.md](parity.md) | — | 1 |
 | T3 | CI on GitHub and release automation (W8, first half) — **done**, see [releasing.md](releasing.md) | — | 1 |
-| T4 | Shared infrastructure: redaction, envelope type, write safety, long-running operations, `rest/` helper (W2) | T1 | 2 |
+| T4 | Shared infrastructure: redaction, envelope type, write safety, long-running operations, `rest/` helper (W2) — **done** 2026-10-03, see W2 | T1 | 2 |
 | T5 | Contract and resident-list parity (W4) — **done** 2026-10-03, see W4 | T1 | 2 |
 | T6 | Guidance, prompts, resources, knowledge tools from clio-knowledge bundles (W5, D2) — **read side done**, see below | — (rebase after T1) | 2, started early |
 | T7–T15 | Write tools, one task per W6 area | T1, T2, T4, decision D1 | 3 (in parallel) |
@@ -208,8 +233,7 @@ splits into independent areas once the write harness and shared infrastructure e
 
 | Task | Count | Tools |
 |---|---|---|
-| done (served by creatio-mcp-go) | 70 | `check-theming-access`, `clio-run`, `compile-status`, `dataforge-context`, `dataforge-find-lookups`, `dataforge-find-tables`, `dataforge-get-relations`, `dataforge-get-table-columns`, `dataforge-status`, `describe-business-process`, `describe-environment`, `execute-esq`, `find-app`, `find-empty-iis-port`, `find-entity-schema`, `get-app-info`, `get-classic-list-columns`, `get-classic-page-sources`, `get-client-unit-schema`, `get-email-template`, `get-entity-schema-column-properties`, `get-entity-schema-properties`, `get-fsm-mode`, `get-guidance`, `get-knowledge-feedback-policy`, `get-package-file`, `get-page`, `get-page-hierarchy`, `get-process-page-facts`, `get-process-signature`, `get-record-rights`, `get-related-page-addon`, `get-schema`, `get-schema-name-prefix`, `get-sequence-context`, `get-sql-schema`, `get-sys-setting`, `get-target-package`, `get-telemetry-consent`, `get-theme`, `get-user-culture`, `info-knowledge`, `inspect-access`, `inspect-license`, `inspect-role`, `inspect-user`, `last-compilation-log`, `list-app-sections`, `list-apps`, `list-entity-client-schemas`, `list-environments`, `list-knowledge-examples`, `list-knowledge-sources`, `list-package-files`, `list-packages`, `list-page-templates`, `list-pages`, `list-printables`, `list-sys-settings`, `list-themes`, `list-user-tasks`, `odata-read`, `read-data-binding-db`, `read-entity-business-rules`, `read-page-business-rules`, `resolve-oauth-system-user`, `restart-status`, `start-creatio`, `validate-page`, `verify-oauth-app` |
-| T4 shared infrastructure | 1 | `clio-run-destructive` |
+| done (served by creatio-mcp-go) | 71 | `check-theming-access`, `clio-run`, `clio-run-destructive`, `compile-status`, `dataforge-context`, `dataforge-find-lookups`, `dataforge-find-tables`, `dataforge-get-relations`, `dataforge-get-table-columns`, `dataforge-status`, `describe-business-process`, `describe-environment`, `execute-esq`, `find-app`, `find-empty-iis-port`, `find-entity-schema`, `get-app-info`, `get-classic-list-columns`, `get-classic-page-sources`, `get-client-unit-schema`, `get-email-template`, `get-entity-schema-column-properties`, `get-entity-schema-properties`, `get-fsm-mode`, `get-guidance`, `get-knowledge-feedback-policy`, `get-package-file`, `get-page`, `get-page-hierarchy`, `get-process-page-facts`, `get-process-signature`, `get-record-rights`, `get-related-page-addon`, `get-schema`, `get-schema-name-prefix`, `get-sequence-context`, `get-sql-schema`, `get-sys-setting`, `get-target-package`, `get-telemetry-consent`, `get-theme`, `get-user-culture`, `info-knowledge`, `inspect-access`, `inspect-license`, `inspect-role`, `inspect-user`, `last-compilation-log`, `list-app-sections`, `list-apps`, `list-entity-client-schemas`, `list-environments`, `list-knowledge-examples`, `list-knowledge-sources`, `list-package-files`, `list-packages`, `list-page-templates`, `list-pages`, `list-printables`, `list-sys-settings`, `list-themes`, `list-user-tasks`, `odata-read`, `read-data-binding-db`, `read-entity-business-rules`, `read-page-business-rules`, `resolve-oauth-system-user`, `restart-status`, `start-creatio`, `validate-page`, `verify-oauth-app` |
 | T6 guidance and knowledge | 18 | `add-knowledge-source`, `configure-knowledge-feedback-policy`, `delete-knowledge`, `delete-toolkit`, `disable-knowledge-source`, `enable-knowledge-source`, `experimental`, `export-component-registry`, `get-component-info`, `get-request-info`, `install-knowledge`, `install-toolkit`, `merge-creatio-artifact`, `remove-knowledge-source`, `send-telemetry`, `update-knowledge`, `update-toolkit`, `withdraw-telemetry-consent` |
 | T7 applications | 6 | `create-app`, `create-app-section`, `delete-app`, `delete-app-section`, `install-application`, `update-app-section` |
 | T8 schemas | 14 | `create-entity-schema`, `create-lookup`, `create-schema`, `create-sql-schema`, `delete-schema`, `export-schema`, `import-schema`, `install-sql-schema`, `modify-entity-schema-column`, `set-entity-schema-properties`, `sync-schemas`, `update-entity-schema`, `update-schema`, `update-sql-schema` |

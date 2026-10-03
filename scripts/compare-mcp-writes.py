@@ -17,7 +17,7 @@ Safety:
 Printed and persisted: verdicts, timings and the JSON paths that differ. Never values, URLs,
 environment names, object names or credentials, so the evidence file is safe to share.
 """
-import argparse, importlib.util, json, pathlib, re, shlex, sys, time
+import argparse, importlib.util, json, os, pathlib, re, shlex, sys, time
 
 REPO = pathlib.Path(__file__).resolve().parent.parent
 SIDES = ("clio", "go")
@@ -25,9 +25,9 @@ SIDES = ("clio", "go")
 _spec = importlib.util.spec_from_file_location("compare_mcp", REPO / "scripts/compare-mcp.py")
 compare_mcp = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(compare_mcp)
-Server, payload, normalize, differences, verdict, go_environment = (
+Server, payload, normalize, differences, verdict, go_environment, clio_home = (
     compare_mcp.Server, compare_mcp.payload, compare_mcp.normalize, compare_mcp.differences,
-    compare_mcp.verdict, compare_mcp.go_environment)
+    compare_mcp.verdict, compare_mcp.go_environment, compare_mcp.clio_home)
 
 STEP_KINDS = {"write", "read-back", "expect", "cleanup"}
 DESTRUCTIVE_PREFIXES = ("delete-", "remove-", "uninstall-", "clear-", "prune-", "restore-db")
@@ -220,16 +220,23 @@ class Refused(Exception):
 
 
 class Harness:
-    def __init__(self, servers, environment, run_id):
-        self.servers, self.environment, self.run_id = servers, environment, run_id
+    def __init__(self, servers, environment, run_id, go_env_mode="name"):
+        self.servers, self.environment, self.run_id, self.go_env_mode = servers, environment, run_id, go_env_mode
 
     def call(self, server_side, call, arguments):
         server = self.servers[server_side]
+        selector = {call.get("clio-environment-key", "environment-name"): self.environment}
         if server_side == "clio":
-            arguments = {call.get("clio-environment-key", "environment-name"): self.environment, **arguments}
+            arguments = {**selector, **arguments}
             if call.get("clio-run"):
                 return server.call("clio-run", {"command": call["tool"], "args": arguments})
             return server.call(call["tool"], {"args": arguments})
+        if self.go_env_mode == "name":
+            arguments = {**selector, **arguments}
+        # This server refuses a direct call to a write tool the way clio does, so a step that goes through
+        # clio-run on clio goes through clio-run here too.
+        if call.get("clio-run"):
+            return server.call("clio-run", {"command": call["tool"], "args": arguments})
         return server.call(call["tool"], arguments)
 
     def guard(self, call, arguments, side_state, target_template):
@@ -411,9 +418,12 @@ def check_gate(environment, confirmed):
 def start_servers(options):
     clio_command = shlex.split(options.clio_command) if options.clio_command else ["dotnet", options.clio_dll, "mcp-server"]
     go_command = shlex.split(options.go_command) if options.go_command else [options.go_bin]
-    clio = Server(clio_command)
+    clio_env = dict(os.environ)
+    if options.clio_settings:
+        clio_env["CLIO_HOME"] = clio_home(options.clio_settings)
+    clio = Server(clio_command, env=clio_env)
     try:
-        go = Server(go_command, env=go_environment(options.clio_env, options.clio_settings))
+        go = Server(go_command, env=go_environment(options.clio_env, options.clio_settings, options.go_env_mode))
     except BaseException:
         clio.close()
         raise
@@ -429,7 +439,7 @@ def cleanup_ledger(options):
     failures = 0
     try:
         for record in leftovers:
-            harness = Harness(servers, options.clio_env, record["run"])
+            harness = Harness(servers, options.clio_env, record["run"], options.go_env_mode)
             side_state = {"variables": {"run": record["run"], "side": record["side"]}, "created": {record["name"]},
                           "provenance": {}, "replacements": {}}
             problems = []
@@ -464,6 +474,9 @@ def main(argv=None):
     go.add_argument("--go-command", help="full command that starts this server (instead of --go-bin)")
     parser.add_argument("--clio-env", required=True, help="registered clio environment name; must be allow-listed")
     parser.add_argument("--clio-settings", help="clio appsettings.json (default: the platform location)")
+    parser.add_argument("--go-env-mode", choices=("name", "variables"), default="name",
+                        help="name: this server reads clio's settings and gets environment-name per call, as clio "
+                             "does (default); variables: it gets the environment through CREATIO_* variables")
     parser.add_argument("--scenarios", nargs="+",
                         default=sorted(str(p) for p in (REPO / "scripts/write-scenarios").glob("*.json")),
                         help="scenario files; default: scripts/write-scenarios/*.json")
@@ -493,7 +506,7 @@ def main(argv=None):
     results = []
     servers = start_servers(options) if runnable else None
     try:
-        harness = Harness(servers, options.clio_env, run_id)
+        harness = Harness(servers, options.clio_env, run_id, options.go_env_mode)
         for scenario in scenarios:
             results.append(harness.run_scenario(scenario))
     finally:

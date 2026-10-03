@@ -6,53 +6,74 @@ import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// compile-status and restart-status read clio's in-process registry of compile-creatio and restart
-// operations that clio itself started. This server starts neither, so its registry is always empty and the
-// only truthful answer is clio's not-found envelope. Nothing is sent to Creatio.
+// compile-status and restart-status read the operation registry (operations.go) that compile-creatio and
+// the restart tools record into, scoped to the caller's environment as clio scopes them. Nothing is sent to
+// Creatio.
 const (
 	runtimeCompileNotFoundNote = "No compile-creatio operation has been recorded for this environment in the current MCP server session."
 	runtimeRestartNotFoundNote = "No restart operation has been recorded for this environment in the current MCP server session."
 )
 
-// runtimeOperationStatus is the shared compile-status / restart-status envelope. environment-name echoes the
-// argument exactly as passed, as clio does; the name is not resolved, because nothing is sent to Creatio.
-type runtimeOperationStatus struct {
-	Success         bool   `json:"success"`
-	Status          string `json:"status"`
-	EnvironmentName string `json:"environment-name,omitempty"`
-	Note            string `json:"note,omitempty"`
+// compileStatusResponse is clio's CompileStatusResponse; restart-status leaves the compile-only fields out.
+type compileStatusResponse struct {
+	Success         bool     `json:"success"`
+	Status          string   `json:"status"`
+	OperationID     string   `json:"operation-id,omitempty"`
+	EnvironmentName string   `json:"environment-name,omitempty"`
+	PackageName     string   `json:"package-name,omitempty"`
+	StartedUTC      *utcTime `json:"started-utc,omitempty"`
+	FinishedUTC     *utcTime `json:"finished-utc,omitempty"`
+	ExitCode        *int     `json:"exit-code,omitempty"`
+	MessageTail     []string `json:"message-tail,omitzero"`
+	Note            string   `json:"note,omitempty"`
+	ProcessName     string   `json:"process-name,omitempty"`
 }
 
 func init() {
-	operationID := map[string]any{"type": "string", "description": "Optional operation id from an in-progress response. Accepted for compatibility; this server records no operations."}
+	operationID := map[string]any{"type": "string", "description": "Optional operation id from an in-progress response. When omitted, returns the most recently started operation for this environment."}
 	registerTool(map[string]any{
 		"name": "compile-status",
-		"description": "Return the status of a compile-creatio operation tracked by this MCP server session. This server starts no " +
-			"compilations, so it always answers success:true, status:not-found. Read the persisted result of the last build with " +
-			"last-compilation-log instead. Read-only; never starts a compilation.",
+		"description": "Returns the status of the most recent compile-creatio operation tracked for an environment, or of a specific " +
+			"operation-id from a compile-creatio in-progress response. Use this after compile-creatio returns an in-progress note " +
+			"to check whether the compile finished; do not re-run compile-creatio just to check. Read-only.",
 		"inputSchema": map[string]any{"type": "object", "properties": map[string]any{"operation-id": operationID}},
-	}, func(_ context.Context, _ *environments, args map[string]any) (*mcp.CallToolResult, error) {
-		return runtimeOperationStatusResult("compile-status", args, runtimeCompileNotFoundNote)
+	}, func(_ context.Context, envs *environments, args map[string]any) (*mcp.CallToolResult, error) {
+		return operationStatusResult("compile-status", envs, args, compileOperations, runtimeCompileNotFoundNote)
 	})
 	registerTool(map[string]any{
 		"name": "restart-status",
-		"description": "Return the readiness status of a restart tracked by this MCP server session. This server starts no " +
-			"restarts, so it always answers success:true, status:not-found. Read-only; never restarts anything.",
+		"description": "Returns the readiness status of the most recent restart tracked for an environment, or of a specific " +
+			"operation-id from a restart-by-environment-name in-progress response. Use this after that tool returns an " +
+			"in-progress note to check whether the instance finished warming up; do not re-run the restart just to check. Read-only.",
 		"inputSchema": map[string]any{"type": "object", "properties": map[string]any{"operation-id": operationID}},
-	}, func(_ context.Context, _ *environments, args map[string]any) (*mcp.CallToolResult, error) {
-		return runtimeOperationStatusResult("restart-status", args, runtimeRestartNotFoundNote)
+	}, func(_ context.Context, envs *environments, args map[string]any) (*mcp.CallToolResult, error) {
+		return operationStatusResult("restart-status", envs, args, restartOperations, runtimeRestartNotFoundNote)
 	})
 }
 
-// runtimeOperationStatusResult is lenient like clio (unknown keys are ignored). An unknown environment name
-// is not an error here either: clio answers not-found for it too.
-func runtimeOperationStatusResult(tool string, args map[string]any, note string) (*mcp.CallToolResult, error) {
-	if _, err := optionalStringArg(args, tool, "operation-id"); err != nil {
+// operationStatusResult is lenient like clio (unknown keys are ignored). environment-name is echoed exactly
+// as passed; an unknown name answers not-found, as in clio.
+func operationStatusResult(tool string, envs *environments, args map[string]any, store *operationStore, note string) (*mcp.CallToolResult, error) {
+	operationID, err := optionalStringArg(args, tool, "operation-id")
+	if err != nil {
 		return nil, err
 	}
 	name, err := optionalStringArg(args, tool, "environment-name")
 	if err != nil {
 		return nil, err
 	}
-	return structuredToolResult(runtimeOperationStatus{Success: true, Status: "not-found", EnvironmentName: name, Note: note}), nil
+	record, ok := store.lookup(envs.tenantKey(name), operationID)
+	if !ok {
+		return structuredToolResult(compileStatusResponse{Success: true, Status: "not-found", EnvironmentName: name, Note: note}), nil
+	}
+	environmentName := record.EnvironmentName
+	if environmentName == "" {
+		environmentName = name
+	}
+	return structuredToolResult(compileStatusResponse{
+		Success: true, Status: record.Status, OperationID: record.ID, EnvironmentName: environmentName,
+		PackageName: record.Details.PackageName, ProcessName: record.Details.ProcessName,
+		StartedUTC: utcTimePointer(&record.StartedUTC), FinishedUTC: utcTimePointer(record.FinishedUTC),
+		ExitCode: record.ExitCode, MessageTail: record.MessageTail,
+	}), nil
 }

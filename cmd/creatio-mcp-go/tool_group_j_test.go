@@ -59,10 +59,7 @@ func TestGroupJToolsAnswerByRawNameAndThroughClioRun(t *testing.T) {
 		{"get-theme", map[string]any{"id": "x", "outputFile": "a.css"}, `{"success":false,"error":` + groupEJSON(t, "Rename: 'outputFile' -> 'output-file'.") + `}`},
 	}
 	for _, c := range cases {
-		for _, call := range []*mcp.CallToolParams{
-			{Name: c.name, Arguments: c.args},
-			{Name: "clio-run", Arguments: map[string]any{"command": c.name, "args": c.args}},
-		} {
+		for _, call := range callPaths(c.name, c.args) {
 			result, err := session.CallTool(context.Background(), call)
 			if err != nil || result.IsError {
 				t.Fatalf("call %q via %q = %#v, err = %v", c.name, call.Name, result, err)
@@ -98,10 +95,7 @@ func TestGroupJToolsReportArgumentTypeErrorsAsToolErrors(t *testing.T) {
 			"invalid-parameter-type: argument 'id' for MCP tool 'get-theme' must be a string. Received an incompatible JSON value."},
 	}
 	for _, c := range cases {
-		for _, call := range []*mcp.CallToolParams{
-			{Name: c.name, Arguments: c.args},
-			{Name: "clio-run", Arguments: map[string]any{"command": c.name, "args": c.args}},
-		} {
+		for _, call := range callPaths(c.name, c.args) {
 			result, err := session.CallTool(context.Background(), call)
 			if err != nil || !result.IsError {
 				t.Fatalf("call %q via %q = %#v, err = %v", c.name, call.Name, result, err)

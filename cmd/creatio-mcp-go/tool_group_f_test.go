@@ -46,10 +46,7 @@ func TestGroupFToolsAnswerByRawNameAndThroughClioRun(t *testing.T) {
 		"verify-oauth-app": {map[string]any{}, `{"success":false,"error":"OAuth verification failed. Check the IdentityService URL and CRM connectivity; configure OAuth credentials or supply both --client-id and --client-secret."}`},
 	}
 	for name, c := range cases {
-		for _, call := range []*mcp.CallToolParams{
-			{Name: name, Arguments: c.args},
-			{Name: "clio-run", Arguments: map[string]any{"command": name, "args": c.args}},
-		} {
+		for _, call := range callPaths(name, c.args) {
 			result, err := session.CallTool(context.Background(), call)
 			if err != nil || result.IsError {
 				t.Fatalf("call %q via %q = %#v, err = %v", name, call.Name, result, err)

@@ -42,10 +42,7 @@ func TestGroupBToolsAnswerByRawNameAndThroughClioRun(t *testing.T) {
 			`{"message-type":"None","value":"{\n  \"coreVersion\": \"8.1\",\n  \"userCulture\": {\n    \"displayValue\": \"en-US\"\n  }\n}"}]}`},
 	}
 	for name, c := range cases {
-		for _, call := range []*mcp.CallToolParams{
-			{Name: name, Arguments: c.args},
-			{Name: "clio-run", Arguments: map[string]any{"command": name, "args": c.args}},
-		} {
+		for _, call := range callPaths(name, c.args) {
 			result, err := session.CallTool(context.Background(), call)
 			if err != nil || result.IsError {
 				t.Fatalf("call %q via %q = %#v, err = %v", name, call.Name, result, err)

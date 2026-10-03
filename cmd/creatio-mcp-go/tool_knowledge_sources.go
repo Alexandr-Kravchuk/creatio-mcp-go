@@ -28,7 +28,7 @@ func init() {
 			"source":       map[string]string{"type": "string", "description": "Configured source alias; omit to inspect all configured sources."},
 			"checkUpdates": map[string]string{"type": "boolean", "description": "When true, contacts configured transports to check update availability; defaults to local-only."},
 		}},
-	}, invokeInfoKnowledge)
+	}, invokeInfoKnowledge, withAnnotations(toolAnnotations{ReadOnly: true, Idempotent: true, OpenWorld: true}))
 	registerTool(map[string]any{
 		"name":        "list-knowledge-examples",
 		"description": "Lists reference examples registered in active local knowledge catalogs, including immutable repository coordinates, without cloning repositories or contacting remote services.",

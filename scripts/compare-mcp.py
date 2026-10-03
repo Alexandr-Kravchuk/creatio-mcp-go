@@ -261,7 +261,12 @@ def main():
         if case.get("go-wrapped"):
             # The shape tools/list publishes, {"args": {...}}; Go is otherwise called flat.
             arguments = {"args": arguments}
-        go_response, go_seconds = go.call(name, arguments)
+        if case.get("clio-run"):
+            # Both servers are reached the same way: a tool that is not read-only answers
+            # confirmation-required to a direct call on both, so such a case goes through clio-run.
+            go_response, go_seconds = go.call("clio-run", {"command": name, "args": arguments})
+        else:
+            go_response, go_seconds = go.call(name, arguments)
         return name, payload(clio_response), clio_seconds, payload(go_response), go_seconds
 
     try:

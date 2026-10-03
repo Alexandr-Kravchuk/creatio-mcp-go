@@ -45,7 +45,7 @@ func init() {
 		}
 		// clio refuses unknown keys inside its command envelope, before the package gate.
 		if refusal := unknownArgumentError(args, processDescribeKnownArgs...); refusal != "" {
-			return structuredToolResult(creatio.NewUserTasksResult(1, "Error", refusal)), nil
+			return structuredToolResult(creatio.NewCommandResult(1, "Error", refusal)), nil
 		}
 		client, refusal, err := envs.resolve("describe-business-process", args, scopeName)
 		if err != nil {

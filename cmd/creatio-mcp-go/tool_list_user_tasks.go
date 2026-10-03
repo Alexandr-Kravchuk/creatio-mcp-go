@@ -19,7 +19,7 @@ func init() {
 	}, func(ctx context.Context, envs *environments, args map[string]any) (*mcp.CallToolResult, error) {
 		// clio reports argument refusals as exit code 1 inside its command envelope.
 		if refusal := unknownArgumentError(args, "environment-name"); refusal != "" {
-			return structuredToolResult(creatio.NewUserTasksResult(1, "Error", refusal)), nil
+			return structuredToolResult(creatio.NewCommandResult(1, "Error", refusal)), nil
 		}
 		client, failure, err := envs.resolve("list-user-tasks", args, scopeName)
 		if err != nil {

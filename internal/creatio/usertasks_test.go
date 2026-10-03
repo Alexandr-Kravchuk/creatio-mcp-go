@@ -39,7 +39,7 @@ func TestListUserTasksListsPaletteAfterPackageGate(t *testing.T) {
 		`{"ListUserTasksResult":{"success":true,"userTasks":[{"name":"ReadDataUserTask","uid":"u-1"},{"name":"ApprovalUserTask","uid":"u-2"}]}}`)
 	defer server.Close()
 	result := newFormsTestClient(t, server.URL).ListUserTasks(context.Background())
-	want := []UserTaskLogMessage{{"Info", "ReadDataUserTask\tu-1"}, {"Info", "ApprovalUserTask\tu-2"}, {"Info", "Total user tasks: 2"}}
+	want := []LogMessage{{"Info", "ReadDataUserTask\tu-1"}, {"Info", "ApprovalUserTask\tu-2"}, {"Info", "Total user tasks: 2"}}
 	if result.ExitCode != 0 || len(result.Messages) != len(want) {
 		t.Fatalf("result = %#v", result)
 	}

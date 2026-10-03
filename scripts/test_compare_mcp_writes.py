@@ -99,6 +99,12 @@ class WriteHarnessTest(unittest.TestCase):
         self.assertNotIn("go:odata-delete", self.stand()["_calls"])
         self.assert_evidence_is_clean()
 
+    def test_variables_mode_gives_go_one_environment_and_no_name(self):
+        result = self.run_harness("--go-env-mode=variables")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(self.evidence_data()["counts"]["match"], 1)
+        self.assertEqual(self.stand()["settings"], {})
+
     def test_read_back_mismatch_is_reported_and_cleaned_up(self):
         result = self.run_harness(go_faults=("mangle-read",))
         self.assertEqual(result.returncode, 1, result.stdout + result.stderr)

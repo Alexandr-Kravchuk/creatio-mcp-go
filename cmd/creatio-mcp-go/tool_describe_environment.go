@@ -30,7 +30,7 @@ func init() {
 func invokeDescribeEnvironment(ctx context.Context, envs *environments, args map[string]any) (*mcp.CallToolResult, error) {
 	// clio reports argument refusals as an exit-code-1 envelope, not as a protocol error.
 	if refusal := unknownArgumentError(args, describeEnvironmentKnownArgs...); refusal != "" {
-		return structuredToolResult(creatio.DescribeFailure(refusal)), nil
+		return structuredToolResult(creatio.CommandFailure(refusal)), nil
 	}
 	var input struct {
 		Timeout *int `json:"timeout,omitempty"`

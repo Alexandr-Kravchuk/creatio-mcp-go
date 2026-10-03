@@ -42,7 +42,7 @@ func init() {
 		return structuredToolResult(client.GetSourceCodeSchema(ctx, creatio.SourceCodeSchemaRequest{
 			SchemaName: schemaName, OutputFile: outputFile,
 		})), nil
-	})
+	}, withAnnotations(localWriteAnnotations))
 }
 
 // schemaGetBoolArg reads an optional boolean the way clio's binder does: absent or null is false, any other

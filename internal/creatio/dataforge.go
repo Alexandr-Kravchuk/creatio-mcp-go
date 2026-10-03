@@ -234,28 +234,11 @@ func (s *dataForgeSession) post(ctx context.Context, route string, body []byte) 
 	if err := s.ensureSupportedVersion(ctx); err != nil {
 		return nil, err
 	}
-	requestCtx, cancel := context.WithTimeout(ctx, dataForgeRequestTimeout)
-	defer cancel()
-	response, _, err := s.client.doAuthenticated(requestCtx, s.client.requestClient(), func() (*http.Request, error) {
-		request, err := http.NewRequestWithContext(requestCtx, http.MethodPost, s.client.serviceURL(route), bytes.NewReader(body))
-		if err != nil {
-			return nil, fmt.Errorf("build Data Forge request: %w", err)
-		}
-		request.Header.Set("Content-Type", "application/json")
-		request.Header.Set("Accept", "application/json")
-		return request, nil
-	})
+	response, err := s.client.serviceRequest(ctx, serviceCall{Route: route, Body: body, Timeout: dataForgeRequestTimeout})
 	if err != nil {
-		if isTransportError(err) {
-			return nil, fmt.Errorf("Creatio service %s transport failure: %w", route, err)
-		}
 		return nil, err
 	}
-	payload, err := readResponseLimit(response, maxResponseBytes)
-	if err != nil {
-		return nil, fmt.Errorf("Creatio service %s response: %w", route, err)
-	}
-	return payload, nil
+	return response.payload, nil
 }
 
 var dataForgeVersionPattern = regexp.MustCompile(`\d+(?:\.\d+){1,3}`)
