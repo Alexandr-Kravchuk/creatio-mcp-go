@@ -1,7 +1,7 @@
 [
   {
     "label": "create-app, read back, create/update/delete a section, delete the app",
-    "why": "T7. Argument names are clio master's ApplicationCreateArgs, ApplicationSectionCreateArgs, ApplicationSectionUpdateArgs, ApplicationSectionDeleteArgs, ApplicationGetInfoArgs, ApplicationSectionGetListArgs and the delete-app arguments. template-code is passed explicitly: clio 8.1.0.134 lists it as required, master defaults it. Colors are explicit so both sides write the same values; the icon is random on both sides (clio picks a random SysAppIcons row), so icon ids are compared only by presence. The section is created inside the run's own application package and goes away with the application; it is deleted by its own step first. Mobile pages are skipped to keep the section insert short. Every write waits 120 s before each side (settle-seconds): an application or section write starts an OData rebuild that refuses the next one ('Creatio is currently rebuilding the OData library') on clio and Go alike, and this stand answers IsODataBuildRunning with an HTML page, so neither server's OData build gate can wait for it.",
+    "why": "T7. Argument names are clio master's ApplicationCreateArgs, ApplicationSectionCreateArgs, ApplicationSectionUpdateArgs, ApplicationSectionDeleteArgs, ApplicationGetInfoArgs, ApplicationSectionGetListArgs and the delete-app arguments. template-code is passed explicitly: clio 8.1.0.134 lists it as required, master defaults it. Colors are explicit so both sides write the same values; the icon is random on both sides (clio picks a random SysAppIcons row), so icon ids are compared only by presence. The section is created inside the run's own application package and goes away with the application; it is deleted by its own step first. Mobile pages are skipped to keep the section insert short. Every write waits 120 s before each side (settle-seconds): an application or section write starts an OData rebuild that refuses the next one ('Creatio is currently rebuilding the OData library') on clio and Go alike, and this stand answers IsODataBuildRunning with an HTML page, so neither server's OData build gate can wait for it. Writes refused with that message are retried on either side (retry-while), up to 6 times 30 s apart.",
     "steps": [
       {
         "kind": "write",
@@ -18,26 +18,77 @@
           "icon-background": "#247EE5",
           "with-mobile-pages": false
         },
-        "capture": {"appid": "$.applicationid", "pkguid": "$.packageuid"},
-        "known-differences": ["$.warnings", "$.nextstep"],
-        "why": "warnings/next-step come from master's navigation cache reset (ENG-101680), which clio 8.1.0.134 does not have; the GUIDs of pages and entities are created per side."
+        "capture": {
+          "appid": "$.applicationid",
+          "pkguid": "$.packageuid"
+        },
+        "known-differences": [
+          "$.warnings",
+          "$.nextstep",
+          "$.dataforge.health.correlationid",
+          "$.entities[0].uid",
+          "$.entities[1].uid",
+          "$.entities[2].uid",
+          "$.pages[0].uid",
+          "$.pages[1].uid",
+          "$.pages[2].uid",
+          "$.pages[3].uid"
+        ],
+        "why": "warnings/next-step come from master's navigation cache reset (ENG-101680), which clio 8.1.0.134 does not have; the GUIDs of pages and entities are created per side.",
+        "retry-while": "rebuilding the OData library",
+        "retry-attempts": 6,
+        "retry-delay-seconds": 30
       },
       {
         "kind": "cleanup",
         "for": "UsrParity{run}{side}App",
         "server": "own",
         "calls": [
-          {"tool": "delete-app", "clio-run": true, "settle-seconds": 120, "args": {"app-name": "UsrParity{run}{side}App"}}
+          {
+            "tool": "delete-app",
+            "clio-run": true,
+            "settle-seconds": 120,
+            "args": {
+              "app-name": "UsrParity{run}{side}App"
+            }
+          }
         ]
       },
-      {"kind": "expect", "step": "create-app", "path": "$.applicationCode", "equals": "UsrParity{run}{side}App"},
-      {"kind": "expect", "step": "create-app", "path": "$.packageName", "equals": "UsrParity{run}{side}App"},
-      {"kind": "expect", "step": "create-app", "path": "$.schemaNamePrefix", "equals": "Usr"},
+      {
+        "kind": "expect",
+        "step": "create-app",
+        "path": "$.applicationCode",
+        "equals": "UsrParity{run}{side}App"
+      },
+      {
+        "kind": "expect",
+        "step": "create-app",
+        "path": "$.packageName",
+        "equals": "UsrParity{run}{side}App"
+      },
+      {
+        "kind": "expect",
+        "step": "create-app",
+        "path": "$.schemaNamePrefix",
+        "equals": "Usr"
+      },
       {
         "kind": "read-back",
         "label": "get-app-info",
         "tool": "get-app-info",
-        "args": {"code": "UsrParity{run}{side}App"}
+        "args": {
+          "code": "UsrParity{run}{side}App"
+        },
+        "known-differences": [
+          "$.entities[0].uid",
+          "$.entities[1].uid",
+          "$.entities[2].uid",
+          "$.pages[0].uid",
+          "$.pages[1].uid",
+          "$.pages[2].uid",
+          "$.pages[3].uid"
+        ],
+        "why": "Entity and page UIds are generated per side."
       },
       {
         "kind": "write",
@@ -53,17 +104,57 @@
           "icon-background": "#FF8800",
           "with-mobile-pages": false
         },
-        "capture": {"sectionid": "$.section.id"},
-        "known-differences": ["$.warnings", "$.nextstep"],
-        "why": "warnings/next-step: master's navigation cache reset, absent in clio 8.1.0.134."
+        "capture": {
+          "sectionid": "$.section.id",
+          "sectioncode": "$.section.code"
+        },
+        "known-differences": [
+          "$.warnings",
+          "$.nextstep",
+          "$.entity.uid",
+          "$.section.iconid",
+          "$.section.sectionschemauid",
+          "$.pages[0].uid",
+          "$.pages[1].uid",
+          "$.pages[2].uid",
+          "$.pages[3].uid"
+        ],
+        "why": "warnings/next-step: master's navigation cache reset, absent in clio 8.1.0.134.",
+        "retry-while": "rebuilding the OData library",
+        "retry-attempts": 6,
+        "retry-delay-seconds": 30
       },
-      {"kind": "expect", "step": "create-app-section", "path": "$.section.code", "equals": "UsrParity{run}{side}Orders"},
-      {"kind": "expect", "step": "create-app-section", "path": "$.section.iconBackground", "equals": "#FF8800"},
+      {
+        "kind": "expect",
+        "step": "create-app-section",
+        "path": "$.section.code",
+        "equals": "{sectioncode}"
+      },
+      {
+        "kind": "expect",
+        "step": "create-app-section",
+        "path": "$.section.iconBackground",
+        "equals": "#FF8800"
+      },
       {
         "kind": "read-back",
         "label": "list-app-sections after create",
         "tool": "list-app-sections",
-        "args": {"application-code": "UsrParity{run}{side}App"}
+        "args": {
+          "application-code": "UsrParity{run}{side}App"
+        },
+        "known-differences": [
+          "$.sections[0].id",
+          "$.sections[0].iconid",
+          "$.sections[0].sectionschemauid",
+          "$.sections[1].id",
+          "$.sections[1].iconid",
+          "$.sections[1].sectionschemauid",
+          "$.sections[2].id",
+          "$.sections[2].iconid",
+          "$.sections[2].sectionschemauid"
+        ],
+        "why": "The application's own main section is not captured, and icon ids (random SysAppIcons pick on both servers) and section schema UIds are generated per side."
       },
       {
         "kind": "write",
@@ -78,16 +169,53 @@
           "description": "Parity section renamed",
           "icon-background": "#20A959"
         },
-        "known-differences": ["$.warnings", "$.nextstep", "$.captionculture", "$.captionculturevalue", "$.preservedcultures"],
-        "why": "caption-culture, caption-culture-value, preserved-cultures, warnings and next-step belong to master's localization-aware update; clio 8.1.0.134 returns only the before/after sections."
+        "known-differences": [
+          "$.warnings",
+          "$.nextstep",
+          "$.captionculture",
+          "$.captionculturevalue",
+          "$.preservedcultures",
+          "$.previoussection.iconid",
+          "$.previoussection.sectionschemauid",
+          "$.section.iconid",
+          "$.section.sectionschemauid"
+        ],
+        "why": "caption-culture, caption-culture-value, preserved-cultures, warnings and next-step belong to master's localization-aware update; clio 8.1.0.134 returns only the before/after sections.",
+        "retry-while": "rebuilding the OData library",
+        "retry-attempts": 6,
+        "retry-delay-seconds": 30
       },
-      {"kind": "expect", "step": "update-app-section", "path": "$.section.caption", "equals": "Parity Orders Renamed"},
-      {"kind": "expect", "step": "update-app-section", "path": "$.previousSection.caption", "equals": "Parity Orders"},
+      {
+        "kind": "expect",
+        "step": "update-app-section",
+        "path": "$.section.caption",
+        "equals": "Parity Orders Renamed"
+      },
+      {
+        "kind": "expect",
+        "step": "update-app-section",
+        "path": "$.previousSection.caption",
+        "equals": "Parity Orders"
+      },
       {
         "kind": "read-back",
         "label": "list-app-sections after update",
         "tool": "list-app-sections",
-        "args": {"application-code": "UsrParity{run}{side}App"}
+        "args": {
+          "application-code": "UsrParity{run}{side}App"
+        },
+        "known-differences": [
+          "$.sections[0].id",
+          "$.sections[0].iconid",
+          "$.sections[0].sectionschemauid",
+          "$.sections[1].id",
+          "$.sections[1].iconid",
+          "$.sections[1].sectionschemauid",
+          "$.sections[2].id",
+          "$.sections[2].iconid",
+          "$.sections[2].sectionschemauid"
+        ],
+        "why": "As after create."
       },
       {
         "kind": "write",
@@ -99,13 +227,35 @@
         "args": {
           "application-code": "UsrParity{run}{side}App",
           "section-code": "UsrParity{run}{side}Orders"
-        }
+        },
+        "known-differences": [
+          "$.deletedsection.iconid",
+          "$.deletedsection.sectionschemauid"
+        ],
+        "why": "The deleted section's random icon id and its list page UId are per side.",
+        "retry-while": "rebuilding the OData library",
+        "retry-attempts": 6,
+        "retry-delay-seconds": 30
       },
       {
         "kind": "read-back",
         "label": "list-app-sections after delete",
         "tool": "list-app-sections",
-        "args": {"application-code": "UsrParity{run}{side}App"}
+        "args": {
+          "application-code": "UsrParity{run}{side}App"
+        },
+        "known-differences": [
+          "$.sections[0].id",
+          "$.sections[0].iconid",
+          "$.sections[0].sectionschemauid",
+          "$.sections[1].id",
+          "$.sections[1].iconid",
+          "$.sections[1].sectionschemauid",
+          "$.sections[2].id",
+          "$.sections[2].iconid",
+          "$.sections[2].sectionschemauid"
+        ],
+        "why": "As after create."
       }
     ]
   }

@@ -49,6 +49,8 @@ const (
 	appWriteEntitySchemaType = 3
 	appWriteClientUnitType   = 4
 	appWriteEmptyGUID        = "00000000-0000-0000-0000-000000000000"
+	// appWriteWorkspaceItemsLimit bounds the GetWorkspaceItems answer (about 5 MB on the product stand).
+	appWriteWorkspaceItemsLimit = 128 << 20
 )
 
 // appWriteWorkspaceItem is the delete service's WorkspaceSchemaItemDto, sent back to WorkspaceExplorerService.
@@ -266,7 +268,9 @@ func (c *Client) appWriteReferences(ctx context.Context, root string, columns ma
 // appWriteSectionSchemas is LoadSectionSchemas: the declared list and form pages found by UId, and with
 // delete-entity-schema the one entity schema named like the section's entity.
 func (c *Client) appWriteSectionSchemas(ctx context.Context, section appWriteSectionRecord, deleteEntity bool) ([]appWriteWorkspaceItem, error) {
-	payload, err := c.callService(ctx, serviceCall{Route: "ServiceModel/WorkspaceExplorerService.svc/GetWorkspaceItems", Body: []byte{}})
+	// Every schema of the configuration: several megabytes on a full product stand (clio reads it unbounded).
+	payload, err := c.callService(ctx, serviceCall{Route: "ServiceModel/WorkspaceExplorerService.svc/GetWorkspaceItems", Body: []byte{},
+		Limit: appWriteWorkspaceItemsLimit})
 	if err != nil {
 		return nil, err
 	}

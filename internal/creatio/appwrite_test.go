@@ -345,7 +345,9 @@ func TestAppWriteDeleteSection(t *testing.T) {
 	fake.answers["SelectQuery:ApplicationSection"] = appWriteSectionRows(row)
 	fake.answers["SelectQuery:SysModule"] = ok(`{"success":true,"rows":[{"Id":"` + sectionID + `","SectionSchemaUId":"cccccccc-0000-0000-0000-000000000003","CardSchemaUId":"eeeeeeee-0000-0000-0000-000000000005","SysModuleEntityId":"ffffffff-0000-0000-0000-000000000006"}]}`)
 	fake.answers["SelectQuery:SysModuleEdit"] = ok(`{"success":true,"rows":[]}`)
-	fake.answers["GetWorkspaceItems"] = ok(`{"success":true,"items":[{"id":"10000000-0000-0000-0000-000000000000","uId":"CCCCCCCC-0000-0000-0000-000000000003","name":"UsrOrders_ListPage","packageUId":"bbbbbbbb-0000-0000-0000-000000000002","packageName":"UsrTodo","type":4,"modifiedOn":"2026-10-03T00:00:00"},{"id":"20000000-0000-0000-0000-000000000000","uId":"eeeeeeee-0000-0000-0000-000000000005","name":"UsrOrders_FormPage","type":4}]}`)
+	// The product stand's answer is several megabytes: pad it past the default response bound.
+	padding := `{"id":"30000000-0000-0000-0000-000000000000","uId":"30000000-0000-0000-0000-000000000000","name":"` + strings.Repeat("x", 5<<20) + `","type":1},`
+	fake.answers["GetWorkspaceItems"] = ok(`{"success":true,"items":[` + padding + `{"id":"10000000-0000-0000-0000-000000000000","uId":"CCCCCCCC-0000-0000-0000-000000000003","name":"UsrOrders_ListPage","packageUId":"bbbbbbbb-0000-0000-0000-000000000002","packageName":"UsrTodo","type":4,"modifiedOn":"2026-10-03T00:00:00"},{"id":"20000000-0000-0000-0000-000000000000","uId":"eeeeeeee-0000-0000-0000-000000000005","name":"UsrOrders_FormPage","type":4}]}`)
 	fake.answers["Delete"] = ok(`{"success":true}`)
 	fake.answers["DeleteQuery"] = ok(`{"success":true}`)
 	result := client.DeleteAppSection(context.Background(), "UsrTodo", "UsrOrders", false)
