@@ -327,6 +327,13 @@ class Harness:
             # server: clio makes both sides' objects through clio, for a setup this server has no tool for yet.
             server_side = side if step.get("server", "own") == "own" else "clio"
             response, seconds[side] = self.call(server_side, step, arguments)
+            # retry-while: a refusal the stand words as transient (e.g. Creatio rebuilding its OData library after
+            # the previous side's create) is retried every 10 s for at most retry-seconds.
+            deadline = time.monotonic() + step.get("retry-seconds", 0)
+            while (step.get("retry-while") and failed(normalize(payload(response)))
+                   and step["retry-while"] in json.dumps(payload(response)) and time.monotonic() < deadline):
+                time.sleep(10)
+                response, seconds[side] = self.call(server_side, step, arguments)
             answers[side] = normalize(payload(response))
             self.capture(step, answers[side], arguments, side_state)
             side_state["answers"][label] = answers[side]

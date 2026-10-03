@@ -109,6 +109,13 @@ class WriteHarnessTest(unittest.TestCase):
         self.assertEqual(calls.count("clio:create-sys-setting"), 2)
         self.assertEqual(self.stand()["settings"], {})
 
+    def test_retry_while_retries_a_transient_refusal(self):
+        scenario = json.loads(json.dumps(SCENARIO))
+        scenario[0]["steps"][0].update({"retry-while": "never matches", "retry-seconds": 30})
+        result = self.run_harness(scenarios=scenario, go_faults=("fail-create",))
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertEqual(self.stand()["_calls"].count("go:create-sys-setting"), 1)
+
     def test_variables_mode_gives_go_one_environment_and_no_name(self):
         result = self.run_harness("--go-env-mode=variables")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
