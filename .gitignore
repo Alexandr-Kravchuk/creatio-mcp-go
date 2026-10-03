@@ -11,3 +11,6 @@ __pycache__/
 dist/
 .clio-pages/
 evidence/contracts-latest.json
+
+# Local implementation journal.
+.ai_temp/

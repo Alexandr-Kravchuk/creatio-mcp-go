@@ -1,0 +1,42 @@
+[
+  {
+    "label": "create-client-unit-schema invalid",
+    "tool": "create-client-unit-schema",
+    "clio-run": true,
+    "args": {
+      "schema-name": "bad/name",
+      "package-name": "none"
+    }
+  },
+  {
+    "label": "update-client-unit-schema invalid",
+    "tool": "update-client-unit-schema",
+    "clio-run": true,
+    "args": {
+      "schema-name": "UsrParityMissing",
+      "body": ""
+    }
+  },
+  {
+    "label": "set-record-rights invalid",
+    "tool": "set-record-rights",
+    "clio-run": true,
+    "args": {
+      "entity": "UsrParityMissing",
+      "record-id": "00000000-0000-0000-0000-000000000001",
+      "grantee": "bad",
+      "operation": "read"
+    }
+  },
+  {
+    "label": "set-record-rights invalid",
+    "tool": "set-record-rights",
+    "clio-run": true,
+    "args": {
+      "entity": "UsrParityMissing",
+      "record-id": "00000000-0000-0000-0000-000000000001",
+      "grantee": "bad",
+      "operation": "bad"
+    }
+  }
+]

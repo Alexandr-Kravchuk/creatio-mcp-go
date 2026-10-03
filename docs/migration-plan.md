@@ -195,6 +195,55 @@ for live checks; several may be deliberately left to clio.
 - Exit criteria per release: parity run on two stands (on-premises .NET Framework, cloud with OAuth), and
   one .NET Core stand once available.
 
+## Recovery checkpoint (2026-10-03)
+
+Claude session `ba9331a3-c45a-44dd-aaab-caa021018c34` stopped on its weekly API
+limit during Stage 3. Work resumed in the original
+`.claude/worktrees/clio-mcp-new-implementation-f9a6b6` at `ece7fe5`; partial source
+from five sibling worktrees was preserved and integrated. This checkpoint adds
+30 implemented tool registrations to the previous 72, for **102 total** (including
+`get-tool-contract`). No commit, push or release was made.
+
+| Task | Implemented in this checkpoint | Remaining task tools | Details |
+|---|---:|---:|---|
+| T7 applications | 1 | 5 | [T7/T8 status](t7-t8-t10-status.md) |
+| T8 schemas | 8 | 6 | [T7/T8 status](t7-t8-t10-status.md) |
+| T9 pages | 2 | 5, plus the T6 component/merge leftovers | [T9/T11/T12 status](t9-t11-t12-status.md) |
+| T10 business rules | 2 | 4 | [T10 status](t10-status.md) |
+| T11 data | 3 | 9 | [T9/T11/T12 status](t9-t11-t12-status.md) |
+| T12 settings/access | 1 | 12 | [T9/T11/T12 status](t9-t11-t12-status.md) |
+| T13 processes | 1 | 10 | [T13/T14/T15 status](t13-t14-t15-status.md) |
+| T14 themes/email | 8 | 3 | [T13/T14/T15 status](t13-t14-t15-status.md) |
+| T15 packages/operations | 4 | 12 | [T13/T14/T15 status](t13-t14-t15-status.md) |
+
+Final contract comparison: **220 match, 0 unexplained differences**; remaining
+not-ported tools and unknown-name suggestions are explicitly classified. The combined
+local-validation comparison is **28 match, 0 mismatches**.
+
+Shared verification passes: `go test -race ./...`, `go vet ./...`, Windows amd64
+build, formatting/diff checks and all 21 Python harness tests. HTTP integration
+fixtures and MCP tests exercise success/refusal paths, payload preservation,
+confirmation/executor routing and failure semantics. Validation parity is separate
+from successful live write parity; area reports record exact coverage and known
+compatibility limits, including palette floating-point rounding and the installed
+clio email argument-binding failure.
+
+Connectivity recovered after the owner logged in on 2026-10-03. Live read parity:
+11 matches, eight expected both-failed cases, zero mismatches. Own theme create,
+update and delete match; read-back differences are limited to CSS length and the
+per-theme cache hash. All explicit content expectations pass after correcting the
+scenario's neutralized name casing. Own Contact OData create/update/read also
+match. OData DELETE receives the same IIS HTTP 405 on both implementations;
+DataService cleanup successfully removed both contacts. The two tentative schemas
+from the DNS outage were independently confirmed absent by authenticated
+SourceCodeSchemaManager lookups. No stand-wide compile, restart or cache refresh
+was run. Stage 3 remains **partial**, not ready for T17 release verification.
+
+Next: run schema/client-unit scenarios in a dedicated owned package, then port
+remaining Stage-3 tools. Global-operation scenarios remain in a dedicated
+verification window. The appendix below is the generated baseline task allocation;
+this checkpoint table and linked reports describe current implementation status.
+
 ## Tasks and dependencies
 
 | ID | Task | Depends on | Stage |
@@ -205,7 +254,7 @@ for live checks; several may be deliberately left to clio.
 | T4 | Shared infrastructure: redaction, envelope type, write safety, long-running operations, `rest/` helper (W2) — **done** 2026-10-03, see W2 | T1 | 2 |
 | T5 | Contract and resident-list parity (W4) — **done** 2026-10-03, see W4 | T1 | 2 |
 | T6 | Guidance, prompts, resources, knowledge tools from clio-knowledge bundles (W5, D2) — **read side done**, see below | — (rebase after T1) | 2, started early |
-| T7–T15 | Write tools, one task per W6 area | T1, T2, T4, decision D1 | 3 (in parallel) |
+| T7–T15 | Write tools, one task per W6 area — **partial**, 30 tools added in the recovery checkpoint | T1, T2, T4, decision D1 | 3 (in parallel) |
 | T16 | Local machine, infrastructure and workspace tools (W7) — deferred (D3) | T1, T4 | later |
 | T17 | Full parity run, docs, release `v0.2.0` | T5–T16 | 4 |
 | T18 | CAADT plugin switch, pilot, default switch (W8, second half) | T17 | 5 |

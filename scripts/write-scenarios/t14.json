@@ -1,0 +1,106 @@
+[
+  {
+    "label": "create-theme inline, read back, update-theme, read back, delete-theme",
+    "why": "T14. Argument names are clio master's CreateThemeArgs, UpdateThemeArgs, DeleteThemeArgs and GetThemeArgs. The css-class-name is left to clio's derivation from the caption, so the derived name is compared too. get-theme is not read-only in clio (it can write a local file), so it goes through clio-run like the writes.",
+    "steps": [
+      {
+        "kind": "write",
+        "label": "create",
+        "tool": "create-theme",
+        "clio-run": true,
+        "creates": "UsrParity{run}{side}Theme",
+        "args": {
+          "caption": "UsrParity{run}{side}Theme",
+          "css-content": ".usrparity{run}{side}theme { --crt-palette-primary-500: #1f5f8b; }"
+        },
+        "capture": {
+          "id": "$.id"
+        }
+      },
+      {
+        "kind": "cleanup",
+        "for": "UsrParity{run}{side}Theme",
+        "server": "own",
+        "calls": [
+          {
+            "tool": "delete-theme",
+            "clio-run": true,
+            "args": {
+              "id": "{id}"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "read-back",
+        "label": "read-created",
+        "tool": "get-theme",
+        "clio-run": true,
+        "args": {
+          "id": "{id}"
+        },
+        "known-differences": [
+          "$.csscontentlength",
+          "$.cssfilepath"
+        ],
+        "why": "The side name inside the CSS ('clio' vs 'go') changes its length, and cssFilePath carries the platform's per-theme cache-busting hash."
+      },
+      {
+        "kind": "expect",
+        "step": "read-created",
+        "path": "$.cssClassName",
+        "equals": "UsrParity{run}{side}Theme"
+      },
+      {
+        "kind": "expect",
+        "step": "read-created",
+        "path": "$.caption",
+        "equals": "UsrParity{run}{side}Theme"
+      },
+      {
+        "kind": "expect",
+        "step": "read-created",
+        "path": "$.cssContent",
+        "equals": ".UsrParity{run}{side}Theme { --crt-palette-primary-500: #1f5f8b; }"
+      },
+      {
+        "kind": "write",
+        "label": "update",
+        "tool": "update-theme",
+        "clio-run": true,
+        "args": {
+          "id": "{id}",
+          "caption": "UsrParity{run}{side}Theme Updated",
+          "css-class-name": "usrparity{run}{side}theme",
+          "css-content": ".usrparity{run}{side}theme { --crt-palette-primary-500: #8b1f5f; }"
+        }
+      },
+      {
+        "kind": "read-back",
+        "label": "read-updated",
+        "tool": "get-theme",
+        "clio-run": true,
+        "args": {
+          "id": "{id}"
+        },
+        "known-differences": [
+          "$.csscontentlength",
+          "$.cssfilepath"
+        ],
+        "why": "The side name inside the CSS ('clio' vs 'go') changes its length, and cssFilePath carries the platform's per-theme cache-busting hash."
+      },
+      {
+        "kind": "expect",
+        "step": "read-updated",
+        "path": "$.caption",
+        "equals": "UsrParity{run}{side}Theme Updated"
+      },
+      {
+        "kind": "expect",
+        "step": "read-updated",
+        "path": "$.cssContent",
+        "equals": ".UsrParity{run}{side}Theme { --crt-palette-primary-500: #8b1f5f; }"
+      }
+    ]
+  }
+]

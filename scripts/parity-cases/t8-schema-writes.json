@@ -1,0 +1,82 @@
+[
+  {
+    "tool": "create-schema",
+    "args": {
+      "schema-name": ""
+    },
+    "clio-run": true,
+    "label": "create-schema empty name"
+  },
+  {
+    "tool": "create-sql-schema",
+    "args": {
+      "schema-name": ""
+    },
+    "clio-run": true,
+    "label": "create-sql-schema empty name"
+  },
+  {
+    "tool": "update-schema",
+    "args": {
+      "schema-name": ""
+    },
+    "clio-run": true,
+    "label": "update-schema empty name"
+  },
+  {
+    "tool": "update-schema",
+    "args": {
+      "schema-name": "UsrParityMissingSchema"
+    },
+    "clio-run": true,
+    "label": "update-schema missing body"
+  },
+  {
+    "tool": "update-sql-schema",
+    "args": {
+      "schema-name": ""
+    },
+    "clio-run": true,
+    "label": "update-sql-schema empty name"
+  },
+  {
+    "tool": "update-sql-schema",
+    "args": {
+      "schema-name": "UsrParityMissingSchema"
+    },
+    "clio-run": true,
+    "label": "update-sql-schema missing body"
+  },
+  {
+    "tool": "install-sql-schema",
+    "args": {
+      "schema-name": ""
+    },
+    "clio-run": true,
+    "label": "install-sql-schema empty name"
+  },
+  {
+    "tool": "delete-schema",
+    "args": {},
+    "clio-run": true,
+    "label": "delete-schema empty input"
+  },
+  {
+    "tool": "export-schema",
+    "args": {},
+    "clio-run": true,
+    "label": "export-schema empty input"
+  },
+  {
+    "tool": "import-schema",
+    "args": {},
+    "clio-run": true,
+    "label": "import-schema empty input"
+  },
+  {
+    "tool": "delete-app",
+    "args": {},
+    "clio-run": true,
+    "label": "delete-app empty input"
+  }
+]

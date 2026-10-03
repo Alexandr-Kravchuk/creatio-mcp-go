@@ -1,0 +1,112 @@
+[
+  {
+    "label": "C# source designer create update read delete",
+    "steps": [
+      {
+        "kind": "write",
+        "label": "create",
+        "tool": "create-schema",
+        "clio-run": true,
+        "creates": "UsrParity{run}{side}Source",
+        "args": {
+          "schema-name": "UsrParity{run}{side}Source",
+          "package-name": "Custom"
+        }
+      },
+      {
+        "kind": "cleanup",
+        "for": "UsrParity{run}{side}Source",
+        "server": "clio",
+        "calls": [
+          {
+            "tool": "delete-schema",
+            "clio-run": true,
+            "args": {
+              "schema-name": "UsrParity{run}{side}Source",
+              "remote": true
+            }
+          }
+        ]
+      },
+      {
+        "kind": "write",
+        "label": "update",
+        "tool": "update-schema",
+        "clio-run": true,
+        "args": {
+          "schema-name": "UsrParity{run}{side}Source",
+          "body": "namespace Terrasoft.Configuration { public class UsrParityProbe {} }"
+        }
+      },
+      {
+        "kind": "read-back",
+        "label": "read",
+        "tool": "get-schema",
+        "args": {
+          "schema-name": "UsrParity{run}{side}Source"
+        }
+      },
+      {
+        "kind": "expect",
+        "step": "read",
+        "path": "$.body",
+        "equals": "namespace Terrasoft.Configuration { public class UsrParityProbe {} }"
+      }
+    ]
+  },
+  {
+    "label": "SQL designer create update read delete",
+    "steps": [
+      {
+        "kind": "write",
+        "label": "create",
+        "tool": "create-sql-schema",
+        "clio-run": true,
+        "creates": "UsrParity{run}{side}Sql",
+        "args": {
+          "schema-name": "UsrParity{run}{side}Sql",
+          "package-name": "Custom"
+        }
+      },
+      {
+        "kind": "cleanup",
+        "for": "UsrParity{run}{side}Sql",
+        "server": "clio",
+        "calls": [
+          {
+            "tool": "delete-schema",
+            "clio-run": true,
+            "args": {
+              "schema-name": "UsrParity{run}{side}Sql",
+              "remote": true
+            }
+          }
+        ]
+      },
+      {
+        "kind": "write",
+        "label": "update",
+        "tool": "update-sql-schema",
+        "clio-run": true,
+        "args": {
+          "schema-name": "UsrParity{run}{side}Sql",
+          "body": "SELECT 1;"
+        }
+      },
+      {
+        "kind": "read-back",
+        "label": "read",
+        "tool": "get-sql-schema",
+        "args": {
+          "schema-name": "UsrParity{run}{side}Sql"
+        }
+      },
+      {
+        "kind": "expect",
+        "step": "read",
+        "path": "$.body",
+        "equals": "SELECT 1;"
+      }
+    ]
+  }
+]

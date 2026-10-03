@@ -1,0 +1,40 @@
+[
+  {
+    "tool": "delete-entity-business-rules",
+    "clio-run": true,
+    "args": {},
+    "label": "delete-entity-business-rules empty"
+  },
+  {
+    "tool": "delete-entity-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "Own",
+      "entity-schema-name": "OwnSchema",
+      "rule-names": [
+        "OwnRule"
+      ],
+      "environment-name": "__missing_parity_env__"
+    },
+    "label": "delete-entity-business-rules unknown"
+  },
+  {
+    "tool": "delete-page-business-rules",
+    "clio-run": true,
+    "args": {},
+    "label": "delete-page-business-rules empty"
+  },
+  {
+    "tool": "delete-page-business-rules",
+    "clio-run": true,
+    "args": {
+      "package-name": "Own",
+      "page-schema-name": "OwnSchema",
+      "rule-names": [
+        "OwnRule"
+      ],
+      "environment-name": "__missing_parity_env__"
+    },
+    "label": "delete-page-business-rules unknown"
+  }
+]

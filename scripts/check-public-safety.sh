@@ -15,10 +15,14 @@ if [[ -n "$secret_matches" ]]; then
   echo "possible committed secret found" >&2
   exit 1
 fi
-host_matches=$(git ls-files -z | xargs -0 rg -n -i \
-  '([a-z0-9-]+\.)+(internal|local|corp|lan|test|dev|rnd|stage|preprod)\b' || true)
+host_matches=$(git ls-files -z | xargs -0 rg -n -i -o -P \
+  '([a-z0-9-]+\.)+(internal|local|corp|lan|test|dev|rnd|stage|preprod)\b(?!-[a-z])' \
+  --glob '!scripts/check-public-safety.sh' || true)
 # clio's knowledge resources are named like reference.<topic>.test-patterns; they are not hostnames.
 host_matches=$(printf '%s\n' "$host_matches" | rg -v -i '([a-z0-9-]+\.)+(test)-[a-z]' || true)
+# The encoding/xml local-name property is a Go member access. Match only the
+# complete reported token at its known source location; other tokens still fail.
+host_matches=$(printf '%s\n' "$host_matches" | rg -v '^internal/creatio/odatawrite\.go:[0-9]+:(element|attr)\.Name\.Local$' || true)
 if [[ -n "$host_matches" ]]; then
   printf '%s\n' "$host_matches" >&2
   echo "possible non-public hostname found" >&2

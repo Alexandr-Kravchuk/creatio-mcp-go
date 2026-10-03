@@ -1,0 +1,62 @@
+[
+  {
+    "label": "Own helper module create update read delete",
+    "why": "Prepared, not run: disposable stand DNS unavailable. Creates only a UsrParity schema in Custom; deletes only this schema. No compilation.",
+    "steps": [
+      {
+        "kind": "write",
+        "label": "create helper",
+        "tool": "create-client-unit-schema",
+        "clio-run": true,
+        "creates": "UsrParity{run}{side}Helper",
+        "args": {
+          "schema-name": "UsrParity{run}{side}Helper",
+          "package-name": "Custom",
+          "caption": "Parity helper"
+        },
+        "capture": {
+          "schemaUID": "$.schemaUId"
+        }
+      },
+      {
+        "kind": "cleanup",
+        "for": "UsrParity{run}{side}Helper",
+        "server": "clio",
+        "calls": [
+          {
+            "tool": "delete-schema",
+            "clio-run": true,
+            "args": {
+              "schema-name": "UsrParity{run}{side}Helper",
+              "remote": true
+            }
+          }
+        ]
+      },
+      {
+        "kind": "write",
+        "label": "update helper",
+        "tool": "update-client-unit-schema",
+        "clio-run": true,
+        "args": {
+          "schema-name": "UsrParity{run}{side}Helper",
+          "body": "define(\"ParityHelper\", [], function() { return {}; });"
+        }
+      },
+      {
+        "kind": "read-back",
+        "label": "read helper",
+        "tool": "get-client-unit-schema",
+        "args": {
+          "schema-name": "UsrParity{run}{side}Helper"
+        }
+      },
+      {
+        "kind": "expect",
+        "step": "read helper",
+        "path": "$.body",
+        "equals": "define(\"ParityHelper\", [], function() { return {}; });"
+      }
+    ]
+  }
+]

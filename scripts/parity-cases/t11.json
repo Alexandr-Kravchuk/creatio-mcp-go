@@ -1,0 +1,80 @@
+[
+  {
+    "label": "odata-create missing",
+    "tool": "odata-create",
+    "args": {},
+    "clio-run": true
+  },
+  {
+    "label": "odata-create invalid entity",
+    "tool": "odata-create",
+    "args": {
+      "entity": "bad/entity",
+      "rows": [
+        {
+          "Name": "test"
+        }
+      ]
+    },
+    "clio-run": true
+  },
+  {
+    "label": "odata-create empty rows",
+    "tool": "odata-create",
+    "args": {
+      "entity": "UsrParityNonexistent",
+      "rows": []
+    },
+    "clio-run": true
+  },
+  {
+    "label": "odata-update missing",
+    "tool": "odata-update",
+    "args": {},
+    "clio-run": true
+  },
+  {
+    "label": "odata-update invalid entity",
+    "tool": "odata-update",
+    "args": {
+      "entity": "bad/entity",
+      "id": "1",
+      "confirm": true
+    },
+    "clio-run": true
+  },
+  {
+    "label": "odata-update confirmation",
+    "tool": "odata-update",
+    "args": {
+      "entity": "UsrParityNonexistent",
+      "id": "00000000-0000-0000-0000-000000000001"
+    },
+    "clio-run": true
+  },
+  {
+    "label": "odata-delete missing",
+    "tool": "odata-delete",
+    "args": {},
+    "clio-run": true
+  },
+  {
+    "label": "odata-delete invalid entity",
+    "tool": "odata-delete",
+    "args": {
+      "entity": "bad/entity",
+      "id": "1",
+      "confirm": true
+    },
+    "clio-run": true
+  },
+  {
+    "label": "odata-delete confirmation",
+    "tool": "odata-delete",
+    "args": {
+      "entity": "UsrParityNonexistent",
+      "id": "00000000-0000-0000-0000-000000000001"
+    },
+    "clio-run": true
+  }
+]

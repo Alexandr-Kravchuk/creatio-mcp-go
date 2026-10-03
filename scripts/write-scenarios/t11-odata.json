@@ -1,0 +1,249 @@
+[
+  {
+    "label": "Own Contact OData create update read with DataService cleanup",
+    "why": "Only uniquely named test contacts; cleanup resolves their IDs again by exact name after an interrupted run. OData DELETE is blocked by IIS HTTP 405 on the current stand, so cleanup uses the native DataService baseline.",
+    "steps": [
+      {
+        "kind": "write",
+        "label": "create",
+        "tool": "odata-create",
+        "clio-run": true,
+        "creates": "UsrParity{run}{side}Contact",
+        "args": {
+          "entity": "Contact",
+          "rows": [
+            {
+              "Name": "UsrParity{run}{side}Contact",
+              "Notes": "Parity initial"
+            }
+          ]
+        },
+        "capture": {
+          "id": "$.results[0].id"
+        }
+      },
+      {
+        "kind": "cleanup",
+        "for": "UsrParity{run}{side}Contact",
+        "server": "clio",
+        "calls": [
+          {
+            "tool": "execute-esq",
+            "clio-run": true,
+            "args": {
+              "query": {
+                "rootSchemaName": "Contact",
+                "operationType": 0,
+                "rowCount": 1,
+                "columns": {
+                  "items": {
+                    "Id": {
+                      "expression": {
+                        "expressionType": 0,
+                        "columnPath": "Id"
+                      }
+                    },
+                    "Name": {
+                      "expression": {
+                        "expressionType": 0,
+                        "columnPath": "Name"
+                      }
+                    },
+                    "Notes": {
+                      "expression": {
+                        "expressionType": 0,
+                        "columnPath": "Notes"
+                      }
+                    }
+                  }
+                },
+                "filters": {
+                  "filterType": 6,
+                  "isEnabled": true,
+                  "logicalOperation": 0,
+                  "items": {
+                    "own": {
+                      "filterType": 1,
+                      "comparisonType": 3,
+                      "isEnabled": true,
+                      "leftExpression": {
+                        "expressionType": 0,
+                        "columnPath": "Name"
+                      },
+                      "rightExpression": {
+                        "expressionType": 2,
+                        "parameter": {
+                          "dataValueType": 1,
+                          "value": "UsrParity{run}{side}Contact"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "capture": {
+              "cleanupId": "$.rows[0].id"
+            }
+          },
+          {
+            "tool": "execute-dataservice-batch",
+            "clio-run": true,
+            "args": {
+              "operations": [
+                {
+                  "operation": "delete",
+                  "schema-name": "Contact",
+                  "record-id": "{cleanupId}"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "kind": "read-back",
+        "label": "read-created",
+        "tool": "execute-esq",
+        "clio-run": true,
+        "args": {
+          "query": {
+            "rootSchemaName": "Contact",
+            "operationType": 0,
+            "rowCount": 1,
+            "columns": {
+              "items": {
+                "Id": {
+                  "expression": {
+                    "expressionType": 0,
+                    "columnPath": "Id"
+                  }
+                },
+                "Name": {
+                  "expression": {
+                    "expressionType": 0,
+                    "columnPath": "Name"
+                  }
+                },
+                "Notes": {
+                  "expression": {
+                    "expressionType": 0,
+                    "columnPath": "Notes"
+                  }
+                }
+              }
+            },
+            "filters": {
+              "filterType": 6,
+              "isEnabled": true,
+              "logicalOperation": 0,
+              "items": {
+                "own": {
+                  "filterType": 1,
+                  "comparisonType": 3,
+                  "isEnabled": true,
+                  "leftExpression": {
+                    "expressionType": 0,
+                    "columnPath": "Name"
+                  },
+                  "rightExpression": {
+                    "expressionType": 2,
+                    "parameter": {
+                      "dataValueType": 1,
+                      "value": "UsrParity{run}{side}Contact"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "kind": "expect",
+        "step": "read-created",
+        "path": "$.rows[0].name",
+        "equals": "UsrParity{run}{side}Contact"
+      },
+      {
+        "kind": "write",
+        "label": "update",
+        "tool": "odata-update",
+        "clio-run": true,
+        "target": "UsrParity{run}{side}Contact",
+        "args": {
+          "entity": "Contact",
+          "id": "{id}",
+          "data": {
+            "Notes": "Parity updated"
+          },
+          "confirm": true
+        }
+      },
+      {
+        "kind": "read-back",
+        "label": "read-updated",
+        "tool": "execute-esq",
+        "clio-run": true,
+        "args": {
+          "query": {
+            "rootSchemaName": "Contact",
+            "operationType": 0,
+            "rowCount": 1,
+            "columns": {
+              "items": {
+                "Id": {
+                  "expression": {
+                    "expressionType": 0,
+                    "columnPath": "Id"
+                  }
+                },
+                "Name": {
+                  "expression": {
+                    "expressionType": 0,
+                    "columnPath": "Name"
+                  }
+                },
+                "Notes": {
+                  "expression": {
+                    "expressionType": 0,
+                    "columnPath": "Notes"
+                  }
+                }
+              }
+            },
+            "filters": {
+              "filterType": 6,
+              "isEnabled": true,
+              "logicalOperation": 0,
+              "items": {
+                "own": {
+                  "filterType": 1,
+                  "comparisonType": 3,
+                  "isEnabled": true,
+                  "leftExpression": {
+                    "expressionType": 0,
+                    "columnPath": "Name"
+                  },
+                  "rightExpression": {
+                    "expressionType": 2,
+                    "parameter": {
+                      "dataValueType": 1,
+                      "value": "UsrParity{run}{side}Contact"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "kind": "expect",
+        "step": "read-updated",
+        "path": "$.rows[0].notes",
+        "equals": "Parity updated"
+      }
+    ]
+  }
+]
