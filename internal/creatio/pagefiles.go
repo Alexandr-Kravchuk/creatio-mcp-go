@@ -26,6 +26,13 @@ var pageSchemaNamePattern = regexp.MustCompile(`^[A-Za-z0-9_]+$`)
 // tree is built under .clio-pages/.staging and swapped in under the same .locks/{schema}.lock file clio
 // locks, so a reader never sees a half-written directory.
 func (c *Client) WritePageFiles(result PageGetResult, schemaName, outputDirectory string) PageGetResult {
+	return c.WritePageFilesFor(result, schemaName, outputDirectory, "", "")
+}
+
+// WritePageFilesFor is WritePageFiles with the baseline identity clio records: the registered environment
+// name the call used, and the URI of a direct connection. A call that gave neither (this server's
+// CREATIO_* default) is recorded by the configured URL.
+func (c *Client) WritePageFilesFor(result PageGetResult, schemaName, outputDirectory, environmentName, uri string) PageGetResult {
 	if strings.TrimSpace(schemaName) == "" || !pageSchemaNamePattern.MatchString(schemaName) {
 		return PageGetResult{Error: fmt.Sprintf("Invalid schema name '%s': only letters, digits and underscore are allowed.", schemaName)}
 	}
@@ -44,10 +51,10 @@ func (c *Client) WritePageFiles(result PageGetResult, schemaName, outputDirector
 		return PageGetResult{Error: fmt.Sprintf("Failed to write page files: another clio operation is still using '%s' (%s).", schemaDir, err.Error())}
 	}
 	defer unlock()
-	return c.writePageFilesLocked(result, schemaName, rootDir, schemaDir)
+	return c.writePageFilesLocked(result, schemaName, rootDir, schemaDir, environmentName, uri)
 }
 
-func (c *Client) writePageFilesLocked(result PageGetResult, schemaName, rootDir, schemaDir string) PageGetResult {
+func (c *Client) writePageFilesLocked(result PageGetResult, schemaName, rootDir, schemaDir, environmentName, uri string) PageGetResult {
 	stagingRoot := filepath.Join(rootDir, ".staging", schemaName)
 	stagingDir := filepath.Join(stagingRoot, randomHex(4))
 	ensurePagesGitIgnore(rootDir)
@@ -63,7 +70,7 @@ func (c *Client) writePageFilesLocked(result PageGetResult, schemaName, rootDir,
 	}
 	fetchedAt := time.Now().UTC().Format("2006-01-02T15:04:05.0000000Z")
 	meta := orderedFields{{"fetchedAt", fetchedAt}, {"page", pageMetadataNode(result.fullPage)}}
-	if baseline := c.pageBaselineNode(schemaName, result.Editable, fetchedAt); baseline != nil {
+	if baseline := c.pageBaselineNode(schemaName, result.Editable, fetchedAt, environmentName, uri); baseline != nil {
 		meta = append(meta, field{"baseline", baseline})
 	}
 	write := func() error {
@@ -217,16 +224,22 @@ func pageMetadataNode(page *PageMetadata) *jnode {
 	return toJNode(fields)
 }
 
-// pageBaselineNode is clio's PageBaselineInfo. clio records the registered environment name; this server
-// has none, so it records the configured Creatio URL as environmentUri, which clio's baseline check also
-// matches on. modifiedOn is the raw DataService value: clio renders it through .NET DateTime.ToString() in
+// pageBaselineNode is clio's PageBaselineInfo: the environment name and direct URI of the call, as clio's
+// PageFileWriter records them (clio's update-page matches the name, or a direct URI against its own); a call
+// with neither records the configured Creatio URL as environmentUri. modifiedOn is the raw DataService value: clio renders it through .NET DateTime.ToString() in
 // the clio host's culture and time zone, which is not reproducible here.
-func (c *Client) pageBaselineNode(schemaName string, editable *PageEditableInfo, capturedAt string) *jnode {
+func (c *Client) pageBaselineNode(schemaName string, editable *PageEditableInfo, capturedAt, environmentName, uri string) *jnode {
 	if editable == nil {
 		return nil
 	}
 	fields := orderedFields{{"schemaName", schemaName}}
-	if uri := strings.TrimSpace(c.config.BaseURL); uri != "" {
+	if strings.TrimSpace(environmentName) == "" && strings.TrimSpace(uri) == "" {
+		uri = strings.TrimSpace(c.config.BaseURL)
+	}
+	if strings.TrimSpace(environmentName) != "" {
+		fields = append(fields, field{"environmentName", environmentName})
+	}
+	if strings.TrimSpace(uri) != "" {
 		fields = append(fields, field{"environmentUri", uri})
 	}
 	fields = append(fields, field{"editableSchemaExists", editable.EditableSchemaExists})
