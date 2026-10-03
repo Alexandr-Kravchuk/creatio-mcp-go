@@ -150,6 +150,8 @@ def validate(scenario, path):
             if "{side}" not in created or "{run}" not in created:
                 raise SystemExit(f"{path}: {label}: creates must contain {{run}} and {{side}}: {created}")
             creates.add(created)
+        if kind in ("write", "read-back") and step.get("server", "own") not in ("own", "clio"):
+            raise SystemExit(f"{path}: {label}: {kind} server must be 'own' or 'clio'")
         if kind == "expect" and not (step.get("step") and step.get("path") and "equals" in step):
             raise SystemExit(f"{path}: {label}: an expect step needs step, path and equals")
         if kind == "cleanup":
@@ -322,7 +324,9 @@ class Harness:
                 side_state["attempted"].append(step["creates"])
                 side_state["replacements"][name] = step["creates"]
             self.guard(step, arguments, side_state, None)
-            response, seconds[side] = self.call(side, step, arguments)
+            # server: clio makes both sides' objects through clio, for a setup this server has no tool for yet.
+            server_side = side if step.get("server", "own") == "own" else "clio"
+            response, seconds[side] = self.call(server_side, step, arguments)
             answers[side] = normalize(payload(response))
             self.capture(step, answers[side], arguments, side_state)
             side_state["answers"][label] = answers[side]
