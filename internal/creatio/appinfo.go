@@ -99,11 +99,13 @@ func (c *Client) GetAppInfo(ctx context.Context, input AppInfoRequest) AppInfoRe
 }
 
 func (c *Client) appInfo(ctx context.Context, id, code string) (AppInfoResponse, error) {
+	// clio's BuildInstalledApplicationsQuery: one filter per identifier given (create-app's readback sends both).
 	filters := map[string]any{}
 	if id != "" {
 		filters["filter0"] = comparisonFilter("Id", id, 0, 3)
-	} else {
-		filters["filter0"] = comparisonFilter("Code", code, 1, 3)
+	}
+	if code != "" {
+		filters[fmt.Sprintf("filter%d", len(filters))] = comparisonFilter("Code", code, 1, 3)
 	}
 	appRows, err := c.selectRows(ctx, buildSelectQuery("SysInstalledApp", map[string]string{
 		"Id": "Id", "Code": "Code", "Name": "Name", "Version": "Version",

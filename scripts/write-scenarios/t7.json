@@ -1,0 +1,112 @@
+[
+  {
+    "label": "create-app, read back, create/update/delete a section, delete the app",
+    "why": "T7. Argument names are clio master's ApplicationCreateArgs, ApplicationSectionCreateArgs, ApplicationSectionUpdateArgs, ApplicationSectionDeleteArgs, ApplicationGetInfoArgs, ApplicationSectionGetListArgs and the delete-app arguments. template-code is passed explicitly: clio 8.1.0.134 lists it as required, master defaults it. Colors are explicit so both sides write the same values; the icon is random on both sides (clio picks a random SysAppIcons row), so icon ids are compared only by presence. The section is created inside the run's own application package and goes away with the application; it is deleted by its own step first. Mobile pages are skipped to keep the section insert short. Every write waits 120 s before each side (settle-seconds): an application or section write starts an OData rebuild that refuses the next one ('Creatio is currently rebuilding the OData library') on clio and Go alike, and this stand answers IsODataBuildRunning with an HTML page, so neither server's OData build gate can wait for it.",
+    "steps": [
+      {
+        "kind": "write",
+        "label": "create-app",
+        "tool": "create-app",
+        "clio-run": true,
+        "settle-seconds": 120,
+        "creates": "UsrParity{run}{side}App",
+        "args": {
+          "name": "UsrParity{run}{side}App",
+          "code": "UsrParity{run}{side}App",
+          "template-code": "AppFreedomUI",
+          "description": "Created by scripts/compare-mcp-writes.py; safe to delete",
+          "icon-background": "#247EE5",
+          "with-mobile-pages": false
+        },
+        "capture": {"appid": "$.applicationid", "pkguid": "$.packageuid"},
+        "known-differences": ["$.warnings", "$.nextstep"],
+        "why": "warnings/next-step come from master's navigation cache reset (ENG-101680), which clio 8.1.0.134 does not have; the GUIDs of pages and entities are created per side."
+      },
+      {
+        "kind": "cleanup",
+        "for": "UsrParity{run}{side}App",
+        "server": "own",
+        "calls": [
+          {"tool": "delete-app", "clio-run": true, "settle-seconds": 120, "args": {"app-name": "UsrParity{run}{side}App"}}
+        ]
+      },
+      {"kind": "expect", "step": "create-app", "path": "$.applicationCode", "equals": "UsrParity{run}{side}App"},
+      {"kind": "expect", "step": "create-app", "path": "$.packageName", "equals": "UsrParity{run}{side}App"},
+      {"kind": "expect", "step": "create-app", "path": "$.schemaNamePrefix", "equals": "Usr"},
+      {
+        "kind": "read-back",
+        "label": "get-app-info",
+        "tool": "get-app-info",
+        "args": {"code": "UsrParity{run}{side}App"}
+      },
+      {
+        "kind": "write",
+        "label": "create-app-section",
+        "tool": "create-app-section",
+        "clio-run": true,
+        "settle-seconds": 120,
+        "args": {
+          "application-code": "UsrParity{run}{side}App",
+          "caption": "Parity Orders",
+          "code": "UsrParity{run}{side}Orders",
+          "description": "Parity section",
+          "icon-background": "#FF8800",
+          "with-mobile-pages": false
+        },
+        "capture": {"sectionid": "$.section.id"},
+        "known-differences": ["$.warnings", "$.nextstep"],
+        "why": "warnings/next-step: master's navigation cache reset, absent in clio 8.1.0.134."
+      },
+      {"kind": "expect", "step": "create-app-section", "path": "$.section.code", "equals": "UsrParity{run}{side}Orders"},
+      {"kind": "expect", "step": "create-app-section", "path": "$.section.iconBackground", "equals": "#FF8800"},
+      {
+        "kind": "read-back",
+        "label": "list-app-sections after create",
+        "tool": "list-app-sections",
+        "args": {"application-code": "UsrParity{run}{side}App"}
+      },
+      {
+        "kind": "write",
+        "label": "update-app-section",
+        "tool": "update-app-section",
+        "clio-run": true,
+        "settle-seconds": 120,
+        "args": {
+          "application-code": "UsrParity{run}{side}App",
+          "section-code": "UsrParity{run}{side}Orders",
+          "caption": "Parity Orders Renamed",
+          "description": "Parity section renamed",
+          "icon-background": "#20A959"
+        },
+        "known-differences": ["$.warnings", "$.nextstep", "$.captionculture", "$.captionculturevalue", "$.preservedcultures"],
+        "why": "caption-culture, caption-culture-value, preserved-cultures, warnings and next-step belong to master's localization-aware update; clio 8.1.0.134 returns only the before/after sections."
+      },
+      {"kind": "expect", "step": "update-app-section", "path": "$.section.caption", "equals": "Parity Orders Renamed"},
+      {"kind": "expect", "step": "update-app-section", "path": "$.previousSection.caption", "equals": "Parity Orders"},
+      {
+        "kind": "read-back",
+        "label": "list-app-sections after update",
+        "tool": "list-app-sections",
+        "args": {"application-code": "UsrParity{run}{side}App"}
+      },
+      {
+        "kind": "write",
+        "label": "delete-app-section",
+        "tool": "delete-app-section",
+        "clio-run": true,
+        "settle-seconds": 120,
+        "target": "UsrParity{run}{side}App",
+        "args": {
+          "application-code": "UsrParity{run}{side}App",
+          "section-code": "UsrParity{run}{side}Orders"
+        }
+      },
+      {
+        "kind": "read-back",
+        "label": "list-app-sections after delete",
+        "tool": "list-app-sections",
+        "args": {"application-code": "UsrParity{run}{side}App"}
+      }
+    ]
+  }
+]
