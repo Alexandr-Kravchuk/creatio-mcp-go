@@ -125,7 +125,9 @@ func TestTwoTierMCPExposesContractAndRunsHiddenToolByRawName(t *testing.T) {
 	for _, tool := range listed.Tools {
 		names = append(names, tool.Name)
 	}
-	if strings.Join(names, ",") != "clio-run,get-tool-contract,list-apps,list-environments" {
+	// clio's resident tools that this server implements, in clio's tools/list order (contracts_test.go
+	// pins the full entries).
+	if strings.Join(names, ",") != strings.Join(servedResidentNames(), ",") || !contains(names, "get-page") {
 		t.Fatalf("resident tools = %v", names)
 	}
 	for _, tool := range listed.Tools {
@@ -134,37 +136,28 @@ func TestTwoTierMCPExposesContractAndRunsHiddenToolByRawName(t *testing.T) {
 		}
 	}
 
-	contract, err := session.CallTool(context.Background(), &mcp.CallToolParams{
-		Name: "get-tool-contract", Arguments: map[string]any{"name": "odata-read"},
-	})
-	if err != nil || contract.IsError {
-		t.Fatalf("get-tool-contract result = %#v, err = %v", contract, err)
+	contract := contractAnswer(t, session, map[string]any{"args": map[string]any{"tool-names": []any{"odata-read"}}})
+	tools, _ := contract["tools"].([]any)
+	if contract["success"] != true || len(tools) != 1 || tools[0].(map[string]any)["name"] != "odata-read" {
+		t.Fatalf("contract result = %#v", contract)
 	}
-	contractValue, ok := contract.StructuredContent.(map[string]any)
-	if !ok || contractValue["name"] != "odata-read" {
-		t.Fatalf("contract result = %#v", contract.StructuredContent)
+	builtIn := []string{}
+	for _, name := range indexNames(t, contractAnswer(t, session, nil)) {
+		if _, ok := hiddenToolContracts[name]; ok {
+			builtIn = append(builtIn, name)
+		}
 	}
-	contracts, err := session.CallTool(context.Background(), &mcp.CallToolParams{Name: "get-tool-contract"})
-	if err != nil || contracts.IsError {
-		t.Fatalf("get-tool-contract index = %#v, err = %v", contracts, err)
+	if !reflect.DeepEqual(builtIn, []string{"execute-esq", "find-empty-iis-port", "get-entity-schema-properties", "get-package-file", "get-sql-schema", "list-app-sections", "list-package-files", "list-packages", "list-pages", "odata-read", "start-creatio"}) {
+		t.Fatalf("contract index built-in names = %v", builtIn)
 	}
-	contractIndex, ok := contracts.StructuredContent.(map[string]any)
-	if !ok || !reflect.DeepEqual(builtInToolNames(contractIndex["tools"]), []any{"execute-esq", "find-empty-iis-port", "get-entity-schema-properties", "get-package-file", "get-sql-schema", "list-app-sections", "list-package-files", "list-packages", "list-pages", "odata-read", "start-creatio"}) {
-		t.Fatalf("contract index = %#v", contracts.StructuredContent)
+	startContract := contractAnswer(t, session, map[string]any{"name": "start-creatio"})
+	startTools, _ := startContract["tools"].([]any)
+	if len(startTools) != 1 {
+		t.Fatalf("start-creatio contract = %#v", startContract)
 	}
-	startContract, err := session.CallTool(context.Background(), &mcp.CallToolParams{
-		Name: "get-tool-contract", Arguments: map[string]any{"name": "start-creatio"},
-	})
-	if err != nil || startContract.IsError {
-		t.Fatalf("start-creatio contract = %#v, err = %v", startContract, err)
-	}
-	startContractValue, ok := startContract.StructuredContent.(map[string]any)
-	if !ok {
-		t.Fatalf("start-creatio contract content = %#v", startContract.StructuredContent)
-	}
-	startSchema, ok := startContractValue["inputSchema"].(map[string]any)
-	if !ok || !reflect.DeepEqual(startSchema["required"], []any{"environmentName"}) {
-		t.Fatalf("start-creatio schema = %#v", startContractValue["inputSchema"])
+	startSchema, _ := startTools[0].(map[string]any)["input-schema"].(map[string]any)
+	if !reflect.DeepEqual(startSchema["required"], []any{"environmentName"}) {
+		t.Fatalf("start-creatio schema = %#v", startSchema)
 	}
 
 	for _, call := range []*mcp.CallToolParams{
@@ -401,17 +394,9 @@ func TestMCPResponsesIncludeOneTextCopyForEveryHiddenTool(t *testing.T) {
 		},
 	}
 	session := connectTestClient(t, newMCPServerWithHiddenTools(staticEnvironments(client), hostTools), mcp.NewClient(&mcp.Implementation{Name: "probe-client", Version: "test"}, nil))
-	index, err := session.CallTool(context.Background(), &mcp.CallToolParams{Name: "get-tool-contract"})
-	if err != nil || index.IsError {
-		t.Fatalf("get-tool-contract index = %#v, err = %v", index, err)
-	}
-	indexValue, ok := index.StructuredContent.(map[string]any)
-	if !ok {
-		t.Fatalf("contract index structured content = %#v", index.StructuredContent)
-	}
-	toolNames, ok := indexValue["tools"].([]any)
-	if !ok {
-		t.Fatalf("contract index tools = %#v", indexValue["tools"])
+	toolNames := []any{}
+	for _, name := range indexNames(t, contractAnswer(t, session, nil)) {
+		toolNames = append(toolNames, name)
 	}
 	argsByName := map[string]map[string]any{
 		"execute-esq":                  {"query": map[string]any{"rootSchemaName": "Contact"}},
@@ -563,12 +548,13 @@ func connectTestClient(t *testing.T, server *mcp.Server, client *mcp.Client) *mc
 	return session
 }
 
-// builtInToolNames drops self-registered tools from a get-tool-contract index, keeping its order.
+// builtInToolNames keeps the hidden tools built into invokeHiddenTool from a list of index names,
+// dropping self-registered and resident tools, in the list's order.
 func builtInToolNames(names any) []any {
 	list, _ := names.([]any)
 	builtIn := []any{}
 	for _, name := range list {
-		if text, _ := name.(string); registeredTools[text].invoke == nil {
+		if text, _ := name.(string); hiddenToolContracts[text] != nil {
 			builtIn = append(builtIn, name)
 		}
 	}

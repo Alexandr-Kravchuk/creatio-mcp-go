@@ -131,9 +131,12 @@ environment and tell me how many applications there are."* A working setup answe
 starting; the first call then fails with the reason, for example `forms login rejected credentials` or
 `DataService SelectQuery returned HTTP 404`.
 
-Four tools are listed up front — `list-apps`, `list-environments`, `clio-run` and `get-tool-contract`,
-as in clio. The rest are called by name, directly or through `clio-run`, and `get-tool-contract`
-returns their input schemas:
+tools/list carries the same resident tools as clio's, in clio's order and with clio's descriptions,
+input schemas and annotations — 15 of clio's 19 for now (`get-component-info`, `get-request-info`,
+`merge-creatio-artifact` and `clio-run-destructive` are not ported yet). The rest
+are called by name, directly or through `clio-run`, and `get-tool-contract` returns clio's contract for
+each tool served here. Every tool takes its arguments flat or wrapped as `{"args": {...}}`, the shape
+tools/list publishes:
 
 | Tool | What it reads |
 |---|---|

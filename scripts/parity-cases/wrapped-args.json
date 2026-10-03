@@ -1,0 +1,6 @@
+[
+  {"label": "list-apps, wrapped args", "tool": "list-apps", "go-wrapped": true},
+  {"label": "list-packages filter+paging, wrapped args", "tool": "list-packages", "args": {"filter": "crt", "limit": 10, "offset": 5}, "go-wrapped": true},
+  {"label": "find-app, wrapped args", "tool": "find-app", "args": {"search-pattern": "customer"}, "go-wrapped": true},
+  {"label": "get-sys-setting by name, wrapped args", "tool": "get-sys-setting", "args": {"code": "SchemaNamePrefix"}, "go-wrapped": true}
+]

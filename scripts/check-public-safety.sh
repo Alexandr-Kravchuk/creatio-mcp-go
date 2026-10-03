@@ -15,8 +15,12 @@ if [[ -n "$secret_matches" ]]; then
   echo "possible committed secret found" >&2
   exit 1
 fi
-if git ls-files -z | xargs -0 rg -n -i \
-  '([a-z0-9-]+\.)+(internal|local|corp|lan|test|dev|rnd|stage|preprod)\b'; then
+host_matches=$(git ls-files -z | xargs -0 rg -n -i \
+  '([a-z0-9-]+\.)+(internal|local|corp|lan|test|dev|rnd|stage|preprod)\b' || true)
+# clio's knowledge resources are named like reference.<topic>.test-patterns; they are not hostnames.
+host_matches=$(printf '%s\n' "$host_matches" | rg -v -i '([a-z0-9-]+\.)+(test)-[a-z]' || true)
+if [[ -n "$host_matches" ]]; then
+  printf '%s\n' "$host_matches" >&2
   echo "possible non-public hostname found" >&2
   exit 1
 fi

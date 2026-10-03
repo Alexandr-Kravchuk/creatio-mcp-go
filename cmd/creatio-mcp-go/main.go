@@ -8,7 +8,6 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"sort"
 	"strings"
 	"time"
 
@@ -101,45 +100,77 @@ func defaultHiddenToolServices() hiddenToolServices {
 func newMCPServerWithHiddenTools(envs *environments, hostTools hiddenToolServices) *mcp.Server {
 	server := mcp.NewServer(&mcp.Implementation{Name: "creatio-mcp-go", Version: serverVersion()}, knowledgeServerOptions())
 	addKnowledgeHandlers(server)
-	mcp.AddTool(server, &mcp.Tool{Name: "list-apps", Description: "List installed Creatio applications through DataService."},
-		func(ctx context.Context, _ *mcp.CallToolRequest, input listAppsArgs) (*mcp.CallToolResult, any, error) {
-			client, err := envs.client(input.EnvironmentName, creatio.ConnectionOverrides{})
-			if err != nil {
-				return nil, creatio.AppListResponse{Error: redacted(err)}, nil
-			}
-			return nil, client.ListAppsResponse(ctx), nil
-		})
-	mcp.AddTool(server, &mcp.Tool{Name: "list-environments", Description: listEnvironmentsDescription,
-		Annotations: &mcp.ToolAnnotations{ReadOnlyHint: true, IdempotentHint: true, DestructiveHint: new(bool), OpenWorldHint: new(bool)}},
-		func(_ context.Context, _ *mcp.CallToolRequest, _ map[string]any) (*mcp.CallToolResult, any, error) {
-			return envs.listEnvironments(), nil, nil
-		})
-	// Hidden tools are deliberately omitted from tools/list. They remain directly callable by raw
-	// name and through clio-run, while get-tool-contract provides their schemas on demand.
-	mcp.AddTool(server, &mcp.Tool{Name: "clio-run", Description: "Invoke a supported Creatio MCP tool by name."},
-		func(ctx context.Context, req *mcp.CallToolRequest, input clioRunArgs) (*mcp.CallToolResult, any, error) {
-			command := strings.TrimSpace(input.Command)
-			result, err := invokeHiddenTool(ctx, envs, hostTools, command, input.Args,
-				progressReporter(ctx, req.Session, req.Params.GetProgressToken()))
-			if err != nil {
-				// clio's clio-run dispatcher reports a failed inner tool with this prefix.
-				return toolError(clioFailure("Error: tool '"+command+"' failed: ", err)), nil, nil
-			}
-			return result, nil, nil
-		})
-	mcp.AddTool(server, &mcp.Tool{Name: "get-tool-contract", Description: "List supported hidden tools or retrieve one tool's input schema."},
-		func(_ context.Context, _ *mcp.CallToolRequest, input getToolContractArgs) (*mcp.CallToolResult, any, error) {
-			if input.Name == "" {
-				return nil, map[string]any{"tools": hiddenToolNames()}, nil
-			}
-			contract, ok := toolContract(input.Name)
-			if !ok {
-				return nil, nil, fmt.Errorf("unknown tool contract %q", input.Name)
-			}
-			return nil, contract, nil
-		})
+	// tools/list carries clio's resident tools that this server implements, with clio's description, input
+	// schema and annotations (internal/cliocontract). The schemas wrap the arguments in "args"; every tool
+	// also accepts them flat. Other tools stay out of tools/list: they are callable by name and through
+	// clio-run, and get-tool-contract describes them.
+	for _, tool := range residentTools() {
+		switch tool.Name {
+		case "list-apps":
+			server.AddTool(tool, func(ctx context.Context, req *mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+				args, err := decodeCallArgs(req.Params.Arguments)
+				wrapped := isWrapped(args)
+				if err == nil {
+					args, err = unwrapArgs("list-apps", args)
+				}
+				if err != nil {
+					return toolError(err), nil
+				}
+				name, err := listAppsEnvironment(args, wrapped)
+				if err != nil {
+					return toolError(err), nil
+				}
+				client, err := envs.client(name, creatio.ConnectionOverrides{})
+				if err != nil {
+					return structuredToolResult(creatio.AppListResponse{Error: redacted(err)}), nil
+				}
+				return structuredToolResult(client.ListAppsResponse(ctx)), nil
+			})
+		case "list-environments":
+			server.AddTool(tool, func(context.Context, *mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+				return envs.listEnvironments(), nil
+			})
+		case "clio-run":
+			server.AddTool(tool, func(ctx context.Context, req *mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+				input, err := clioRunInput(req.Params.Arguments)
+				if err != nil {
+					return toolError(err), nil
+				}
+				command := strings.TrimSpace(input.Command)
+				result, err := invokeHiddenTool(ctx, envs, hostTools, command, input.Args,
+					progressReporter(ctx, req.Session, req.Params.GetProgressToken()))
+				if err != nil {
+					// clio's clio-run dispatcher reports a failed inner tool with this prefix.
+					return toolError(clioFailure("Error: tool '"+command+"' failed: ", err)), nil
+				}
+				return result, nil
+			})
+		case "get-tool-contract":
+			server.AddTool(tool, func(_ context.Context, req *mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+				args, err := decodeCallArgs(req.Params.Arguments)
+				if err != nil {
+					return toolError(err), nil
+				}
+				result, err := getToolContract(args, legacyContractClient(req.Session))
+				if err != nil {
+					return toolError(err), nil
+				}
+				return result, nil
+			})
+		default:
+			server.AddTool(tool, residentHandler(envs, hostTools))
+		}
+	}
+	order := residentOrder()
 	server.AddReceivingMiddleware(func(next mcp.MethodHandler) mcp.MethodHandler {
 		return func(ctx context.Context, method string, request mcp.Request) (mcp.Result, error) {
+			if method == "tools/list" {
+				result, err := next(ctx, method, request)
+				if err == nil {
+					orderToolsList(result, order)
+				}
+				return result, err
+			}
 			if method != "tools/call" {
 				return next(ctx, method, request)
 			}
@@ -147,34 +178,60 @@ func newMCPServerWithHiddenTools(envs *environments, hostTools hiddenToolService
 			if !ok || call.Params == nil || !isHiddenTool(call.Params.Name) {
 				return next(ctx, method, request)
 			}
-			var args map[string]any
-			if len(call.Params.Arguments) > 0 {
-				if err := json.Unmarshal(call.Params.Arguments, &args); err != nil {
-					return toolError(err), nil
-				}
-			}
-			result, err := invokeHiddenTool(ctx, envs, hostTools, call.Params.Name, args,
-				progressReporter(ctx, call.Session, call.Params.GetProgressToken()))
+			args, err := decodeCallArgs(call.Params.Arguments)
 			if err != nil {
-				// clio's McpToolErrorFilter reports a failed direct call with this prefix.
-				return toolError(clioFailure("MCP tool '"+call.Params.Name+"' failed: ", err)), nil
+				return toolError(err), nil
 			}
-			return result, nil
+			return callHiddenTool(ctx, envs, hostTools, call.Params.Name, args, call.Session, call.Params.GetProgressToken()), nil
 		}
 	})
 	return server
 }
 
-func hiddenToolNames() []string {
-	names := make([]string, 0, len(hiddenToolContracts)+len(registeredTools))
-	for name := range hiddenToolContracts {
-		names = append(names, name)
+// listAppsEnvironment reads list-apps' only argument. As in clio, other keys are refused in the flat
+// shape and ignored inside the "args" wrapper, where clio's binder drops them.
+func listAppsEnvironment(args map[string]any, wrapped bool) (string, error) {
+	var unknown []string
+	for key := range args {
+		if !strings.EqualFold(key, "environment-name") {
+			unknown = append(unknown, key)
+		}
 	}
-	for name := range registeredTools {
-		names = append(names, name)
+	if len(unknown) > 0 && !wrapped {
+		return "", unknownArgumentsError("list-apps", []string{"environment-name"}, unknown)
 	}
-	sort.Strings(names)
-	return names
+	for key, value := range args {
+		if !strings.EqualFold(key, "environment-name") {
+			continue
+		}
+		switch typed := value.(type) {
+		case nil:
+		case string:
+			return typed, nil
+		default:
+			return "", fmt.Errorf("invalid-parameter-type: argument '%s' for MCP tool 'list-apps' must be a string. Received an incompatible JSON value.", key)
+		}
+	}
+	return "", nil
+}
+
+// clioRunInput reads clio-run's {"command", "args"}, also in the wrapped shape
+// {"args": {"command", "args"}} that clio's description promises.
+func clioRunInput(raw json.RawMessage) (clioRunArgs, error) {
+	args, err := decodeCallArgs(raw)
+	if err != nil {
+		return clioRunArgs{}, err
+	}
+	if inner, ok := args["args"].(map[string]any); ok && len(args) == 1 {
+		if _, wrapped := inner["command"]; wrapped {
+			args = inner
+		}
+	}
+	var input clioRunArgs
+	if err := decodeStrictArgs(args, &input); err != nil {
+		return clioRunArgs{}, fmt.Errorf("decode clio-run arguments: %w", err)
+	}
+	return input, nil
 }
 
 func isHiddenTool(name string) bool {
@@ -406,18 +463,9 @@ func decodeStrictArgs(args map[string]any, target any) error {
 	return decoder.Decode(target)
 }
 
-// listAppsArgs is clio's flat list-apps argument; other keys are ignored, as clio's binder ignores them.
-type listAppsArgs struct {
-	EnvironmentName string `json:"environment-name,omitempty"`
-}
-
 type clioRunArgs struct {
 	Command string         `json:"command"`
 	Args    map[string]any `json:"args"`
-}
-
-type getToolContractArgs struct {
-	Name string `json:"name,omitempty"`
 }
 
 var odataReadContract = map[string]any{

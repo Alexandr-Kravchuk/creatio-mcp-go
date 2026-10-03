@@ -3,7 +3,30 @@
 How each tool reaches Creatio and what it deliberately does not do. Evidence of parity with clio is
 in [research.md](research.md).
 
-The server uses the official [`github.com/modelcontextprotocol/go-sdk`](https://github.com/modelcontextprotocol/go-sdk) over stdio. Its resident list is `list-apps`, `clio-run`, and `get-tool-contract`; `odata-read`, `find-empty-iis-port`, `start-creatio`, `execute-esq`, `get-entity-schema-properties`, `get-package-file`, `get-sql-schema`, `list-app-sections`, `list-package-files`, `list-packages`, and `list-pages` are available through `clio-run` or by raw tool name, and their schemas are returned on demand by `get-tool-contract`. The protocol probes establish progress-token correlation, response `_meta`, cancellation, and hidden-name dispatch.
+The server uses the official [`github.com/modelcontextprotocol/go-sdk`](https://github.com/modelcontextprotocol/go-sdk) over stdio. The protocol probes establish progress-token correlation, response `_meta`, cancellation, and hidden-name dispatch.
+
+## Tool contracts (T5)
+
+tools/list and `get-tool-contract` answer with clio's own data, not hand-written text:
+
+1. `scripts/clio-inventory.py --clio-dll <clio.dll> --go-bin <creatio-mcp-go>` asks a live `clio mcp-server`
+   for tools/list, prompts, resources, the get-tool-contract index and every tool's contract, and writes
+   `docs/clio-inventory.json`, `docs/clio-inventory.md` and the appendix of `docs/migration-plan.md`.
+2. `go generate ./internal/cliocontract` copies the tool part of that file into
+   `internal/cliocontract/contracts.json`, which is embedded in the binary. `TestEmbeddedContractsMatchTheInventory`
+   fails when the two differ.
+3. At run time the server lists clio's resident tools that it implements, in clio's order, with clio's
+   description, input schema and annotations, and `get-tool-contract` serves clio's index entries and
+   contracts for the tools it implements (`cmd/creatio-mcp-go/contracts.go`). A tool registered with
+   `registerTool` gets its contract from the inventory by name; the contract map passed to `registerTool`
+   is used only for a tool clio does not have, and `TestEveryServedToolHasClioContract` keeps that set
+   empty.
+4. `scripts/compare-contracts.py` diffs both servers live; see [parity.md](parity.md).
+
+clio publishes its resident schemas wrapped in `args`, so every tool here also accepts `{"args": {...}}`
+(a wrapper next to other top-level keys is refused with clio's "ambiguous argument shape" text); the
+flat shape keeps working as before. The Go SDK omits a false `readOnlyHint`/`idempotentHint`, which MCP
+reads as false, the same value clio writes.
 
 `odata-read` replaces the narrow `IApplicationClient` OData read path with direct HTTP: it supports entity, projection, ordering, pagination and count; filters and expands are still rejected. R1's `find-empty-iis-port` and `start-creatio` use built-in `appcmd.exe`/`netstat.exe` and have no `creatio.client`, `Microsoft.Web.Administration`, WMI, PowerShell, or .NET helper dependency. `start-creatio` launches `dotnet Terrasoft.WebHost.dll` where appropriate; that is the Creatio application's runtime, not a .NET library linked into this MCP server. The Windows commands have mocked coverage and a Windows cross-build, but no live Windows run.
 

@@ -258,6 +258,9 @@ def main():
             clio_response, clio_seconds = clio.call("clio-run", {"command": name, "args": clio_arguments})
         else:
             clio_response, clio_seconds = clio.call(name, {"args": clio_arguments})
+        if case.get("go-wrapped"):
+            # The shape tools/list publishes, {"args": {...}}; Go is otherwise called flat.
+            arguments = {"args": arguments}
         go_response, go_seconds = go.call(name, arguments)
         return name, payload(clio_response), clio_seconds, payload(go_response), go_seconds
 

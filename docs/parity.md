@@ -49,6 +49,25 @@ in the text, and writes the file only when that model reproduces every captured 
 included. It needs no Creatio environment. Then run `go test ./...` and the `prompts/*` cases of
 `scripts/parity-cases/knowledge.json`.
 
+A case with `"go-wrapped": true` calls the Go server with `{"args": {...}}`, the shape clio's tools/list
+publishes (`scripts/parity-cases/wrapped-args.json`); every other case calls it flat.
+
+## Tool contracts: `scripts/compare-contracts.py`
+
+```sh
+python3 scripts/compare-contracts.py --clio-dll <path>/clio.dll --go-bin ./creatio-mcp-go
+```
+
+Starts both servers without a Creatio environment and compares tools/list (resident set, order,
+description, input schema, annotations), the get-tool-contract index, every served tool's full contract,
+`detail=full` and the answer for an unknown name. Verdicts: `match`, `known:<class>` (the reason is in
+`KNOWN_DIFFERENCES` in the script and in the evidence) and `unexplained`; the exit code is non-zero on any
+`unexplained`. `known:not-ported` rows carry the task that ports the tool, read from the `tasks` map of
+`docs/clio-inventory.json`. Evidence goes to `evidence/contracts-latest.json`.
+
+A clio upgrade shows up here as `unexplained`: rerun `scripts/clio-inventory.py` against the new clio, then
+`go generate ./internal/cliocontract`, then `go test ./...`.
+
 ## Write tools: `scripts/compare-mcp-writes.py`
 
 A write cannot be compared by sending both servers the same arguments. Each scenario creates one object

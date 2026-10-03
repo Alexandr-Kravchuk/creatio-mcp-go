@@ -7,8 +7,8 @@ Measured on 2026-10-03 against clio master `914dab286`:
 
 | | clio | this server |
 |---|---|---|
-| MCP tools | about 217 | 65, all read-only (`list-environments` added in T1) |
-| MCP prompts and resources | about 125 attributes (`get-guidance`, `docs://help/...`) | 74 prompts, 5 resource templates, the knowledge catalog (T6) |
+| MCP tools | 219 in clio 8.1.0.134 (218 in the get-tool-contract index plus `get-tool-contract`), 19 resident; exact list in [clio-inventory.md](clio-inventory.md) (T5) | see the appendix; clio's resident tools that are served here are listed with clio's contracts (T5) |
+| MCP prompts and resources | 74 prompts, 170 resources, 5 resource templates (clio 8.1.0.134 with its installed knowledge bundles) | 74 prompts, 5 resource templates, the knowledge catalog (T6) |
 | Environments per process | any, per call (`environment-name`) | any, per call, from clio's `appsettings.json` (T1); `CREATIO_*` as the default |
 | Live parity | — | 302 calls, 0 data differences (clio 8.1.0.134); after T1 302 cases per stand, and 632 calls with both stands served by one process (incl. 14 environment cases), 0 mismatches |
 
@@ -69,6 +69,30 @@ Done (T2): `scripts/compare-mcp-writes.py`, scenarios in `scripts/write-scenario
 ### W4. Tool contract and resident list
 `tools/list`, `get-tool-contract` descriptions and input schemas must match clio, because agents call
 `get-tool-contract` before acting. Generate a diff from clio's live answers and close it.
+
+**Done (T5, 2026-10-03), against clio 8.1.0.134.** `scripts/clio-inventory.py` records clio's live
+tools/list, prompts, resources, resource templates, get-tool-contract index and every tool's contract in
+`docs/clio-inventory.json` (summary: [clio-inventory.md](clio-inventory.md), which also lists how a build of
+clio master `914dab286` differs). `go generate ./internal/cliocontract` embeds the tool part; tools/list and
+get-tool-contract answer from it, so every served tool carries clio's description, input schema,
+annotations, index entry and contract (how it works: [implementation.md](implementation.md#tool-contracts-t5)).
+`scripts/compare-contracts.py` compares both servers live: 0 unexplained differences; known are the
+not-ported tools (4 resident, 148 indexed) and the suggestions for an unknown name. The read parity run on
+`s16123120` stays at 0 mismatches (353 cases with the T6 knowledge cases, incl. 4 that call Go with `{"args": {...}}`). Changes in passing:
+- tools/list now lists the 15 resident tools served here, in clio's order (before: 4, sorted by name), and
+  every tool accepts clio's published `{"args": {...}}` shape besides the flat one;
+- get-tool-contract takes clio's `tool-names`/`detail` (flat or wrapped; the older `name` still works) and
+  answers in clio's shape (`index`, `tools`, `not-found`), text only; `list-environments` is in the index;
+- the `environment-name` property that T1 added to the hand-written schemas is gone with them: the schema
+  agents read is clio's;
+- list-apps refuses an unknown flat key with clio's text, and ignores it inside `args`, as clio does.
+Not matched on purpose or left for later:
+- the contract texts describe clio's behaviour; where a Go tool still differs (for example
+  `get-entity-schema-properties` refuses `package-name`), the contract is the target, not the description;
+- clio master changes 45 tools' contracts (10 of them served here) and adds 8 tools compared with 8.1.0.134 (listed in clio-inventory.md);
+  rerun the inventory after the next clio release;
+- the inventory records clio's prompts and resources for reference only; T6 serves them from the
+  clio-knowledge bundles, and its `knowledgeClioToolCatalog` is a separate copy of the same tool index.
 
 ### W5. Guidance, prompts and resources
 `get-guidance` (core-rules, routing, per-area guides), `docs://help/command/{name}` resources, MCP prompts,
@@ -154,7 +178,7 @@ for live checks; several may be deliberately left to clio.
 | T2 | Write-parity harness (W3) — **done**, see [parity.md](parity.md) | — | 1 |
 | T3 | CI on GitHub and release automation (W8, first half) — **done**, see [releasing.md](releasing.md) | — | 1 |
 | T4 | Shared infrastructure: redaction, envelope type, write safety, long-running operations, `rest/` helper (W2) | T1 | 2 |
-| T5 | Contract and resident-list parity (W4) | T1 | 2 |
+| T5 | Contract and resident-list parity (W4) — **done** 2026-10-03, see W4 | T1 | 2 |
 | T6 | Guidance, prompts, resources, knowledge tools from clio-knowledge bundles (W5, D2) — **read side done**, see below | — (rebase after T1) | 2, started early |
 | T7–T15 | Write tools, one task per W6 area | T1, T2, T4, decision D1 | 3 (in parallel) |
 | T16 | Local machine, infrastructure and workspace tools (W7) — deferred (D3) | T1, T4 | later |
@@ -178,22 +202,22 @@ splits into independent areas once the write harness and shared infrastructure e
 - **D3. Local machine, infrastructure and workspace tools (W7, T16) are deferred.** They stay in clio for
   now and are outside "done" until revisited.
 
-## Appendix: every clio tool not yet ported, by task
+## Appendix: every clio tool, by task
 
-157 clio tools (clio master `914dab286`), generated from clio's `[McpServerTool]` attributes. The generator under-counts files that declare several tools through same-named constants; the business-rule row was completed by hand, so other rows may still miss a tool — T5 produces the exact list from clio's live `tools/list` and `get-tool-contract`.
+218 clio tools in the get-tool-contract index of clio 8.1.0.134 (plus `get-tool-contract` itself, which the index leaves out), 19 of them resident in tools/list. Generated by `scripts/clio-inventory.py` from clio's live answers (`docs/clio-inventory.json`, summary in [clio-inventory.md](clio-inventory.md)); do not edit by hand, change `TASKS` in the script and rerun it.
 
 | Task | Count | Tools |
 |---|---|---|
-| T1 environments | 1 | `list-environments` (done) |
+| done (served by creatio-mcp-go) | 70 | `check-theming-access`, `clio-run`, `compile-status`, `dataforge-context`, `dataforge-find-lookups`, `dataforge-find-tables`, `dataforge-get-relations`, `dataforge-get-table-columns`, `dataforge-status`, `describe-business-process`, `describe-environment`, `execute-esq`, `find-app`, `find-empty-iis-port`, `find-entity-schema`, `get-app-info`, `get-classic-list-columns`, `get-classic-page-sources`, `get-client-unit-schema`, `get-email-template`, `get-entity-schema-column-properties`, `get-entity-schema-properties`, `get-fsm-mode`, `get-guidance`, `get-knowledge-feedback-policy`, `get-package-file`, `get-page`, `get-page-hierarchy`, `get-process-page-facts`, `get-process-signature`, `get-record-rights`, `get-related-page-addon`, `get-schema`, `get-schema-name-prefix`, `get-sequence-context`, `get-sql-schema`, `get-sys-setting`, `get-target-package`, `get-telemetry-consent`, `get-theme`, `get-user-culture`, `info-knowledge`, `inspect-access`, `inspect-license`, `inspect-role`, `inspect-user`, `last-compilation-log`, `list-app-sections`, `list-apps`, `list-entity-client-schemas`, `list-environments`, `list-knowledge-examples`, `list-knowledge-sources`, `list-package-files`, `list-packages`, `list-page-templates`, `list-pages`, `list-printables`, `list-sys-settings`, `list-themes`, `list-user-tasks`, `odata-read`, `read-data-binding-db`, `read-entity-business-rules`, `read-page-business-rules`, `resolve-oauth-system-user`, `restart-status`, `start-creatio`, `validate-page`, `verify-oauth-app` |
 | T4 shared infrastructure | 1 | `clio-run-destructive` |
-| T6 guidance and knowledge | 25 | `add-knowledge-source`, `configure-knowledge-feedback-policy`, `delete-knowledge`, `delete-toolkit`, `disable-knowledge-source`, `enable-knowledge-source`, `experimental`, `export-component-registry`, `get-component-info`, `get-component-info-to-file`, `get-guidance`, `get-knowledge-feedback-policy`, `get-mobile-page-conversion-guide`, `get-request-info`, `get-request-info-to-file`, `get-telemetry-consent`, `info-knowledge`, `install-knowledge`, `list-knowledge-examples`, `list-knowledge-sources`, `merge-creatio-artifact`, `remove-knowledge-source`, `send-telemetry`, `update-knowledge`, `withdraw-telemetry-consent` |
+| T6 guidance and knowledge | 18 | `add-knowledge-source`, `configure-knowledge-feedback-policy`, `delete-knowledge`, `delete-toolkit`, `disable-knowledge-source`, `enable-knowledge-source`, `experimental`, `export-component-registry`, `get-component-info`, `get-request-info`, `install-knowledge`, `install-toolkit`, `merge-creatio-artifact`, `remove-knowledge-source`, `send-telemetry`, `update-knowledge`, `update-toolkit`, `withdraw-telemetry-consent` |
 | T7 applications | 6 | `create-app`, `create-app-section`, `delete-app`, `delete-app-section`, `install-application`, `update-app-section` |
-| T8 schemas | 15 | `create-entity-schema`, `create-lookup`, `create-schema`, `create-sql-schema`, `delete-schema`, `export-schema`, `import-schema`, `install-sql-schema`, `list-entity-client-schemas-to-file`, `modify-entity-schema-column`, `set-entity-schema-properties`, `sync-schemas`, `update-entity-schema`, `update-schema`, `update-sql-schema` |
-| T9 pages | 8 | `create-client-unit-schema`, `create-page`, `create-related-page-addon`, `create-user-task-page`, `localize-page`, `sync-pages`, `update-client-unit-schema`, `update-page` |
-| T10 business rules | 6 | `create-entity-business-rules`, `update-entity-business-rules`, `delete-entity-business-rules`, `create-page-business-rules`, `update-page-business-rules`, `delete-page-business-rules` |
-| T11 data | 14 | `add-data-binding-row`, `create-data-binding`, `create-data-binding-db`, `execute-dataservice-batch`, `execute-esq-to-file`, `execute-sql-script`, `odata-create`, `odata-delete`, `odata-read-to-file`, `odata-update`, `remove-data-binding-row`, `remove-data-binding-row-db`, `run-process`, `upsert-data-binding-row-db` |
-| T12 settings, users, access | 11 | `create-oauth-technical-user`, `create-server-to-server-oauth-app`, `create-sys-setting`, `download-sys-setting-file`, `manage-access`, `manage-license`, `manage-role`, `manage-user`, `set-fsm-mode`, `set-record-rights`, `update-sys-setting` |
+| T8 schemas | 14 | `create-entity-schema`, `create-lookup`, `create-schema`, `create-sql-schema`, `delete-schema`, `export-schema`, `import-schema`, `install-sql-schema`, `modify-entity-schema-column`, `set-entity-schema-properties`, `sync-schemas`, `update-entity-schema`, `update-schema`, `update-sql-schema` |
+| T9 pages | 7 | `create-client-unit-schema`, `create-page`, `create-related-page-addon`, `create-user-task-page`, `sync-pages`, `update-client-unit-schema`, `update-page` |
+| T10 business rules | 6 | `create-entity-business-rules`, `create-page-business-rules`, `delete-entity-business-rules`, `delete-page-business-rules`, `update-entity-business-rules`, `update-page-business-rules` |
+| T11 data | 12 | `add-data-binding-row`, `create-data-binding`, `create-data-binding-db`, `execute-dataservice-batch`, `execute-sql-script`, `odata-create`, `odata-delete`, `odata-update`, `remove-data-binding-row`, `remove-data-binding-row-db`, `run-process`, `upsert-data-binding-row-db` |
+| T12 settings, users, access | 13 | `create-server-to-server-oauth-app`, `create-sys-setting`, `download-sys-setting-file`, `get-identity-assertion`, `get-identity-public-jwk`, `manage-access`, `manage-license`, `manage-role`, `manage-user`, `regenerate-identity-signing-key`, `set-fsm-mode`, `set-record-rights`, `update-sys-setting` |
 | T13 processes | 11 | `create-business-process`, `create-user-task`, `enroll-sequence-participants`, `generate-process-model`, `install-process-builder`, `modify-business-process`, `modify-business-process-as-new-version`, `modify-user-task-parameters`, `register-process-element`, `set-active-business-process-version`, `validate-process-graph` |
 | T14 themes, branding, email | 11 | `advise-theme-palette`, `build-theme`, `clear-themes-cache`, `create-theme`, `delete-theme`, `set-background-image`, `set-logo`, `set-user-theme`, `update-email-template`, `update-theme`, `upload-image` |
-| T15 packages, compile, restart | 18 | `add-custom-logging`, `add-package-dependency`, `compile-creatio`, `create-package`, `dataforge-initialize`, `dataforge-update`, `download-configuration-by-build`, `download-configuration-by-environment`, `finish-hotfix`, `install-dashboards-migrator`, `install-gate`, `pkg-to-db`, `pkg-to-file-system`, `remove-package-dependency`, `restart-by-credentials`, `restart-by-environment-name`, `unlock-for-hotfix`, `watch-compilation` |
-| T16 local, infrastructure, workspace | 30 | `add-item-model`, `add-package`, `assert-infrastructure`, `check-auth-code-flow`, `check-settings-health`, `clear-browser-session`, `clear-redis-db-by-credentials`, `clear-redis-db-by-environment`, `create-workspace`, `deploy-creatio`, `deploy-identity`, `generate-source-code`, `get-browser-session`, `get-identity-service-config`, `link-from-repository-by-env-package-path`, `link-from-repository-by-environment`, `link-from-repository-unlocked`, `list-creatio-builds`, `list-db-templates`, `new-integration-test-project`, `new-ui-project`, `prune-db-templates`, `push-workspace`, `restore-db-by-credentials`, `restore-db-by-environment`, `restore-db-to-local-server`, `restore-workspace`, `show-passing-infrastructure`, `uninstall-creatio`, `uninstall-identity` |
+| T15 packages, compile, restart | 16 | `add-custom-logging`, `add-package-dependency`, `compile-creatio`, `dataforge-initialize`, `dataforge-update`, `download-configuration-by-build`, `download-configuration-by-environment`, `finish-hotfix`, `install-dashboards-migrator`, `install-gate`, `pkg-to-db`, `pkg-to-file-system`, `remove-package-dependency`, `restart-by-credentials`, `restart-by-environment-name`, `unlock-for-hotfix` |
+| T16 local, infrastructure, workspace | 33 | `StopAllCreatio`, `add-item-model`, `add-package`, `assert-infrastructure`, `check-auth-code-flow`, `check-settings-health`, `clear-browser-session`, `clear-redis-db-by-credentials`, `clear-redis-db-by-environment`, `create-workspace`, `deploy-creatio`, `generate-source-code`, `get-browser-session`, `get-identity-service-config`, `link-from-repository-by-env-package-path`, `link-from-repository-by-environment`, `link-from-repository-unlocked`, `list-creatio-builds`, `list-db-templates`, `new-integration-test-project`, `new-test-project`, `new-ui-project`, `prune-db-templates`, `push-workspace`, `reg-web-app`, `restore-db-by-credentials`, `restore-db-by-environment`, `restore-db-to-local-server`, `restore-workspace`, `show-passing-infrastructure`, `stop-all-creatio`, `stop-creatio`, `uninstall-creatio` |

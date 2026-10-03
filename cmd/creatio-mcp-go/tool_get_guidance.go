@@ -11,7 +11,6 @@ import (
 )
 
 func init() {
-	toolsWithoutEnvironmentName["get-guidance"] = true // guidance does not depend on an environment
 	registerTool(map[string]any{
 		"name":        "get-guidance",
 		"description": "Returns a named guidance article from active trusted knowledge, or lists all available guide names when the requested name is unknown.",

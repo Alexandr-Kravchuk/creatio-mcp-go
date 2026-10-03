@@ -16,9 +16,6 @@ import (
 )
 
 func init() {
-	for _, name := range []string{"list-knowledge-sources", "list-knowledge-examples", "info-knowledge", "get-knowledge-feedback-policy", "get-telemetry-consent"} {
-		toolsWithoutEnvironmentName[name] = true // local clio-knowledge state only; never Creatio
-	}
 	registerTool(map[string]any{
 		"name":        "list-knowledge-sources",
 		"description": "Lists all configured knowledge sources, including disabled sources.",
