@@ -1,0 +1,92 @@
+[
+  {
+    "label": "Own app related-page add-on: bind the app's form page, read back, clear",
+    "why": "WINDOW ONLY: create-related-page-addon ends with WorkspaceExplorerService.BuildConfiguration, a stand-wide static-content rebuild. The app is created through clio on both sides; its form page is bound to its main object, read back, then the binding is cleared and the app removed.",
+    "steps": [
+      {
+        "kind": "write",
+        "label": "create app",
+        "tool": "create-app",
+        "server": "clio",
+        "clio-run": true,
+        "creates": "UsrParity{run}{side}Rp",
+        "retry-while": "temporarily unavailable",
+        "retry-seconds": 300,
+        "args": {
+          "name": "Parity {run} {side} Rp",
+          "code": "Parity{run}{side}Rp",
+          "template-code": "AppFreedomUI",
+          "with-mobile-pages": false
+        },
+        "capture": {
+          "pkg": "$.packagename",
+          "pkguid": "$.packageuid",
+          "appuid": "$.applicationid"
+        },
+        "known-differences": ["$.applicationname", "$.entities[0].caption", "$.entities[0].uid", "$.pages[0].uid",
+                              "$.pages[1].uid", "$.pages[2].uid", "$.dataforge.warnings[0]", "$.dataforge.warnings[1]"],
+        "why": "Setup through clio on both sides; ids and the display name differ per side."
+      },
+      {
+        "kind": "cleanup",
+        "for": "UsrParity{run}{side}Rp",
+        "server": "clio",
+        "calls": [
+          {
+            "tool": "delete-app",
+            "clio-run": true,
+            "args": {
+              "app-name": "UsrParity{run}{side}Rp"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "write",
+        "label": "bind the form page",
+        "tool": "create-related-page-addon",
+        "clio-run": true,
+        "args": {
+          "entity-schema-name": "UsrParity{run}{side}Rp",
+          "package-name": "{pkg}",
+          "pages": [
+            {
+              "page-schema-name": "UsrParity{run}{side}Rp_FormPage",
+              "is-default": true,
+              "role-name": "All employees"
+            }
+          ]
+        },
+        "capture": {
+          "entityuid": "$.entityschemauid"
+        }
+      },
+      {
+        "kind": "read-back",
+        "label": "read the binding",
+        "tool": "get-related-page-addon",
+        "args": {
+          "entity-schema-name": "UsrParity{run}{side}Rp",
+          "package-name": "{pkg}"
+        }
+      },
+      {
+        "kind": "expect",
+        "step": "read the binding",
+        "path": "$.pagecount",
+        "equals": 1
+      },
+      {
+        "kind": "write",
+        "label": "clear the binding",
+        "tool": "create-related-page-addon",
+        "clio-run": true,
+        "args": {
+          "entity-schema-name": "UsrParity{run}{side}Rp",
+          "package-name": "{pkg}",
+          "pages": []
+        }
+      }
+    ]
+  }
+]
