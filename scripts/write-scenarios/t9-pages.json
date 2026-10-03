@@ -1,0 +1,322 @@
+[
+  {
+    "label": "Own app pages: create, get, update (replace/append), clio and Go baselines both ways, sync, conflict",
+    "why": "The app (and its package) is created through clio on both sides until this server has create-app; both pages live in that package. get-page / update-page steps alternate between the servers on the same .clio-pages baseline.",
+    "steps": [
+      {
+        "kind": "write",
+        "label": "create app",
+        "tool": "create-app",
+        "server": "clio",
+        "clio-run": true,
+        "creates": "UsrParity{run}{side}",
+        "retry-while": "temporarily unavailable",
+        "retry-seconds": 300,
+        "args": {
+          "name": "Parity {run} {side}",
+          "code": "Parity{run}{side}",
+          "template-code": "AppFreedomUI",
+          "with-mobile-pages": false
+        },
+        "capture": {
+          "pkg": "$.packagename",
+          "pkguid": "$.packageuid",
+          "appuid": "$.applicationid"
+        },
+        "known-differences": [
+          "$.applicationname",
+          "$.entities[0].caption",
+          "$.entities[0].uid",
+          "$.pages[0].uid",
+          "$.pages[1].uid",
+          "$.pages[2].uid",
+          "$.dataforge.warnings[0]",
+          "$.dataforge.warnings[1]"
+        ],
+        "why": "Setup through clio on both sides; ids and the display name differ per side."
+      },
+      {
+        "kind": "cleanup",
+        "for": "UsrParity{run}{side}",
+        "server": "clio",
+        "calls": [
+          {
+            "tool": "delete-app",
+            "clio-run": true,
+            "args": {
+              "app-name": "UsrParity{run}{side}"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "write",
+        "label": "create page",
+        "tool": "create-page",
+        "clio-run": true,
+        "creates": "UsrParity{run}{side}_Page",
+        "args": {
+          "schema-name": "UsrParity{run}{side}_Page",
+          "template": "BlankPageTemplate",
+          "package-name": "{pkg}",
+          "caption": "Parity page"
+        },
+        "capture": {
+          "pageuid": "$.schemauid"
+        }
+      },
+      {
+        "kind": "cleanup",
+        "for": "UsrParity{run}{side}_Page",
+        "server": "clio",
+        "calls": [
+          {
+            "tool": "delete-schema",
+            "clio-run": true,
+            "args": {
+              "schema-name": "UsrParity{run}{side}_Page",
+              "remote": true
+            }
+          }
+        ]
+      },
+      {
+        "kind": "write",
+        "label": "create form page with entity and optional properties",
+        "tool": "create-page",
+        "clio-run": true,
+        "creates": "UsrParity{run}{side}_EntityPage",
+        "args": {
+          "schema-name": "UsrParity{run}{side}_EntityPage",
+          "template": "BlankPageTemplate",
+          "package-name": "{pkg}",
+          "caption": "Parity form",
+          "description": "Parity description",
+          "entity-schema-name": "UsrParity{run}{side}",
+          "caption-culture": "en-us",
+          "optional-properties": "[{\"key\": \"entitySchemaName\", \"value\": \"UsrParity{run}{side}\"}]"
+        },
+        "capture": {
+          "formuid": "$.schemauid",
+          "entityuid": "$.entityschemauid"
+        }
+      },
+      {
+        "kind": "cleanup",
+        "for": "UsrParity{run}{side}_EntityPage",
+        "server": "clio",
+        "calls": [
+          {
+            "tool": "delete-schema",
+            "clio-run": true,
+            "args": {
+              "schema-name": "UsrParity{run}{side}_EntityPage",
+              "remote": true
+            }
+          }
+        ]
+      },
+      {
+        "kind": "read-back",
+        "label": "get page (own)",
+        "tool": "get-page",
+        "args": {
+          "schema-name": "UsrParity{run}{side}_Page",
+          "output-directory": "/private/tmp/claude-502/t9-pages"
+        },
+        "known-differences": [
+          "$.editable.checksum",
+          "$.editable.modifiedon",
+          "$.page.ownbodysummary.bodylength"
+        ],
+        "why": "Checksums differ per page and body lengths by the side name in the body; clio prints modifiedOn through .NET DateTime.ToString() in its host culture, Go keeps the DataService text."
+      },
+      {
+        "kind": "write",
+        "label": "update page replace with resources (own baseline)",
+        "tool": "update-page",
+        "clio-run": true,
+        "args": {
+          "schema-name": "UsrParity{run}{side}_Page",
+          "body": "define(\"UsrParity{run}{side}_Page\", /**SCHEMA_DEPS*/[]/**SCHEMA_DEPS*/, function/**SCHEMA_ARGS*/()/**SCHEMA_ARGS*/ {\n\treturn {\n\t\tviewConfigDiff: /**SCHEMA_VIEW_CONFIG_DIFF*/[\n {\n  \"operation\": \"insert\",\n  \"name\": \"ParityLabel\",\n  \"values\": {\n   \"type\": \"crt.Label\",\n   \"caption\": \"#ResourceString(UsrParityTitle)#\",\n   \"labelType\": \"body\",\n   \"visible\": true\n  },\n  \"parentName\": \"MainContainer\",\n  \"propertyName\": \"items\",\n  \"index\": 0\n }\n]/**SCHEMA_VIEW_CONFIG_DIFF*/,\n\t\tviewModelConfigDiff: /**SCHEMA_VIEW_MODEL_CONFIG_DIFF*/[]/**SCHEMA_VIEW_MODEL_CONFIG_DIFF*/,\n\t\tmodelConfigDiff: /**SCHEMA_MODEL_CONFIG_DIFF*/[]/**SCHEMA_MODEL_CONFIG_DIFF*/,\n\t\thandlers: /**SCHEMA_HANDLERS*/[]/**SCHEMA_HANDLERS*/,\n\t\tconverters: /**SCHEMA_CONVERTERS*/{}/**SCHEMA_CONVERTERS*/,\n\t\tvalidators: /**SCHEMA_VALIDATORS*/{}/**SCHEMA_VALIDATORS*/\n\t};\n});",
+          "resources": "{\"UsrParityTitle\": \"Parity title\"}",
+          "output-directory": "/private/tmp/claude-502/t9-pages"
+        },
+        "known-differences": [
+          "$.newchecksum",
+          "$.newmodifiedon",
+          "$.bodylength",
+          "$.warnings"
+        ],
+        "why": "Body lengths differ by the side name inside the body. Go adds a warning naming clio's page checks it does not run (PageWriteValidationGapWarning). Checksums differ per page."
+      },
+      {
+        "kind": "read-back",
+        "label": "get page after replace (own)",
+        "tool": "get-page",
+        "args": {
+          "schema-name": "UsrParity{run}{side}_Page",
+          "output-directory": "/private/tmp/claude-502/t9-pages"
+        },
+        "known-differences": [
+          "$.editable.checksum",
+          "$.editable.modifiedon",
+          "$.page.ownbodysummary.bodylength"
+        ],
+        "why": "Checksums differ per page and body lengths by the side name in the body; clio prints modifiedOn through .NET DateTime.ToString() in its host culture, Go keeps the DataService text."
+      },
+      {
+        "kind": "expect",
+        "step": "get page after replace (own)",
+        "path": "$.page.ownbodysummary.viewconfigdiffoperations",
+        "equals": 1
+      },
+      {
+        "kind": "read-back",
+        "label": "get page through clio (clio baseline)",
+        "tool": "get-page",
+        "args": {
+          "schema-name": "UsrParity{run}{side}_Page",
+          "output-directory": "/private/tmp/claude-502/t9-pages"
+        },
+        "known-differences": [
+          "$.editable.checksum",
+          "$.editable.modifiedon",
+          "$.page.ownbodysummary.bodylength"
+        ],
+        "why": "Checksums differ per page and body lengths by the side name in the body; clio prints modifiedOn through .NET DateTime.ToString() in its host culture, Go keeps the DataService text.",
+        "server": "clio"
+      },
+      {
+        "kind": "write",
+        "label": "update page append on clio's baseline",
+        "tool": "update-page",
+        "clio-run": true,
+        "args": {
+          "schema-name": "UsrParity{run}{side}_Page",
+          "mode": "append",
+          "body": "/**SCHEMA_VIEW_CONFIG_DIFF*/[\n {\n  \"operation\": \"insert\",\n  \"name\": \"ParityLabel2\",\n  \"values\": {\n   \"type\": \"crt.Label\",\n   \"caption\": \"#ResourceString(UsrParityTitleTwo)#\",\n   \"labelType\": \"body\",\n   \"visible\": true\n  },\n  \"parentName\": \"MainContainer\",\n  \"propertyName\": \"items\",\n  \"index\": 1\n }\n]/**SCHEMA_VIEW_CONFIG_DIFF*/",
+          "resources": "{\"UsrParityTitleTwo\": \"Parity title two\"}",
+          "output-directory": "/private/tmp/claude-502/t9-pages"
+        },
+        "known-differences": [
+          "$.newchecksum",
+          "$.newmodifiedon",
+          "$.bodylength",
+          "$.warnings"
+        ],
+        "why": "Body lengths differ by the side name inside the body. Go adds a warning naming clio's page checks it does not run (PageWriteValidationGapWarning). Checksums differ per page."
+      },
+      {
+        "kind": "read-back",
+        "label": "get page after append (own baseline)",
+        "tool": "get-page",
+        "args": {
+          "schema-name": "UsrParity{run}{side}_Page",
+          "output-directory": "/private/tmp/claude-502/t9-pages"
+        },
+        "known-differences": [
+          "$.editable.checksum",
+          "$.editable.modifiedon",
+          "$.page.ownbodysummary.bodylength"
+        ],
+        "why": "Checksums differ per page and body lengths by the side name in the body; clio prints modifiedOn through .NET DateTime.ToString() in its host culture, Go keeps the DataService text."
+      },
+      {
+        "kind": "expect",
+        "step": "get page after append (own baseline)",
+        "path": "$.page.ownbodysummary.viewconfigdiffoperations",
+        "equals": 2
+      },
+      {
+        "kind": "write",
+        "label": "update page through clio on the own baseline",
+        "tool": "update-page",
+        "clio-run": true,
+        "server": "clio",
+        "args": {
+          "schema-name": "UsrParity{run}{side}_Page",
+          "body": "define(\"UsrParity{run}{side}_Page\", /**SCHEMA_DEPS*/[]/**SCHEMA_DEPS*/, function/**SCHEMA_ARGS*/()/**SCHEMA_ARGS*/ {\n\treturn {\n\t\tviewConfigDiff: /**SCHEMA_VIEW_CONFIG_DIFF*/[\n {\n  \"operation\": \"insert\",\n  \"name\": \"ParityLabel\",\n  \"values\": {\n   \"type\": \"crt.Label\",\n   \"caption\": \"#ResourceString(UsrParityTitle)#\",\n   \"labelType\": \"body\",\n   \"visible\": true\n  },\n  \"parentName\": \"MainContainer\",\n  \"propertyName\": \"items\",\n  \"index\": 0\n },\n {\n  \"operation\": \"insert\",\n  \"name\": \"ParityLabel2\",\n  \"values\": {\n   \"type\": \"crt.Label\",\n   \"caption\": \"#ResourceString(UsrParityTitleTwo)#\",\n   \"labelType\": \"body\",\n   \"visible\": true\n  },\n  \"parentName\": \"MainContainer\",\n  \"propertyName\": \"items\",\n  \"index\": 1\n }\n]/**SCHEMA_VIEW_CONFIG_DIFF*/,\n\t\tviewModelConfigDiff: /**SCHEMA_VIEW_MODEL_CONFIG_DIFF*/[]/**SCHEMA_VIEW_MODEL_CONFIG_DIFF*/,\n\t\tmodelConfigDiff: /**SCHEMA_MODEL_CONFIG_DIFF*/[]/**SCHEMA_MODEL_CONFIG_DIFF*/,\n\t\thandlers: /**SCHEMA_HANDLERS*/[]/**SCHEMA_HANDLERS*/,\n\t\tconverters: /**SCHEMA_CONVERTERS*/{}/**SCHEMA_CONVERTERS*/,\n\t\tvalidators: /**SCHEMA_VALIDATORS*/{}/**SCHEMA_VALIDATORS*/\n\t};\n});",
+          "output-directory": "/private/tmp/claude-502/t9-pages"
+        },
+        "known-differences": [
+          "$.newchecksum",
+          "$.newmodifiedon",
+          "$.bodylength"
+        ],
+        "why": "Checksums differ per page."
+      },
+      {
+        "kind": "write",
+        "label": "sync pages with verify",
+        "tool": "sync-pages",
+        "clio-run": true,
+        "args": {
+          "pages": [
+            {
+              "schema-name": "UsrParity{run}{side}_Page",
+              "body": "define(\"UsrParity{run}{side}_Page\", /**SCHEMA_DEPS*/[]/**SCHEMA_DEPS*/, function/**SCHEMA_ARGS*/()/**SCHEMA_ARGS*/ {\n\treturn {\n\t\tviewConfigDiff: /**SCHEMA_VIEW_CONFIG_DIFF*/[\n {\n  \"operation\": \"insert\",\n  \"name\": \"ParityLabel\",\n  \"values\": {\n   \"type\": \"crt.Label\",\n   \"caption\": \"#ResourceString(UsrParityTitle)#\",\n   \"labelType\": \"body\",\n   \"visible\": true\n  },\n  \"parentName\": \"MainContainer\",\n  \"propertyName\": \"items\",\n  \"index\": 0\n },\n {\n  \"operation\": \"insert\",\n  \"name\": \"ParityLabel2\",\n  \"values\": {\n   \"type\": \"crt.Label\",\n   \"caption\": \"#ResourceString(UsrParityTitleTwo)#\",\n   \"labelType\": \"caption\",\n   \"visible\": true\n  },\n  \"parentName\": \"MainContainer\",\n  \"propertyName\": \"items\",\n  \"index\": 1\n }\n]/**SCHEMA_VIEW_CONFIG_DIFF*/,\n\t\tviewModelConfigDiff: /**SCHEMA_VIEW_MODEL_CONFIG_DIFF*/[]/**SCHEMA_VIEW_MODEL_CONFIG_DIFF*/,\n\t\tmodelConfigDiff: /**SCHEMA_MODEL_CONFIG_DIFF*/[]/**SCHEMA_MODEL_CONFIG_DIFF*/,\n\t\thandlers: /**SCHEMA_HANDLERS*/[]/**SCHEMA_HANDLERS*/,\n\t\tconverters: /**SCHEMA_CONVERTERS*/{}/**SCHEMA_CONVERTERS*/,\n\t\tvalidators: /**SCHEMA_VALIDATORS*/{}/**SCHEMA_VALIDATORS*/\n\t};\n});"
+            }
+          ],
+          "verify": true,
+          "output-directory": "/private/tmp/claude-502/t9-pages"
+        },
+        "known-differences": [
+          "$.pages[0].validation.warnings",
+          "$.pages[0].bodylength",
+          "$.pages[0].page.ownbodysummary.bodylength"
+        ],
+        "why": "Body lengths differ by the side name inside the body. Go adds a warning naming clio's page checks it does not run (PageWriteValidationGapWarning)."
+      },
+      {
+        "kind": "read-back",
+        "label": "get page after sync (own)",
+        "tool": "get-page",
+        "args": {
+          "schema-name": "UsrParity{run}{side}_Page",
+          "output-directory": "/private/tmp/claude-502/t9-pages"
+        },
+        "known-differences": [
+          "$.editable.checksum",
+          "$.editable.modifiedon",
+          "$.page.ownbodysummary.bodylength"
+        ],
+        "why": "Checksums differ per page and body lengths by the side name in the body; clio prints modifiedOn through .NET DateTime.ToString() in its host culture, Go keeps the DataService text."
+      },
+      {
+        "kind": "write",
+        "label": "update page dry-run append projection",
+        "tool": "update-page",
+        "clio-run": true,
+        "args": {
+          "schema-name": "UsrParity{run}{side}_Page",
+          "mode": "append",
+          "dry-run": true,
+          "body": "/**SCHEMA_VIEW_CONFIG_DIFF*/[\n {\n  \"operation\": \"insert\",\n  \"name\": \"ParityLabel2\",\n  \"values\": {\n   \"type\": \"crt.Label\",\n   \"caption\": \"#ResourceString(UsrParityTitleTwo)#\",\n   \"labelType\": \"body\",\n   \"visible\": true\n  },\n  \"parentName\": \"MainContainer\",\n  \"propertyName\": \"items\",\n  \"index\": 1\n }\n]/**SCHEMA_VIEW_CONFIG_DIFF*/",
+          "output-directory": "/private/tmp/claude-502/t9-pages"
+        },
+        "known-differences": [
+          "$.warnings"
+        ],
+        "why": "Body lengths differ by the side name inside the body. Go adds a warning naming clio's page checks it does not run (PageWriteValidationGapWarning)."
+      },
+      {
+        "kind": "write",
+        "label": "update page with a stale pinned checksum is a conflict",
+        "tool": "update-page",
+        "clio-run": true,
+        "args": {
+          "schema-name": "UsrParity{run}{side}_Page",
+          "body": "define(\"UsrParity{run}{side}_Page\", /**SCHEMA_DEPS*/[]/**SCHEMA_DEPS*/, function/**SCHEMA_ARGS*/()/**SCHEMA_ARGS*/ {\n\treturn {\n\t\tviewConfigDiff: /**SCHEMA_VIEW_CONFIG_DIFF*/[\n {\n  \"operation\": \"insert\",\n  \"name\": \"ParityLabel\",\n  \"values\": {\n   \"type\": \"crt.Label\",\n   \"caption\": \"#ResourceString(UsrParityTitle)#\",\n   \"labelType\": \"body\",\n   \"visible\": true\n  },\n  \"parentName\": \"MainContainer\",\n  \"propertyName\": \"items\",\n  \"index\": 0\n },\n {\n  \"operation\": \"insert\",\n  \"name\": \"ParityLabel2\",\n  \"values\": {\n   \"type\": \"crt.Label\",\n   \"caption\": \"#ResourceString(UsrParityTitleTwo)#\",\n   \"labelType\": \"caption\",\n   \"visible\": true\n  },\n  \"parentName\": \"MainContainer\",\n  \"propertyName\": \"items\",\n  \"index\": 1\n }\n]/**SCHEMA_VIEW_CONFIG_DIFF*/,\n\t\tviewModelConfigDiff: /**SCHEMA_VIEW_MODEL_CONFIG_DIFF*/[]/**SCHEMA_VIEW_MODEL_CONFIG_DIFF*/,\n\t\tmodelConfigDiff: /**SCHEMA_MODEL_CONFIG_DIFF*/[]/**SCHEMA_MODEL_CONFIG_DIFF*/,\n\t\thandlers: /**SCHEMA_HANDLERS*/[]/**SCHEMA_HANDLERS*/,\n\t\tconverters: /**SCHEMA_CONVERTERS*/{}/**SCHEMA_CONVERTERS*/,\n\t\tvalidators: /**SCHEMA_VALIDATORS*/{}/**SCHEMA_VALIDATORS*/\n\t};\n});",
+          "checksum": "parity-stale-checksum",
+          "output-directory": "/private/tmp/claude-502/t9-pages"
+        },
+        "known-differences": [
+          "$.conflictdetails.actualchecksum",
+          "$.conflictdetails.modifiedon"
+        ],
+        "why": "Both refuse; the actual checksum and modifiedOn differ per page."
+      }
+    ]
+  }
+]
