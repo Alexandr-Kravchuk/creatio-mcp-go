@@ -113,10 +113,22 @@ input schemas:
 | `get-user-culture`, `get-schema-name-prefix`, `get-target-package` | Current user culture, schema name prefix, package new schemas go to |
 | `describe-environment` | Creatio version, runtime, current user and cliogate state |
 | `list-themes`, `list-printables`, `list-user-tasks`, `list-page-templates` | Themes, printables, process user tasks, page templates |
+| `get-page-hierarchy`, `get-client-unit-schema`, `get-schema` | Page layer chain; client and other schema bodies, optionally to `output-file` |
+| `validate-page` | Offline check of a Freedom UI page body; covers only part of clio's rules and says which |
+| `get-classic-page-sources`, `get-classic-list-columns` | Classic UI page sources; Classic section list columns |
+| `describe-business-process`, `get-process-page-facts` | Process graph; what a page offers to a process |
+| `get-sequence-context`, `read-data-binding-db`, `get-email-template`, `get-related-page-addon` | Sequences, package data bindings, email templates, related-page add-ons |
+| `inspect-user`, `inspect-role`, `inspect-license`, `inspect-access` | Users, roles, licenses, operation rights |
+| `check-theming-access`, `get-theme` | Theming rights; one theme's CSS |
+| `last-compilation-log`, `get-fsm-mode` | Last compilation result; file-system mode |
+| `compile-status`, `restart-status` | Status of jobs this server started; it starts none, so these answer not-found |
+| `resolve-oauth-system-user`, `verify-oauth-app` | OAuth technical user; check an OAuth client can get a token |
+| `dataforge-status`, `dataforge-context`, `dataforge-find-tables`, `dataforge-find-lookups`, `dataforge-get-relations`, `dataforge-get-table-columns` | Data Forge state and lookups through Creatio |
 | `find-empty-iis-port`, `start-creatio` | Local machine: free IIS port, start a local Creatio |
 
 Nothing here writes to Creatio. `get-page` writes local files, the way clio does, under
-`output-directory` or the workspace root. `start-creatio` starts a local process; the `-write-probe`
+`output-directory` or the workspace root; tools with `output-file` write only that file and never
+overwrite one. `start-creatio` starts a local process; the `-write-probe`
 command-line flag inserts and deletes a test record and is not meant for everyday use.
 
 Found an answer that differs from clio's for the same call? Open an issue with the tool name and the

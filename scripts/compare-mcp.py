@@ -86,6 +86,15 @@ def normalize(value):
     return value
 
 
+def with_side(value, side):
+    """Replace {side} in string arguments, so tools that write a file get a separate path per server."""
+    if isinstance(value, dict):
+        return {key: with_side(item, side) for key, item in value.items()}
+    if isinstance(value, list):
+        return [with_side(item, side) for item in value]
+    return value.replace("{side}", side) if isinstance(value, str) else value
+
+
 def differences(left, right, path="$", out=None, limit=20):
     out = [] if out is None else out
     if len(out) >= limit:
@@ -180,7 +189,9 @@ def main():
         for case in cases:
             name, arguments = case["tool"], case.get("args", {})
             # A few clio tools name the environment argument differently (get-fsm-mode: environmentName).
-            clio_arguments = {case.get("clio-environment-key", "environment-name"): options.clio_env, **arguments}
+            clio_arguments = {case.get("clio-environment-key", "environment-name"): options.clio_env,
+                              **with_side(arguments, "clio")}
+            arguments = with_side(arguments, "go")
             if case.get("clio-run"):
                 clio_response, clio_seconds = clio.call("clio-run", {"command": name, "args": clio_arguments})
             else:
