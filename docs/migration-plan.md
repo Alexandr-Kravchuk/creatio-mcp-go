@@ -94,8 +94,8 @@ for live checks; several may be deliberately left to clio.
 | ID | Task | Depends on | Stage |
 |---|---|---|---|
 | T1 | Multiple environments per process (W1) | — | 1 |
-| T2 | Write-parity harness (W3) — done | — | 1 |
-| T3 | CI on GitHub and release automation (W8, first half) | — | 1 |
+| T2 | Write-parity harness (W3) — **done**, see [parity.md](parity.md) | — | 1 |
+| T3 | CI on GitHub and release automation (W8, first half) — **done**, see [releasing.md](releasing.md) | — | 1 |
 | T4 | Shared infrastructure: redaction, envelope type, write safety, long-running operations, `rest/` helper (W2) | T1 | 2 |
 | T5 | Contract and resident-list parity (W4) | T1 | 2 |
 | T6 | Guidance, prompts, resources, knowledge tools (W5) | T1, decision D2 | 2 |

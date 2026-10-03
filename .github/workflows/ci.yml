@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Format, vet, tests (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: gofmt
+        if: runner.os == 'Linux'
+        run: |
+          unformatted=$(gofmt -l .)
+          if [[ -n $unformatted ]]; then
+            echo "these files need gofmt:"
+            echo "$unformatted"
+            exit 1
+          fi
+      - name: go vet
+        run: go vet ./...
+      - name: go test (race detector)
+        if: runner.os == 'Linux'
+        run: go test -race ./...
+      - name: go test
+        if: runner.os != 'Linux'
+        run: go test ./...
+
+  release-build:
+    name: Release archives, script tests, public-safety check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Shell syntax
+        run: for f in scripts/*.sh; do bash -n "$f"; done
+      - name: Build archives for every platform (macOS unsigned)
+        run: UNSIGNED=1 scripts/build-release.sh v0.0.0-ci
+      - name: Verify SHA256SUMS
+        run: cd dist && shasum -a 256 -c SHA256SUMS
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - name: Script unit tests (skipped while there are none)
+        run: |
+          if compgen -G 'scripts/test_*.py' >/dev/null; then
+            python3 -m unittest discover -s scripts -v
+          else
+            echo "no scripts/test_*.py files; skipping"
+          fi
+      - name: Public-safety check
+        run: |
+          command -v rg >/dev/null || { sudo apt-get update -qq && sudo apt-get install -y -qq ripgrep; }
+          bash scripts/check-public-safety.sh

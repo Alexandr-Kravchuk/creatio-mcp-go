@@ -134,4 +134,5 @@ command-line flag inserts and deletes a test record and is not meant for everyda
 Found an answer that differs from clio's for the same call? Open an issue with the tool name and the
 arguments. To compare many calls at once, run `scripts/compare-mcp.py` against an environment
 registered in clio; write tools are compared with `scripts/compare-mcp-writes.py` on an allow-listed
-disposable stand (see [parity.md](parity.md)). Release archives are built with `scripts/build-release.sh <tag>`.
+disposable stand (see [parity.md](parity.md)). How releases are built, signed and published:
+[releasing.md](releasing.md).

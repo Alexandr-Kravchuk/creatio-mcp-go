@@ -30,6 +30,7 @@ OAuth, .NET Core sites, Windows and the tool list: [docs/install.md](docs/instal
 - [Installation and usage](docs/install.md)
 - [Research record](docs/research.md) — why this exists and how it compares with clio
 - [Implementation notes](docs/implementation.md)
+- [Releasing](docs/releasing.md) — CI, release script and workflow
 
 ## License
 

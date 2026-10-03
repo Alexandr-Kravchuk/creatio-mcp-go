@@ -7,6 +7,8 @@ set -euo pipefail
 #
 # Usage: scripts/build-release.sh v0.1.1              (writes to dist/)
 #        UNSIGNED=1 scripts/build-release.sh v0.1.1   (local test build, macOS binaries unsigned)
+#        TARGETS="linux/amd64 windows/amd64" scripts/build-release.sh v0.1.1   (only these platforms;
+#        signing is skipped when no darwin target is listed — the GitHub release workflow uses this)
 #
 # Signing reads RELEASE_ENV (default ~/secrets/adac-release.env), which exports
 #   MAC_CERT_P12, MAC_CERT_PASSWORD, APPLE_API_KEY (.p8 path), APPLE_API_KEY_ID, APPLE_API_ISSUER
@@ -14,7 +16,8 @@ set -euo pipefail
 version=${1:?Pass the release tag, for example v0.1.1}
 repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 dist="$repo_root/dist"
-targets=(darwin/arm64 darwin/amd64 linux/amd64 linux/arm64 windows/amd64)
+read -r -a targets <<< "${TARGETS:-darwin/arm64 darwin/amd64 linux/amd64 linux/arm64 windows/amd64}"
+[[ ${#targets[@]} -gt 0 ]] || { echo "TARGETS is empty" >&2; exit 2; }
 
 stage_name() { echo "creatio-mcp-go_${version#v}_${1%/*}_${1#*/}"; }
 
@@ -33,7 +36,9 @@ for target in "${targets[@]}"; do
   [[ $target == darwin/* ]] && darwin_binaries+=("$dist/$(stage_name "$target")/creatio-mcp-go")
 done
 
-if [[ ${UNSIGNED:-0} == 1 ]]; then
+if [[ ${#darwin_binaries[@]} -eq 0 ]]; then
+  echo "no macOS targets: nothing to sign"
+elif [[ ${UNSIGNED:-0} == 1 ]]; then
   echo "UNSIGNED=1: macOS binaries are NOT signed; do not publish this build" >&2
 else
   release_env=${RELEASE_ENV:-"$HOME/secrets/adac-release.env"}
@@ -92,5 +97,5 @@ for target in "${targets[@]}"; do
   fi
   rm -rf "${dist:?}/$name"
 done
-(cd "$dist" && shasum -a 256 ./*.tar.gz ./*.zip | sed 's# \./# #' > SHA256SUMS)
+(cd "$dist" && shopt -s nullglob && shasum -a 256 ./*.tar.gz ./*.zip | sed 's# \./# #' > SHA256SUMS)
 ls -l "$dist"
