@@ -1,42 +1,246 @@
 [
-  {"route": "/SelectQuery", "contains": "SysPackage\"", "body": "{\"success\":true,\"rows\":[{\"Name\":\"Base\",\"UId\":\"11111111-0000-0000-0000-000000000001\",\"Maintainer\":\"Terrasoft\",\"Version\":\"8.1.0\"},{\"Name\":\"CrtProcessBuilder\",\"UId\":\"11111111-0000-0000-0000-000000000002\",\"Maintainer\":\"Creatio\",\"Version\":\"99.0.0.0\"}]}"},
-  {"route": "/SelectQuery", "contains": "SequenceParticipant\"", "body": "{\"success\":true,\"rows\":[{\"id\":\"p1\",\"contact-id\":\"5b1f0c2e-2222-4b6a-9c1e-000000000002\",\"status-id\":\"s1\",\"status-name\":\"Added\",\"stage-name\":null}]}"},
-  {"route": "/SelectQuery", "body": "{\"success\":true,\"rows\":[]}"},
-
-  {"route": "/ProcessDesignService/BuildProcess", "contains": "UsrOk", "body": "{\"BuildProcessResult\":{\"success\":true,\"schemaName\":\"UsrOk\",\"schemaUId\":\"aaaaaaaa-0000-0000-0000-000000000001\",\"warnings\":[\"Lane added.\",\"Second.\"]}}"},
-  {"route": "/ProcessDesignService/BuildProcess", "contains": "UsrFail", "body": "{\"BuildProcessResult\":{\"success\":false,\"errorMessage\":\"Element 'x' has an unknown type.\"}}"},
-  {"route": "/ProcessDesignService/BuildProcess", "contains": "UsrNoMessage", "body": "{\"BuildProcessResult\":{\"success\":false}}"},
-  {"route": "/ProcessDesignService/BuildProcess", "contains": "UsrShape", "body": "{\"Other\":1}"},
-  {"route": "/ProcessDesignService/BuildProcess", "contains": "UsrNull", "body": "null"},
-  {"route": "/ProcessDesignService/BuildProcess", "contains": "UsrGarbage", "body": "this is not json"},
-  {"route": "/ProcessDesignService/BuildProcess", "contains": "UsrBadType", "body": "{\"BuildProcessResult\":{\"success\":\"yes\"}}"},
-
-  {"route": "/ProcessDesignService/ModifyProcess", "contains": "UsrOk", "body": "{\"ModifyProcessResult\":{\"success\":true,\"schemaName\":\"UsrOk\",\"schemaUId\":\"aaaaaaaa-0000-0000-0000-000000000001\",\"appliedOperations\":2,\"warnings\":[\"w1\"]}}"},
-  {"route": "/ProcessDesignService/ModifyProcess", "contains": "UsrCompile", "body": "{\"ModifyProcessResult\":{\"success\":true,\"schemaName\":\"UsrCompile\",\"schemaUId\":\"u\",\"appliedOperations\":1,\"warnings\":[\"Nothing runs until the configuration is compiled.\"]}}"},
-  {"route": "/ProcessDesignService/ModifyProcess", "contains": "UsrRedraw", "body": "{\"ModifyProcessResult\":{\"success\":false,\"errorMessage\":\"The edit re-draws the diagram.\",\"failedOperationIndex\":1,\"appliedOperations\":0,\"layoutChange\":{\"reason\":\"r\",\"summary\":\"s\",\"elements\":[\"A\",\" \",\"B\"]}}}"},
-  {"route": "/ProcessDesignService/ModifyProcess", "contains": "UsrNoLayout", "body": "{\"ModifyProcessResult\":{\"success\":false,\"errorMessage\":\"Refused.\",\"layoutChange\":{\"elements\":[]}}}"},
-  {"route": "/ProcessDesignService/ModifyProcess", "contains": "UsrGarbage", "body": "<<>>"},
-
-  {"route": "/ProcessDesignService/ModifyProcessAsNewVersion", "contains": "UsrOk", "body": "{\"ModifyProcessAsNewVersionResult\":{\"success\":true,\"versionName\":\"UsrOk_v3\",\"versionSchemaUId\":\"v3\",\"version\":3,\"isActiveVersion\":false,\"versionRootSchemaUId\":\"root\",\"appliedOperations\":1,\"layoutChange\":{\"elements\":[\"A\"]},\"warnings\":[\"w\"]}}"},
-  {"route": "/ProcessDesignService/ModifyProcessAsNewVersion", "contains": "UsrActive", "body": "{\"ModifyProcessAsNewVersionResult\":{\"success\":true,\"versionName\":\"UsrActive_v2\",\"isActiveVersion\":true}}"},
-  {"route": "/ProcessDesignService/ModifyProcessAsNewVersion", "contains": "UsrUnknown", "body": "{\"ModifyProcessAsNewVersionResult\":{\"success\":true}}"},
-  {"route": "/ProcessDesignService/ModifyProcessAsNewVersion", "contains": "UsrFail", "body": "{\"ModifyProcessAsNewVersionResult\":{\"success\":false,\"errorMessage\":\"Bad op.\",\"failedOperationIndex\":0,\"appliedOperations\":2,\"layoutChange\":{\"elements\":[\"X\"]},\"versionName\":\"UsrFail_v2\",\"versionSchemaUId\":\"v2\",\"warnings\":[\"a\",\"b\"]}}"},
-
-  {"route": "/ProcessDesignService/SetActiveProcessVersion", "contains": "UsrOk", "body": "{\"SetActiveProcessVersionResult\":{\"success\":true,\"activeVersionName\":\"UsrOk_v2\",\"activeVersionSchemaUId\":\"aaaaaaaa-0000-0000-0000-000000000002\",\"deactivationFailureCount\":1,\"warnings\":[\"w\"]}}"},
-  {"route": "/ProcessDesignService/SetActiveProcessVersion", "contains": "aaaaaaaa-0000-0000-0000-000000000009", "body": "{\"SetActiveProcessVersionResult\":{\"success\":true,\"activeVersionName\":\"Other\",\"activeVersionSchemaUId\":\"bbbbbbbb-0000-0000-0000-000000000002\"}}"},
-  {"route": "/ProcessDesignService/SetActiveProcessVersion", "contains": "UsrSilent", "body": "{\"SetActiveProcessVersionResult\":{\"success\":true}}"},
-  {"route": "/ProcessDesignService/SetActiveProcessVersion", "contains": "UsrFail", "body": "{\"SetActiveProcessVersionResult\":{\"success\":false,\"errorMessage\":\"Nope.\",\"activeVersionName\":\"UsrFail\",\"activeVersionSchemaUId\":\"u1\",\"deactivationFailureCount\":2,\"warnings\":[\"x\"]}}"},
-
-  {"route": "/SequenceParticipantBulkAddService/AddByFilter", "contains": "000000000001", "body": "{\"success\":true,\"addedCount\":1,\"failedCount\":0,\"errorMessages\":[]}"},
-  {"route": "/SequenceParticipantBulkAddService/AddByFilter", "contains": "000000000003", "body": "{\"success\":false,\"addedCount\":0,\"failedCount\":1,\"errorMessages\":[\"Contact is already enrolled.\"],\"errorInfo\":{\"message\":\"token=abc123secret\"}}"},
-  {"route": "/SequenceParticipantBulkAddService/AddByFilter", "contains": "000000000004", "body": "{\"success\":true,\"addedCount\":5,\"failedCount\":0}"},
-  {"route": "/SequenceParticipantBulkAddService/AddByFilter", "contains": "000000000005", "status": 500, "body": "{\"Message\":\"boom\"}"},
-
-  {"route": "/ProcessUserTaskSchemaDesignerService.svc/CreateNewSchema", "body": "{\"success\":true,\"schema\":{\"uId\":\"cccccccc-0000-0000-0000-000000000001\",\"id\":\"cccccccc-0000-0000-0000-000000000002\",\"name\":\"UsrProcessUserTask1\",\"caption\":[],\"parameters\":[],\"color\":\"\",\"isReadOnly\":false}}"},
-  {"route": "/SchemaDataDesignerService.svc/GetAvailableEntitySchemas", "body": "{\"items\":[{\"uId\":\"dddddddd-0000-0000-0000-000000000001\",\"name\":\"Account\",\"caption\":\"Account\"}]}"},
-  {"route": "/ProcessUserTaskSchemaDesignerService.svc/SaveSchema", "contains": "UsrParityT13Invalid", "body": "{\"success\":false,\"validationErrors\":[{\"source\":\"S\",\"reference\":\"R\",\"package\":\"P\"}]}"},
-  {"route": "/ProcessUserTaskSchemaDesignerService.svc/SaveSchema", "body": "{\"success\":true,\"schemaUid\":\"cccccccc-0000-0000-0000-000000000001\"}"},
-  {"route": "/WorkspaceExplorerService.svc/GetWorkspaceItems", "body": "{\"items\":[{\"uId\":\"cccccccc-0000-0000-0000-000000000001\",\"name\":\"UsrParityT13Task\",\"packageUId\":\"7d2b9c4e-5a1f-4e3b-9c8d-13f13f13f001\",\"packageName\":\"UsrParityT13Pkg\"}]}"},
-  {"route": "/ProcessUserTaskSchemaDesignerService.svc/GetSchema", "body": "{\"success\":true,\"schema\":{\"uId\":\"cccccccc-0000-0000-0000-000000000001\",\"name\":\"UsrParityT13Task\",\"parameters\":[{\"uId\":\"eeeeeeee-0000-0000-0000-000000000001\",\"name\":\"Keep\",\"caption\":[{\"cultureName\":\"en-US\",\"value\":\"Keep\"}],\"itemProperties\":[],\"type\":1,\"resulting\":true,\"serializable\":true,\"icon\":\"data-type-text-icon.svg\"}]}}"},
-  {"route": "/WorkspaceExplorerService.svc/BuildPackage", "body": "{\"success\":true}"}
+ {
+  "route": "/ProcessDesignService/BuildProcess",
+  "contains": "UsrVerNoName",
+  "body": "{\"BuildProcessResult\": {\"success\": true}}"
+ },
+ {
+  "route": "/ProcessDesignService/BuildProcess",
+  "contains": "UsrVerUnv",
+  "body": "{\"BuildProcessResult\": {\"success\": true, \"schemaName\": \"UsrVerUnv\", \"schemaUId\": \"aaaaaaaa-0000-0000-0000-0000000000f1\"}}"
+ },
+ {
+  "route": "/ProcessDesignService/BuildProcess",
+  "contains": "UsrVerNoMessage",
+  "body": "{\"BuildProcessResult\": {\"success\": true, \"schemaName\": \"UsrVerNoMessage\", \"schemaUId\": \"aaaaaaaa-0000-0000-0000-0000000000f1\"}}"
+ },
+ {
+  "route": "/ProcessDesignService/BuildProcess",
+  "contains": "UsrVerGarbage",
+  "body": "{\"BuildProcessResult\": {\"success\": true, \"schemaName\": \"UsrVerGarbage\", \"schemaUId\": \"aaaaaaaa-0000-0000-0000-0000000000f1\"}}"
+ },
+ {
+  "route": "/ProcessDesignService/BuildProcess",
+  "contains": "UsrVerShape",
+  "body": "{\"BuildProcessResult\": {\"success\": true, \"schemaName\": \"UsrVerShape\", \"schemaUId\": \"aaaaaaaa-0000-0000-0000-0000000000f1\"}}"
+ },
+ {
+  "route": "/ProcessDesignService/BuildProcess",
+  "contains": "UsrVerDesc",
+  "body": "{\"BuildProcessResult\": {\"success\": true, \"schemaName\": \"UsrVerDesc\", \"schemaUId\": \"aaaaaaaa-0000-0000-0000-0000000000f1\"}}"
+ },
+ {
+  "route": "/ProcessDesignService/BuildProcess",
+  "contains": "UsrVerQuiet",
+  "body": "{\"BuildProcessResult\": {\"success\": true, \"schemaName\": \"UsrVerQuiet\", \"schemaUId\": \"aaaaaaaa-0000-0000-0000-0000000000f1\"}}"
+ },
+ {
+  "route": "/ProcessDesignService/DescribeProcess",
+  "contains": "UsrVerUnv",
+  "body": "{\"DescribeProcessResult\": {\"success\": false, \"errorMessage\": \"Process is locked.\"}}"
+ },
+ {
+  "route": "/ProcessDesignService/DescribeProcess",
+  "contains": "UsrVerNoMessage",
+  "body": "{\"DescribeProcessResult\": {\"success\": false}}"
+ },
+ {
+  "route": "/ProcessDesignService/DescribeProcess",
+  "contains": "UsrVerGarbage",
+  "body": "<html>nope</html>"
+ },
+ {
+  "route": "/ProcessDesignService/DescribeProcess",
+  "contains": "UsrVerShape",
+  "body": "{\"Other\": 1}"
+ },
+ {
+  "route": "/ProcessDesignService/DescribeProcess",
+  "contains": "UsrVerDesc",
+  "body": "{\"DescribeProcessResult\": {\"success\": true, \"name\": \"UsrVerDesc\", \"elements\": [{\"name\": \"Rights1\", \"uid\": \"r1\", \"userTaskName\": \"ChangeAdminRightsUserTask\", \"parameters\": [{\"name\": \"DataSourceFilters\", \"value\": \"\"}]}, {\"name\": \"Rights2\", \"accessRights\": {\"addUnreadable\": 2}, \"filter\": {\"conditions\": []}}, {\"name\": \"Rights3\", \"accessRights\": {}, \"parameters\": [{\"name\": \"datasourcefilters\", \"value\": \"xyz\"}]}, {\"name\": \"Rights4\", \"AccessRights\": {}}, {\"name\": \"Rights5\", \"accessRights\": {}, \"filter\": {\"groups\": [{\"conditions\": [{\"column\": \"Id\"}]}]}}, {\"name\": \"Email1\"}, {\"name\": \"Email2\", \"email\": {\"template\": \"\", \"hasBody\": true, \"body\": \"\"}}, {\"name\": \"Appr1\"}, {\"name\": \"Appr2\", \"approval\": {\"approverType\": \"\", \"approverEmailTemplate\": \"\", \"authorEmailTemplate\": \"t\", \"recipient\": \" \"}}, {\"name\": \"Appr3\", \"approval\": {\"approverType\": \"user\"}}], \"flows\": [{\"source\": \"s\", \"target\": \"a\", \"label\": \"Other\"}, {\"source\": \"a\", \"target\": \"b\"}, {\"source\": \"b\", \"target\": \"c\", \"label\": \"old\"}, {\"source\": \"x\", \"target\": \"y\", \"label\": \"q\"}, {\"source\": \"x\", \"target\": \"y\"}]}}"
+ },
+ {
+  "route": "/ProcessDesignService/DescribeProcess",
+  "contains": "UsrMod",
+  "body": "{\"DescribeProcessResult\": {\"success\": true, \"elements\": [{\"name\": \"Clear1\", \"userTaskName\": \"ChangeAdminRightsUserTask\"}, {\"name\": \"Set1\", \"accessRights\": {\"removeUnreadable\": 1}}, {\"name\": \"Mail1\", \"email\": {\"template\": null}}], \"flows\": [{\"source\": \"p\", \"target\": \"q\", \"label\": \"kept\"}]}}"
+ },
+ {
+  "route": "/ProcessDesignService/DescribeProcess",
+  "contains": "bbbbbbbb-0000-0000-0000-000000000077",
+  "body": "{\"DescribeProcessResult\": {\"success\": true, \"elements\": [{\"name\": \"Clear1\", \"userTaskName\": \"ChangeAdminRightsUserTask\"}, {\"name\": \"Set1\", \"accessRights\": {\"removeUnreadable\": 1}}, {\"name\": \"Mail1\", \"email\": {\"template\": null}}], \"flows\": [{\"source\": \"p\", \"target\": \"q\", \"label\": \"kept\"}]}}"
+ },
+ {
+  "route": "/ProcessDesignService/ModifyProcess",
+  "contains": "UsrMod",
+  "body": "{\"ModifyProcessResult\": {\"success\": true, \"schemaName\": \"UsrModDone\", \"schemaUId\": \"m1\", \"appliedOperations\": 3}}"
+ },
+ {
+  "route": "/ProcessDesignService/ModifyProcess",
+  "contains": "bbbbbbbb-0000-0000-0000-000000000077",
+  "body": "{\"ModifyProcessResult\": {\"success\": true, \"appliedOperations\": 1}}"
+ },
+ {
+  "route": "/SelectQuery",
+  "contains": "SysPackage\"",
+  "body": "{\"success\":true,\"rows\":[{\"Name\":\"Base\",\"UId\":\"11111111-0000-0000-0000-000000000001\",\"Maintainer\":\"Terrasoft\",\"Version\":\"8.1.0\"},{\"Name\":\"CrtProcessBuilder\",\"UId\":\"11111111-0000-0000-0000-000000000002\",\"Maintainer\":\"Creatio\",\"Version\":\"99.0.0.0\"}]}"
+ },
+ {
+  "route": "/SelectQuery",
+  "contains": "SequenceParticipant\"",
+  "body": "{\"success\":true,\"rows\":[{\"id\":\"p1\",\"contact-id\":\"5b1f0c2e-2222-4b6a-9c1e-000000000002\",\"status-id\":\"s1\",\"status-name\":\"Added\",\"stage-name\":null}]}"
+ },
+ {
+  "route": "/SelectQuery",
+  "body": "{\"success\":true,\"rows\":[]}"
+ },
+ {
+  "route": "/ProcessDesignService/BuildProcess",
+  "contains": "UsrOk",
+  "body": "{\"BuildProcessResult\":{\"success\":true,\"schemaName\":\"UsrOk\",\"schemaUId\":\"aaaaaaaa-0000-0000-0000-000000000001\",\"warnings\":[\"Lane added.\",\"Second.\"]}}"
+ },
+ {
+  "route": "/ProcessDesignService/BuildProcess",
+  "contains": "UsrFail",
+  "body": "{\"BuildProcessResult\":{\"success\":false,\"errorMessage\":\"Element 'x' has an unknown type.\"}}"
+ },
+ {
+  "route": "/ProcessDesignService/BuildProcess",
+  "contains": "UsrNoMessage",
+  "body": "{\"BuildProcessResult\":{\"success\":false}}"
+ },
+ {
+  "route": "/ProcessDesignService/BuildProcess",
+  "contains": "UsrShape",
+  "body": "{\"Other\":1}"
+ },
+ {
+  "route": "/ProcessDesignService/BuildProcess",
+  "contains": "UsrNull",
+  "body": "null"
+ },
+ {
+  "route": "/ProcessDesignService/BuildProcess",
+  "contains": "UsrGarbage",
+  "body": "this is not json"
+ },
+ {
+  "route": "/ProcessDesignService/BuildProcess",
+  "contains": "UsrBadType",
+  "body": "{\"BuildProcessResult\":{\"success\":\"yes\"}}"
+ },
+ {
+  "route": "/ProcessDesignService/ModifyProcess",
+  "contains": "UsrOk",
+  "body": "{\"ModifyProcessResult\":{\"success\":true,\"schemaName\":\"UsrOk\",\"schemaUId\":\"aaaaaaaa-0000-0000-0000-000000000001\",\"appliedOperations\":2,\"warnings\":[\"w1\"]}}"
+ },
+ {
+  "route": "/ProcessDesignService/ModifyProcess",
+  "contains": "UsrCompile",
+  "body": "{\"ModifyProcessResult\":{\"success\":true,\"schemaName\":\"UsrCompile\",\"schemaUId\":\"u\",\"appliedOperations\":1,\"warnings\":[\"Nothing runs until the configuration is compiled.\"]}}"
+ },
+ {
+  "route": "/ProcessDesignService/ModifyProcess",
+  "contains": "UsrRedraw",
+  "body": "{\"ModifyProcessResult\":{\"success\":false,\"errorMessage\":\"The edit re-draws the diagram.\",\"failedOperationIndex\":1,\"appliedOperations\":0,\"layoutChange\":{\"reason\":\"r\",\"summary\":\"s\",\"elements\":[\"A\",\" \",\"B\"]}}}"
+ },
+ {
+  "route": "/ProcessDesignService/ModifyProcess",
+  "contains": "UsrNoLayout",
+  "body": "{\"ModifyProcessResult\":{\"success\":false,\"errorMessage\":\"Refused.\",\"layoutChange\":{\"elements\":[]}}}"
+ },
+ {
+  "route": "/ProcessDesignService/ModifyProcess",
+  "contains": "UsrGarbage",
+  "body": "<<>>"
+ },
+ {
+  "route": "/ProcessDesignService/ModifyProcessAsNewVersion",
+  "contains": "UsrOk",
+  "body": "{\"ModifyProcessAsNewVersionResult\":{\"success\":true,\"versionName\":\"UsrOk_v3\",\"versionSchemaUId\":\"v3\",\"version\":3,\"isActiveVersion\":false,\"versionRootSchemaUId\":\"root\",\"appliedOperations\":1,\"layoutChange\":{\"elements\":[\"A\"]},\"warnings\":[\"w\"]}}"
+ },
+ {
+  "route": "/ProcessDesignService/ModifyProcessAsNewVersion",
+  "contains": "UsrActive",
+  "body": "{\"ModifyProcessAsNewVersionResult\":{\"success\":true,\"versionName\":\"UsrActive_v2\",\"isActiveVersion\":true}}"
+ },
+ {
+  "route": "/ProcessDesignService/ModifyProcessAsNewVersion",
+  "contains": "UsrUnknown",
+  "body": "{\"ModifyProcessAsNewVersionResult\":{\"success\":true}}"
+ },
+ {
+  "route": "/ProcessDesignService/ModifyProcessAsNewVersion",
+  "contains": "UsrFail",
+  "body": "{\"ModifyProcessAsNewVersionResult\":{\"success\":false,\"errorMessage\":\"Bad op.\",\"failedOperationIndex\":0,\"appliedOperations\":2,\"layoutChange\":{\"elements\":[\"X\"]},\"versionName\":\"UsrFail_v2\",\"versionSchemaUId\":\"v2\",\"warnings\":[\"a\",\"b\"]}}"
+ },
+ {
+  "route": "/ProcessDesignService/SetActiveProcessVersion",
+  "contains": "UsrOk",
+  "body": "{\"SetActiveProcessVersionResult\":{\"success\":true,\"activeVersionName\":\"UsrOk_v2\",\"activeVersionSchemaUId\":\"aaaaaaaa-0000-0000-0000-000000000002\",\"deactivationFailureCount\":1,\"warnings\":[\"w\"]}}"
+ },
+ {
+  "route": "/ProcessDesignService/SetActiveProcessVersion",
+  "contains": "aaaaaaaa-0000-0000-0000-000000000009",
+  "body": "{\"SetActiveProcessVersionResult\":{\"success\":true,\"activeVersionName\":\"Other\",\"activeVersionSchemaUId\":\"bbbbbbbb-0000-0000-0000-000000000002\"}}"
+ },
+ {
+  "route": "/ProcessDesignService/SetActiveProcessVersion",
+  "contains": "UsrSilent",
+  "body": "{\"SetActiveProcessVersionResult\":{\"success\":true}}"
+ },
+ {
+  "route": "/ProcessDesignService/SetActiveProcessVersion",
+  "contains": "UsrFail",
+  "body": "{\"SetActiveProcessVersionResult\":{\"success\":false,\"errorMessage\":\"Nope.\",\"activeVersionName\":\"UsrFail\",\"activeVersionSchemaUId\":\"u1\",\"deactivationFailureCount\":2,\"warnings\":[\"x\"]}}"
+ },
+ {
+  "route": "/SequenceParticipantBulkAddService/AddByFilter",
+  "contains": "000000000001",
+  "body": "{\"success\":true,\"addedCount\":1,\"failedCount\":0,\"errorMessages\":[]}"
+ },
+ {
+  "route": "/SequenceParticipantBulkAddService/AddByFilter",
+  "contains": "000000000003",
+  "body": "{\"success\":false,\"addedCount\":0,\"failedCount\":1,\"errorMessages\":[\"Contact is already enrolled.\"],\"errorInfo\":{\"message\":\"token=abc123secret\"}}"
+ },
+ {
+  "route": "/SequenceParticipantBulkAddService/AddByFilter",
+  "contains": "000000000004",
+  "body": "{\"success\":true,\"addedCount\":5,\"failedCount\":0}"
+ },
+ {
+  "route": "/SequenceParticipantBulkAddService/AddByFilter",
+  "contains": "000000000005",
+  "status": 500,
+  "body": "{\"Message\":\"boom\"}"
+ },
+ {
+  "route": "/ProcessUserTaskSchemaDesignerService.svc/CreateNewSchema",
+  "body": "{\"success\":true,\"schema\":{\"uId\":\"cccccccc-0000-0000-0000-000000000001\",\"id\":\"cccccccc-0000-0000-0000-000000000002\",\"name\":\"UsrProcessUserTask1\",\"caption\":[],\"parameters\":[],\"color\":\"\",\"isReadOnly\":false}}"
+ },
+ {
+  "route": "/SchemaDataDesignerService.svc/GetAvailableEntitySchemas",
+  "body": "{\"items\":[{\"uId\":\"dddddddd-0000-0000-0000-000000000001\",\"name\":\"Account\",\"caption\":\"Account\"}]}"
+ },
+ {
+  "route": "/ProcessUserTaskSchemaDesignerService.svc/SaveSchema",
+  "contains": "UsrParityT13Invalid",
+  "body": "{\"success\":false,\"validationErrors\":[{\"source\":\"S\",\"reference\":\"R\",\"package\":\"P\"}]}"
+ },
+ {
+  "route": "/ProcessUserTaskSchemaDesignerService.svc/SaveSchema",
+  "body": "{\"success\":true,\"schemaUid\":\"cccccccc-0000-0000-0000-000000000001\"}"
+ },
+ {
+  "route": "/WorkspaceExplorerService.svc/GetWorkspaceItems",
+  "body": "{\"items\":[{\"uId\":\"cccccccc-0000-0000-0000-000000000001\",\"name\":\"UsrParityT13Task\",\"packageUId\":\"7d2b9c4e-5a1f-4e3b-9c8d-13f13f13f001\",\"packageName\":\"UsrParityT13Pkg\"}]}"
+ },
+ {
+  "route": "/ProcessUserTaskSchemaDesignerService.svc/GetSchema",
+  "body": "{\"success\":true,\"schema\":{\"uId\":\"cccccccc-0000-0000-0000-000000000001\",\"name\":\"UsrParityT13Task\",\"parameters\":[{\"uId\":\"eeeeeeee-0000-0000-0000-000000000001\",\"name\":\"Keep\",\"caption\":[{\"cultureName\":\"en-US\",\"value\":\"Keep\"}],\"itemProperties\":[],\"type\":1,\"resulting\":true,\"serializable\":true,\"icon\":\"data-type-text-icon.svg\"}]}}"
+ },
+ {
+  "route": "/WorkspaceExplorerService.svc/BuildPackage",
+  "body": "{\"success\":true}"
+ }
 ]

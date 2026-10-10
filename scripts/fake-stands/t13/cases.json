@@ -626,5 +626,88 @@
     "Keep"
    ]
   }
+ },
+ {
+  "label": "verify create unverified (describe refused)",
+  "tool": "create-business-process",
+  "clio-run": true,
+  "args": {
+   "descriptor": "{\"name\":\"UsrVerUnv\",\"elements\":[{\"name\":\"R1\",\"accessRights\":{}},{\"name\":\"R1\",\"accessRights\":{}},{\"name\":\"r1\",\"accessRights\":{}}],\"flows\":[{\"source\":\"s\",\"target\":\"a\",\"label\":\" Yes \"},{\"source\":\"S\",\"target\":\"A\",\"label\":\"Again\"},{\"source\":\"a\",\"target\":\"b\",\"label\":\"x\\u0001y\"}]}"
+  }
+ },
+ {
+  "label": "verify create describe without message",
+  "tool": "create-business-process",
+  "clio-run": true,
+  "args": {
+   "descriptor": "{\"name\":\"UsrVerNoMessage\",\"flows\":[{\"source\":\"s\",\"target\":\"a\",\"label\":\"L\"}]}"
+  }
+ },
+ {
+  "label": "verify create describe garbage",
+  "tool": "create-business-process",
+  "clio-run": true,
+  "args": {
+   "descriptor": "{\"name\":\"UsrVerGarbage\",\"elements\":[{\"name\":\"R1\",\"accessRights\":{}}]}"
+  }
+ },
+ {
+  "label": "verify create describe shape",
+  "tool": "create-business-process",
+  "clio-run": true,
+  "args": {
+   "descriptor": "{\"name\":\"UsrVerShape\",\"elements\":[{\"name\":\"R1\",\"accessRights\":{}}]}"
+  }
+ },
+ {
+  "label": "verify create no schema name",
+  "tool": "create-business-process",
+  "clio-run": true,
+  "args": {
+   "descriptor": "{\"name\":\"UsrVerNoName\",\"elements\":[{\"name\":\"R1\",\"accessRights\":{}},{\"name\":\"A1\",\"approval\":{}}],\"flows\":[{\"source\":\"s\",\"target\":\"e\",\"label\":\"go\"}]}"
+  }
+ },
+ {
+  "label": "verify create approval only, nothing to read",
+  "tool": "create-business-process",
+  "clio-run": true,
+  "args": {
+   "descriptor": "{\"name\":\"UsrVerQuiet\",\"elements\":[{\"name\":\"Nope\",\"approval\":{\"approver\":{\"type\":\"user\"}}}]}"
+  }
+ },
+ {
+  "label": "verify create described",
+  "tool": "create-business-process",
+  "clio-run": true,
+  "args": {
+   "descriptor": "{\"name\":\"UsrVerDesc\",\"elements\":[{\"name\":\"Rights1\",\"accessRights\":{}},{\"name\":\"Rights2\",\"accessRights\":{}},{\"name\":\"Rights3\",\"accessRights\":{}},{\"name\":\"Rights4\",\"accessRights\":{}},{\"name\":\"Rights5\",\"accessRights\":{}},{\"name\":\"Ghost\",\"accessRights\":{}},{\"name\":\"Email1\",\"email\":{\"subject\":\"s\"}},{\"name\":\"Email2\",\"email\":{\"template\":\"T1\",\"body\":\"Hi [[PARAM:Name]]\"}},{\"name\":\"Appr1\",\"approval\":{\"approver\":{\"type\":\"user\"}}},{\"name\":\"Appr2\",\"approval\":{\"approver\":{\"type\":\"user\"},\"notifyApprover\":{\"emailTemplate\":\"T\"},\"notifyAuthor\":{\"emailTemplate\":\"T\",\"recipient\":{\"value\":\"a@b\"}}}},{\"name\":\"Appr3\",\"approval\":{\"approverType\":\"user\",\"notifyApprover\":true}}],\"flows\":[{\"source\":\"s\",\"target\":\"a\",\"label\":\"Yes\"},{\"source\":\"a\",\"target\":\"b\",\"label\":\"Go\"},{\"source\":\"b\",\"target\":\"c\",\"label\":\"\"},{\"source\":\"c\",\"target\":\"d\",\"label\":\"x\"},{\"source\":\"x\",\"target\":\"y\",\"label\":\"q\"},{\"source\":\"aaaaaaaa-0000-0000-0000-000000000001\",\"target\":\"b\",\"label\":\"uid\"}]}"
+  }
+ },
+ {
+  "label": "verify modify described",
+  "tool": "modify-business-process",
+  "clio-run": true,
+  "args": {
+   "process-name": "UsrModOne",
+   "operations": "[{\"op\":\"setElement\",\"elementName\":\"Set1\",\"elementUpdate\":{\"accessRights\":{}}},{\"op\":\"clearFilter\",\"elementName\":\"Clear1\"},{\"op\":\"CLEARFILTER\",\"elementName\":\"Gone1\"},{\"op\":\"addElement\",\"element\":{\"name\":\"Added1\",\"accessRights\":{},\"email\":{\"template\":\"T\"}}},{\"op\":\"addElement\",\"element\":{\"name\":\"Set1\",\"accessRights\":{}}},{\"op\":\"setElement\",\"elementName\":\"Mail1\",\"elementUpdate\":{\"email\":{\"template\":\"T\"}}},{\"op\":\"setElement\",\"elementName\":\"Mail1\",\"elementUpdate\":{\"email\":{\"messageSource\":\" Custom \"}}},{\"op\":\"setElement\",\"elementName\":\"Mail2\",\"elementUpdate\":{\"email\":{\"template\":\"T\"}}},{\"op\":\"addFlow\",\"source\":\"p\",\"target\":\"q\",\"label\":\"new\"},{\"op\":\"addFlow\",\"source\":\"q\",\"target\":\"r\",\"label\":\"drop\"},{\"op\":\"removeFlow\",\"source\":\"Q\",\"target\":\"R\"},{\"op\":\"setFlow\",\"source\":\"bbbbbbbbbbbb0000000000000000000a\",\"target\":\"z\",\"label\":\"u\"},{\"op\":\"addElement\",\"element\":{\"name\":\"ApprAdd\",\"approval\":{\"approver\":{}}}}]"
+  }
+ },
+ {
+  "label": "verify modify addElement rights only",
+  "tool": "modify-business-process",
+  "clio-run": true,
+  "args": {
+   "process-name": "UsrOk",
+   "operations": "[{\"op\":\"addElement\",\"element\":{\"name\":\"A1\",\"accessRights\":{}}},{\"op\":\"addElement\",\"element\":{\"name\":\"a1\",\"accessRights\":{}}},{\"op\":\"addElement\",\"element\":{\"name\":\"A2\",\"accessRights\":{}}}]"
+  }
+ },
+ {
+  "label": "verify modify by uid without schema name",
+  "tool": "modify-business-process",
+  "clio-run": true,
+  "args": {
+   "process-uid": "bbbbbbbb-0000-0000-0000-000000000077",
+   "operations": "[{\"op\":\"clearFilter\",\"elementName\":\"Clear1\"}]"
+  }
  }
 ]

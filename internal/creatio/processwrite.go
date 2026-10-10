@@ -235,8 +235,17 @@ func (c *Client) processWritePost(ctx context.Context, call serviceCall) ([]byte
 }
 
 // processWriteJSONError is the System.Text.Json reader's text for a body that does not start a JSON value
-// (JsonDocument.Parse reports no path); other malformations keep Go's wording.
+// as JsonDocument.Parse reports it (no path); other malformations keep Go's wording.
 func processWriteJSONError(payload []byte, fallback error) string {
+	return processWriteReaderError(payload, fallback, "")
+}
+
+// processWriteDeserializeError is the same text as JsonSerializer.Deserialize reports it, with the path.
+func processWriteDeserializeError(payload []byte, fallback error) string {
+	return processWriteReaderError(payload, fallback, "Path: $ | ")
+}
+
+func processWriteReaderError(payload []byte, fallback error, path string) string {
 	line, column := 0, 0
 	for _, b := range payload {
 		switch b {
@@ -250,10 +259,10 @@ func processWriteJSONError(payload []byte, fallback error) string {
 		if strings.ContainsRune(`{["-0123456789tfn`, rune(b)) {
 			break
 		}
-		return fmt.Sprintf("'%c' is an invalid start of a value. LineNumber: %d | BytePositionInLine: %d.", rune(b), line, column)
+		return fmt.Sprintf("'%c' is an invalid start of a value. %sLineNumber: %d | BytePositionInLine: %d.", rune(b), path, line, column)
 	}
 	if strings.TrimSpace(string(payload)) == "" {
-		return fmt.Sprintf("The input does not contain any JSON tokens. Expected the input to start with a valid JSON token, while isFinalBlock is true. LineNumber: %d | BytePositionInLine: %d.", line, column)
+		return fmt.Sprintf("The input does not contain any JSON tokens. Expected the input to start with a valid JSON token, while isFinalBlock is true. %sLineNumber: %d | BytePositionInLine: %d.", path, line, column)
 	}
 	return fallback.Error()
 }

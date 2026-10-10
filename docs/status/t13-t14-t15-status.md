@@ -204,11 +204,15 @@ user-task tools need a local workspace linked to a stand package, which the writ
   case POSTs to the native `SequenceParticipantBulkAddService` with random sequence and contact ids:
   it enrolls nobody (added 0) and creates nothing, but it is a write endpoint.
 - Success and failure paths against a canned Creatio, `scripts/fake-stands/t13` (how to run it is in
-  `fake_creatio.py`): 38 cases through both servers — every ProcessDesignService answer shape (success,
+  `fake_creatio.py`): 48 cases through both servers — every ProcessDesignService answer shape (success,
   failure texts, layout-change relay, version report, activation read-back, UNKNOWN / empty / shape
-  texts), the validator on rule-heavy graphs, enrollment outcomes, user-task create/modify with
-  lookups, composite items and save refusals — 37 match, 1 known-diff (compile note, below). The
-  request bodies the two servers sent are the same on all 12 routes (parsed JSON, generated parameter
+  texts), the post-write block verification of create and modify (unverified, refused, garbled and
+  described read-backs: missing accessRights/email/approval blocks, unresolved elements, lossy reads,
+  absent/conditionless/undecodable record filters, unlanded templates, unresolved body macros,
+  describe-shaped approval blocks, absent/different/uncleared/UId-addressed flow labels, addElement
+  rights), the validator on rule-heavy graphs, enrollment outcomes, user-task create/modify with
+  lookups, composite items and save refusals — 47 match, 1 known-diff (compile note, below). The
+  request bodies the two servers sent are the same on all 13 routes (parsed JSON, generated parameter
   uIds blanked).
 - `register-process-element` (offline): run against a fixture workspace with clio 8.1.0.134 and Go; the
   SQL scripts are byte-identical, the descriptors differ only in the random UId and the timestamp.
@@ -230,14 +234,17 @@ clio master versus 8.1.0.134 (measured; this server follows master):
   8.1.0.134 does (its raw string literal is compiled from a CRLF checkout), not with master's LF source;
   clio compares an existing script with line endings normalized, so either form is accepted on a re-run.
 
+The post-write verification (clio's `WarnOnDiscardedConfigurationBlocks` with BlockExpectationIntent,
+the AccessRights / Approval / Email / FlowLabel expectations and BlockExpectationReporter) is ported:
+after a successful build or edit that sent an `accessRights`, `email` or `approval` block, a flow
+`label` or (modify) a `clearFilter`, the process is read back once (DescribeProcess, 5 s, no version
+facts) and every block that did not land becomes a warning; modify also warns about `accessRights` sent
+with `addElement`.
+
 Known gaps:
-- Not ported: the post-write configuration-block verification of `create-business-process` and
-  `modify-business-process` (clio's `WarnOnDiscardedConfigurationBlocks`: BlockExpectationIntent,
-  AccessRights/Approval/Email/FlowLabel expectations, BlockExpectationReporter). It runs only when the
-  descriptor or operations carry an `accessRights` block, an `approval` block, a flow `label`, or `[#…#]`
-  macros in a sendEmail body; clio then reads the process back (DescribeProcess and the process library)
-  and adds warnings about blocks the server dropped. Go answers the same build/edit without those
-  warnings; modify's "ignored on addElement" access-rights warning is part of the same gap.
+- The verification reads the described graph as JSON rather than through clio's typed model, so a
+  DescribeProcess answer with a field of the wrong JSON type (which clio's deserializer refuses as
+  "could not parse server response") is read leniently.
 - A `descriptor` / `operations` sent as a JSON object reaches Go as a map, so it is forwarded with its
   keys in alphabetical order; clio keeps the caller's order. A string-held document keeps its order.
   The server reads both the same.

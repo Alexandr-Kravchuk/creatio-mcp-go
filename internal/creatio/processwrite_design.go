@@ -109,6 +109,8 @@ func (c *Client) CreateBusinessProcess(ctx context.Context, request ProcessWrite
 		for _, warning := range warnings {
 			log.warning(warning)
 		}
+		processWriteGuardVerification(log, "The process was created, but verifying its configuration failed: %s. Re-read it with describe-business-process before reporting a grant or revoke as applied.",
+			func() { c.processWriteVerifyCreate(ctx, request.Descriptor, processWriteDeref(schemaName), log) })
 		return nil
 	})
 }
@@ -167,6 +169,8 @@ func (c *Client) ModifyBusinessProcess(ctx context.Context, request ProcessWrite
 		for _, warning := range warnings {
 			log.warning(warning)
 		}
+		processWriteGuardVerification(log, "The edit was applied, but verifying its configuration failed: %s. Re-read the process with describe-business-process before reporting a grant or revoke as applied.",
+			func() { c.processWriteVerifyModify(ctx, request, processWriteDeref(schemaName), log) })
 		return nil
 	})
 }
@@ -262,6 +266,17 @@ func (c *Client) ModifyBusinessProcessAsNewVersion(ctx context.Context, request 
 		}
 		return nil
 	})
+}
+
+// processWriteGuardVerification runs the post-write check the way the commands do: a failure inside it is
+// a warning, never a failed write.
+func processWriteGuardVerification(log *processWriteLog, format string, verify func()) {
+	defer func() {
+		if recovered := recover(); recovered != nil {
+			log.warning(fmt.Sprintf(format, fmt.Sprint(recovered)))
+		}
+	}()
+	verify()
 }
 
 // processWritePageGate runs the pre-configured page check: its refusal fails the command, its warnings are
