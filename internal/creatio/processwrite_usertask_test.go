@@ -10,16 +10,16 @@ import (
 )
 
 const (
-	taskPackageUID = "7d2b9c4e-5a1f-4e3b-9c8d-13f13f13f001"
-	taskSchemaUID  = "aaaaaaaa-1111-2222-3333-444444444444"
+	processWriteTaskPackageUID = "7d2b9c4e-5a1f-4e3b-9c8d-13f13f13f001"
+	processWriteTaskSchemaUID  = "aaaaaaaa-1111-2222-3333-444444444444"
 )
 
-func taskWorkspace(t *testing.T, metadata string) string {
+func processWriteTaskWorkspace(t *testing.T, metadata string) string {
 	t.Helper()
 	root := t.TempDir()
 	files := map[string]string{
 		".clio/workspaceSettings.json":    `{"Packages":["UsrPkg"]}`,
-		"packages/UsrPkg/descriptor.json": "\xef\xbb\xbf" + `{"Descriptor":{"UId":"` + taskPackageUID + `","Name":"UsrPkg","Type":0}}`,
+		"packages/UsrPkg/descriptor.json": "\xef\xbb\xbf" + `{"Descriptor":{"UId":"` + processWriteTaskPackageUID + `","Name":"UsrPkg","Type":0}}`,
 	}
 	if metadata != "" {
 		files["packages/UsrPkg/Schemas/UsrTask/metadata.json"] = metadata
@@ -34,7 +34,7 @@ func taskWorkspace(t *testing.T, metadata string) string {
 	return root
 }
 
-func taskCalls(calls []processWriteCall, suffix string) []processWriteCall {
+func processWriteTaskCalls(calls []processWriteCall, suffix string) []processWriteCall {
 	found := []processWriteCall{}
 	for _, call := range calls {
 		if strings.HasSuffix(call.Path, suffix) {
@@ -44,45 +44,45 @@ func taskCalls(calls []processWriteCall, suffix string) []processWriteCall {
 	return found
 }
 
-const taskNewSchema = `{"success":true,"schema":{"uId":"` + taskSchemaUID + `","id":"bbbbbbbb-1111-2222-3333-444444444444","name":"UsrProcessUserTask1",` +
+const processWriteTaskNewSchema = `{"success":true,"schema":{"uId":"` + processWriteTaskSchemaUID + `","id":"bbbbbbbb-1111-2222-3333-444444444444","name":"UsrProcessUserTask1",` +
 	`"caption":[],"parameters":[],"dependencies":{"x":1},"unknownField":true,"color":"","package":null,"smallSvgImage":{"_isChanged":true,"imageContent":"svg"}}}`
 
 func TestCreateUserTaskCreatesSavesAndBuilds(t *testing.T) {
-	root := taskWorkspace(t, "")
+	root := processWriteTaskWorkspace(t, "")
 	client, calls := processWriteServer(t, "", func(call processWriteCall) (int, string) {
 		switch {
 		case strings.HasSuffix(call.Path, "/CreateNewSchema"):
-			return 200, taskNewSchema
+			return 200, processWriteTaskNewSchema
 		case strings.HasSuffix(call.Path, "/GetAvailableEntitySchemas"):
 			return 200, `{"items":[{"uId":"cccccccc-1111-2222-3333-444444444444","name":"Account","caption":"Account"}]}`
 		case strings.HasSuffix(call.Path, "/SaveSchema"):
-			return 200, `{"success":true,"schemaUid":"` + taskSchemaUID + `"}`
+			return 200, `{"success":true,"schemaUid":"` + processWriteTaskSchemaUID + `"}`
 		}
 		return 200, `{"success":true}`
 	})
 	description := "Does it"
 	parameters := []ProcessWriteTaskParameter{
-		{Code: "Account", Title: "Account", Type: "lookup", Lookup: " Account ", Required: boolPointer(true)},
+		{Code: "Account", Title: "Account", Type: "lookup", Lookup: " Account ", Required: processWriteBoolPointer(true)},
 		{Code: "Rows", Title: "Rows", Type: "Serializable list of composite values", Items: []ProcessWriteTaskParameter{{Code: "RowId", Title: "Row id", Type: "Guid"}}},
 	}
 	result := client.CreateUserTask(context.Background(), ProcessWriteCreateTaskRequest{Code: " UsrTask ", Package: "UsrPkg", Title: "Task", Description: &description,
 		Culture: "en-US", WorkspacePath: " " + root + " ", Parameters: ProcessWriteTaskDefinitions(parameters), ParameterItems: ProcessWriteTaskNestedItems(parameters)})
 	got := processWriteMessages(result)
-	want := []string{"Info: Created user task schema 'UsrTask' (" + taskSchemaUID + ").", "Info: Building package 'UsrPkg'...", "Info: Done add-user-task"}
+	want := []string{"Info: Created user task schema 'UsrTask' (" + processWriteTaskSchemaUID + ").", "Info: Building package 'UsrPkg'...", "Info: Done add-user-task"}
 	if result.ExitCode != 0 || result.Note != "" || strings.Join(got, "\n") != strings.Join(want, "\n") {
 		t.Fatalf("%d %q", result.ExitCode, got)
 	}
-	create := taskCalls(*calls, "/CreateNewSchema")[0]
-	if create.Path != "/0/ServiceModel/ProcessUserTaskSchemaDesignerService.svc/CreateNewSchema" || create.Body != `{"packageUId":"`+taskPackageUID+`","cultures":null}` {
+	create := processWriteTaskCalls(*calls, "/CreateNewSchema")[0]
+	if create.Path != "/0/ServiceModel/ProcessUserTaskSchemaDesignerService.svc/CreateNewSchema" || create.Body != `{"packageUId":"`+processWriteTaskPackageUID+`","cultures":null}` {
 		t.Fatalf("create %+v", create)
 	}
-	if lookup := taskCalls(*calls, "/GetAvailableEntitySchemas")[0]; lookup.Body != `{"packageUId":"`+taskPackageUID+`"}` {
+	if lookup := processWriteTaskCalls(*calls, "/GetAvailableEntitySchemas")[0]; lookup.Body != `{"packageUId":"`+processWriteTaskPackageUID+`"}` {
 		t.Fatalf("lookup %+v", lookup)
 	}
-	if build := taskCalls(*calls, "/BuildPackage")[0]; build.Path != "/0/ServiceModel/WorkspaceExplorerService.svc/BuildPackage" || build.Body != `{"packageName":"UsrPkg"}` {
+	if build := processWriteTaskCalls(*calls, "/BuildPackage")[0]; build.Path != "/0/ServiceModel/WorkspaceExplorerService.svc/BuildPackage" || build.Body != `{"packageName":"UsrPkg"}` {
 		t.Fatalf("build %+v", build)
 	}
-	save := taskCalls(*calls, "/SaveSchema")[0].Body
+	save := processWriteTaskCalls(*calls, "/SaveSchema")[0].Body
 	var schema map[string]any
 	if err := json.Unmarshal([]byte(save), &schema); err != nil {
 		t.Fatal(err)
@@ -99,12 +99,12 @@ func TestCreateUserTaskCreatesSavesAndBuilds(t *testing.T) {
 	if strings.Join(keys, ",") != "uId,id,name,body,metaData,caption,description,parameters,localizableStrings,addonTypes,optionalProperties,dependencies,isReadOnly,useFullHierarchy,forceSave,userLevelSchema,isFullHierarchyDesignSchema,partial,userTask,customEventHandler,editPageSchemaUId,dcmEditPageSchemaUId,smallSvgImage,largeSvgImage,titleSvgImage,dcmSmallSvgImage,color,serializeToDB,package" {
 		t.Fatalf("keys %v", keys)
 	}
-	wantMeta := `{"metaData":{"schema":{"managerName":"ProcessUserTaskSchemaManager","uId":"` + taskSchemaUID + `","name":"UsrTask","methods":[],"localizableStrings":[],"usings":[],"packageUId":"` + taskPackageUID + `","parameters":[],"color":"#839DC3"}}}`
+	wantMeta := `{"metaData":{"schema":{"managerName":"ProcessUserTaskSchemaManager","uId":"` + processWriteTaskSchemaUID + `","name":"UsrTask","methods":[],"localizableStrings":[],"usings":[],"packageUId":"` + processWriteTaskPackageUID + `","parameters":[],"color":"#839DC3"}}}`
 	if schema["name"] != "UsrTask" || schema["body"] != "" || schema["metaData"] != wantMeta || schema["color"] != "#839DC3" || schema["userTask"] != true ||
-		schema["serializeToDB"] != true || schema["addonTypes"] != nil || mustJSONText(schema["dependencies"]) != `{"x":1}` || schema["unknownField"] != nil ||
-		mustJSONText(schema["package"]) != `{"name":"UsrPkg","type":0,"uId":"`+taskPackageUID+`"}` ||
-		mustJSONText(schema["smallSvgImage"]) != `{"_isChanged":true,"imageContent":"svg"}` || mustJSONText(schema["largeSvgImage"]) != `{"_isChanged":false,"imageContent":null}` ||
-		mustJSONText(schema["caption"]) != `[{"cultureName":"en-US","value":"Task"}]` || mustJSONText(schema["description"]) != `[{"cultureName":"en-US","value":"Does it"}]` {
+		schema["serializeToDB"] != true || schema["addonTypes"] != nil || processWriteJSONText(schema["dependencies"]) != `{"x":1}` || schema["unknownField"] != nil ||
+		processWriteJSONText(schema["package"]) != `{"name":"UsrPkg","type":0,"uId":"`+processWriteTaskPackageUID+`"}` ||
+		processWriteJSONText(schema["smallSvgImage"]) != `{"_isChanged":true,"imageContent":"svg"}` || processWriteJSONText(schema["largeSvgImage"]) != `{"_isChanged":false,"imageContent":null}` ||
+		processWriteJSONText(schema["caption"]) != `[{"cultureName":"en-US","value":"Task"}]` || processWriteJSONText(schema["description"]) != `[{"cultureName":"en-US","value":"Does it"}]` {
 		t.Fatalf("schema %s", save)
 	}
 	parametersSaved := schema["parameters"].([]any)
@@ -121,22 +121,22 @@ func TestCreateUserTaskCreatesSavesAndBuilds(t *testing.T) {
 	}
 }
 
-func boolPointer(value bool) *bool { return &value }
+func processWriteBoolPointer(value bool) *bool { return &value }
 
-func mustJSONText(value any) string {
+func processWriteJSONText(value any) string {
 	encoded, _ := json.Marshal(value)
 	return string(encoded)
 }
 
 func TestCreateUserTaskAppliesExplicitDirectionsThroughTheWorkspace(t *testing.T) {
-	root := taskWorkspace(t, `{"MetaData":{"Schema":{"FJ1":[{"A2":"Amount","L12":2},{"A2":"Note"}]}}}`)
+	root := processWriteTaskWorkspace(t, `{"MetaData":{"Schema":{"FJ1":[{"A2":"Amount","L12":2},{"A2":"Note"}]}}}`)
 	loaded := false
 	client, calls := processWriteServer(t, "", func(call processWriteCall) (int, string) {
 		switch {
 		case strings.HasSuffix(call.Path, "/CreateNewSchema"):
-			return 200, taskNewSchema
+			return 200, processWriteTaskNewSchema
 		case strings.HasSuffix(call.Path, "/SaveSchema"):
-			return 200, `{"success":true,"schemaUid":"` + taskSchemaUID + `"}`
+			return 200, `{"success":true,"schemaUid":"` + processWriteTaskSchemaUID + `"}`
 		case strings.HasSuffix(call.Path, "/GetIsFileDesignMode"):
 			return 200, `{"success":true,"value":true}`
 		case strings.HasSuffix(call.Path, "/LoadPackagesToDB"):
@@ -149,11 +149,11 @@ func TestCreateUserTaskAppliesExplicitDirectionsThroughTheWorkspace(t *testing.T
 	result := client.CreateUserTask(context.Background(), ProcessWriteCreateTaskRequest{Code: "UsrTask", Package: "UsrPkg", Title: "Task", Culture: "en-US",
 		WorkspacePath: root, Parameters: ProcessWriteTaskDefinitions(parameters)})
 	got := processWriteMessages(result)
-	want := []string{"Info: Created user task schema 'UsrTask' (" + taskSchemaUID + ").", "Info: Building package 'UsrPkg'...",
+	want := []string{"Info: Created user task schema 'UsrTask' (" + processWriteTaskSchemaUID + ").", "Info: Building package 'UsrPkg'...",
 		"Info: Applying direction metadata for 2 parameter(s) on 'UsrTask'...", "Info: Loading workspace packages to database to apply direction metadata changes...",
 		"None: Start load packages to database on a web application", "Info: Load packages to database on a web application completed",
 		"Info: Building package 'UsrPkg'...", "Info: Done add-user-task"}
-	if result.ExitCode != 0 || strings.Join(got, "\n") != strings.Join(want, "\n") || !loaded || len(taskCalls(*calls, "/BuildPackage")) != 2 {
+	if result.ExitCode != 0 || strings.Join(got, "\n") != strings.Join(want, "\n") || !loaded || len(processWriteTaskCalls(*calls, "/BuildPackage")) != 2 {
 		t.Fatalf("%q", got)
 	}
 	metadata, _ := os.ReadFile(filepath.Join(root, "packages/UsrPkg/Schemas/UsrTask/metadata.json"))
@@ -163,13 +163,13 @@ func TestCreateUserTaskAppliesExplicitDirectionsThroughTheWorkspace(t *testing.T
 }
 
 func TestCreateUserTaskStopsWhenFileDesignModeIsOff(t *testing.T) {
-	root := taskWorkspace(t, `{"MetaData":{"Schema":{"FJ1":[{"A2":"Amount"}]}}}`)
+	root := processWriteTaskWorkspace(t, `{"MetaData":{"Schema":{"FJ1":[{"A2":"Amount"}]}}}`)
 	client, calls := processWriteServer(t, "", func(call processWriteCall) (int, string) {
 		switch {
 		case strings.HasSuffix(call.Path, "/CreateNewSchema"):
-			return 200, taskNewSchema
+			return 200, processWriteTaskNewSchema
 		case strings.HasSuffix(call.Path, "/SaveSchema"):
-			return 200, `{"success":true,"schemaUid":"` + taskSchemaUID + `"}`
+			return 200, `{"success":true,"schemaUid":"` + processWriteTaskSchemaUID + `"}`
 		case strings.HasSuffix(call.Path, "/GetIsFileDesignMode"):
 			return 200, `{"success":true,"value":false}`
 		}
@@ -181,17 +181,17 @@ func TestCreateUserTaskStopsWhenFileDesignModeIsOff(t *testing.T) {
 	if result.ExitCode != 1 || last.Value != "Parameter direction metadata for user task 'UsrTask' was written to the workspace but not applied on the environment: "+
 		"file system development mode is disabled on the environment. The user task schema 'UsrTask' has already been created and built on the environment, so do not "+
 		"re-run add-user-task: enable file system development mode (clio turn-fsm on) and run 'clio pkg-to-db' followed by 'clio compile-package UsrPkg' to finish applying the directions." ||
-		len(taskCalls(*calls, "/LoadPackagesToDB")) != 0 {
+		len(processWriteTaskCalls(*calls, "/LoadPackagesToDB")) != 0 {
 		t.Fatalf("%+v", result)
 	}
 }
 
 func TestCreateUserTaskRefusals(t *testing.T) {
-	root := taskWorkspace(t, "")
+	root := processWriteTaskWorkspace(t, "")
 	client, calls := processWriteServer(t, "", func(call processWriteCall) (int, string) {
 		switch {
 		case strings.HasSuffix(call.Path, "/CreateNewSchema"):
-			return 200, taskNewSchema
+			return 200, processWriteTaskNewSchema
 		case strings.HasSuffix(call.Path, "/GetAvailableEntitySchemas"):
 			return 200, `{"items":[{"uId":"cccccccc-1111-2222-3333-444444444444","name":"Account"},{"uId":"dddddddd-1111-2222-3333-444444444444","name":"account"}]}`
 		case strings.HasSuffix(call.Path, "/SaveSchema"):
@@ -233,17 +233,17 @@ func TestCreateUserTaskRefusals(t *testing.T) {
 }
 
 func TestModifyUserTaskParametersEditsTheWorkspaceTask(t *testing.T) {
-	root := taskWorkspace(t, `{"MetaData":{"Schema":{"FJ1":[{"A2":"Keep","L12":1},{"A2":"Drop","L12":0}]}}}`)
+	root := processWriteTaskWorkspace(t, `{"MetaData":{"Schema":{"FJ1":[{"A2":"Keep","L12":1},{"A2":"Drop","L12":0}]}}}`)
 	client, calls := processWriteServer(t, "", func(call processWriteCall) (int, string) {
 		switch {
 		case strings.HasSuffix(call.Path, "/GetWorkspaceItems"):
-			return 200, `{"items":[{"uId":"` + taskSchemaUID + `","name":"usrtask","packageUId":"` + taskPackageUID + `","packageName":"usrpkg"},{"uId":"` + taskSchemaUID + `","name":"UsrTask","packageName":"Other"}]}`
+			return 200, `{"items":[{"uId":"` + processWriteTaskSchemaUID + `","name":"usrtask","packageUId":"` + processWriteTaskPackageUID + `","packageName":"usrpkg"},{"uId":"` + processWriteTaskSchemaUID + `","name":"UsrTask","packageName":"Other"}]}`
 		case strings.HasSuffix(call.Path, "/GetSchema"):
-			return 200, `{"success":true,"schema":{"uId":"` + taskSchemaUID + `","name":"UsrTask","parameters":[` +
+			return 200, `{"success":true,"schema":{"uId":"` + processWriteTaskSchemaUID + `","name":"UsrTask","parameters":[` +
 				`{"uId":"11111111-0000-0000-0000-000000000001","name":"Keep","caption":[],"itemProperties":[],"type":1,"resulting":true,"serializable":true,"icon":"i","extra":1},` +
 				`{"uId":"11111111-0000-0000-0000-000000000002","name":"Drop","caption":[],"itemProperties":[],"type":1,"resulting":true,"serializable":true,"icon":"i"}]}}`
 		case strings.HasSuffix(call.Path, "/SaveSchema"):
-			return 200, `{"success":true,"schemaUid":"` + taskSchemaUID + `"}`
+			return 200, `{"success":true,"schemaUid":"` + processWriteTaskSchemaUID + `"}`
 		case strings.HasSuffix(call.Path, "/GetIsFileDesignMode"):
 			return 200, `{"success":true,"value":true}`
 		case strings.HasSuffix(call.Path, "/LoadPackagesToDB"):
@@ -254,31 +254,31 @@ func TestModifyUserTaskParametersEditsTheWorkspaceTask(t *testing.T) {
 	result := client.ModifyUserTaskParameters(context.Background(), ProcessWriteModifyTaskRequest{UserTaskName: "UsrTask", Culture: "en-US", WorkspacePath: root,
 		AddParameters: []string{"code=Added;title=Added;type=Integer"}, RemoveParameters: []string{"drop"}, SetDirections: []string{"Added=Out"}})
 	got := processWriteMessages(result)
-	want := []string{"Info: Updated user task schema 'UsrTask' (" + taskSchemaUID + ").", "Info: Building package 'usrpkg'...",
+	want := []string{"Info: Updated user task schema 'UsrTask' (" + processWriteTaskSchemaUID + ").", "Info: Building package 'usrpkg'...",
 		"Info: Applying direction metadata for 2 parameter(s) on 'UsrTask'..."}
 	if result.ExitCode != 1 || strings.Join(got[:3], "\n") != strings.Join(want, "\n") ||
 		got[len(got)-1] != "Error: Parameter 'Added' was not found in metadata for user task 'UsrTask'." {
 		t.Fatalf("%q", got)
 	}
-	if body := taskCalls(*calls, "/GetSchema")[0].Body; body != `{"schemaUId":"`+taskSchemaUID+`","useFullHierarchy":false,"cultures":[]}` {
+	if body := processWriteTaskCalls(*calls, "/GetSchema")[0].Body; body != `{"schemaUId":"`+processWriteTaskSchemaUID+`","useFullHierarchy":false,"cultures":[]}` {
 		t.Fatalf("get %s", body)
 	}
-	if body := taskCalls(*calls, "/GetWorkspaceItems")[0].Body; body != "" {
+	if body := processWriteTaskCalls(*calls, "/GetWorkspaceItems")[0].Body; body != "" {
 		t.Fatalf("items body %q", body)
 	}
 	var saved processWriteTaskSchema
-	_ = json.Unmarshal([]byte(taskCalls(*calls, "/SaveSchema")[0].Body), &saved)
+	_ = json.Unmarshal([]byte(processWriteTaskCalls(*calls, "/SaveSchema")[0].Body), &saved)
 	if len(saved.Parameters) != 2 || *saved.Parameters[0].Name != "Keep" || *saved.Parameters[1].Name != "Added" || *saved.Parameters[1].Direction != 1 ||
-		saved.Parameters[0].Direction != nil || strings.Contains(taskCalls(*calls, "/SaveSchema")[0].Body, `"extra"`) {
-		t.Fatalf("saved %s", taskCalls(*calls, "/SaveSchema")[0].Body)
+		saved.Parameters[0].Direction != nil || strings.Contains(processWriteTaskCalls(*calls, "/SaveSchema")[0].Body, `"extra"`) {
+		t.Fatalf("saved %s", processWriteTaskCalls(*calls, "/SaveSchema")[0].Body)
 	}
 }
 
 func TestModifyUserTaskParametersRefusals(t *testing.T) {
-	root := taskWorkspace(t, "")
+	root := processWriteTaskWorkspace(t, "")
 	client, calls := processWriteServer(t, "", func(call processWriteCall) (int, string) {
 		if strings.HasSuffix(call.Path, "/GetWorkspaceItems") {
-			return 200, `{"items":[{"uId":"` + taskSchemaUID + `","name":"UsrTask","packageName":"UsrPkg"}]}`
+			return 200, `{"items":[{"uId":"` + processWriteTaskSchemaUID + `","name":"UsrTask","packageName":"UsrPkg"}]}`
 		}
 		if strings.HasSuffix(call.Path, "/GetSchema") {
 			return 200, `{"success":true,"schema":{"name":"UsrTask","parameters":[{"name":"A","type":1}]}}`
@@ -305,13 +305,13 @@ func TestModifyUserTaskParametersRefusals(t *testing.T) {
 			t.Errorf("%+v: %+v", item.request, result)
 		}
 	}
-	if len(taskCalls(*calls, "/SaveSchema")) != 0 {
+	if len(processWriteTaskCalls(*calls, "/SaveSchema")) != 0 {
 		t.Fatal("a refused edit was saved")
 	}
 }
 
 func TestProcessWriteTaskDefinitionsFollowClio(t *testing.T) {
-	parameters := []ProcessWriteTaskParameter{{Code: "L", Title: "List", Type: "CompositeValueList", Lookup: " ", Direction: " Out ", LazyLoad: boolPointer(false),
+	parameters := []ProcessWriteTaskParameter{{Code: "L", Title: "List", Type: "CompositeValueList", Lookup: " ", Direction: " Out ", LazyLoad: processWriteBoolPointer(false),
 		Items: []ProcessWriteTaskParameter{{Code: "C", Title: "Child", Type: "Text", Items: []ProcessWriteTaskParameter{{Code: "G", Title: "Grand", Type: "Text"}}}}}}
 	if got := strings.Join(ProcessWriteTaskDefinitions(parameters), "|"); got != "code=L;title=List;type=CompositeValueList;direction=Out;lazyLoad=false" {
 		t.Fatalf("%s", got)

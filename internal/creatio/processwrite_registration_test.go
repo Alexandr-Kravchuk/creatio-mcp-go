@@ -9,19 +9,19 @@ import (
 )
 
 const (
-	registrationTask    = "aaaaaaaa-0000-0000-0000-000000000001"
-	registrationPackage = "11111111-2222-3333-4444-555555555555"
+	processWriteRegistrationTask    = "aaaaaaaa-0000-0000-0000-000000000001"
+	processWriteRegistrationPackage = "11111111-2222-3333-4444-555555555555"
 )
 
-// registrationWorkspace builds a clio workspace with package UsrPkg owning user task UsrTask1.
-func registrationWorkspace(t *testing.T) string {
+// processWriteRegistrationWorkspace builds a clio workspace with package UsrPkg owning user task UsrTask1.
+func processWriteRegistrationWorkspace(t *testing.T) string {
 	t.Helper()
 	root := t.TempDir()
 	files := map[string]string{
 		".clio/workspaceSettings.json":                     `{"Packages":["UsrPkg"]}`,
-		"packages/UsrPkg/descriptor.json":                  `{"Descriptor":{"Name":"UsrPkg","UId":"` + registrationPackage + `"}}`,
+		"packages/UsrPkg/descriptor.json":                  `{"Descriptor":{"Name":"UsrPkg","UId":"` + processWriteRegistrationPackage + `"}}`,
 		"packages/UsrPkg/Schemas/UsrTask1/descriptor.json": `{"Descriptor":{"UId":"AAAAAAAA-0000-0000-0000-000000000001","Name":"UsrTask1","ManagerName":"ProcessUserTaskSchemaManager"}}`,
-		"packages/UsrPkg/Schemas/UsrTask1/metadata.json":   `{"MetaData":{"Schema":{"ManagerName":"ProcessUserTaskSchemaManager","A2":"UsrTask1","UId":"` + registrationTask + `","B6":"` + registrationPackage + `"}}}`,
+		"packages/UsrPkg/Schemas/UsrTask1/metadata.json":   `{"MetaData":{"Schema":{"ManagerName":"ProcessUserTaskSchemaManager","A2":"UsrTask1","UId":"` + processWriteRegistrationTask + `","B6":"` + processWriteRegistrationPackage + `"}}}`,
 	}
 	for path, content := range files {
 		full := filepath.Join(root, path)
@@ -35,13 +35,13 @@ func registrationWorkspace(t *testing.T) string {
 	return root
 }
 
-func registrationRequest(root string) ProcessWriteRegisterRequest {
-	return ProcessWriteRegisterRequest{WorkspacePath: root, PackageName: "UsrPkg", UserTaskUID: registrationTask, Caption: `It's a \ test`}
+func processWriteRegistrationRequest(root string) ProcessWriteRegisterRequest {
+	return ProcessWriteRegisterRequest{WorkspacePath: root, PackageName: "UsrPkg", UserTaskUID: processWriteRegistrationTask, Caption: `It's a \ test`}
 }
 
 func TestRegisterProcessElementWritesBothDialectsAndIsRepeatable(t *testing.T) {
-	root := registrationWorkspace(t)
-	result := RegisterProcessElement(registrationRequest(root))
+	root := processWriteRegistrationWorkspace(t)
+	result := RegisterProcessElement(processWriteRegistrationRequest(root))
 	scripts := filepath.Join(root, "packages", "UsrPkg", "SqlScripts")
 	postgres := filepath.Join(scripts, "UsrRegisterTaskaaaaaaaa000000000000000000000001PostgreSql", "UsrRegisterTaskaaaaaaaa000000000000000000000001PostgreSql.sql")
 	mssql := filepath.Join(scripts, "UsrRegisterTaskaaaaaaaa000000000000000000000001MsSql", "UsrRegisterTaskaaaaaaaa000000000000000000000001MsSql.sql")
@@ -52,7 +52,7 @@ func TestRegisterProcessElementWritesBothDialectsAndIsRepeatable(t *testing.T) {
 	sql, _ := os.ReadFile(postgres)
 	wantPostgres := "INSERT INTO \"SysProcessUserTask\" (\"SysUserTaskSchemaUId\", \"Caption\")\r\nSELECT s.\"UId\", E'It''s a \\\\ test'\r\n" +
 		"FROM \"SysSchema\" s\r\nINNER JOIN \"SysPackage\" p ON p.\"Id\" = s.\"SysPackageId\"\r\n" +
-		"WHERE s.\"UId\" = '" + registrationTask + "' AND p.\"UId\" = '" + registrationPackage + "'\r\n" +
+		"WHERE s.\"UId\" = '" + processWriteRegistrationTask + "' AND p.\"UId\" = '" + processWriteRegistrationPackage + "'\r\n" +
 		"AND NOT EXISTS (SELECT 1 FROM \"SysProcessUserTask\" t WHERE t.\"SysUserTaskSchemaUId\" = s.\"UId\");"
 	if string(sql) != wantPostgres {
 		t.Fatalf("postgres sql:\n%q", sql)
@@ -68,13 +68,13 @@ func TestRegisterProcessElementWritesBothDialectsAndIsRepeatable(t *testing.T) {
 	}
 	// A re-run keeps every artifact, an LF copy of the script included.
 	_ = os.WriteFile(mssql, []byte(strings.ReplaceAll(string(sql), "\r\n", "\n")), 0o644)
-	if again := RegisterProcessElement(registrationRequest(root)); again.ExitCode != 0 {
+	if again := RegisterProcessElement(processWriteRegistrationRequest(root)); again.ExitCode != 0 {
 		t.Fatalf("re-run: %+v", again)
 	}
 	if kept, _ := os.ReadFile(filepath.Join(filepath.Dir(mssql), "descriptor.json")); string(kept) != string(descriptor) {
 		t.Fatal("the descriptor was rewritten")
 	}
-	changed := registrationRequest(root)
+	changed := processWriteRegistrationRequest(root)
 	changed.Caption = "Other"
 	if failure := RegisterProcessElement(changed); failure.ExitCode != 1 || failure.Messages[0].Value != "Existing registration SQL differs; it was preserved: "+postgres {
 		t.Fatalf("%+v", failure)
@@ -82,7 +82,7 @@ func TestRegisterProcessElementWritesBothDialectsAndIsRepeatable(t *testing.T) {
 }
 
 func TestRegisterProcessElementRefusals(t *testing.T) {
-	root := registrationWorkspace(t)
+	root := processWriteRegistrationWorkspace(t)
 	required := "A workspace path, package name, nonempty user-task UId and caption are required."
 	cases := []struct {
 		label  string
@@ -101,15 +101,15 @@ func TestRegisterProcessElementRefusals(t *testing.T) {
 			"The requested user-task UId was not found in the workspace package."},
 		{"duplicate", nil, func() {
 			_ = os.MkdirAll(filepath.Join(root, "packages/UsrPkg/Schemas/UsrTask2"), 0o755)
-			_ = os.WriteFile(filepath.Join(root, "packages/UsrPkg/Schemas/UsrTask2/descriptor.json"), []byte(`{"Descriptor":{"UId":"`+registrationTask+`"}}`), 0o644)
+			_ = os.WriteFile(filepath.Join(root, "packages/UsrPkg/Schemas/UsrTask2/descriptor.json"), []byte(`{"Descriptor":{"UId":"`+processWriteRegistrationTask+`"}}`), 0o644)
 		}, "The user-task UId is duplicated in the package."},
 		{"metadata mismatch", nil, func() {
 			_ = os.WriteFile(filepath.Join(root, "packages/UsrPkg/Schemas/UsrTask1/metadata.json"),
-				[]byte(`{"MetaData":{"Schema":{"ManagerName":"ProcessUserTaskSchemaManager","A2":"Other","UId":"`+registrationTask+`","B6":"`+registrationPackage+`"}}}`), 0o644)
+				[]byte(`{"MetaData":{"Schema":{"ManagerName":"ProcessUserTaskSchemaManager","A2":"Other","UId":"`+processWriteRegistrationTask+`","B6":"`+processWriteRegistrationPackage+`"}}}`), 0o644)
 		}, "The schema must be a user task with matching descriptor, metadata and package identities."},
 	}
 	for _, item := range cases {
-		request := registrationRequest(root)
+		request := processWriteRegistrationRequest(root)
 		if item.mutate != nil {
 			item.mutate(&request)
 		}
@@ -127,12 +127,12 @@ func TestRegisterProcessElementRefusals(t *testing.T) {
 }
 
 func TestRegisterProcessElementRefusesAConflictingDescriptorBeforeWriting(t *testing.T) {
-	root := registrationWorkspace(t)
+	root := processWriteRegistrationWorkspace(t)
 	directory := filepath.Join(root, "packages", "UsrPkg", "SqlScripts", "UsrRegisterTaskaaaaaaaa000000000000000000000001MsSql")
 	_ = os.MkdirAll(directory, 0o755)
 	descriptor := filepath.Join(directory, "descriptor.json")
 	_ = os.WriteFile(descriptor, []byte(`{"SqlScript":{"UId":"bbbbbbbb-0000-0000-0000-000000000001","Name":"UsrRegisterTaskaaaaaaaa000000000000000000000001MsSql","DBEngineType":2,"InstallType":1}}`), 0o644)
-	result := RegisterProcessElement(registrationRequest(root))
+	result := RegisterProcessElement(processWriteRegistrationRequest(root))
 	if result.ExitCode != 1 || result.Messages[0].Value != "Existing registration descriptor conflicts with the requested task: "+descriptor {
 		t.Fatalf("%+v", result)
 	}

@@ -21,9 +21,9 @@ func processWriteFastInstall(t *testing.T) {
 	t.Cleanup(func() { processWriteInstallTimings, appWriteInstallTimings = saved, savedApp })
 }
 
-// installServer is a Creatio that accepts the upload and install, answers its health route with health
+// processWriteInstallServer is a Creatio that accepts the upload and install, answers its health route with health
 // and the CrtProcessBuilder Ping with ping.
-func installServer(t *testing.T, installed string, health int, ping string) (*Client, *[]string) {
+func processWriteInstallServer(t *testing.T, installed string, health int, ping string) (*Client, *[]string) {
 	t.Helper()
 	var mu sync.Mutex
 	routes := []string{}
@@ -59,7 +59,7 @@ func installServer(t *testing.T, installed string, health int, ping string) (*Cl
 	return newFormsTestClient(t, server.URL), &routes
 }
 
-func installMessages(result CommandResult) []string {
+func processWriteInstallMessages(result CommandResult) []string {
 	texts := []string{}
 	for _, message := range result.Messages {
 		texts = append(texts, message.MessageType+": "+message.Value)
@@ -70,9 +70,9 @@ func installMessages(result CommandResult) []string {
 func TestInstallProcessBuilderInstallsWaitsAndPings(t *testing.T) {
 	processWriteFastInstall(t)
 	processWriteArchive(t, map[string]string{"descriptor.json": `{"Descriptor":{"PackageVersion":"1.6.6.80","Name":"CrtProcessBuilder"}}`})
-	client, routes := installServer(t, "1.6.6.70", 200, `{"PingResult":{"success":true}}`)
+	client, routes := processWriteInstallServer(t, "1.6.6.70", 200, `{"PingResult":{"success":true}}`)
 	result := client.InstallProcessBuilder(context.Background())
-	got := installMessages(result)
+	got := processWriteInstallMessages(result)
 	if result.ExitCode != 0 || got[len(got)-1] != "None: Done" {
 		t.Fatalf("%d\n%s", result.ExitCode, strings.Join(got, "\n"))
 	}
@@ -96,7 +96,7 @@ func TestInstallProcessBuilderInstallsWaitsAndPings(t *testing.T) {
 func TestInstallProcessBuilderRefusals(t *testing.T) {
 	processWriteFastInstall(t)
 	processWriteArchive(t, map[string]string{"descriptor.json": `{"Descriptor":{"PackageVersion":"1.6.6.80"}}`})
-	client, routes := installServer(t, "1.7.0.0", 200, `{}`)
+	client, routes := processWriteInstallServer(t, "1.7.0.0", 200, `{}`)
 	result := client.InstallProcessBuilder(context.Background())
 	if result.ExitCode != 1 || !strings.HasPrefix(result.Messages[0].Value, "Refusing: the environment carries CrtProcessBuilder 1.7.0.0, and this clio ships 1.6.6.80") ||
 		!strings.HasSuffix(result.Messages[0].Value, "Update clio instead. A command-line override exists for the case where the rollback is what you want; see 'clio install-process-builder -H'.") {
@@ -122,17 +122,17 @@ func TestInstallProcessBuilderRefusals(t *testing.T) {
 func TestInstallProcessBuilderReportsAnUncompiledPackage(t *testing.T) {
 	processWriteFastInstall(t)
 	processWriteArchive(t, map[string]string{"descriptor.json": `{"Descriptor":{}}`})
-	client, _ := installServer(t, "", 200, `{"PingResult":{"success":false}}`)
+	client, _ := processWriteInstallServer(t, "", 200, `{"PingResult":{"success":false}}`)
 	result := client.InstallProcessBuilder(context.Background())
-	got := installMessages(result)
+	got := processWriteInstallMessages(result)
 	if result.ExitCode != 1 || !strings.HasPrefix(got[0], "Warning: The bundled CrtProcessBuilder archive at ") ||
 		!strings.Contains(got[0], "has a descriptor.json without a readable Descriptor.PackageVersion. Reinstall or update clio itself. Installing anyway") ||
 		!strings.HasPrefix(got[len(got)-1], "Error: CrtProcessBuilder's Ping route answered, but not with success") {
 		t.Fatalf("%s", strings.Join(got, "\n"))
 	}
-	client, _ = installServer(t, "", 503, `{}`)
+	client, _ = processWriteInstallServer(t, "", 503, `{}`)
 	result = client.InstallProcessBuilder(context.Background())
-	got = installMessages(result)
+	got = processWriteInstallMessages(result)
 	if result.ExitCode != 1 || !strings.Contains(strings.Join(got, "\n"), "Error: \tError: 503 Service Unavailable") ||
 		!strings.HasPrefix(got[len(got)-2], "Warning: Server did not become ready within 0 seconds.") ||
 		!strings.HasPrefix(got[len(got)-1], "Error: CrtProcessBuilder was installed, but the environment did not become ready") {

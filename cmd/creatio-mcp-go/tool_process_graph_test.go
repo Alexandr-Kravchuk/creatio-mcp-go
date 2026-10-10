@@ -21,14 +21,14 @@ func processGraphCallAll(t *testing.T, session *mcp.ClientSession, args map[stri
 		_ = json.Unmarshal([]byte(result.Content[0].(*mcp.TextContent).Text), &answer)
 		if first == nil {
 			first = answer
-		} else if encoded, again := mustJSON(first), mustJSON(answer); encoded != again {
+		} else if encoded, again := processGraphJSON(first), processGraphJSON(answer); encoded != again {
 			t.Fatalf("paths disagree: %s vs %s", encoded, again)
 		}
 	}
 	return first
 }
 
-func mustJSON(value any) string {
+func processGraphJSON(value any) string {
 	encoded, _ := json.Marshal(value)
 	return string(encoded)
 }

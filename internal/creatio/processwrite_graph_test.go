@@ -7,7 +7,7 @@ import (
 
 // Cases ported from clio's ProcessGraphValidatorTests.
 
-func pgNode(name, typ string) *ProcessGraphNode {
+func processWritePGNode(name, typ string) *ProcessGraphNode {
 	node := &ProcessGraphNode{Type: &typ}
 	if name != "\x00" {
 		node.Name = &name
@@ -15,7 +15,7 @@ func pgNode(name, typ string) *ProcessGraphNode {
 	return node
 }
 
-func pgEdge(source, target string, kind ProcessGraphFlowKind) *ProcessGraphEdge {
+func processWritePGEdge(source, target string, kind ProcessGraphFlowKind) *ProcessGraphEdge {
 	edge := &ProcessGraphEdge{FlowKind: kind}
 	if source != "\x00" {
 		edge.Source = &source
@@ -26,16 +26,16 @@ func pgEdge(source, target string, kind ProcessGraphFlowKind) *ProcessGraphEdge 
 	return edge
 }
 
-func pgSeq(source, target string) *ProcessGraphEdge {
-	return pgEdge(source, target, ProcessGraphSequence)
+func processWritePGSeq(source, target string) *ProcessGraphEdge {
+	return processWritePGEdge(source, target, ProcessGraphSequence)
 }
-func pgCond(source, target string) *ProcessGraphEdge {
-	return pgEdge(source, target, ProcessGraphConditional)
+func processWritePGCond(source, target string) *ProcessGraphEdge {
+	return processWritePGEdge(source, target, ProcessGraphConditional)
 }
-func pgDef(source, target string) *ProcessGraphEdge {
-	return pgEdge(source, target, ProcessGraphDefault)
+func processWritePGDef(source, target string) *ProcessGraphEdge {
+	return processWritePGEdge(source, target, ProcessGraphDefault)
 }
-func pgWith(edge *ProcessGraphEdge, condition string, results ...string) *ProcessGraphEdge {
+func processWritePGWith(edge *ProcessGraphEdge, condition string, results ...string) *ProcessGraphEdge {
 	edge.Condition = &condition
 	if condition == "\x00" {
 		edge.Condition = nil
@@ -46,7 +46,7 @@ func pgWith(edge *ProcessGraphEdge, condition string, results ...string) *Proces
 	return edge
 }
 
-func pgRules(findings []ProcessGraphFinding) []string {
+func processWritePGRules(findings []ProcessGraphFinding) []string {
 	rules := []string{}
 	for _, finding := range findings {
 		rules = append(rules, finding.Severity+":"+finding.RuleID)
@@ -54,7 +54,7 @@ func pgRules(findings []ProcessGraphFinding) []string {
 	return rules
 }
 
-func pgHas(findings []ProcessGraphFinding, severity, rule string, node string) bool {
+func processWritePGHas(findings []ProcessGraphFinding, severity, rule string, node string) bool {
 	for _, finding := range findings {
 		if finding.Severity == severity && finding.RuleID == rule && (node == "" || (finding.NodeName != nil && *finding.NodeName == node)) {
 			return true
@@ -71,117 +71,117 @@ func TestValidateProcessGraphRuleCases(t *testing.T) {
 		hasErrors bool
 		want      []string // exact severity:rule sequence
 	}{
-		{"canonical", []*ProcessGraphNode{pgNode("s", "startEvent"), pgNode("r", "readDataUserTask"), pgNode("e", "endEvent")},
-			[]*ProcessGraphEdge{pgSeq("s", "r"), pgSeq("r", "e")}, false, []string{}},
-		{"build tokens", []*ProcessGraphNode{pgNode("s", "startEvent"), pgNode("x", "changeAccessRights"), pgNode("y", "callActivity"), pgNode("z", "preconfiguredpage"), pgNode("e", "endEvent")},
-			[]*ProcessGraphEdge{pgSeq("s", "x"), pgSeq("x", "y"), pgSeq("y", "z"), pgSeq("z", "e")}, false, []string{}},
-		{"R1 incoming start", []*ProcessGraphNode{pgNode("s", "startEvent"), pgNode("a", "activityUserTask"), pgNode("e", "endEvent")},
-			[]*ProcessGraphEdge{pgSeq("s", "a"), pgSeq("a", "e"), pgSeq("a", "s")}, true, []string{"error:R1", "warning:R12"}},
-		{"R2 outgoing end", []*ProcessGraphNode{pgNode("s", "startEvent"), pgNode("r", "readDataUserTask"), pgNode("e", "endEvent")},
-			[]*ProcessGraphEdge{pgSeq("s", "r"), pgSeq("r", "e"), pgSeq("e", "r")}, true, []string{"error:R2"}},
-		{"R15 missing node", []*ProcessGraphNode{pgNode("s", "startEvent"), pgNode("r", "readDataUserTask"), pgNode("e", "endEvent")},
-			[]*ProcessGraphEdge{pgSeq("s", "r"), pgSeq("r", "e"), pgSeq("r", "ghost")}, true, []string{"error:R15"}},
-		{"R3 none", []*ProcessGraphNode{pgNode("a", "activityUserTask"), pgNode("e", "endEvent")},
-			[]*ProcessGraphEdge{pgSeq("a", "e")}, true, []string{"error:R3"}},
-		{"signal starts", []*ProcessGraphNode{pgNode("added", "signalStart"), pgNode("changed", "signalStart"), pgNode("r", "readDataUserTask"), pgNode("e", "endEvent")},
-			[]*ProcessGraphEdge{pgSeq("added", "r"), pgSeq("changed", "r"), pgSeq("r", "e")}, false, []string{}},
-		{"R3 two simple", []*ProcessGraphNode{pgNode("s1", "startEvent"), pgNode("s2", "startEvent"), pgNode("r", "readDataUserTask"), pgNode("e", "endEvent")},
-			[]*ProcessGraphEdge{pgSeq("s1", "r"), pgSeq("s2", "r"), pgSeq("r", "e")}, true, []string{"error:R3"}},
-		{"R10", []*ProcessGraphNode{pgNode("s", "startEvent"), pgNode("g", "eventBasedGateway"), pgNode("a", "activityUserTask"), pgNode("e", "endEvent")},
-			[]*ProcessGraphEdge{pgSeq("s", "g"), pgSeq("g", "a"), pgSeq("a", "e")}, true, []string{"error:R10"}},
-		{"R11", []*ProcessGraphNode{pgNode("s", "startEvent"), pgNode("g", "parallelGateway"), pgNode("a", "activityUserTask"), pgNode("e", "endEvent")},
-			[]*ProcessGraphEdge{pgSeq("s", "g"), pgCond("g", "a"), pgSeq("a", "e")}, true, []string{"error:R11", "warning:R13"}},
-		{"R13 from start", []*ProcessGraphNode{pgNode("s", "startEvent"), pgNode("a", "activityUserTask"), pgNode("e", "endEvent")},
-			[]*ProcessGraphEdge{pgCond("s", "a"), pgSeq("a", "e")}, false, []string{"warning:R13", "warning:R13"}},
-		{"condition on plain and default", []*ProcessGraphNode{pgNode("s", "startEvent"), pgNode("a", "activityUserTask"), pgNode("g", "exclusiveGateway"),
-			pgNode("b", "activityUserTask"), pgNode("c", "activityUserTask"), pgNode("e", "endEvent")},
-			[]*ProcessGraphEdge{pgSeq("s", "a"), pgWith(pgSeq("a", "g"), "[#Amount#] > 100"), pgWith(pgCond("g", "b"), "[#Amount#] > 100"),
-				pgWith(pgDef("g", "c"), "[#Amount#] <= 100"), pgSeq("b", "e"), pgSeq("c", "e")}, false, []string{}},
-		{"R7 beside a default", []*ProcessGraphNode{pgNode("s", "startEvent"), pgNode("g", "exclusiveGateway"), pgNode("a", "activityUserTask"),
-			pgNode("b", "activityUserTask"), pgNode("c", "activityUserTask"), pgNode("e", "endEvent")},
-			[]*ProcessGraphEdge{pgSeq("s", "g"), pgWith(pgCond("g", "a"), "[#Amount#] > 100"), pgDef("g", "b"), pgSeq("g", "c"), pgSeq("a", "e"), pgSeq("b", "e"), pgSeq("c", "e")},
+		{"canonical", []*ProcessGraphNode{processWritePGNode("s", "startEvent"), processWritePGNode("r", "readDataUserTask"), processWritePGNode("e", "endEvent")},
+			[]*ProcessGraphEdge{processWritePGSeq("s", "r"), processWritePGSeq("r", "e")}, false, []string{}},
+		{"build tokens", []*ProcessGraphNode{processWritePGNode("s", "startEvent"), processWritePGNode("x", "changeAccessRights"), processWritePGNode("y", "callActivity"), processWritePGNode("z", "preconfiguredpage"), processWritePGNode("e", "endEvent")},
+			[]*ProcessGraphEdge{processWritePGSeq("s", "x"), processWritePGSeq("x", "y"), processWritePGSeq("y", "z"), processWritePGSeq("z", "e")}, false, []string{}},
+		{"R1 incoming start", []*ProcessGraphNode{processWritePGNode("s", "startEvent"), processWritePGNode("a", "activityUserTask"), processWritePGNode("e", "endEvent")},
+			[]*ProcessGraphEdge{processWritePGSeq("s", "a"), processWritePGSeq("a", "e"), processWritePGSeq("a", "s")}, true, []string{"error:R1", "warning:R12"}},
+		{"R2 outgoing end", []*ProcessGraphNode{processWritePGNode("s", "startEvent"), processWritePGNode("r", "readDataUserTask"), processWritePGNode("e", "endEvent")},
+			[]*ProcessGraphEdge{processWritePGSeq("s", "r"), processWritePGSeq("r", "e"), processWritePGSeq("e", "r")}, true, []string{"error:R2"}},
+		{"R15 missing node", []*ProcessGraphNode{processWritePGNode("s", "startEvent"), processWritePGNode("r", "readDataUserTask"), processWritePGNode("e", "endEvent")},
+			[]*ProcessGraphEdge{processWritePGSeq("s", "r"), processWritePGSeq("r", "e"), processWritePGSeq("r", "ghost")}, true, []string{"error:R15"}},
+		{"R3 none", []*ProcessGraphNode{processWritePGNode("a", "activityUserTask"), processWritePGNode("e", "endEvent")},
+			[]*ProcessGraphEdge{processWritePGSeq("a", "e")}, true, []string{"error:R3"}},
+		{"signal starts", []*ProcessGraphNode{processWritePGNode("added", "signalStart"), processWritePGNode("changed", "signalStart"), processWritePGNode("r", "readDataUserTask"), processWritePGNode("e", "endEvent")},
+			[]*ProcessGraphEdge{processWritePGSeq("added", "r"), processWritePGSeq("changed", "r"), processWritePGSeq("r", "e")}, false, []string{}},
+		{"R3 two simple", []*ProcessGraphNode{processWritePGNode("s1", "startEvent"), processWritePGNode("s2", "startEvent"), processWritePGNode("r", "readDataUserTask"), processWritePGNode("e", "endEvent")},
+			[]*ProcessGraphEdge{processWritePGSeq("s1", "r"), processWritePGSeq("s2", "r"), processWritePGSeq("r", "e")}, true, []string{"error:R3"}},
+		{"R10", []*ProcessGraphNode{processWritePGNode("s", "startEvent"), processWritePGNode("g", "eventBasedGateway"), processWritePGNode("a", "activityUserTask"), processWritePGNode("e", "endEvent")},
+			[]*ProcessGraphEdge{processWritePGSeq("s", "g"), processWritePGSeq("g", "a"), processWritePGSeq("a", "e")}, true, []string{"error:R10"}},
+		{"R11", []*ProcessGraphNode{processWritePGNode("s", "startEvent"), processWritePGNode("g", "parallelGateway"), processWritePGNode("a", "activityUserTask"), processWritePGNode("e", "endEvent")},
+			[]*ProcessGraphEdge{processWritePGSeq("s", "g"), processWritePGCond("g", "a"), processWritePGSeq("a", "e")}, true, []string{"error:R11", "warning:R13"}},
+		{"R13 from start", []*ProcessGraphNode{processWritePGNode("s", "startEvent"), processWritePGNode("a", "activityUserTask"), processWritePGNode("e", "endEvent")},
+			[]*ProcessGraphEdge{processWritePGCond("s", "a"), processWritePGSeq("a", "e")}, false, []string{"warning:R13", "warning:R13"}},
+		{"condition on plain and default", []*ProcessGraphNode{processWritePGNode("s", "startEvent"), processWritePGNode("a", "activityUserTask"), processWritePGNode("g", "exclusiveGateway"),
+			processWritePGNode("b", "activityUserTask"), processWritePGNode("c", "activityUserTask"), processWritePGNode("e", "endEvent")},
+			[]*ProcessGraphEdge{processWritePGSeq("s", "a"), processWritePGWith(processWritePGSeq("a", "g"), "[#Amount#] > 100"), processWritePGWith(processWritePGCond("g", "b"), "[#Amount#] > 100"),
+				processWritePGWith(processWritePGDef("g", "c"), "[#Amount#] <= 100"), processWritePGSeq("b", "e"), processWritePGSeq("c", "e")}, false, []string{}},
+		{"R7 beside a default", []*ProcessGraphNode{processWritePGNode("s", "startEvent"), processWritePGNode("g", "exclusiveGateway"), processWritePGNode("a", "activityUserTask"),
+			processWritePGNode("b", "activityUserTask"), processWritePGNode("c", "activityUserTask"), processWritePGNode("e", "endEvent")},
+			[]*ProcessGraphEdge{processWritePGSeq("s", "g"), processWritePGWith(processWritePGCond("g", "a"), "[#Amount#] > 100"), processWritePGDef("g", "b"), processWritePGSeq("g", "c"), processWritePGSeq("a", "e"), processWritePGSeq("b", "e"), processWritePGSeq("c", "e")},
 			true, []string{"warning:R7", "error:R18"}},
-		{"two defaults", []*ProcessGraphNode{pgNode("s", "startEvent"), pgNode("g", "exclusiveGateway"), pgNode("a", "activityUserTask"),
-			pgNode("b", "activityUserTask"), pgNode("c", "activityUserTask"), pgNode("e", "endEvent")},
-			[]*ProcessGraphEdge{pgSeq("s", "g"), pgWith(pgCond("g", "a"), "[#Amount#] > 100"), pgDef("g", "b"), pgDef("g", "c"), pgSeq("a", "e"), pgSeq("b", "e"), pgSeq("c", "e")},
+		{"two defaults", []*ProcessGraphNode{processWritePGNode("s", "startEvent"), processWritePGNode("g", "exclusiveGateway"), processWritePGNode("a", "activityUserTask"),
+			processWritePGNode("b", "activityUserTask"), processWritePGNode("c", "activityUserTask"), processWritePGNode("e", "endEvent")},
+			[]*ProcessGraphEdge{processWritePGSeq("s", "g"), processWritePGWith(processWritePGCond("g", "a"), "[#Amount#] > 100"), processWritePGDef("g", "b"), processWritePGDef("g", "c"), processWritePGSeq("a", "e"), processWritePGSeq("b", "e"), processWritePGSeq("c", "e")},
 			true, []string{"error:R14", "error:R18"}},
-		{"R7 alone default plain to gateway", []*ProcessGraphNode{pgNode("s", "startEvent"), pgNode("g", "exclusiveGateway"), pgNode("h", "exclusiveGateway"),
-			pgNode("b", "activityUserTask"), pgNode("c", "activityUserTask"), pgNode("e", "endEvent")},
-			[]*ProcessGraphEdge{pgSeq("s", "g"), pgDef("g", "b"), pgSeq("g", "h"), pgSeq("h", "c"), pgSeq("b", "e"), pgSeq("c", "e")}, false, []string{"warning:R7"}},
-		{"results silence R13", []*ProcessGraphNode{pgNode("s", "startEvent"), pgNode("a", "activityUserTask"), pgNode("yes", "endEvent"), pgNode("no", "endEvent")},
-			[]*ProcessGraphEdge{pgSeq("s", "a"), pgWith(pgCond("a", "yes"), "\x00", "Positive"), pgSeq("a", "no")}, false, []string{}},
-		{"R13 neither", []*ProcessGraphNode{pgNode("s", "startEvent"), pgNode("a", "activityUserTask"), pgNode("yes", "endEvent"), pgNode("no", "endEvent")},
-			[]*ProcessGraphEdge{pgSeq("s", "a"), pgCond("a", "yes"), pgSeq("a", "no")}, false, []string{"warning:R13"}},
-		{"R19", []*ProcessGraphNode{pgNode("s", "startEvent"), pgNode("a", "activityUserTask"), pgNode("yes", "endEvent")},
-			[]*ProcessGraphEdge{pgSeq("s", "a"), pgWith(pgSeq("a", "yes"), "\x00", "Positive")}, true, []string{"error:R19"}},
-		{"R20", []*ProcessGraphNode{pgNode("s", "startEvent"), pgNode("a", "activityUserTask"), pgNode("yes", "endEvent"), pgNode("no", "endEvent")},
-			[]*ProcessGraphEdge{pgSeq("s", "a"), pgWith(pgCond("a", "yes"), "1 > 0", "Positive"), pgSeq("a", "no")}, true, []string{"error:R20"}},
-		{"R13 blank", []*ProcessGraphNode{pgNode("s", "startEvent"), pgNode("a", "activityUserTask"), pgNode("yes", "endEvent"), pgNode("no", "endEvent")},
-			[]*ProcessGraphEdge{pgSeq("s", "a"), pgWith(pgCond("a", "yes"), "  "), pgSeq("a", "no")}, true, []string{"error:R13"}},
-		{"R14 no conditional", []*ProcessGraphNode{pgNode("s", "startEvent"), pgNode("a", "activityUserTask"), pgNode("b", "activityUserTask"), pgNode("c", "activityUserTask"), pgNode("e", "endEvent")},
-			[]*ProcessGraphEdge{pgSeq("s", "a"), pgDef("a", "b"), pgSeq("a", "c"), pgSeq("b", "e"), pgSeq("c", "e")}, true, []string{"error:R14"}},
-		{"R15 orphan", []*ProcessGraphNode{pgNode("s", "startEvent"), pgNode("r", "readDataUserTask"), pgNode("e", "endEvent"), pgNode("orphan", "activityUserTask")},
-			[]*ProcessGraphEdge{pgSeq("s", "r"), pgSeq("r", "e")}, true, []string{"error:R15"}},
-		{"R7 no default", []*ProcessGraphNode{pgNode("s", "startEvent"), pgNode("g", "exclusiveGateway"), pgNode("a1", "activityUserTask"), pgNode("a2", "activityUserTask"), pgNode("e", "endEvent")},
-			[]*ProcessGraphEdge{pgSeq("s", "g"), pgWith(pgCond("g", "a1"), "x"), pgWith(pgCond("g", "a2"), "y"), pgSeq("a1", "e"), pgSeq("a2", "e")}, false, []string{"warning:R7"}},
-		{"R12", []*ProcessGraphNode{pgNode("s", "startEvent"), pgNode("a", "activityUserTask"), pgNode("e1", "endEvent"), pgNode("e2", "endEvent")},
-			[]*ProcessGraphEdge{pgSeq("s", "a"), pgSeq("a", "e1"), pgSeq("a", "e2")}, false, []string{"warning:R12"}},
-		{"R17", []*ProcessGraphNode{pgNode("s", "startEvent"), pgNode("add", "AddDataUserTask"), pgNode("a", "activityUserTask"), pgNode("e", "endEvent")},
-			[]*ProcessGraphEdge{pgSeq("s", "add"), pgSeq("add", "a"), pgSeq("a", "e")}, false, []string{"warning:R17"}},
-		{"no R17 into read data", []*ProcessGraphNode{pgNode("s", "startEvent"), pgNode("add", "addDataUserTask"), pgNode("r", "readData"), pgNode("e", "endEvent")},
-			[]*ProcessGraphEdge{pgSeq("s", "add"), pgSeq("add", "r"), pgSeq("r", "e")}, false, []string{}},
-		{"unknown", []*ProcessGraphNode{pgNode("s", "startEvent"), pgNode("x", "totallyBogusType"), pgNode("e", "endEvent")},
-			[]*ProcessGraphEdge{pgSeq("s", "x"), pgSeq("x", "e")}, true, []string{"error:UNKNOWN"}},
-		{"dup", []*ProcessGraphNode{pgNode("s", "startEvent"), pgNode("a", "activityUserTask"), pgNode("a", "readDataUserTask"), pgNode("e", "endEvent")},
-			[]*ProcessGraphEdge{pgSeq("s", "a"), pgSeq("a", "e")}, true, []string{"error:DUP"}},
-		{"R18 two plain", []*ProcessGraphNode{pgNode("s", "startEvent"), pgNode("t", "userTask"), pgNode("a", "endEvent"), pgNode("b", "endEvent"), pgNode("c", "endEvent")},
-			[]*ProcessGraphEdge{pgSeq("s", "t"), pgSeq("t", "a"), pgSeq("t", "b"), pgCond("t", "c")}, true, []string{"warning:R12", "error:R18", "warning:R13"}},
-		{"unnamed", []*ProcessGraphNode{pgNode("s", "startEvent"), pgNode("\x00", "userTask"), pgNode("e", "endEvent")},
-			[]*ProcessGraphEdge{pgSeq("s", "e")}, true, []string{"error:UNNAMED", "error:R15"}},
-		{"blank endpoint", []*ProcessGraphNode{pgNode("s", "startEvent"), pgNode("e", "endEvent")},
-			[]*ProcessGraphEdge{pgSeq("s", "e"), pgSeq("s", "\x00")}, true, []string{"error:R15"}},
-		{"both endpoints blank", []*ProcessGraphNode{pgNode("s", "startEvent"), pgNode("e", "endEvent")},
-			[]*ProcessGraphEdge{pgSeq("s", "e"), pgSeq("\x00", "\x00")}, true, []string{"error:R15"}},
-		{"null entries", []*ProcessGraphNode{pgNode("s", "startEvent"), nil, pgNode("e", "endEvent")},
-			[]*ProcessGraphEdge{pgSeq("s", "e"), nil}, false, []string{}},
-		{"R8 conditional split on an activity", []*ProcessGraphNode{pgNode("s", "startEvent"), pgNode("a", "activityUserTask"), pgNode("b", "activityUserTask"),
-			pgNode("c", "activityUserTask"), pgNode("join", "parallelGateway"), pgNode("e", "endEvent")},
-			[]*ProcessGraphEdge{pgSeq("s", "a"), pgWith(pgCond("a", "b"), "1 > 0"), pgWith(pgCond("a", "c"), "2 > 0"), pgSeq("b", "join"), pgSeq("c", "join"), pgSeq("join", "e")},
+		{"R7 alone default plain to gateway", []*ProcessGraphNode{processWritePGNode("s", "startEvent"), processWritePGNode("g", "exclusiveGateway"), processWritePGNode("h", "exclusiveGateway"),
+			processWritePGNode("b", "activityUserTask"), processWritePGNode("c", "activityUserTask"), processWritePGNode("e", "endEvent")},
+			[]*ProcessGraphEdge{processWritePGSeq("s", "g"), processWritePGDef("g", "b"), processWritePGSeq("g", "h"), processWritePGSeq("h", "c"), processWritePGSeq("b", "e"), processWritePGSeq("c", "e")}, false, []string{"warning:R7"}},
+		{"results silence R13", []*ProcessGraphNode{processWritePGNode("s", "startEvent"), processWritePGNode("a", "activityUserTask"), processWritePGNode("yes", "endEvent"), processWritePGNode("no", "endEvent")},
+			[]*ProcessGraphEdge{processWritePGSeq("s", "a"), processWritePGWith(processWritePGCond("a", "yes"), "\x00", "Positive"), processWritePGSeq("a", "no")}, false, []string{}},
+		{"R13 neither", []*ProcessGraphNode{processWritePGNode("s", "startEvent"), processWritePGNode("a", "activityUserTask"), processWritePGNode("yes", "endEvent"), processWritePGNode("no", "endEvent")},
+			[]*ProcessGraphEdge{processWritePGSeq("s", "a"), processWritePGCond("a", "yes"), processWritePGSeq("a", "no")}, false, []string{"warning:R13"}},
+		{"R19", []*ProcessGraphNode{processWritePGNode("s", "startEvent"), processWritePGNode("a", "activityUserTask"), processWritePGNode("yes", "endEvent")},
+			[]*ProcessGraphEdge{processWritePGSeq("s", "a"), processWritePGWith(processWritePGSeq("a", "yes"), "\x00", "Positive")}, true, []string{"error:R19"}},
+		{"R20", []*ProcessGraphNode{processWritePGNode("s", "startEvent"), processWritePGNode("a", "activityUserTask"), processWritePGNode("yes", "endEvent"), processWritePGNode("no", "endEvent")},
+			[]*ProcessGraphEdge{processWritePGSeq("s", "a"), processWritePGWith(processWritePGCond("a", "yes"), "1 > 0", "Positive"), processWritePGSeq("a", "no")}, true, []string{"error:R20"}},
+		{"R13 blank", []*ProcessGraphNode{processWritePGNode("s", "startEvent"), processWritePGNode("a", "activityUserTask"), processWritePGNode("yes", "endEvent"), processWritePGNode("no", "endEvent")},
+			[]*ProcessGraphEdge{processWritePGSeq("s", "a"), processWritePGWith(processWritePGCond("a", "yes"), "  "), processWritePGSeq("a", "no")}, true, []string{"error:R13"}},
+		{"R14 no conditional", []*ProcessGraphNode{processWritePGNode("s", "startEvent"), processWritePGNode("a", "activityUserTask"), processWritePGNode("b", "activityUserTask"), processWritePGNode("c", "activityUserTask"), processWritePGNode("e", "endEvent")},
+			[]*ProcessGraphEdge{processWritePGSeq("s", "a"), processWritePGDef("a", "b"), processWritePGSeq("a", "c"), processWritePGSeq("b", "e"), processWritePGSeq("c", "e")}, true, []string{"error:R14"}},
+		{"R15 orphan", []*ProcessGraphNode{processWritePGNode("s", "startEvent"), processWritePGNode("r", "readDataUserTask"), processWritePGNode("e", "endEvent"), processWritePGNode("orphan", "activityUserTask")},
+			[]*ProcessGraphEdge{processWritePGSeq("s", "r"), processWritePGSeq("r", "e")}, true, []string{"error:R15"}},
+		{"R7 no default", []*ProcessGraphNode{processWritePGNode("s", "startEvent"), processWritePGNode("g", "exclusiveGateway"), processWritePGNode("a1", "activityUserTask"), processWritePGNode("a2", "activityUserTask"), processWritePGNode("e", "endEvent")},
+			[]*ProcessGraphEdge{processWritePGSeq("s", "g"), processWritePGWith(processWritePGCond("g", "a1"), "x"), processWritePGWith(processWritePGCond("g", "a2"), "y"), processWritePGSeq("a1", "e"), processWritePGSeq("a2", "e")}, false, []string{"warning:R7"}},
+		{"R12", []*ProcessGraphNode{processWritePGNode("s", "startEvent"), processWritePGNode("a", "activityUserTask"), processWritePGNode("e1", "endEvent"), processWritePGNode("e2", "endEvent")},
+			[]*ProcessGraphEdge{processWritePGSeq("s", "a"), processWritePGSeq("a", "e1"), processWritePGSeq("a", "e2")}, false, []string{"warning:R12"}},
+		{"R17", []*ProcessGraphNode{processWritePGNode("s", "startEvent"), processWritePGNode("add", "AddDataUserTask"), processWritePGNode("a", "activityUserTask"), processWritePGNode("e", "endEvent")},
+			[]*ProcessGraphEdge{processWritePGSeq("s", "add"), processWritePGSeq("add", "a"), processWritePGSeq("a", "e")}, false, []string{"warning:R17"}},
+		{"no R17 into read data", []*ProcessGraphNode{processWritePGNode("s", "startEvent"), processWritePGNode("add", "addDataUserTask"), processWritePGNode("r", "readData"), processWritePGNode("e", "endEvent")},
+			[]*ProcessGraphEdge{processWritePGSeq("s", "add"), processWritePGSeq("add", "r"), processWritePGSeq("r", "e")}, false, []string{}},
+		{"unknown", []*ProcessGraphNode{processWritePGNode("s", "startEvent"), processWritePGNode("x", "totallyBogusType"), processWritePGNode("e", "endEvent")},
+			[]*ProcessGraphEdge{processWritePGSeq("s", "x"), processWritePGSeq("x", "e")}, true, []string{"error:UNKNOWN"}},
+		{"dup", []*ProcessGraphNode{processWritePGNode("s", "startEvent"), processWritePGNode("a", "activityUserTask"), processWritePGNode("a", "readDataUserTask"), processWritePGNode("e", "endEvent")},
+			[]*ProcessGraphEdge{processWritePGSeq("s", "a"), processWritePGSeq("a", "e")}, true, []string{"error:DUP"}},
+		{"R18 two plain", []*ProcessGraphNode{processWritePGNode("s", "startEvent"), processWritePGNode("t", "userTask"), processWritePGNode("a", "endEvent"), processWritePGNode("b", "endEvent"), processWritePGNode("c", "endEvent")},
+			[]*ProcessGraphEdge{processWritePGSeq("s", "t"), processWritePGSeq("t", "a"), processWritePGSeq("t", "b"), processWritePGCond("t", "c")}, true, []string{"warning:R12", "error:R18", "warning:R13"}},
+		{"unnamed", []*ProcessGraphNode{processWritePGNode("s", "startEvent"), processWritePGNode("\x00", "userTask"), processWritePGNode("e", "endEvent")},
+			[]*ProcessGraphEdge{processWritePGSeq("s", "e")}, true, []string{"error:UNNAMED", "error:R15"}},
+		{"blank endpoint", []*ProcessGraphNode{processWritePGNode("s", "startEvent"), processWritePGNode("e", "endEvent")},
+			[]*ProcessGraphEdge{processWritePGSeq("s", "e"), processWritePGSeq("s", "\x00")}, true, []string{"error:R15"}},
+		{"both endpoints blank", []*ProcessGraphNode{processWritePGNode("s", "startEvent"), processWritePGNode("e", "endEvent")},
+			[]*ProcessGraphEdge{processWritePGSeq("s", "e"), processWritePGSeq("\x00", "\x00")}, true, []string{"error:R15"}},
+		{"null entries", []*ProcessGraphNode{processWritePGNode("s", "startEvent"), nil, processWritePGNode("e", "endEvent")},
+			[]*ProcessGraphEdge{processWritePGSeq("s", "e"), nil}, false, []string{}},
+		{"R8 conditional split on an activity", []*ProcessGraphNode{processWritePGNode("s", "startEvent"), processWritePGNode("a", "activityUserTask"), processWritePGNode("b", "activityUserTask"),
+			processWritePGNode("c", "activityUserTask"), processWritePGNode("join", "parallelGateway"), processWritePGNode("e", "endEvent")},
+			[]*ProcessGraphEdge{processWritePGSeq("s", "a"), processWritePGWith(processWritePGCond("a", "b"), "1 > 0"), processWritePGWith(processWritePGCond("a", "c"), "2 > 0"), processWritePGSeq("b", "join"), processWritePGSeq("c", "join"), processWritePGSeq("join", "e")},
 			false, []string{"warning:R8"}},
-		{"no R8 plain split", []*ProcessGraphNode{pgNode("s", "startEvent"), pgNode("a", "activityUserTask"), pgNode("b", "activityUserTask"),
-			pgNode("c", "activityUserTask"), pgNode("join", "parallelGateway"), pgNode("e", "endEvent")},
-			[]*ProcessGraphEdge{pgSeq("s", "a"), pgSeq("a", "b"), pgSeq("a", "c"), pgSeq("b", "join"), pgSeq("c", "join"), pgSeq("join", "e")},
+		{"no R8 plain split", []*ProcessGraphNode{processWritePGNode("s", "startEvent"), processWritePGNode("a", "activityUserTask"), processWritePGNode("b", "activityUserTask"),
+			processWritePGNode("c", "activityUserTask"), processWritePGNode("join", "parallelGateway"), processWritePGNode("e", "endEvent")},
+			[]*ProcessGraphEdge{processWritePGSeq("s", "a"), processWritePGSeq("a", "b"), processWritePGSeq("a", "c"), processWritePGSeq("b", "join"), processWritePGSeq("c", "join"), processWritePGSeq("join", "e")},
 			false, []string{"warning:R12"}},
-		{"R8 direct default into the join", []*ProcessGraphNode{pgNode("s", "startEvent"), pgNode("x", "exclusiveGateway"), pgNode("a", "activityUserTask"),
-			pgNode("and", "parallelGateway"), pgNode("e", "endEvent")},
-			[]*ProcessGraphEdge{pgSeq("s", "x"), pgDef("x", "and"), pgWith(pgCond("x", "a"), "1 > 0"), pgSeq("a", "and"), pgSeq("and", "e")},
+		{"R8 direct default into the join", []*ProcessGraphNode{processWritePGNode("s", "startEvent"), processWritePGNode("x", "exclusiveGateway"), processWritePGNode("a", "activityUserTask"),
+			processWritePGNode("and", "parallelGateway"), processWritePGNode("e", "endEvent")},
+			[]*ProcessGraphEdge{processWritePGSeq("s", "x"), processWritePGDef("x", "and"), processWritePGWith(processWritePGCond("x", "a"), "1 > 0"), processWritePGSeq("a", "and"), processWritePGSeq("and", "e")},
 			false, []string{"warning:R8"}},
-		{"self loop", []*ProcessGraphNode{pgNode("s", "startEvent"), pgNode("a", "activityUserTask"), pgNode("e", "endEvent")},
-			[]*ProcessGraphEdge{pgSeq("s", "a"), pgSeq("a", "a"), pgSeq("a", "e")}, true, []string{"warning:R12", "error:R15"}},
+		{"self loop", []*ProcessGraphNode{processWritePGNode("s", "startEvent"), processWritePGNode("a", "activityUserTask"), processWritePGNode("e", "endEvent")},
+			[]*ProcessGraphEdge{processWritePGSeq("s", "a"), processWritePGSeq("a", "a"), processWritePGSeq("a", "e")}, true, []string{"warning:R12", "error:R15"}},
 	}
 	for _, item := range cases {
 		hasErrors, findings := ValidateProcessGraph(item.nodes, item.edges)
-		if got := strings.Join(pgRules(findings), ","); got != strings.Join(item.want, ",") || hasErrors != item.hasErrors {
+		if got := strings.Join(processWritePGRules(findings), ","); got != strings.Join(item.want, ",") || hasErrors != item.hasErrors {
 			t.Errorf("%s: hasErrors=%v findings=%s", item.label, hasErrors, got)
 		}
 	}
 }
 
 func TestValidateProcessGraphMessagesAndEndpoints(t *testing.T) {
-	_, findings := ValidateProcessGraph([]*ProcessGraphNode{pgNode("s", "startEvent"), pgNode("e", "endEvent")},
-		[]*ProcessGraphEdge{pgSeq("s", "e"), pgSeq("\x00", "\x00")})
+	_, findings := ValidateProcessGraph([]*ProcessGraphNode{processWritePGNode("s", "startEvent"), processWritePGNode("e", "endEvent")},
+		[]*ProcessGraphEdge{processWritePGSeq("s", "e"), processWritePGSeq("\x00", "\x00")})
 	if len(findings) != 1 || findings[0].Message != "Flow references a missing node (source '(missing source)', target '(missing target)')." ||
 		findings[0].NodeName != nil || *findings[0].Source != "(missing source)" || *findings[0].Target != "(missing target)" {
 		t.Fatalf("%+v", findings)
 	}
-	_, findings = ValidateProcessGraph([]*ProcessGraphNode{pgNode("s", "startEvent"), pgNode("t", "userTask"), pgNode("a", "endEvent"), pgNode("b", "endEvent"), pgNode("c", "endEvent")},
-		[]*ProcessGraphEdge{pgSeq("s", "t"), pgWith(pgCond("t", "a"), "x"), pgDef("t", "b"), pgSeq("t", "c")})
-	if !pgHas(findings, "error", "R18", "t") || pgHas(findings, "warning", "R12", "") ||
+	_, findings = ValidateProcessGraph([]*ProcessGraphNode{processWritePGNode("s", "startEvent"), processWritePGNode("t", "userTask"), processWritePGNode("a", "endEvent"), processWritePGNode("b", "endEvent"), processWritePGNode("c", "endEvent")},
+		[]*ProcessGraphEdge{processWritePGSeq("s", "t"), processWritePGWith(processWritePGCond("t", "a"), "x"), processWritePGDef("t", "b"), processWritePGSeq("t", "c")})
+	if !processWritePGHas(findings, "error", "R18", "t") || processWritePGHas(findings, "warning", "R12", "") ||
 		!strings.Contains(findings[0].Message, "carrying 2 flows that have none ('t' -> 'b', 't' -> 'c')") || findings[0].Source != nil {
 		t.Fatalf("%+v", findings)
 	}
-	_, findings = ValidateProcessGraph([]*ProcessGraphNode{pgNode("s", "startEvent"), pgNode("g", "exclusiveGateway"), pgNode("a1", "activityUserTask"), pgNode("a2", "activityUserTask"), pgNode("e", "endEvent")},
-		[]*ProcessGraphEdge{pgSeq("s", "g"), pgWith(pgCond("g", "a1"), "x"), pgWith(pgCond("g", "a2"), "y"), pgSeq("a1", "e"), pgSeq("a2", "e")})
+	_, findings = ValidateProcessGraph([]*ProcessGraphNode{processWritePGNode("s", "startEvent"), processWritePGNode("g", "exclusiveGateway"), processWritePGNode("a1", "activityUserTask"), processWritePGNode("a2", "activityUserTask"), processWritePGNode("e", "endEvent")},
+		[]*ProcessGraphEdge{processWritePGSeq("s", "g"), processWritePGWith(processWritePGCond("g", "a1"), "x"), processWritePGWith(processWritePGCond("g", "a2"), "y"), processWritePGSeq("a1", "e"), processWritePGSeq("a2", "e")})
 	want := `Diverging gateway 'g' has no default flow: if no condition matches at run time the instance stops there and the process log reads "None of the conditions were met after the element 'g'". Add a default flow, or confirm the conditions cover every case.`
 	if len(findings) != 1 || findings[0].Message != want || *findings[0].NodeName != "g" {
 		t.Fatalf("%+v", findings)
