@@ -257,3 +257,53 @@ func TestGetRequestInfoIsReadOnlyAndReachableBothWays(t *testing.T) {
 		t.Fatal("get-request-info must be callable by its raw name")
 	}
 }
+
+func TestLocalDataBindingToolsThroughExecutorsAndGate(t *testing.T) {
+	root := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(root, ".clio"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(filepath.Join(root, "packages", "UsrParityPkg"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	_ = os.WriteFile(filepath.Join(root, ".clio", "workspaceSettings.json"), []byte("{}"), 0o600)
+	requests := 0
+	session := dataWriteTestSession(t, func(w http.ResponseWriter, r *http.Request) { requests++; http.NotFound(w, r) })
+	create := map[string]any{"package-name": "UsrParityPkg", "schema-name": "SysSettings", "binding-name": "B", "workspace-path": root,
+		"values": `{"Id":"11111111-1111-1111-1111-111111111111","Code":"UsrParity"}`}
+	raw, _ := dataWriteTestCall(t, session, "", "create-data-binding", create)
+	if !raw.IsError || !strings.Contains(dataWriteTestText(raw), "was NOT executed") {
+		t.Fatalf("raw call escaped the write gate: %s", dataWriteTestText(raw))
+	}
+	for _, executor := range []string{"clio-run", "clio-run-destructive"} {
+		for _, call := range []struct {
+			tool string
+			args map[string]any
+		}{
+			{"create-data-binding", create},
+			{"add-data-binding-row", map[string]any{"package-name": "UsrParityPkg", "binding-name": "B", "workspace-path": root,
+				"values": `{"Id":"22222222-2222-2222-2222-222222222222","Code":"Second"}`}},
+			{"remove-data-binding-row", map[string]any{"package-name": "UsrParityPkg", "binding-name": "B", "workspace-path": root,
+				"key-value": "22222222-2222-2222-2222-222222222222"}},
+		} {
+			result, answer := dataWriteTestCall(t, session, executor, call.tool, call.args)
+			if result.IsError || answer["exit-code"] != float64(0) {
+				t.Fatalf("%s %s: %s", executor, call.tool, dataWriteTestText(result))
+			}
+		}
+	}
+	if _, err := os.Stat(filepath.Join(root, "packages", "UsrParityPkg", "Data", "B", "data.json")); err != nil {
+		t.Fatal(err)
+	}
+	result, _ := dataWriteTestCall(t, session, "clio-run", "add-data-binding-row", map[string]any{"package-name": "P", "binding-name": "B", "values": "{}"})
+	if !result.IsError || dataWriteTestText(result) != "Error: tool 'add-data-binding-row' failed: workspace-path is required." {
+		t.Fatalf("missing workspace %s", dataWriteTestText(result))
+	}
+	_, answer := dataWriteTestCall(t, session, "clio-run", "create-data-binding", map[string]any{"package-name": "UsrParityPkg", "schema-name": "Contact", "workspace-path": root})
+	if messages := answer["execution-log-messages"].([]any); !strings.HasPrefix(messages[0].(map[string]any)["value"].(string), "[EnvironmentResolutionException] Either a configured environment name") {
+		t.Fatalf("non-template without environment %v", answer)
+	}
+	if requests != 0 {
+		t.Fatalf("an offline call reached Creatio: %d", requests)
+	}
+}

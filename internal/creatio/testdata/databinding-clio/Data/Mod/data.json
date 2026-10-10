@@ -1,0 +1,39 @@
+{
+  "PackageData": [
+    {
+      "Row": [
+        {
+          "SchemaColumnUId": "e0c474a3-e4bc-457e-bb67-c1ec1b399f60",
+          "Value": "UsrX"
+        },
+        {
+          "SchemaColumnUId": "d3afc924-2d21-4c0e-b2f3-9f8c180221f9",
+          "Value": "b659d704-3955-e011-981f-00155d043204",
+          "DisplayValue": "Folders"
+        },
+        {
+          "SchemaColumnUId": "ae0e45ca-c495-4fe7-a39d-3ab7278e1617",
+          "Value": "44444444-4444-4444-4444-444444444444"
+        },
+        {
+          "SchemaColumnUId": "6d827ba7-a622-47cc-8f11-b40b91c7441a",
+          "Value": "UE5HREFUQQ=="
+        },
+        {
+          "SchemaColumnUId": "380d55b9-487c-429b-9aff-e04101ffc307",
+          "Value": "cccccccc-0000-0000-0000-000000000001",
+          "DisplayValue": "logo"
+        },
+        {
+          "SchemaColumnUId": "e6243d2b-cc8f-4b2d-8646-36bac9fb48e9",
+          "Value": "null",
+          "DisplayValue": "null"
+        },
+        {
+          "SchemaColumnUId": "1e4741cc-9a6e-446f-9865-5f5910fadd67",
+          "Value": 3
+        }
+      ]
+    }
+  ]
+}

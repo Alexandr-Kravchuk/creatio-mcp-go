@@ -1,0 +1,33 @@
+{
+  "PackageData": [
+    {
+      "Row": [
+        {
+          "SchemaColumnUId": "ae0e45ca-c495-4fe7-a39d-3ab7278e1617",
+          "ColumnName": "Id",
+          "Value": ""
+        },
+        {
+          "SchemaColumnUId": "13aad544-ec30-4e76-a373-f0cff3202e24",
+          "ColumnName": "Code",
+          "Value": ""
+        },
+        {
+          "SchemaColumnUId": "9e53fd7c-dde4-4502-a64c-b9e34148108b",
+          "ColumnName": "Description",
+          "Value": ""
+        },
+        {
+          "SchemaColumnUId": "736c30a7-c0ec-4fa9-b034-2552b319b633",
+          "ColumnName": "Name",
+          "Value": ""
+        },
+        {
+          "SchemaColumnUId": "f7960a8a-1fd4-41d2-997a-fd78ea60075f",
+          "ColumnName": "ValueTypeName",
+          "Value": ""
+        }
+      ]
+    }
+  ]
+}

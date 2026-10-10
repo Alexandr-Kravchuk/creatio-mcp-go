@@ -443,7 +443,7 @@ func dataWriteRoundTripDate(raw string) (string, bool) {
 		if strings.HasSuffix(strings.ToUpper(text), "Z") {
 			return parsed.UTC().Format("2006-01-02T15:04:05.0000000Z"), true
 		}
-		return parsed.Local().Format("2006-01-02T15:04:05.0000000-07:00"), true
+		return parsed.In(time.Now().Location()).Format("2006-01-02T15:04:05.0000000-07:00"), true
 	}
 	for _, layout := range []string{"2006-01-02T15:04:05.9999999", "2006-01-02T15:04", "2006-01-02 15:04:05", "2006-01-02", "01/02/2006 15:04:05", "01/02/2006"} {
 		if parsed, err := time.Parse(layout, text); err == nil {

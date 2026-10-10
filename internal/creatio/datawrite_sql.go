@@ -317,7 +317,7 @@ func dataWriteDateText(text string) (string, bool) {
 		return "", false
 	}
 	if !strings.HasSuffix(text, "Z") && (strings.Contains(text[19:], "+") || strings.Contains(text[19:], "-")) {
-		parsed = parsed.In(time.Local)
+		parsed = parsed.In(time.Now().Location())
 	}
 	return parsed.Format("01/02/2006 15:04:05"), true
 }

@@ -444,5 +444,111 @@
       "process-name": "UsrParityNoSuchProcess",
       "timeout": 1.5
     }
+  },
+  {
+    "label": "binding create without workspace",
+    "tool": "create-data-binding",
+    "clio-run": true,
+    "args": {
+      "package-name": "P",
+      "schema-name": "SysSettings"
+    }
+  },
+  {
+    "label": "binding create relative workspace",
+    "tool": "create-data-binding",
+    "clio-run": true,
+    "args": {
+      "package-name": "P",
+      "schema-name": "SysSettings",
+      "workspace-path": "rel/ws"
+    }
+  },
+  {
+    "label": "binding create missing workspace",
+    "tool": "create-data-binding",
+    "clio-run": true,
+    "args": {
+      "package-name": "P",
+      "schema-name": "SysSettings",
+      "workspace-path": "/UsrParityNoSuchWorkspace"
+    }
+  },
+  {
+    "label": "binding create not a workspace",
+    "tool": "create-data-binding",
+    "clio-run": true,
+    "args": {
+      "package-name": "P",
+      "schema-name": "SysSettings",
+      "workspace-path": "/"
+    }
+  },
+  {
+    "label": "binding create install type",
+    "tool": "create-data-binding",
+    "clio-run": true,
+    "args": {
+      "package-name": "P",
+      "schema-name": "SysSettings",
+      "install-type": 7,
+      "workspace-path": "/"
+    }
+  },
+  {
+    "label": "binding create values not a string",
+    "tool": "create-data-binding",
+    "clio-run": true,
+    "args": {
+      "package-name": "P",
+      "schema-name": "SysSettings",
+      "workspace-path": "/",
+      "values": {
+        "Code": "x"
+      }
+    }
+  },
+  {
+    "label": "binding add not a workspace",
+    "tool": "add-data-binding-row",
+    "clio-run": true,
+    "args": {
+      "package-name": "P",
+      "binding-name": "B",
+      "values": "{}",
+      "workspace-path": "/"
+    }
+  },
+  {
+    "label": "binding add blank values",
+    "tool": "add-data-binding-row",
+    "clio-run": true,
+    "args": {
+      "package-name": "P",
+      "binding-name": "B",
+      "values": " ",
+      "workspace-path": "/"
+    }
+  },
+  {
+    "label": "binding remove not a workspace",
+    "tool": "remove-data-binding-row",
+    "clio-run": true,
+    "args": {
+      "package-name": "P",
+      "binding-name": "B",
+      "key-value": "1",
+      "workspace-path": "/"
+    }
+  },
+  {
+    "label": "binding remove without workspace",
+    "tool": "remove-data-binding-row",
+    "clio-run": true,
+    "args": {
+      "package-name": "P",
+      "binding-name": "B",
+      "key-value": "1"
+    }
   }
 ]

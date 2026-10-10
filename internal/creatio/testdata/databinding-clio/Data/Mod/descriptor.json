@@ -1,0 +1,63 @@
+{
+  "Descriptor": {
+    "UId": "e09728ac-3121-4790-b0a5-5aa864b6270e",
+    "Name": "Mod",
+    "ModifiedOnUtc": "/Date(1791653549409)/",
+    "InstallType": 0,
+    "Schema": {
+      "UId": "2b2ed767-0b4b-4a7b-9de2-d48e14a2c0c5",
+      "Name": "SysModule"
+    },
+    "Columns": [
+      {
+        "ColumnUId": "e0c474a3-e4bc-457e-bb67-c1ec1b399f60",
+        "IsForceUpdate": false,
+        "IsKey": false,
+        "ColumnName": "Code",
+        "DataTypeValueUId": "ddb3a1ee-07e8-4d62-b7a9-d0e618b00fbd"
+      },
+      {
+        "ColumnUId": "d3afc924-2d21-4c0e-b2f3-9f8c180221f9",
+        "IsForceUpdate": false,
+        "IsKey": false,
+        "ColumnName": "FolderMode",
+        "DataTypeValueUId": "b295071f-7ea9-4e62-8d1a-919bf3732ff2"
+      },
+      {
+        "ColumnUId": "ae0e45ca-c495-4fe7-a39d-3ab7278e1617",
+        "IsForceUpdate": false,
+        "IsKey": true,
+        "ColumnName": "Id",
+        "DataTypeValueUId": "23018567-a13c-4320-8687-fd6f9e3699bd"
+      },
+      {
+        "ColumnUId": "6d827ba7-a622-47cc-8f11-b40b91c7441a",
+        "IsForceUpdate": false,
+        "IsKey": false,
+        "ColumnName": "Image16",
+        "DataTypeValueUId": "fa6e6e49-b996-475e-a77e-73904e4c5a88"
+      },
+      {
+        "ColumnUId": "380d55b9-487c-429b-9aff-e04101ffc307",
+        "IsForceUpdate": false,
+        "IsKey": false,
+        "ColumnName": "Logo",
+        "DataTypeValueUId": "b039feb0-ee7c-4884-8aa6-d6d45d84316f"
+      },
+      {
+        "ColumnUId": "e6243d2b-cc8f-4b2d-8646-36bac9fb48e9",
+        "IsForceUpdate": false,
+        "IsKey": false,
+        "ColumnName": "SysModuleVisa",
+        "DataTypeValueUId": "b295071f-7ea9-4e62-8d1a-919bf3732ff2"
+      },
+      {
+        "ColumnUId": "1e4741cc-9a6e-446f-9865-5f5910fadd67",
+        "IsForceUpdate": false,
+        "IsKey": false,
+        "ColumnName": "Type",
+        "DataTypeValueUId": "6b6b74e2-820d-490e-a017-2b73d4ccf2b0"
+      }
+    ]
+  }
+}
