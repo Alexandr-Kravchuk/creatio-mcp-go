@@ -167,7 +167,7 @@ func TestGetToolContractArgumentShapes(t *testing.T) {
 	}
 	errorValue := missing["error"].(map[string]any)
 	if errorValue["code"] != "tool-not-found" || errorValue["message"] != "Tool 'get-pag' is not registered by clio MCP. "+contractDiscoveryHint ||
-		!reflect.DeepEqual(errorValue["suggestions"], []any{"get-page", "create-page", "get-theme"}) {
+		!reflect.DeepEqual(errorValue["suggestions"], []any{"get-page", "set-logo", "create-page"}) {
 		t.Fatalf("missing error = %#v", errorValue)
 	}
 	mixed := contractAnswer(t, session, map[string]any{"args": map[string]any{"tool-names": []any{"get-page", "nope"}}})
