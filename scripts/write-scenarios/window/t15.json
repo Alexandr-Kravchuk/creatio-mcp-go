@@ -29,10 +29,10 @@
         "label": "compile-creatio package-name",
         "tool": "compile-creatio",
         "clio-run": true,
-        "settle-seconds": 30,
+        "settle-seconds": 600,
         "args": {"package-name": "{pkg}"},
         "known-differences": ["$.executionlogmessages", "$.correlationid"],
-        "why": "A package compile may answer in-progress (exit 0) after the response deadline (45 s on master, 150 s on 8.1.0.134); compile-status below carries the verdict."
+        "why": "A package compile may answer in-progress (exit 0) after the response deadline (45 s on master, 150 s on 8.1.0.134); compile-status below carries the verdict. The harness calls clio first, then this server: the 600 s settle before each side lets the first side's compile finish, because the platform serializes compiles."
       },
       {"kind": "expect", "step": "compile-creatio package-name", "path": "$.exitCode", "equals": 0},
       {
@@ -77,7 +77,7 @@
   },
   {
     "label": "restart-by-environment-name with the readiness wait, then restart-status",
-    "why": "T15, window-only: restarts the application for every user. Each side restarts the stand through its own server; the answer is the restart request's own result once an authenticated DataService round-trip answers again, or an in-progress note after the response deadline, after which restart-status reports ready. Nothing is created.",
+    "why": "T15, window-only: restarts the application for every user. Each side restarts the stand through its own server; the answer is the restart request's own result once an authenticated DataService round-trip answers again, or an in-progress note after the response deadline, after which restart-status reports ready. The 900 s settle before each side lets the first side's restart and readiness wait end before the second restarts the stand. Nothing is created.",
     "steps": [
       {
         "kind": "write",
@@ -85,7 +85,7 @@
         "tool": "restart-by-environment-name",
         "clio-run": true,
         "clio-environment-key": "environmentName",
-        "settle-seconds": 30,
+        "settle-seconds": 900,
         "args": {"waitTimeoutSeconds": 900},
         "known-differences": ["$.executionlogmessages", "$.correlationid"]
       },
