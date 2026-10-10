@@ -150,7 +150,7 @@ func TestManageRoleRefusalsAndGenericFailure(t *testing.T) {
 	_, client = newAdminWriteManageStand(t, map[string][]string{
 		"SelectQuery:SysAdminUnit":                            {adminWriteRows(child), adminWriteRows(), adminWriteRows(child)},
 		"SelectQuery:SysUserInRole":                           {adminWriteRows()},
-		"rest/GridUtilitiesService/DeleteRecords":             {`{"DeleteRecordsResult":"{\"success\":false,\"errorInfo\":{\"message\":\"password=secret\"}}"}`},
+		"rest/GridUtilitiesService/DeleteRecords":             {`{"DeleteRecordsResult":"{\"success\":false,\"errorInfo\":{\"message\":\"the server detail\"}}"}`},
 		"rest/AdministrationService/ActualizeAdminUnitInRole": {`{"ActualizeAdminUnitInRoleResult":true}`},
 	})
 	result = client.ManageAdministration(context.Background(), AdminWriteManageRole, AdminWriteManageRequest{

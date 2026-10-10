@@ -217,7 +217,7 @@ func adminWriteSTJDateTime(text string) time.Time {
 		if strings.HasSuffix(text, "Z") || strings.HasSuffix(text, "z") {
 			return parsed.UTC()
 		}
-		return parsed.In(time.Local)
+		return parsed.In(adminWriteLocalZone())
 	}
 	for _, layout := range []string{"2006-01-02T15:04:05.9999999", "2006-01-02T15:04:05", "2006-01-02"} {
 		if parsed, err := time.Parse(layout, text); err == nil {

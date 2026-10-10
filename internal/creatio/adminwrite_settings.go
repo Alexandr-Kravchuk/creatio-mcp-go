@@ -849,19 +849,22 @@ func dotnetParseDateTime(text string) (time.Time, bool) {
 	trimmed := strings.TrimFunc(text, unicode.IsSpace)
 	for _, layout := range []string{time.RFC3339Nano, "2006-01-02T15:04:05.9999999Z07:00"} {
 		if parsed, err := time.Parse(layout, trimmed); err == nil {
-			return parsed.In(time.Local), true
+			return parsed.In(adminWriteLocalZone()), true
 		}
 	}
 	for _, layout := range []string{"2006-01-02T15:04:05.9999999", "2006-01-02T15:04:05", "2006-01-02T15:04", "2006-01-02 15:04:05.9999999",
 		"2006-01-02 15:04:05", "2006-01-02 15:04", "2006-01-02", "01/02/2006 15:04:05", "01/02/2006 15:04", "01/02/2006", "1/2/2006 15:04:05",
 		"1/2/2006 15:04", "1/2/2006", "15:04:05", "15:04"} {
-		if parsed, err := time.ParseInLocation(layout, trimmed, time.Local); err == nil {
+		if parsed, err := time.ParseInLocation(layout, trimmed, adminWriteLocalZone()); err == nil {
 			if !strings.Contains(layout, "2006") {
 				now := time.Now()
-				parsed = time.Date(now.Year(), now.Month(), now.Day(), parsed.Hour(), parsed.Minute(), parsed.Second(), 0, time.Local)
+				parsed = time.Date(now.Year(), now.Month(), now.Day(), parsed.Hour(), parsed.Minute(), parsed.Second(), 0, adminWriteLocalZone())
 			}
 			return parsed, true
 		}
 	}
 	return time.Time{}, false
 }
+
+// adminWriteLocalZone is the host time zone, which .NET applies to a parsed date with an offset.
+func adminWriteLocalZone() *time.Location { return time.Now().Location() }

@@ -8,10 +8,10 @@ import (
 func TestCreateServerToServerOAuthAppResolvesTheUserAndAddsTheClient(t *testing.T) {
 	stand, client := newAdminWriteManageStand(t, map[string][]string{
 		"SelectQuery:SysAdminUnit":          {`{"success":true,"rows":[{"Id":"7f3b869f-34f3-4f20-ab4d-7480a5fdf647","Name":"Supervisor"}]}`},
-		"rest/OAuthConfigService/AddClient": {`{"AddClientResult":{"success":true,"client":{"ClientId":"ABC","Secret":"s3cret"}}}`},
+		"rest/OAuthConfigService/AddClient": {`{"AddClientResult":{"success":true,"client":{"ClientId":"ABC","Secret":"replace-me"}}}`},
 	})
 	result := client.CreateServerToServerOAuthApp(context.Background(), AdminWriteOAuthAppRequest{ClientName: "UsrParityApp", ClientDescription: " "})
-	if !result.Success || result.App == nil || *result.App != (AdminWriteOAuthApp{ClientID: "ABC", ClientSecret: "s3cret",
+	if !result.Success || result.App == nil || *result.App != (AdminWriteOAuthApp{ClientID: "ABC", ClientSecret: "replace-me",
 		SystemUserID: "7f3b869f-34f3-4f20-ab4d-7480a5fdf647", GrantType: "client_credentials"}) {
 		t.Fatalf("create = %#v", result)
 	}
