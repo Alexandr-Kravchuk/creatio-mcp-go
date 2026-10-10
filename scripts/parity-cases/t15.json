@@ -18,5 +18,14 @@
   {"tool": "restart-by-credentials", "clio-environment-key": "t15-no-environment", "args": {"url": "http://example.invalid", "userName": "u", "password": " "}, "clio-run": true, "label": "restart-by-credentials blank password"},
   {"tool": "restart-by-credentials", "clio-environment-key": "t15-no-environment", "args": {"url": "not a url", "userName": "u", "password": "p", "waitReady": false}, "clio-run": true, "known-differences": ["$.correlationid"], "label": "restart-by-credentials url that is not a URI"},
   {"tool": "compile-creatio", "args": {"package-name": "UsrParityA,UsrParityB"}, "clio-run": true, "label": "compile-creatio comma-separated package list"},
-  {"tool": "compile-creatio", "args": {"environment-name": "UsrParityNoEnv"}, "clio-run": true, "label": "compile-creatio unknown environment"}
+  {"tool": "compile-creatio", "args": {"environment-name": "UsrParityNoEnv"}, "clio-run": true, "label": "compile-creatio unknown environment"},
+  {"tool": "install-dashboards-migrator", "args": {"environment-name": "UsrParityNoEnv"}, "clio-run": true, "label": "install-dashboards-migrator unknown environment"},
+  {"tool": "add-custom-logging", "args": {"min-level": "Loud"}, "clio-run": true, "label": "add-custom-logging validation reports every rule"},
+  {"tool": "add-custom-logging", "args": {"package-name": "UsrParityPkg"}, "clio-run": true, "label": "add-custom-logging environment without EnvironmentPath"},
+  {"tool": "add-custom-logging", "args": {"environment-name": "UsrParityNoEnv", "package-name": "UsrParityPkg"}, "clio-run": true, "label": "add-custom-logging unknown environment"},
+  {"tool": "download-configuration-by-build", "clio-environment-key": "t15-no-environment", "args": {"build-path": "relative.zip", "workspace-path": "/nonexistent-t15-workspace"}, "clio-run": true, "label": "download-configuration-by-build relative build path"},
+  {"tool": "download-configuration-by-build", "clio-environment-key": "t15-no-environment", "args": {"build-path": "/nonexistent-t15-build", "workspace-path": "/nonexistent-t15-workspace"}, "clio-run": true, "label": "download-configuration-by-build workspace not found"},
+  {"tool": "download-configuration-by-build", "clio-environment-key": "t15-no-environment", "args": {"build-path": "/nonexistent-t15-build", "workspace-path": "relative"}, "clio-run": true, "label": "download-configuration-by-build relative workspace path"},
+  {"tool": "download-configuration-by-environment", "args": {"workspace-path": "relative"}, "clio-run": true, "label": "download-configuration-by-environment relative workspace path"},
+  {"tool": "download-configuration-by-environment", "args": {}, "clio-run": true, "label": "download-configuration-by-environment without workspace-path"}
 ]
