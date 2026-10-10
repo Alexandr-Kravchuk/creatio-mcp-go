@@ -84,7 +84,7 @@ func TestInstallProcessBuilderInstallsWaitsAndPings(t *testing.T) {
 	}
 	installedFile := false
 	for _, route := range *routes {
-		if strings.HasSuffix(route, "/InstallAppFromFile") {
+		if strings.HasSuffix(route, "/PackageInstallerService.svc/InstallPackage") {
 			installedFile = true
 		}
 	}

@@ -2,9 +2,10 @@ package creatio
 
 // install-process-builder: clio's InstallProcessBuilderCommand (InstallBundledPackageCommand for
 // CrtProcessBuilder). The archive is the one the installed clio carries. The install refuses a downgrade and
-// a suffixed bundled version, installs through the same installer install-application uses (backup on,
-// developer mode off), waits for the platform to come back after its restart, then asks the package's own
-// ungated Ping whether it is compiled and serving.
+// a suffixed bundled version, installs through clio's PackageInstaller (PackageInstallerService
+// InstallPackage, backup on, developer mode off; T15's pkgWriteInstallPackageFile), waits for the platform
+// to come back after its restart, then asks the package's own ungated Ping whether it is compiled and
+// serving.
 
 import (
 	"context"
@@ -44,7 +45,7 @@ func (c *Client) InstallProcessBuilder(ctx context.Context) CommandResult {
 		log.error(refusal)
 		return log.result(1)
 	}
-	success, err := c.appWriteInstall(ctx, AppInstallRequest{Name: archive, EnvironmentURI: c.config.BaseURL}, log)
+	success, err := c.pkgWriteInstallPackageFile(ctx, archive, log)
 	if err != nil {
 		log.error(err.Error())
 		return log.result(1)

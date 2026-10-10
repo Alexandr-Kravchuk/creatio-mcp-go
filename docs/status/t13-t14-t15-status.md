@@ -261,3 +261,8 @@ Known gaps:
   anonymously like clio's HealthCheckCommand, with an approximated certificate/timeout behaviour. The
   same installed archive also feeds the gates' convergence check ("This clio carries ..."); without an
   installed clio there is no convergence refusal.
+- `install-process-builder` installs the package through T15's PackageInstaller path
+  (`pkgWriteInstallPackageFile`: `PackageInstallerService` `CreateBackup` / `InstallPackage`), as clio does,
+  not through the application installer (`InstallAppFromFile`).
+- The lookup of the newest installed clio in `~/.dotnet/tools/.store/clio` and the reading of its bundled
+  archive now exist twice: here and in T15 (`pkgWriteBundledArchive`). They should be merged into one helper.
