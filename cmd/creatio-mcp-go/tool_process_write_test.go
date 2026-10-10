@@ -223,6 +223,7 @@ func TestProcessWriteAnnotationsMatchClio(t *testing.T) {
 		"create-business-process":                {Destructive: true},
 		"modify-business-process":                {Destructive: true},
 		"modify-business-process-as-new-version": {},
+		"validate-process-graph":                 {ReadOnly: true, Idempotent: true},
 	}
 	for name, want := range expected {
 		got := annotationsOf(name)
