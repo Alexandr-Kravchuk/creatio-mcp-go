@@ -108,3 +108,53 @@ func TestUploadImageArgumentRefusals(t *testing.T) {
 		}
 	}
 }
+
+func TestSetLogoThroughExecutorsAndRefusals(t *testing.T) {
+	var mu sync.Mutex
+	var routes []string
+	session := themeWriteBrandingStand(t, func(w http.ResponseWriter, r *http.Request) {
+		mu.Lock()
+		defer mu.Unlock()
+		routes = append(routes, r.URL.Path)
+		switch r.URL.Path {
+		case "/0/DataService/json/SyncReply/SelectQuery":
+			// No setting exists, so the file upload is refused before anything is written.
+			_, _ = w.Write([]byte(`{"success":true,"rows":[]}`))
+		default:
+			t.Errorf("unexpected %s %s", r.Method, r.URL.Path)
+		}
+	})
+	image := filepath.Join(t.TempDir(), "logo.png")
+	if err := os.WriteFile(image, []byte("png"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	cases := []struct {
+		args map[string]any
+		want string
+	}{
+		{map[string]any{"environment-name": "brand-env", "logo": image, "packageName": "UsrBrand"}, "Rename: 'packageName' -> 'package'."},
+		{map[string]any{"logo": image}, "environment-name is required and cannot be empty."},
+		{map[string]any{"environment-name": "brand-env", "favicon": " "}, "Pass at least one image file: logo (every slot at once), login-logo, menu-logo, configuration-logo, dark-logo, or favicon."},
+		{map[string]any{"environment-name": "brand-env", "login-logo": image}, "Applying 1 image(s) failed: login-logo (LogoImage) from '[redacted-path]" +
+			"': Sys-setting 'LogoImage' was not found or is not readable by the current user. Uploading a file requires an existing, readable Binary setting.."},
+	}
+	for _, executor := range []string{"clio-run", "clio-run-destructive"} {
+		for _, c := range cases {
+			decoded, result := themeWriteBrandingCall(t, session, &mcp.CallToolParams{Name: executor,
+				Arguments: map[string]any{"command": "set-logo", "args": c.args}})
+			if decoded["success"] != false || decoded["error"] != c.want || decoded["applied"] != nil {
+				t.Errorf("%s %v: %#v (%v)\nwant %q", executor, c.args, decoded, result.IsError, c.want)
+			}
+		}
+	}
+	mu.Lock()
+	before := len(routes)
+	mu.Unlock()
+	_, result := themeWriteBrandingCall(t, session, &mcp.CallToolParams{Name: "set-logo",
+		Arguments: map[string]any{"environment-name": "brand-env", "logo": image}})
+	mu.Lock()
+	defer mu.Unlock()
+	if !result.IsError || len(routes) != before {
+		t.Fatalf("direct call was not gated")
+	}
+}

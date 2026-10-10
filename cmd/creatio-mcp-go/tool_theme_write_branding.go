@@ -60,3 +60,80 @@ func invokeUploadImage(ctx context.Context, envs *environments, args map[string]
 	}
 	return structuredToolResult(result), nil
 }
+
+var setLogoSpec = themeWriteArgSpec{
+	tool: "set-logo",
+	strings: []string{"environment-name", "logo", "login-logo", "menu-logo", "configuration-logo", "dark-logo",
+		"favicon", "package"},
+	aliases: map[string]string{"loginLogo": "login-logo", "login_logo": "login-logo", "menuLogo": "menu-logo",
+		"menu_logo": "menu-logo", "configurationLogo": "configuration-logo", "configuration_logo": "configuration-logo",
+		"darkLogo": "dark-logo", "dark_logo": "dark-logo", "faviconImage": "favicon", "favicon_image": "favicon",
+		"packageName": "package", "package_name": "package", "package-name": "package"},
+	hint: "Valid: environment-name, logo, login-logo, menu-logo, configuration-logo, dark-logo, favicon, package.",
+}
+
+func init() {
+	// clio: [McpServerTool(ReadOnly = false, Destructive = true, Idempotent = true, OpenWorld = false)]
+	registerTool(map[string]any{"name": "set-logo"}, invokeSetLogo,
+		withAnnotations(toolAnnotations{Destructive: true, Idempotent: true}))
+}
+
+// themeWriteRedactAll is SensitiveErrorTextRedactor.RedactAll; an empty list stays omitted.
+func themeWriteRedactAll(texts []string) []string {
+	if len(texts) == 0 {
+		return nil
+	}
+	redactedTexts := make([]string, 0, len(texts))
+	for _, text := range texts {
+		redactedTexts = append(redactedTexts, redact.Text(text))
+	}
+	return redactedTexts
+}
+
+func invokeSetLogo(ctx context.Context, envs *environments, args map[string]any) (*mcp.CallToolResult, error) {
+	bound, err := setLogoSpec.bind(args)
+	if err != nil {
+		return nil, err
+	}
+	fail := func(message string) *mcp.CallToolResult {
+		return structuredToolResult(creatio.SetLogoToolFailure(message))
+	}
+	if refusal := setLogoSpec.aliasError(bound); refusal != "" {
+		return fail(refusal), nil
+	}
+	if strings.TrimSpace(bound.str("environment-name")) == "" {
+		return fail(themeWriteEnvironmentRequired), nil
+	}
+	anyImage := false
+	for _, name := range []string{"logo", "login-logo", "menu-logo", "configuration-logo", "dark-logo", "favicon"} {
+		anyImage = anyImage || strings.TrimSpace(bound.str(name)) != ""
+	}
+	if !anyImage {
+		return fail(creatio.SetLogoNoImageError), nil
+	}
+	client, failure, err := envs.resolve("set-logo", bound.raw, scopeName)
+	if err != nil {
+		return nil, err
+	}
+	if failure != nil {
+		return fail(redacted(failure)), nil
+	}
+	result := client.SetLogo(ctx, creatio.SetLogoRequest{Logo: bound.str("logo"), LoginLogo: bound.str("login-logo"),
+		MenuLogo: bound.str("menu-logo"), ConfigurationLogo: bound.str("configuration-logo"), DarkLogo: bound.str("dark-logo"),
+		Favicon: bound.str("favicon"), Package: bound.str("package")})
+	answer := creatio.SetLogoToolResult{Success: result.Success, Applied: result.Applied, Bound: result.Bound,
+		Package: result.Package, Warnings: themeWriteRedactAll(result.Warnings)}
+	if len(answer.Applied) == 0 {
+		answer.Applied = nil
+	}
+	if len(answer.Bound) == 0 {
+		answer.Bound = nil
+	}
+	if !result.Success {
+		answer.Error = "ApplyLogos returned success=false."
+		if strings.TrimSpace(result.Error) != "" {
+			answer.Error = redact.Text(result.Error)
+		}
+	}
+	return structuredToolResult(answer), nil
+}
