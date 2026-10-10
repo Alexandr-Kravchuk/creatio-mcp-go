@@ -13,6 +13,27 @@ import (
 
 const dataForgeAppInfo = `{"success":true,"applicationInfo":{"sysValues":{"coreVersion":"10.2.363.0"}}}`
 
+func TestDataForgeMaintenanceRoutes(t *testing.T) {
+	for _, item := range []struct {
+		initialize bool
+		route      string
+	}{
+		{true, "/0/rest/DataForgeMaintenanceService/InitializeDataStructuresAndLookups"},
+		{false, "/0/rest/DataForgeMaintenanceService/UpdateDataStructuresAndLookups"},
+	} {
+		client, bodies := dataForgeTestServer(t, map[string]string{item.route: `{}`})
+		result := client.DataForgeMaintain(context.Background(), item.initialize)
+		if !result.Success || result.Status.Status != "Scheduled" || len(bodies[item.route]) != 1 || bodies[item.route][0] != "{}" {
+			t.Fatalf("maintenance=%s bodies=%v", dataForgeJSON(t, result), bodies)
+		}
+	}
+	client, _ := dataForgeTestServer(t, map[string]string{"/0/ServiceModel/ApplicationInfoService.svc/GetApplicationInfo": `{"applicationInfo":{"sysValues":{"coreVersion":"8.1.2.3"}}}`})
+	result := client.DataForgeMaintain(context.Background(), true)
+	if result.Success || result.Status.Status != "Failed" || result.Error == nil || result.Error.Code != "initialize_error" {
+		t.Fatalf("failure=%s", dataForgeJSON(t, result))
+	}
+}
+
 // dataForgeTestServer answers the login, the version probe and the given Data Forge routes, and records
 // every request body by path.
 func dataForgeTestServer(t *testing.T, routes map[string]string) (*Client, map[string][]string) {

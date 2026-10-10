@@ -3,7 +3,7 @@ package main
 // The six read-only Data Forge tools from clio's DataForgeTool. clio binds them leniently (unknown keys are
 // ignored), reports every failure inside the envelope with a per-tool error code, and answers a value of the
 // wrong JSON type with an invalid-parameter-type MCP error. dataforge-initialize and dataforge-update
-// schedule index writes and are not offered.
+// schedule index writes; they are in tool_pkg_write_dataforge.go.
 
 import (
 	"context"
