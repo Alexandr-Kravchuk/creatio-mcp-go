@@ -1,0 +1,22 @@
+[
+  {"tool": "pkg-to-db", "clio-environment-key": "environmentName", "args": {"environmentName": "UsrParityNoEnv"}, "clio-run": true, "label": "pkg-to-db unknown environment"},
+  {"tool": "pkg-to-db", "clio-environment-key": "environmentName", "args": {"environmentName": 5}, "clio-run": true, "label": "pkg-to-db environmentName not a string"},
+  {"tool": "pkg-to-file-system", "clio-environment-key": "environmentName", "args": {"environmentName": "UsrParityNoEnv", "extra": 1}, "clio-run": true, "label": "pkg-to-file-system unknown environment, unknown key ignored"},
+  {"tool": "pkg-to-db", "clio-environment-key": "environmentName", "args": {"environmentName": "UsrParityNoEnv"}, "go-wrapped": true, "label": "pkg-to-db by raw name needs confirmation"},
+  {"tool": "dataforge-initialize", "args": {"environment-name": "UsrParityNoEnv"}, "clio-run": true, "label": "dataforge-initialize unknown environment"},
+  {"tool": "dataforge-initialize", "clio-environment-key": "t15-no-environment", "args": {}, "clio-run": true, "label": "dataforge-initialize without environment-name"},
+  {"tool": "dataforge-update", "clio-environment-key": "t15-no-environment", "args": {"environmentName": "UsrParityNoEnv"}, "clio-run": true, "label": "dataforge-update legacy environmentName reads as missing"},
+  {"tool": "dataforge-update", "args": {"environment-name": 5}, "clio-run": true, "label": "dataforge-update environment-name not a string"},
+  {"tool": "install-gate", "args": {"environment-name": "UsrParityNoEnv"}, "clio-run": true, "label": "install-gate unknown environment"},
+  {"tool": "restart-by-environment-name", "clio-environment-key": "environmentName", "args": {"environmentName": "UsrParityNoEnv", "waitReady": false}, "clio-run": true, "label": "restart-by-environment-name unknown environment, no wait"},
+  {"tool": "restart-by-environment-name", "clio-environment-key": "environmentName", "args": {"environmentName": "UsrParityNoEnv"}, "clio-run": true, "label": "restart-by-environment-name unknown environment, waited"},
+  {"tool": "restart-by-environment-name", "clio-environment-key": "environmentName", "args": {"environmentName": "  "}, "clio-run": true, "label": "restart-by-environment-name blank environment"},
+  {"tool": "restart-by-environment-name", "clio-environment-key": "t15-no-environment", "args": {}, "clio-run": true, "label": "restart-by-environment-name without environmentName"},
+  {"tool": "restart-by-environment-name", "clio-environment-key": "environmentName", "args": {"environmentName": "UsrParityNoEnv", "waitReady": "no"}, "clio-run": true, "label": "restart-by-environment-name waitReady not a boolean"},
+  {"tool": "restart-by-credentials", "clio-environment-key": "t15-no-environment", "args": {"url": "", "userName": "u", "password": "p"}, "clio-run": true, "label": "restart-by-credentials blank url"},
+  {"tool": "restart-by-credentials", "clio-environment-key": "t15-no-environment", "args": {"url": "http://example.invalid", "userName": "", "password": "p"}, "clio-run": true, "label": "restart-by-credentials blank userName"},
+  {"tool": "restart-by-credentials", "clio-environment-key": "t15-no-environment", "args": {"url": "http://example.invalid", "userName": "u", "password": " "}, "clio-run": true, "label": "restart-by-credentials blank password"},
+  {"tool": "restart-by-credentials", "clio-environment-key": "t15-no-environment", "args": {"url": "not a url", "userName": "u", "password": "p", "waitReady": false}, "clio-run": true, "known-differences": ["$.correlationid"], "label": "restart-by-credentials url that is not a URI"},
+  {"tool": "compile-creatio", "args": {"package-name": "UsrParityA,UsrParityB"}, "clio-run": true, "label": "compile-creatio comma-separated package list"},
+  {"tool": "compile-creatio", "args": {"environment-name": "UsrParityNoEnv"}, "clio-run": true, "label": "compile-creatio unknown environment"}
+]

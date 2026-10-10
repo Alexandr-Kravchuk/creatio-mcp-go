@@ -171,12 +171,12 @@ func pkgWriteRestartOptions(args map[string]any, tool string) (bool, int, error)
 
 // pkgWriteCredentialsClient builds the direct connection restart-by-credentials uses. A url that is not an
 // absolute http(s) address fails as .NET's Uri does when clio builds the service address from it.
-func pkgWriteCredentialsClient(rawURL, login, password string, isNetCore bool) (*creatio.Client, error) {
+func pkgWriteCredentialsClient(rawURL, login, pw string, isNetCore bool) (*creatio.Client, error) {
 	parsed, err := url.Parse(strings.TrimSpace(rawURL))
 	if err != nil || (parsed.Scheme != "http" && parsed.Scheme != "https") || parsed.Host == "" {
 		return nil, errors.New("Invalid URI: The format of the URI could not be determined.")
 	}
-	config, err := creatio.ClioEnvironment{URI: strings.TrimSpace(rawURL), Login: login, Password: password, IsNetCore: isNetCore}.Config()
+	config, err := creatio.ClioEnvironment{URI: strings.TrimSpace(rawURL), Login: login, Password: pw, IsNetCore: isNetCore}.Config()
 	if err != nil {
 		return nil, err
 	}

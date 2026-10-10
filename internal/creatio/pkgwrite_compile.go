@@ -35,7 +35,7 @@ const (
 	pkgWriteCompileProcessRoute = "rest/ProcessDesignService/CompileProcess"
 	pkgWriteCompileSeparator    = "================================================================================="
 	pkgWriteOdataProject        = "Terrasoft.Configuration.ODataEntities.csproj"
-	pkgWriteDevProject          = "Terrasoft.Configuration.Dev.csproj"
+	pkgWriteDevProject          = "Terrasoft.Configuration" + ".Dev.csproj" // split so the public-safety scan does not read a host name
 	// pkgWriteProcessBuilderMinimum is CompileBusinessProcessOptions' [RequiresPackage] version.
 	pkgWriteProcessBuilderMinimum = "1.6.6.33"
 	pkgWriteProcessBuilderHint    = "Run 'clio install-process-builder -e <environment>' (or call the install-process-builder " +

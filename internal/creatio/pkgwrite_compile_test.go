@@ -165,13 +165,13 @@ func TestPkgWriteFullCompileObservesTheReload(t *testing.T) {
 	client := server.start(t)
 	var probes atomic.Int32
 	server.set(func() {
-		server.history = []string{`{"Id":"r1","CreatedOn":"2026-10-10T10:00:05.000","ProjectName":"Terrasoft.Configuration.Dev.csproj","DurationInSeconds":12,"ErrorsWarnings":"[]","Result":true}`}
+		server.history = []string{`{"Id":"r1","CreatedOn":"2026-10-10T10:00:05.000","ProjectName":"` + pkgWriteDevProject + `","DurationInSeconds":12,"ErrorsWarnings":"[]","Result":true}`}
 		server.reachable = func() bool { count := probes.Add(1); return count < 3 || count > 7 }
 	})
 	result := client.Compile(context.Background(), CompileRequest{EnvironmentName: "parity"})
 	values := strings.Join(pkgWriteValues(result), "|")
 	if result.ExitCode != 1 ||
-		!strings.Contains(values, "Info:At: 10:00:05 after: \x1b[31m12\x1b[0m sec. \x1b[34mTerrasoft.Configuration.Dev.csproj\x1b[0m\x1b[32m <============\x1b[0m") ||
+		!strings.Contains(values, "Info:At: 10:00:05 after: \x1b[31m12\x1b[0m sec. \x1b[34m"+pkgWriteDevProject+"\x1b[0m\x1b[32m <============\x1b[0m") ||
 		!strings.Contains(values, "The environment reloaded and is answering again - a configuration build ends by reloading the application. Reading the compilation result.") ||
 		!strings.HasSuffix(values, "Error:Compilation failed on the environment. Build result: 1.|Error:(CS0103) in B.cs at (1,2): name missing") {
 		t.Fatalf("reload = %q", values)
