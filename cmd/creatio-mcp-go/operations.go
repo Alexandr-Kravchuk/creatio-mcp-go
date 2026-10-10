@@ -205,6 +205,16 @@ func (s *operationStore) begin(tenantKey, environmentName string, details operat
 // finish closes an operation: exit code 0 is success, anything else failure. The message tail keeps the last
 // 50 messages, redacted first, as compile output carries paths and hosts.
 func (s *operationStore) finish(id string, exitCode int, messages []creatio.LogMessage) operationRecord {
+	status := s.failed
+	if exitCode == 0 {
+		status = s.succeeded
+	}
+	return s.finishAs(id, exitCode, status, messages)
+}
+
+// finishAs closes an operation with an explicit status, for a terminal state the exit code does not name
+// (clio's RestartOperationRegistry.FinishRequestFailed: "requestfailed").
+func (s *operationStore) finishAs(id string, exitCode int, status string, messages []creatio.LogMessage) operationRecord {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	now := s.now()
@@ -213,10 +223,7 @@ func (s *operationStore) finish(id string, exitCode int, messages []creatio.LogM
 		record = &operationRecord{ID: id, StartedUTC: now}
 		s.byID[id] = record
 	}
-	record.Status = s.failed
-	if exitCode == 0 {
-		record.Status = s.succeeded
-	}
+	record.Status = status
 	record.FinishedUTC, record.ExitCode = &now, &exitCode
 	if s.keepTail {
 		if len(messages) > messageTailCap {
