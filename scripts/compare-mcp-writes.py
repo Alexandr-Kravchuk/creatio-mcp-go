@@ -331,24 +331,20 @@ class Harness:
             # server: clio makes both sides' objects through clio, for a setup this server has no tool for yet.
             server_side = side if step.get("server", "own") == "own" else "clio"
             response, seconds[side] = self.call(server_side, step, arguments)
-<<<<<<< HEAD
+            # retry-while: a refusal the stand words as transient (its own background work, e.g. an OData rebuild after
+            # the previous side's create) is retried on either side alike; the answer that counts is the last one.
+            # retry-attempts / retry-delay-seconds bound it by count, retry-seconds by time (every 10 s).
+            transient = step.get("retry-while")
             for _ in range(step.get("retry-attempts", 0)):
-                # A refusal the stand gives before it writes anything (its own background work) is retried
-                # on either side alike; the answer that counts is the last one.
-                if step.get("retry-while", " ") not in json.dumps(payload(response), ensure_ascii=False):
+                if not transient or transient not in json.dumps(payload(response), ensure_ascii=False):
                     break
                 time.sleep(step.get("retry-delay-seconds", 30))
                 response, seconds[side] = self.call(server_side, step, arguments)
-||||||| parent of 259d6b6 (Retry a write step while the stand refuses it as temporarily unavailable)
-=======
-            # retry-while: a refusal the stand words as transient (e.g. Creatio rebuilding its OData library after
-            # the previous side's create) is retried every 10 s for at most retry-seconds.
             deadline = time.monotonic() + step.get("retry-seconds", 0)
-            while (step.get("retry-while") and failed(normalize(payload(response)))
-                   and step["retry-while"] in json.dumps(payload(response)) and time.monotonic() < deadline):
+            while (transient and failed(normalize(payload(response)))
+                   and transient in json.dumps(payload(response)) and time.monotonic() < deadline):
                 time.sleep(10)
                 response, seconds[side] = self.call(server_side, step, arguments)
->>>>>>> 259d6b6 (Retry a write step while the stand refuses it as temporarily unavailable)
             answers[side] = normalize(payload(response))
             self.capture(step, answers[side], arguments, side_state)
             side_state["answers"][label] = answers[side]
