@@ -60,3 +60,48 @@ Own theme creation, update and deletion match the baseline. Caption, CSS class
 and CSS content expectations pass. Read-back differs only in declared CSS length
 and platform cache-hash path. Both test themes were removed in each run. Scenario
 expectations now use the canonical neutralized name casing.
+
+## T14 third round (2026-10-10)
+
+All 11 T14 tools are served. New in this round: `upload-image`, `set-logo`, `set-background-image`
+(clio master 914dab286; the texts match clio 8.1.0.134). The uploader came from the `codex-t14-t15`
+partial work and was checked against clio's `SysImageUploader` and Creatio.Client's
+`CreateImageUploadRequest` (raw body, `Content-Type`, `Content-Range`, `Content-Disposition`, then a
+byte-for-byte read-back).
+
+- `upload-image`: live on `s16123120`. One fixture PNG uploaded through each server, both envelopes
+  `{success, image-id}`, both rows read back as `image/png`, both removed through clio's
+  `execute-dataservice-batch` and confirmed absent. Not expressible as a harness scenario: the object is
+  a `SysImage` row with a random id, not a `{run}{side}` name, so the check was run by hand.
+- `set-logo`, `set-background-image`: window-only (stand-wide branding for all users, no revert).
+  Implemented and mock-tested (request order, payloads, refusals, partial failures, binding collisions);
+  scenarios in `scripts/write-scenarios/window/t14.json` bind into an app package the run creates and
+  remove it with `delete-app`. The logo/background settings themselves stay changed after such a run.
+- Read parity, `scripts/parity-cases/t14.json`: 57 cases, 57 match against clio 8.1.0.134 — every
+  refusal the three branding tools give before a write, 24 `advise-theme-palette` cases over all eight
+  operations, 6 `update-email-template` refusals.
+
+Closed gaps:
+- `update-email-template` "binding failure" was a probe error, not a clio defect: clio's
+  `EmailTemplateUpdateArgs` has `required` members (email-id, environment-name, format,
+  expected-checksum), and a call without one fails binding. Go now gives the same refusal and omits
+  null fields from the answer, as clio does. With the members present, clio and Go match.
+- `advise-theme-palette` float differences: clio rounds nothing in its output path (raw doubles,
+  serializer defaults). 144 ad-hoc cases over all operations and 18 colours matched exactly; the
+  earlier ~1e-16 difference was not reproduced. If it reappears, it is .NET libm `Math.Pow`/`Cbrt`
+  against Go's `math` package, not rounding.
+
+Known gaps (branding):
+- The package resolver of `set-logo` / `set-background-image` follows clio master: the
+  `CurrentPackageId` value is matched on `SysPackage.UId` and the advice reads "Ask the user which
+  package should receive the change...". clio 8.1.0.134 (and this server's `get-target-package`, which
+  was measured against it) match on `Id` and advise "Name the package explicitly...".
+- clio master reads the file-system development mode after each binding save to log a warning; the
+  warning never reaches the MCP result, so Go does not make that read (8.1.0.134 does not either).
+- `UsePanelIconBackground` is turned off with one DataService `BatchQuery` per ATF save; ATF's exact
+  query shape (all model columns) and its error texts are approximated. The same holds for the OData
+  error-envelope detection used by the gallery lookups.
+- Transport failures that clio raises as .NET exceptions surface with Go's error text.
+- The sys-setting write used by branding is a minimal, `themeWrite`-prefixed slice of clio's
+  `SysSettingsCommand` / `SysSettingsManager` (Binary from a file with the file-security policy,
+  Boolean, text). T12's `update-sys-setting` port should absorb it.

@@ -213,7 +213,7 @@ from five sibling worktrees was preserved and integrated. This checkpoint adds
 | T11 data | 3 | 9 | [T9/T11/T12 status](status/t9-t11-t12-status.md) |
 | T12 settings/access | 1 | 12 | [T9/T11/T12 status](status/t9-t11-t12-status.md) |
 | T13 processes | 1 | 10 | [T13/T14/T15 status](status/t13-t14-t15-status.md) |
-| T14 themes/email | 8 | 3 | [T13/T14/T15 status](status/t13-t14-t15-status.md) |
+| T14 themes/email | 8, then 3 in the third round (all 11) | 0; `set-logo` / `set-background-image` live writes await the window run | [T13/T14/T15 status](status/t13-t14-t15-status.md) |
 | T15 packages/operations | 4 | 12 | [T13/T14/T15 status](status/t13-t14-t15-status.md) |
 
 Final contract comparison: **220 match, 0 unexplained differences**; remaining
