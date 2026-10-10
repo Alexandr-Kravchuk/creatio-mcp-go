@@ -8,7 +8,9 @@ import (
 	"net/http/httptest"
 	"path/filepath"
 	"strings"
+	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
@@ -180,5 +182,58 @@ func TestExecuteSQLScriptToolValidatesGatesAndRuns(t *testing.T) {
 	}
 	if scripts != 2 {
 		t.Fatalf("scripts=%d", scripts)
+	}
+}
+
+func TestRunProcessToolAnswersByTheResponseDeadline(t *testing.T) {
+	t.Setenv("CLIO_MCP_RESPONSE_DEADLINE_SECONDS", "1")
+	var launches atomic.Int32
+	var slowSignature, slowRun atomic.Bool
+	session := dataWriteTestSession(t, func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case strings.HasSuffix(r.URL.Path, "/SelectQuery"):
+			if slowSignature.Load() {
+				time.Sleep(1500 * time.Millisecond)
+			}
+			_, _ = io.WriteString(w, `{"success":true,"rows":[{"Id":"aaaaaaaa-0000-0000-0000-000000000001","Name":"UsrParityProcess","Caption":"Own","VersionParentUId":"aaaaaaaa-0000-0000-0000-000000000001","IsActiveVersion":true}]}`)
+		case strings.HasSuffix(r.URL.Path, "/ProcessSchemaRequest"):
+			_, _ = io.WriteString(w, `{"success":true,"schema":{"metaData":"{\"metaData\":{\"schema\":{\"parameters\":[]}}}"}}`)
+		case strings.HasSuffix(r.URL.Path, "/RunProcess"):
+			launches.Add(1)
+			if slowRun.Load() {
+				time.Sleep(1500 * time.Millisecond)
+			}
+			_, _ = io.WriteString(w, `{"success":true,"processId":"bbbbbbbb-0000-0000-0000-000000000001","processStatus":2}`)
+		}
+	})
+	args := map[string]any{"environment-name": "parity-stand", "process-name": "UsrParityProcess"}
+	raw, _ := dataWriteTestCall(t, session, "", "run-process", args)
+	if !raw.IsError || !strings.Contains(dataWriteTestText(raw), "was NOT executed") || launches.Load() != 0 {
+		t.Fatalf("raw call escaped the write gate: %s", dataWriteTestText(raw))
+	}
+	for _, executor := range []string{"clio-run", "clio-run-destructive"} {
+		if _, answer := dataWriteTestCall(t, session, executor, "run-process", args); answer["status"] != "completed" {
+			t.Fatalf("%s answer %v", executor, answer)
+		}
+	}
+	slowRun.Store(true)
+	if _, answer := dataWriteTestCall(t, session, "clio-run", "run-process", args); answer["status"] != "still-running" ||
+		!strings.HasPrefix(answer["warnings"].([]any)[0].(string), "The launch request for 'UsrParityProcess' was sent at ") {
+		t.Fatalf("still-running answer %v", answer)
+	}
+	slowRun.Store(false)
+	slowSignature.Store(true)
+	before := launches.Load()
+	if _, answer := dataWriteTestCall(t, session, "clio-run", "run-process", args); answer["status"] != "not-started" ||
+		!strings.HasPrefix(answer["error"].(string), "'UsrParityProcess' was not launched: preparing the launch") {
+		t.Fatalf("not-started answer %v", answer)
+	}
+	time.Sleep(2 * time.Second)
+	if launches.Load() != before {
+		t.Fatalf("a withdrawn launch was sent afterwards")
+	}
+	_, answer := dataWriteTestCall(t, session, "clio-run", "run-process", map[string]any{"environment-name": "parity-stand", "process-name": "X", "processName": "typo"})
+	if !strings.Contains(answer["error"].(string), "processName") {
+		t.Fatalf("unknown key answer %v", answer)
 	}
 }

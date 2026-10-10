@@ -379,7 +379,9 @@
           "with-mobile-pages": false
         },
         "capture": {
-          "pkg": "$.packagename"
+          "pkg": "$.packagename",
+          "pkguid": "$.packageuid",
+          "appuid": "$.applicationid"
         },
         "known-differences": [
           "$.applicationname",
@@ -611,7 +613,8 @@
           }
         },
         "capture": {
-          "binduid": "$.rows[0].uid"
+          "binduid": "$.rows[0].uid",
+          "bindid": "$.rows[0].id"
         }
       },
       {
@@ -789,7 +792,12 @@
         "args": {
           "package-name": "{pkg}",
           "binding-name": "UsrParity{run}{side}Bind"
-        }
+        },
+        "known-differences": [
+          "$.executionlogmessages[5].value",
+          "$.executionlogmessages[6].value"
+        ],
+        "why": "GetBoundSchemaData lists the two rows in the order of their random ids, which differs per side; each row's values are checked by the execute-esq read-backs."
       },
       {
         "kind": "read-back",

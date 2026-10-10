@@ -2,13 +2,31 @@ package main
 
 import (
 	"context"
-	"encoding/json"
+	"fmt"
+	"math"
+	"sort"
+	"strconv"
+	"strings"
+	"time"
 
 	"github.com/Alexandr-Kravchuk/creatio-mcp-go/internal/creatio"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
+// dataWriteRunProcessDeadline is clio master's run-process response deadline: McpProgressHeartbeat's 45 s
+// default, overridden by CLIO_MCP_RESPONSE_DEADLINE_SECONDS.
+func dataWriteRunProcessDeadline() time.Duration {
+	return durationFromEnv("CLIO_MCP_RESPONSE_DEADLINE_SECONDS", 45*time.Second)
+}
+
+// dataWriteKindBindingError is clio's binder refusal for an argument of the wrong JSON kind.
+func dataWriteKindBindingError(tool, argument, kind string) error {
+	return fmt.Errorf("invalid-parameter-type: argument '%s' for MCP tool '%s' must be %s. Received an incompatible JSON value.", argument, tool, kind)
+}
+
 func init() {
+	// clio's RunProcessTool: unknown keys answered in the response, the launch raced against the response
+	// deadline with a launch gate, the platform verdict mapped by RunProcessCommand.
 	registerTool(map[string]any{"name": "run-process"}, func(ctx context.Context, envs *environments, args map[string]any) (*mcp.CallToolResult, error) {
 		const tool = "run-process"
 		valid := []string{"environment-name", "process-name", "parameters", "result-parameters", "timeout", "uri", "login", "password"}
@@ -22,41 +40,73 @@ func init() {
 		if err != nil {
 			return nil, err
 		}
-		var parameters map[string]json.RawMessage
-		var results []string
+		request := creatio.DataWriteProcessRequest{ProcessName: name, Gate: &creatio.DataWriteLaunchGate{}}
 		if value, ok := args["parameters"]; ok && value != nil {
-			data, _ := json.Marshal(value)
-			if err := json.Unmarshal(data, &parameters); err != nil {
-				return nil, dataWriteNestedBindingError(tool, "parameters")
+			object, isObject := value.(map[string]any)
+			if !isObject {
+				return nil, dataWriteKindBindingError(tool, "parameters", "an object")
+			}
+			// Go's decoder keeps no key order, so the values go out in ordinal key order.
+			codes := make([]string, 0, len(object))
+			for code := range object {
+				codes = append(codes, code)
+			}
+			sort.Strings(codes)
+			for _, code := range codes {
+				request.Parameters = append(request.Parameters, creatio.DataWriteProcessParameter{Code: code, Value: object[code]})
 			}
 		}
 		if value, ok := args["result-parameters"]; ok && value != nil {
-			data, _ := json.Marshal(value)
-			if err := json.Unmarshal(data, &results); err != nil {
-				return nil, dataWriteNestedBindingError(tool, "result-parameters")
+			items, isArray := value.([]any)
+			if !isArray {
+				return nil, dataWriteKindBindingError(tool, "result-parameters", "an array")
 			}
-		}
-		timeout := 0
-		if value, ok := args["timeout"]; ok && value != nil {
-			number, ok := value.(float64)
-			if !ok {
-				if integer, yes := value.(int); yes {
-					number = float64(integer)
-					ok = true
+			request.ResultParameters = []string{}
+			for _, item := range items {
+				text, isString := item.(string)
+				if !isString && item != nil {
+					return nil, dataWriteNestedBindingError(tool, "result-parameters")
 				}
+				request.ResultParameters = append(request.ResultParameters, text)
 			}
-			if !ok || float64(int(number)) != number {
-				return nil, dataWriteNestedBindingError(tool, "timeout")
-			}
-			timeout = int(number)
 		}
-		client, failure, err := envs.resolve(tool, args, scopeDirect)
+		if value, ok := args["timeout"]; ok && value != nil {
+			number, isNumber := value.(float64)
+			if text, isText := value.(string); isText {
+				parsed, parseErr := strconv.ParseFloat(strings.TrimSpace(text), 64)
+				number, isNumber = parsed, parseErr == nil
+			}
+			if !isNumber || number != math.Trunc(number) || number > math.MaxInt32 || number < math.MinInt32 {
+				return nil, dataWriteKindBindingError(tool, "timeout", "a number")
+			}
+			request.TimeoutSeconds = int(number)
+		}
+		deadline := dataWriteRunProcessDeadline()
+		request.Deadline = time.Now().Add(deadline)
+		result, finished, err := runLongOperation(ctx, tool, deadline, func(workCtx context.Context, _ func(string)) creatio.DataWriteProcessResult {
+			client, failure, bindErr := envs.resolve(tool, args, scopeDirect)
+			if bindErr != nil {
+				return creatio.DataWriteProcessResult{Warnings: []string{}, Error: redacted(bindErr)}
+			}
+			if failure != nil {
+				return creatio.DataWriteProcessResult{Warnings: []string{}, Error: redacted(failure)}
+			}
+			return client.RunProcess(workCtx, request)
+		})
 		if err != nil {
+			// The caller stopped waiting: a launch nobody waits for must not start afterwards.
+			request.Gate.TryWithdraw()
 			return nil, err
 		}
-		if failure != nil {
-			return structuredToolResult(creatio.DataWriteProcessResult{Warnings: []string{}, Error: redacted(failure)}), nil
+		if !finished {
+			if request.Gate.TryWithdraw() {
+				return structuredToolResult(creatio.DataWriteProcessResult{Status: creatio.DataWriteNotStartedStatus, Warnings: []string{},
+					Error: creatio.DataWriteNotLaunchedError(name)}), nil
+			}
+			sent, _ := request.Gate.SentAt()
+			return structuredToolResult(creatio.DataWriteProcessResult{Status: creatio.DataWriteStillRunningStatus,
+				Warnings: []string{creatio.DataWriteStillRunningNote(name, sent)}}), nil
 		}
-		return structuredToolResult(client.DataWriteRunProcess(ctx, name, parameters, results, timeout)), nil
+		return structuredToolResult(result), nil
 	}, withAnnotations(toolAnnotations{ReadOnly: false, Destructive: true, Idempotent: false, OpenWorld: false}))
 }

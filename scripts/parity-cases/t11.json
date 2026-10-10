@@ -305,5 +305,144 @@
       "script": "SELECT 1",
       "silent": "yes"
     }
+  },
+  {
+    "label": "run-process unknown process",
+    "tool": "run-process",
+    "clio-run": true,
+    "args": {
+      "process-name": "UsrParityNoSuchProcess"
+    }
+  },
+  {
+    "label": "run-process caption refused",
+    "tool": "run-process",
+    "clio-run": true,
+    "args": {
+      "process-name": "Lead management"
+    }
+  },
+  {
+    "label": "run-process wrong-case code refused",
+    "tool": "run-process",
+    "clio-run": true,
+    "args": {
+      "process-name": "leadmanagement"
+    }
+  },
+  {
+    "label": "run-process wrong-case parameter",
+    "tool": "run-process",
+    "clio-run": true,
+    "args": {
+      "process-name": "LeadManagement",
+      "parameters": {
+        "leadid": "00000000-0000-0000-0000-000000000001"
+      }
+    }
+  },
+  {
+    "label": "run-process unknown parameter",
+    "tool": "run-process",
+    "clio-run": true,
+    "args": {
+      "process-name": "LeadManagement",
+      "parameters": {
+        "Nope": "x"
+      }
+    }
+  },
+  {
+    "label": "run-process boolean refused",
+    "tool": "run-process",
+    "clio-run": true,
+    "args": {
+      "process-name": "LeadManagement",
+      "parameters": {
+        "ShowDistributionPage": 1
+      }
+    }
+  },
+  {
+    "label": "run-process lookup refused",
+    "tool": "run-process",
+    "clio-run": true,
+    "args": {
+      "process-name": "LeadManagement",
+      "parameters": {
+        "LeadId": "Main lead"
+      }
+    }
+  },
+  {
+    "label": "run-process input as result refused",
+    "tool": "run-process",
+    "clio-run": true,
+    "args": {
+      "process-name": "LeadManagement",
+      "result-parameters": [
+        "LeadId"
+      ]
+    }
+  },
+  {
+    "label": "run-process unknown result refused",
+    "tool": "run-process",
+    "clio-run": true,
+    "args": {
+      "process-name": "LeadManagement",
+      "result-parameters": [
+        "Nope"
+      ]
+    }
+  },
+  {
+    "label": "run-process parameters not an object",
+    "tool": "run-process",
+    "clio-run": true,
+    "args": {
+      "process-name": "LeadManagement",
+      "parameters": [
+        1
+      ]
+    }
+  },
+  {
+    "label": "params array",
+    "tool": "run-process",
+    "clio-run": true,
+    "args": {
+      "process-name": "LeadManagement",
+      "parameters": [
+        1
+      ]
+    }
+  },
+  {
+    "label": "result not array",
+    "tool": "run-process",
+    "clio-run": true,
+    "args": {
+      "process-name": "LeadManagement",
+      "result-parameters": "x"
+    }
+  },
+  {
+    "label": "timeout string",
+    "tool": "run-process",
+    "clio-run": true,
+    "args": {
+      "process-name": "UsrParityNoSuchProcess",
+      "timeout": "5"
+    }
+  },
+  {
+    "label": "timeout float",
+    "tool": "run-process",
+    "clio-run": true,
+    "args": {
+      "process-name": "UsrParityNoSuchProcess",
+      "timeout": 1.5
+    }
   }
 ]

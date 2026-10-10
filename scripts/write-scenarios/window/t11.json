@@ -1,0 +1,109 @@
+[
+  {
+    "label": "run-process on an own empty process",
+    "why": "WINDOW ONLY: no harmless process exists on the shared stand to launch, and the stand's execute-sql-script is refused by CustomQuery security, so both launch paths wait for the dedicated window. Each side's app package gets an own start-to-end process made through clio (check the descriptor against get-guidance name=process-modeling before the run); each server then launches its own process and the verdicts are compared. Deleting the app removes the process with its package.",
+    "steps": [
+      {
+        "kind": "write",
+        "label": "create app",
+        "tool": "create-app",
+        "server": "clio",
+        "clio-run": true,
+        "creates": "UsrParity{run}{side}Rp",
+        "retry-while": "temporarily unavailable",
+        "retry-seconds": 300,
+        "args": {"name": "Parity {run} {side} Rp", "code": "Parity{run}{side}Rp", "template-code": "AppFreedomUI", "with-mobile-pages": false},
+        "capture": {"pkg": "$.packagename", "pkguid": "$.packageuid", "appuid": "$.applicationid"},
+        "known-differences": ["$.applicationname", "$.entities[0].caption", "$.entities[0].uid", "$.pages[0].uid",
+                              "$.pages[1].uid", "$.pages[2].uid", "$.dataforge.warnings[0]", "$.dataforge.warnings[1]"],
+        "why": "Setup through clio on both sides; ids and the display name differ per side."
+      },
+      {
+        "kind": "cleanup",
+        "for": "UsrParity{run}{side}Rp",
+        "server": "clio",
+        "calls": [{"tool": "delete-app", "clio-run": true, "args": {"app-name": "UsrParity{run}{side}Rp"}}]
+      },
+      {
+        "kind": "write",
+        "label": "create process",
+        "tool": "create-business-process",
+        "server": "clio",
+        "clio-run": true,
+        "creates": "UsrParity{run}{side}Proc",
+        "args": {
+          "package-name": "{pkg}",
+          "descriptor": "{\"name\":\"UsrParity{run}{side}Proc\",\"caption\":\"Parity process {run} {side}\",\"packageName\":\"{pkg}\",\"elements\":[{\"name\":\"Start1\",\"type\":\"start\"},{\"name\":\"End1\",\"type\":\"terminate\"}],\"flows\":[{\"source\":\"Start1\",\"target\":\"End1\"}],\"parameters\":[{\"name\":\"UsrParityText\",\"caption\":\"Parity text\",\"dataValueType\":\"Text\",\"direction\":\"Input\"}],\"mappings\":[]}"
+        }
+      },
+      {
+        "kind": "write",
+        "label": "run own process",
+        "tool": "run-process",
+        "clio-run": true,
+        "target": "UsrParity{run}{side}Proc",
+        "args": {"process-name": "UsrParity{run}{side}Proc", "parameters": {"UsrParityText": "parity"}},
+        "known-differences": ["$.processid"],
+        "why": "Each launch gets its own run id."
+      },
+      {"kind": "expect", "step": "run own process", "path": "$.status", "equals": "completed"},
+      {
+        "kind": "write",
+        "label": "run own process with a wrong-case parameter",
+        "tool": "run-process",
+        "clio-run": true,
+        "target": "UsrParity{run}{side}Proc",
+        "args": {"process-name": "UsrParity{run}{side}Proc", "parameters": {"usrparitytext": "parity"}}
+      }
+    ]
+  },
+  {
+    "label": "execute-sql-script on own rows",
+    "why": "WINDOW ONLY: the shared stand refuses CustomQuery.ExecuteReader by its security settings, and changing that setting is a stand-wide change. With the setting allowed in the window, each side inserts an own Contact through clio, selects and updates it by its UsrParity name through its own execute-sql-script, and removes it.",
+    "steps": [
+      {
+        "kind": "write",
+        "label": "setup contact",
+        "tool": "odata-create",
+        "clio-run": true,
+        "server": "clio",
+        "creates": "UsrParity{run}{side}Sql",
+        "args": {"entity": "Contact", "rows": [{"Name": "UsrParity{run}{side}Sql", "Notes": "Parity initial"}]},
+        "capture": {"id": "$.results[0].id"}
+      },
+      {
+        "kind": "cleanup",
+        "for": "UsrParity{run}{side}Sql",
+        "server": "clio",
+        "calls": [
+          {"tool": "execute-dataservice-batch", "clio-run": true, "destructive": true,
+           "args": {"operations": [{"operation": "delete", "schema-name": "Contact", "record-id": "{id}"}]}}
+        ]
+      },
+      {
+        "kind": "write",
+        "label": "sql update own row",
+        "tool": "execute-sql-script",
+        "clio-run": true,
+        "target": "UsrParity{run}{side}Sql",
+        "args": {"script": "UPDATE Contact SET Notes = 'Parity updated' WHERE Name = 'UsrParity{run}{side}Sql'"}
+      },
+      {
+        "kind": "read-back",
+        "label": "sql select own row as table",
+        "target": "UsrParity{run}{side}Sql",
+        "tool": "execute-sql-script",
+        "clio-run": true,
+        "args": {"script": "SELECT Name, Notes FROM Contact WHERE Name = 'UsrParity{run}{side}Sql'"}
+      },
+      {
+        "kind": "read-back",
+        "label": "sql select own row as json",
+        "target": "UsrParity{run}{side}Sql",
+        "tool": "execute-sql-script",
+        "clio-run": true,
+        "args": {"script": "SELECT Name, Notes FROM Contact WHERE Name = 'UsrParity{run}{side}Sql'", "view": "json"}
+      }
+    ]
+  }
+]
