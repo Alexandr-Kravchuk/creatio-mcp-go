@@ -184,6 +184,33 @@ func TestServerToServerOAuthAppThroughClioRun(t *testing.T) {
 	adminWriteRawNameIsGated(t, session, "create-server-to-server-oauth-app", args)
 }
 
+func TestIdentityToolsTakeFlatArguments(t *testing.T) {
+	session, _ := newAdminWriteTestSession(t, map[string]func(map[string]any) string{
+		"identityAssertion/publicJwk": func(map[string]any) string { return `{"kty":"RSA"}` },
+	})
+	want := `{"exit-code":0,"execution-log-messages":[{"message-type":"None","value":"{\"kty\":\"RSA\"}"},` +
+		`{"message-type":"Info","value":"Done get-identity-public-jwk"}]}`
+	for _, call := range callPaths("get-identity-public-jwk", map[string]any{"environmentName": "t12-env"}) {
+		result, err := session.CallTool(context.Background(), call)
+		if err != nil || result.IsError {
+			t.Fatalf("%s = %#v, %v", call.Name, result, err)
+		}
+		if text := result.Content[0].(*mcp.TextContent).Text; text != want {
+			t.Errorf("jwk via %s = %s", call.Name, text)
+		}
+	}
+	blank := adminWriteCall(t, session, "get-identity-assertion", map[string]any{"environmentName": " "})
+	if blank != `{"exit-code":1,"execution-log-messages":[{"message-type":"Error","value":"environment-name is required and cannot be empty."}]}` {
+		t.Errorf("blank environment = %s", blank)
+	}
+	missing := adminWriteCall(t, session, "regenerate-identity-signing-key", map[string]any{"format": "json"})
+	if !strings.Contains(missing, "missing a value for the required parameter 'environmentName'") {
+		t.Errorf("missing environment = %s", missing)
+	}
+	adminWriteRawNameIsGated(t, session, "get-identity-assertion", map[string]any{"environmentName": "t12-env"})
+	adminWriteRawNameIsGated(t, session, "regenerate-identity-signing-key", map[string]any{"environmentName": "t12-env"})
+}
+
 func TestManageToolsThroughClioRun(t *testing.T) {
 	session, stand := newAdminWriteTestSession(t, map[string]func(map[string]any) string{
 		"DataService/json/SyncReply/SelectQuery:SysAdminUnit": func(map[string]any) string {

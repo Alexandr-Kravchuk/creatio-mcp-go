@@ -61,5 +61,12 @@
   {"label": "manage-access unknown env", "tool": "manage-access", "clio-run": true, "args": {"environment-name": "UsrParityNoSuchEnvironment", "action": "operations"}},
   {"label": "create-server-to-server-oauth-app bad user", "tool": "create-server-to-server-oauth-app", "clio-run": true, "args": {"system-user": "UsrParityNoSuchUser", "client-name": "UsrParityNotCreated"}},
   {"label": "create-server-to-server-oauth-app wrong type", "tool": "create-server-to-server-oauth-app", "clio-run": true, "args": {"system-user": 5}},
-  {"label": "create-server-to-server-oauth-app unknown env", "tool": "create-server-to-server-oauth-app", "clio-run": true, "args": {"environment-name": "UsrParityNoSuchEnvironment"}}
+  {"label": "create-server-to-server-oauth-app unknown env", "tool": "create-server-to-server-oauth-app", "clio-run": true, "args": {"environment-name": "UsrParityNoSuchEnvironment"}},
+  {"label": "get-identity-public-jwk run", "tool": "get-identity-public-jwk", "clio-run": true, "clio-environment-key": "environmentName", "args": {}},
+  {"label": "get-identity-public-jwk json", "tool": "get-identity-public-jwk", "clio-run": true, "clio-environment-key": "environmentName", "args": {"format": "json"}},
+  {"label": "get-identity-assertion", "tool": "get-identity-assertion", "clio-run": true, "clio-environment-key": "environmentName", "args": {}},
+  {"label": "get-identity-assertion json", "tool": "get-identity-assertion", "clio-run": true, "clio-environment-key": "environmentName", "args": {"format": "JSON"}},
+  {"label": "get-identity-assertion blank env", "tool": "get-identity-assertion", "clio-run": true, "args": {"environmentName": " "}},
+  {"label": "get-identity-assertion unknown env", "tool": "get-identity-assertion", "clio-run": true, "args": {"environmentName": "UsrParityNoSuchEnvironment"}},
+  {"label": "get-identity-assertion bad format type", "tool": "get-identity-assertion", "clio-run": true, "clio-environment-key": "environmentName", "args": {"format": 5}}
 ]
