@@ -9,6 +9,7 @@ package creatio
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"math"
 	"net/http"
 	"strings"
@@ -71,19 +72,33 @@ const (
 	pkgWriteAuthRejected
 )
 
-// WaitForReadiness is ServerReadinessWaiter.WaitForReady with RequireAuthenticatedReadiness. timeout is
-// clamped to 1..3600 s, as RestartCommand.WaitForReadiness clamps it. The waiter's log lines are not part of
-// any answer (clio writes them outside the captured command), so only the verdict is returned.
+// WaitForReadiness is ServerReadinessWaiter.WaitForReady with RequireAuthenticatedReadiness, as the restart
+// tools use it. timeout is clamped to 1..3600 s, as RestartCommand.WaitForReadiness clamps it. The waiter's
+// log lines are not part of the restart answer (clio writes them outside the captured command).
 func (c *Client) WaitForReadiness(ctx context.Context, timeout time.Duration) bool {
-	timeout = min(max(timeout, time.Second), time.Hour)
+	return c.pkgWriteWaitReady(ctx, min(max(timeout, time.Second), time.Hour), true, nil)
+}
+
+// pkgWriteWaitReady is ServerReadinessWaiter.WaitForReady. authenticated adds the DataService round-trip
+// after the liveness probe; log, when given, receives the waiter's and the health check's lines.
+func (c *Client) pkgWriteWaitReady(ctx context.Context, timeout time.Duration, authenticated bool, log *appWriteLog) bool {
+	if log != nil {
+		log.info(fmt.Sprintf("Waiting %.0f seconds for server to start...", pkgWriteReadinessInitialDelay.Seconds()))
+	}
 	if !pkgWriteSleep(ctx, pkgWriteReadinessInitialDelay) {
 		return false
 	}
 	deadline := time.Now().Add(timeout)
 	rejections := 0
-	for {
+	for attempt := 1; ; attempt++ {
 		probeTimeout := pkgWriteProbeTimeout(deadline)
-		if c.pkgWriteHealthCheck(ctx, probeTimeout) {
+		if c.pkgWriteHealthCheck(ctx, probeTimeout, log) {
+			if !authenticated {
+				if log != nil {
+					log.info(fmt.Sprintf("Server is ready after %d attempt(s).", attempt))
+				}
+				return true
+			}
 			switch c.pkgWriteApplicationLayer(ctx, probeTimeout) {
 			case pkgWriteReady:
 				return true
@@ -97,12 +112,23 @@ func (c *Client) WaitForReadiness(ctx context.Context, timeout time.Duration) bo
 			}
 		}
 		if !time.Now().Before(deadline) {
+			break
+		}
+		if log != nil {
+			log.info(fmt.Sprintf("Waiting for server to become ready... (attempt %d). Next check in %.0f seconds.",
+				attempt, pkgWriteReadinessPollInterval.Seconds()))
+		}
+		if !pkgWriteSleep(ctx, pkgWriteReadinessPollInterval) {
 			return false
 		}
-		if !pkgWriteSleep(ctx, pkgWriteReadinessPollInterval) || !time.Now().Before(deadline) {
-			return false
+		if !time.Now().Before(deadline) {
+			break
 		}
 	}
+	if log != nil {
+		log.warning(fmt.Sprintf("Server did not become ready within %.0f seconds.", timeout.Seconds()))
+	}
+	return false
 }
 
 func pkgWriteSleep(ctx context.Context, wait time.Duration) bool {
@@ -126,26 +152,55 @@ func pkgWriteProbeTimeout(deadline time.Time) time.Duration {
 }
 
 // pkgWriteHealthCheck is HealthCheckCommand's single probe: an anonymous GET of the ping endpoint
-// (/0/api/HealthCheck/Ping on .NET Framework, /api/HealthCheck/Ping on .NET Core), redirects not followed,
-// healthy only on a 2xx answer.
-func (c *Client) pkgWriteHealthCheck(ctx context.Context, timeout time.Duration) bool {
-	path := "/0/api/HealthCheck/Ping"
+// (/0/api/HealthCheck/Ping "WebHost" on .NET Framework, /api/HealthCheck/Ping "WebAppLoader" on .NET Core),
+// redirects not followed, healthy only on a 2xx answer. log, when given, receives the command's lines.
+func (c *Client) pkgWriteHealthCheck(ctx context.Context, timeout time.Duration, log *appWriteLog) bool {
+	name, path := "WebHost", "/0/api/HealthCheck/Ping"
 	if c.config.IsNetCore {
-		path = "/api/HealthCheck/Ping"
+		name, path = "WebAppLoader", "/api/HealthCheck/Ping"
+	}
+	uri := strings.TrimRight(c.config.BaseURL, "/") + path
+	if log != nil {
+		log.info(fmt.Sprintf("Checking %s %s ...", name, uri))
+	}
+	failure := func(message string) bool {
+		if log != nil {
+			log.error("\tError: " + message)
+		}
+		return false
 	}
 	requestCtx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
-	request, err := http.NewRequestWithContext(requestCtx, http.MethodGet, strings.TrimRight(c.config.BaseURL, "/")+path, nil)
+	request, err := http.NewRequestWithContext(requestCtx, http.MethodGet, uri, nil)
 	if err != nil {
-		return false
+		return failure(err.Error())
 	}
 	probe := &http.Client{Transport: c.http.Transport, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
 	response, err := probe.Do(request)
 	if err != nil {
-		return false
+		if requestCtx.Err() != nil {
+			return failure(fmt.Sprintf("request timed out after %d ms", timeout.Milliseconds()))
+		}
+		return failure(err.Error())
 	}
 	_ = response.Body.Close()
-	return response.StatusCode >= 200 && response.StatusCode < 300
+	if response.StatusCode < 200 || response.StatusCode >= 300 {
+		status := fmt.Sprintf("%d %s", response.StatusCode, http.StatusText(response.StatusCode))
+		if response.StatusCode >= 300 && response.StatusCode < 400 {
+			target := ""
+			if location := response.Header.Get("Location"); location != "" {
+				target = " to " + location
+			}
+			status += " — the health-check endpoint answered a redirect" + target + " instead of a health " +
+				"response (the application is not serving its own health endpoint; commonly a login " +
+				"redirect or a scheme/host mismatch in the registered environment uri)"
+		}
+		return failure(status)
+	}
+	if log != nil {
+		log.info("\t" + name + " - OK")
+	}
+	return true
 }
 
 // pkgWriteApplicationLayer is ExecuteAuthenticatedRoundTrip: one authenticated SelectQuery that must come back
