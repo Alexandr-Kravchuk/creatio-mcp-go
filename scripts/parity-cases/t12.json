@@ -68,5 +68,8 @@
   {"label": "get-identity-assertion json", "tool": "get-identity-assertion", "clio-run": true, "clio-environment-key": "environmentName", "args": {"format": "JSON"}},
   {"label": "get-identity-assertion blank env", "tool": "get-identity-assertion", "clio-run": true, "args": {"environmentName": " "}},
   {"label": "get-identity-assertion unknown env", "tool": "get-identity-assertion", "clio-run": true, "args": {"environmentName": "UsrParityNoSuchEnvironment"}},
-  {"label": "get-identity-assertion bad format type", "tool": "get-identity-assertion", "clio-run": true, "clio-environment-key": "environmentName", "args": {"format": 5}}
+  {"label": "get-identity-assertion bad format type", "tool": "get-identity-assertion", "clio-run": true, "clio-environment-key": "environmentName", "args": {"format": 5}},
+  {"label": "set-fsm-mode invalid mode", "tool": "set-fsm-mode", "clio-run": true, "args": {"mode": "maybe"}},
+  {"label": "set-fsm-mode unknown environment", "tool": "set-fsm-mode", "clio-run": true, "args": {"environment-name": "UsrParityNoSuchEnvironment", "mode": "on"}},
+  {"label": "set-fsm-mode wrong mode type", "tool": "set-fsm-mode", "clio-run": true, "args": {"mode": true}}
 ]

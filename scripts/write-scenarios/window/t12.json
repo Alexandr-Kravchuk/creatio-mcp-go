@@ -1,0 +1,345 @@
+[
+  {
+    "label": "set-fsm-mode on, then off",
+    "why": "T12, window-only: file system mode is a property of the whole stand. 'on' writes the configuration (on macOS/Linux for this .NET Framework stand: cliogate's SetFileDesignMode, after which IIS recycles the application pool) and then exports every package to the file system; 'off' imports every package into the database first and only then writes the configuration. Run only while the stand is in FSM off, and run compile-creatio afterwards as clio advises. Both sides switch the same stand one after the other, so the second side finds the mode already switched.",
+    "steps": [
+      {
+        "kind": "read-back",
+        "label": "mode before",
+        "tool": "get-fsm-mode",
+        "clio-environment-key": "environmentName",
+        "args": {}
+      },
+      {
+        "kind": "expect",
+        "step": "mode before",
+        "path": "$.mode",
+        "equals": "off"
+      },
+      {
+        "kind": "write",
+        "label": "on",
+        "tool": "set-fsm-mode",
+        "clio-run": true,
+        "args": {
+          "mode": "on"
+        },
+        "settle-seconds": 30,
+        "known-differences": [
+          "$.executionlogmessages"
+        ],
+        "why": "The side that runs second finds FSM already on ('no config edit needed') and only exports."
+      },
+      {
+        "kind": "read-back",
+        "label": "mode on",
+        "tool": "get-fsm-mode",
+        "clio-environment-key": "environmentName",
+        "settle-seconds": 30,
+        "args": {}
+      },
+      {
+        "kind": "expect",
+        "step": "mode on",
+        "path": "$.mode",
+        "equals": "on"
+      },
+      {
+        "kind": "write",
+        "label": "off",
+        "tool": "set-fsm-mode",
+        "clio-run": true,
+        "args": {
+          "mode": "off"
+        },
+        "known-differences": [
+          "$.executionlogmessages"
+        ],
+        "why": "The side that runs second finds file design mode already disabled, so it imports nothing."
+      },
+      {
+        "kind": "read-back",
+        "label": "mode after",
+        "tool": "get-fsm-mode",
+        "clio-environment-key": "environmentName",
+        "settle-seconds": 30,
+        "args": {}
+      },
+      {
+        "kind": "expect",
+        "step": "mode after",
+        "path": "$.mode",
+        "equals": "off"
+      }
+    ]
+  },
+  {
+    "label": "regenerate-identity-signing-key, then read the public JWK",
+    "why": "T12, window-only: regenerating the stand's identity-assertion signing key makes every assertion signed with the previous key stop validating, and the new public key has to be registered with Identity Service V3 again. On the write stand (2026-10-10) the issuer has no signing key and auto-generation is disabled, so both servers may refuse with the same ErrorInfo.",
+    "steps": [
+      {
+        "kind": "write",
+        "label": "regenerate",
+        "tool": "regenerate-identity-signing-key",
+        "clio-run": true,
+        "clio-environment-key": "environmentName",
+        "args": {
+          "format": "json"
+        }
+      },
+      {
+        "kind": "read-back",
+        "label": "public jwk",
+        "tool": "get-identity-public-jwk",
+        "clio-environment-key": "environmentName",
+        "args": {}
+      }
+    ]
+  },
+  {
+    "label": "manage-access operation-position on a grant of a role this run creates",
+    "why": "T12, window-only: operation-position calls cliogate's InvalidateAdministrationRightsCache before and after the change, which clears the rights cache of the whole stand. The grant belongs to a functional role the run creates and is revoked again.",
+    "steps": [
+      {
+        "kind": "write",
+        "label": "create role",
+        "tool": "manage-role",
+        "clio-run": true,
+        "args": {
+          "action": "create",
+          "id": "{guid1}",
+          "name": "UsrParity{run}{side}PosRole",
+          "type": 6,
+          "parent-id": "a29a3ba5-4b0d-de11-9a51-005056c00008"
+        },
+        "creates": "UsrParity{run}{side}PosRole"
+      },
+      {
+        "kind": "cleanup",
+        "for": "UsrParity{run}{side}PosRole",
+        "server": "clio",
+        "calls": [
+          {
+            "tool": "execute-esq",
+            "clio-run": true,
+            "args": {
+              "query": {
+                "rootSchemaName": "SysAdminUnit",
+                "operationType": 0,
+                "rowCount": 1,
+                "columns": {
+                  "items": {
+                    "Id": {
+                      "expression": {
+                        "expressionType": 0,
+                        "columnPath": "Id"
+                      }
+                    }
+                  }
+                },
+                "filters": {
+                  "filterType": 6,
+                  "logicalOperation": 0,
+                  "isEnabled": true,
+                  "items": {
+                    "own": {
+                      "filterType": 1,
+                      "comparisonType": 3,
+                      "isEnabled": true,
+                      "leftExpression": {
+                        "expressionType": 0,
+                        "columnPath": "Id"
+                      },
+                      "rightExpression": {
+                        "expressionType": 2,
+                        "parameter": {
+                          "dataValueType": 0,
+                          "value": "{guid1}"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "capture": {
+              "cleanupId": "$.rows[0].id"
+            }
+          },
+          {
+            "tool": "manage-role",
+            "clio-run": true,
+            "args": {
+              "action": "delete",
+              "id": "{cleanupId}"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "write",
+        "label": "grant operation",
+        "tool": "manage-access",
+        "clio-run": true,
+        "args": {
+          "action": "grant-operation",
+          "operation-id": "23394dfa-23ce-4600-8672-d9315af810a2",
+          "unit-id": "{guid1}"
+        },
+        "creates": "UsrParity{run}{side}PosGrant",
+        "known-differences": [
+          "$.executionlogmessages[0].value"
+        ],
+        "why": "The answer holds the row Creatio just made, whose Id it generates per side; the read-back after capturing that Id compares the rest."
+      },
+      {
+        "kind": "cleanup",
+        "for": "UsrParity{run}{side}PosGrant",
+        "server": "clio",
+        "calls": [
+          {
+            "tool": "execute-esq",
+            "clio-run": true,
+            "args": {
+              "query": {
+                "rootSchemaName": "SysAdminOperationGrantee",
+                "operationType": 0,
+                "rowCount": 1,
+                "columns": {
+                  "items": {
+                    "Id": {
+                      "expression": {
+                        "expressionType": 0,
+                        "columnPath": "Id"
+                      }
+                    }
+                  }
+                },
+                "filters": {
+                  "filterType": 6,
+                  "logicalOperation": 0,
+                  "isEnabled": true,
+                  "items": {
+                    "own": {
+                      "filterType": 1,
+                      "comparisonType": 3,
+                      "isEnabled": true,
+                      "leftExpression": {
+                        "expressionType": 0,
+                        "columnPath": "SysAdminUnit"
+                      },
+                      "rightExpression": {
+                        "expressionType": 2,
+                        "parameter": {
+                          "dataValueType": 0,
+                          "value": "{guid1}"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "capture": {
+              "cleanupId": "$.rows[0].id"
+            }
+          },
+          {
+            "tool": "manage-access",
+            "clio-run": true,
+            "args": {
+              "action": "revoke-operation",
+              "operation-id": "23394dfa-23ce-4600-8672-d9315af810a2",
+              "unit-id": "{guid1}"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "read-back",
+        "label": "find grant",
+        "tool": "execute-esq",
+        "clio-run": true,
+        "args": {
+          "query": {
+            "rootSchemaName": "SysAdminOperationGrantee",
+            "operationType": 0,
+            "rowCount": 1,
+            "columns": {
+              "items": {
+                "Id": {
+                  "expression": {
+                    "expressionType": 0,
+                    "columnPath": "Id"
+                  }
+                }
+              }
+            },
+            "filters": {
+              "filterType": 6,
+              "logicalOperation": 0,
+              "isEnabled": true,
+              "items": {
+                "own": {
+                  "filterType": 1,
+                  "comparisonType": 3,
+                  "isEnabled": true,
+                  "leftExpression": {
+                    "expressionType": 0,
+                    "columnPath": "SysAdminUnit"
+                  },
+                  "rightExpression": {
+                    "expressionType": 2,
+                    "parameter": {
+                      "dataValueType": 0,
+                      "value": "{guid1}"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "capture": {
+          "grantId": "$.rows[0].id"
+        }
+      },
+      {
+        "kind": "write",
+        "label": "position",
+        "tool": "manage-access",
+        "clio-run": true,
+        "args": {
+          "action": "operation-position",
+          "id": "{grantId}",
+          "position": 0
+        },
+        "known-differences": [
+          "$.executionlogmessages[0].value"
+        ],
+        "why": "Both sides' grants of the operation exist at once, so moving each to position 0 shifts the other."
+      },
+      {
+        "kind": "write",
+        "label": "revoke operation",
+        "tool": "manage-access",
+        "clio-run": true,
+        "args": {
+          "action": "revoke-operation",
+          "operation-id": "23394dfa-23ce-4600-8672-d9315af810a2",
+          "unit-id": "{guid1}"
+        }
+      },
+      {
+        "kind": "write",
+        "label": "delete role",
+        "tool": "manage-role",
+        "clio-run": true,
+        "args": {
+          "action": "delete",
+          "id": "{guid1}"
+        }
+      }
+    ]
+  }
+]

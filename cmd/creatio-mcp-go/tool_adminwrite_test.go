@@ -184,6 +184,16 @@ func TestServerToServerOAuthAppThroughClioRun(t *testing.T) {
 	adminWriteRawNameIsGated(t, session, "create-server-to-server-oauth-app", args)
 }
 
+func TestSetFsmModeThroughClioRun(t *testing.T) {
+	session, _ := newAdminWriteTestSession(t, map[string]func(map[string]any) string{})
+	args := map[string]any{"environment-name": "t12-env", "mode": "sideways"}
+	answer := adminWriteCall(t, session, "set-fsm-mode", args)
+	if answer != `{"exit-code":1,"execution-log-messages":[{"message-type":"Error","value":"Invalid value for IsFsm. Expected: 'on' or 'off'."}]}` {
+		t.Errorf("invalid mode = %s", answer)
+	}
+	adminWriteRawNameIsGated(t, session, "set-fsm-mode", args)
+}
+
 func TestIdentityToolsTakeFlatArguments(t *testing.T) {
 	session, _ := newAdminWriteTestSession(t, map[string]func(map[string]any) string{
 		"identityAssertion/publicJwk": func(map[string]any) string { return `{"kty":"RSA"}` },
