@@ -246,6 +246,7 @@ func TestGetRequestInfoIsReadOnlyAndReachableBothWays(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Setenv("CLIO_REQUEST_REGISTRY_LOCAL_FILE", registry)
+	t.Setenv("CLIO_HOME", t.TempDir()) // keep the registry cache away from the real clio home
 	session := dataWriteTestSession(t, func(w http.ResponseWriter, r *http.Request) { http.NotFound(w, r) })
 	for _, params := range callPaths("get-request-info", map[string]any{"request-type": "crt.ClosePageRequest"}) {
 		result, err := session.CallTool(context.Background(), params)
