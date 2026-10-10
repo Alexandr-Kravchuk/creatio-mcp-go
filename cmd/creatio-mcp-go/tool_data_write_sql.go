@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"strings"
 
 	"github.com/Alexandr-Kravchuk/creatio-mcp-go/internal/creatio"
@@ -9,6 +10,8 @@ import (
 )
 
 func init() {
+	// clio's ExecuteSqlScriptTool: the tool's own validation (command envelope, exit 1), then the environment,
+	// then the [RequiresPackage("cliogate", "2.0.0.41")] gate, then SqlScriptCommand.
 	registerTool(map[string]any{"name": "execute-sql-script"}, func(ctx context.Context, envs *environments, args map[string]any) (*mcp.CallToolResult, error) {
 		const tool = "execute-sql-script"
 		fields := map[string]string{}
@@ -23,7 +26,7 @@ func init() {
 		if raw, exists := args["silent"]; exists && raw != nil {
 			value, ok := raw.(bool)
 			if !ok {
-				return nil, dataWriteNestedBindingError(tool, "silent")
+				return nil, errors.New("invalid-parameter-type: argument 'silent' for MCP tool 'execute-sql-script' must be a boolean. Received an incompatible JSON value.")
 			}
 			silent = value
 		}
@@ -36,9 +39,9 @@ func init() {
 		if (strings.TrimSpace(fields["script"]) == "") == (strings.TrimSpace(fields["file"]) == "") {
 			return failure("Provide exactly one of script or file.")
 		}
-		view := strings.ToLower(fields["view"])
-		if view == "" {
-			view = "table"
+		view := "table"
+		if raw, present := args["view"]; present && raw != nil {
+			view = strings.ToLower(fields["view"])
 		}
 		if view != "table" && view != "json" && view != "csv" && view != "xlsx" {
 			return failure("view must be table, json, csv, or xlsx.")
@@ -53,6 +56,19 @@ func init() {
 		if resolution != nil {
 			return resolverFailureEnvelope(resolution), nil
 		}
-		return structuredToolResult(client.DataWriteSQL(ctx, fields["script"], fields["file"], view, fields["destination-path"], silent)), nil
+		if refusal := client.DataWriteSQLRequirement(ctx); refusal != "" {
+			return failure(refusal)
+		}
+		request := creatio.DataWriteSQLRequest{View: view, Silent: silent}
+		if strings.TrimSpace(fields["script"]) != "" {
+			request.Script = fields["script"]
+		} else {
+			request.File = fields["file"]
+		}
+		if raw, present := args["destination-path"]; present && raw != nil {
+			destination := fields["destination-path"]
+			request.Destination = &destination
+		}
+		return structuredToolResult(client.ExecuteSQLScript(ctx, request)), nil
 	}, withAnnotations(toolAnnotations{ReadOnly: false, Destructive: true, Idempotent: false, OpenWorld: false}))
 }

@@ -143,3 +143,42 @@ func TestDataBindingDbToolsThroughExecutorsAndGate(t *testing.T) {
 		t.Fatalf("writes=%d", writes)
 	}
 }
+
+func TestExecuteSQLScriptToolValidatesGatesAndRuns(t *testing.T) {
+	version, scripts := "2.0.0.40", 0
+	session := dataWriteTestSession(t, func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasSuffix(r.URL.Path, "/SelectQuery") {
+			_, _ = io.WriteString(w, `{"success":true,"rows":[{"Name":"cliogate","Version":"`+version+`"}]}`)
+			return
+		}
+		scripts++
+		_, _ = io.WriteString(w, `"5"`)
+	})
+	args := map[string]any{"environment-name": "parity-stand", "script": "UPDATE UsrParityTable SET Name = Name"}
+	raw, _ := dataWriteTestCall(t, session, "", "execute-sql-script", args)
+	if !raw.IsError || !strings.Contains(dataWriteTestText(raw), "was NOT executed") {
+		t.Fatalf("raw call escaped the write gate: %s", dataWriteTestText(raw))
+	}
+	check := func(executor string, args map[string]any, exitCode float64, value string) {
+		t.Helper()
+		result, answer := dataWriteTestCall(t, session, executor, "execute-sql-script", args)
+		messages, _ := answer["execution-log-messages"].([]any)
+		if result.IsError || answer["exit-code"] != exitCode || len(messages) == 0 || messages[0].(map[string]any)["value"] != value {
+			t.Fatalf("%s %v answer %s", executor, args, dataWriteTestText(result))
+		}
+	}
+	check("clio-run", map[string]any{"environment-name": "parity-stand"}, 1, "Provide exactly one of script or file.")
+	check("clio-run", map[string]any{"environment-name": "parity-stand", "script": "x", "view": "XML"}, 1, "view must be table, json, csv, or xlsx.")
+	check("clio-run", args, 1, "To use this command, you need to install the cliogate package version 2.0.0.41 or higher. Install or update the package in the target environment and retry.\n"+
+		"Run 'clio install-gate -e <environment>' (or call the install-gate MCP tool) to install/update cliogate.")
+	if scripts != 0 {
+		t.Fatalf("a refused call ran the script")
+	}
+	version = "2.0.0.41"
+	for _, executor := range []string{"clio-run", "clio-run-destructive"} {
+		check(executor, args, 0, "(5 rows affected)")
+	}
+	if scripts != 2 {
+		t.Fatalf("scripts=%d", scripts)
+	}
+}

@@ -261,5 +261,49 @@
         }
       ]
     }
+  },
+  {
+    "label": "sql literal select refused by the stand",
+    "tool": "execute-sql-script",
+    "clio-run": true,
+    "args": {
+      "script": "SELECT 1 AS A"
+    }
+  },
+  {
+    "label": "sql literal select json refused by the stand",
+    "tool": "execute-sql-script",
+    "clio-run": true,
+    "args": {
+      "script": "SELECT 1 AS A",
+      "view": "json"
+    }
+  },
+  {
+    "label": "sql both script and file",
+    "tool": "execute-sql-script",
+    "clio-run": true,
+    "args": {
+      "script": "SELECT 1",
+      "file": "/nonexistent.sql"
+    }
+  },
+  {
+    "label": "sql xlsx missing destination",
+    "tool": "execute-sql-script",
+    "clio-run": true,
+    "args": {
+      "script": "SELECT 1",
+      "view": "xlsx"
+    }
+  },
+  {
+    "label": "sql silent not a boolean",
+    "tool": "execute-sql-script",
+    "clio-run": true,
+    "args": {
+      "script": "SELECT 1",
+      "silent": "yes"
+    }
   }
 ]
