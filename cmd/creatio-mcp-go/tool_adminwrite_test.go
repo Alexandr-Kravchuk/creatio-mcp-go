@@ -148,9 +148,9 @@ func TestDownloadSysSettingFileThroughClioRun(t *testing.T) {
 		t.Errorf("download = %s\nwant %s", saved, want)
 	}
 	for args, message := range map[string]string{
-		`{"environment-name":"t12-env","code":"UsrLogo","file-name":"relative.bin"}`:        "file-name must be an absolute path including the destination filename.",
-		`{"environment-name":"t12-env","file-name":"/tmp/t12-absent/x.bin"}`:                "environment-name and code are required.",
-		`{"environment-name":"t12-env","code":"UsrLogo","file-name":"` + destination + `"}`: "Destination already exists; choose a new filename.",
+		`{"environment-name":"t12-env","code":"UsrLogo","file-name":"relative.bin"}`:                                  "file-name must be an absolute path including the destination filename.",
+		`{"environment-name":"t12-env","file-name":` + string(mustJSON(t, filepath.Join(t.TempDir(), "x.bin"))) + `}`: "environment-name and code are required.",
+		`{"environment-name":"t12-env","code":"UsrLogo","file-name":` + string(mustJSON(t, destination)) + `}`:        "Destination already exists; choose a new filename.",
 	} {
 		var decoded map[string]any
 		if err := json.Unmarshal([]byte(args), &decoded); err != nil {

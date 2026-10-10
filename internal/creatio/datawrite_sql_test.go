@@ -50,7 +50,8 @@ func TestDataWriteSQLTableMatchesClioConsoleTable(t *testing.T) {
 	if got.ExitCode != 0 || len(got.Messages) != 2 || got.Messages[0].MessageType != "None" || got.Messages[1].Value != "Done" {
 		t.Fatalf("got=%#v", got)
 	}
-	if got.Messages[0].Value != strings.ReplaceAll(string(want), "\n", dataWriteNewline()) {
+	// A Windows checkout may turn the golden file's LF into CRLF; normalise it before applying the platform newline.
+	if got.Messages[0].Value != strings.ReplaceAll(strings.ReplaceAll(string(want), "\r\n", "\n"), "\n", dataWriteNewline()) {
 		t.Fatalf("table differs:\n%s\nwant:\n%s", got.Messages[0].Value, want)
 	}
 }

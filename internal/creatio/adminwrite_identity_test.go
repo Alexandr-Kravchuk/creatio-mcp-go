@@ -59,6 +59,8 @@ func TestIdentityCommandsReadTheirAnswers(t *testing.T) {
 		result := client.IdentityCommand(context.Background(), c.tool, c.format)
 		for index := range result.Messages {
 			result.Messages[index].Value = strings.ReplaceAll(result.Messages[index].Value, client.config.BaseURL, "SERVER")
+			// Indented JSON uses Environment.NewLine, as clio's does; compare the layout with LF.
+			result.Messages[index].Value = strings.ReplaceAll(result.Messages[index].Value, "\r\n", "\n")
 		}
 		if result.ExitCode != c.exitCode || !reflect.DeepEqual(result.Messages, c.messages) {
 			t.Errorf("%s %q = %#v", c.tool.Name, c.format, result)

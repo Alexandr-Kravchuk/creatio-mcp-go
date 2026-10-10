@@ -69,7 +69,8 @@ func TestCreateUserTaskPageScaffoldsAndLinksThePage(t *testing.T) {
 	if !strings.HasPrefix(icons, "\n<Resources") || !strings.Contains(icons, `<Item Name="SmallSvgImage" Type="Image" ContentType="Data" FileExtension=".svg" Value="PHN2Zy`) {
 		t.Fatalf("task resources %q", icons)
 	}
-	if caption := read("packages/UsrPkg/Resources/UsrTaskPage.ClientUnit/resource.en-US.xml"); caption != "<Resources Culture=\"en-US\">\n  <Group Type=\"String\">\n    <Items>\n      <Item Name=\"Caption\" Value=\"Page &quot;one&quot;\" />\n    </Items>\n  </Group>\n</Resources>" {
+	// XmlWriter writes Environment.NewLine, as clio's does; compare the layout with LF.
+	if caption := strings.ReplaceAll(read("packages/UsrPkg/Resources/UsrTaskPage.ClientUnit/resource.en-US.xml"), "\r\n", "\n"); caption != "<Resources Culture=\"en-US\">\n  <Group Type=\"String\">\n    <Items>\n      <Item Name=\"Caption\" Value=\"Page &quot;one&quot;\" />\n    </Items>\n  </Group>\n</Resources>" {
 		t.Fatalf("page resources %q", caption)
 	}
 	again := CreateUserTaskPage(UserTaskPageRequest{WorkspacePath: root, PackageName: "UsrPkg", UserTaskUID: userTaskTestUID, PageName: "UsrOther", Caption: "x"})

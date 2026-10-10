@@ -156,8 +156,9 @@ func TestCreateUserTaskAppliesExplicitDirectionsThroughTheWorkspace(t *testing.T
 	if result.ExitCode != 0 || strings.Join(got, "\n") != strings.Join(want, "\n") || !loaded || len(processWriteTaskCalls(*calls, "/BuildPackage")) != 2 {
 		t.Fatalf("%q", got)
 	}
-	metadata, _ := os.ReadFile(filepath.Join(root, "packages/UsrPkg/Schemas/UsrTask/metadata.json"))
-	if !strings.Contains(string(metadata), `"L12": 1`) || !strings.Contains(string(metadata), `"A2": "Note",`+"\n"+`          "L12": 0`) {
+	raw, _ := os.ReadFile(filepath.Join(root, "packages/UsrPkg/Schemas/UsrTask/metadata.json"))
+	metadata := strings.ReplaceAll(string(raw), "\r\n", "\n") // indented with Environment.NewLine, as clio does
+	if !strings.Contains(metadata, `"L12": 1`) || !strings.Contains(metadata, `"A2": "Note",`+"\n"+`          "L12": 0`) {
 		t.Fatalf("metadata %s", metadata)
 	}
 }
@@ -234,6 +235,11 @@ func TestCreateUserTaskRefusals(t *testing.T) {
 
 func TestModifyUserTaskParametersEditsTheWorkspaceTask(t *testing.T) {
 	root := processWriteTaskWorkspace(t, `{"MetaData":{"Schema":{"FJ1":[{"A2":"Keep","L12":1},{"A2":"Drop","L12":0}]}}}`)
+	// The server answers with "usrpkg" for the workspace's "UsrPkg"; like clio, the task then finds its metadata
+	// file only on a case-insensitive file system (macOS, Windows).
+	if _, err := os.Stat(filepath.Join(root, "packages", "usrpkg")); err != nil {
+		t.Skip("needs a case-insensitive file system, as clio's path lookup does")
+	}
 	client, calls := processWriteServer(t, "", func(call processWriteCall) (int, string) {
 		switch {
 		case strings.HasSuffix(call.Path, "/GetWorkspaceItems"):
