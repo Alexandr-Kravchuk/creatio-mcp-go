@@ -1,27 +1,96 @@
 [
   {
-    "label": "create-sys-setting text, read back, remove",
-    "why": "Example for the T7-T15 authors; argument names are clio master's CreateSysSettingArgs, GetSysSettingArgs, ODataReadArgs and ODataDeleteArgs. Not yet run live: no stand is approved for writes (decision D1).",
+    "label": "create-sys-setting text, update, read back, remove",
+    "why": "Reference scenario: argument names are clio master's CreateSysSettingArgs, UpdateSysSettingArgs and GetSysSettingArgs. Only settings this run creates are written. Cleanup deletes the VwSysSetting row through clio's execute-dataservice-batch: OData DELETE answers HTTP 405 on the write stand and a DataService delete of SysSettings or SysSettingsValue is refused for lack of rights, while the VwSysSetting delete (the system settings section's own path) removes the SysSettings row and its SysSettingsValue rows (checked on the stand, 2026-10-10).",
     "steps": [
-      {"kind": "write", "label": "create", "tool": "create-sys-setting",
+      {"kind": "write", "label": "create", "tool": "create-sys-setting", "clio-run": true,
        "creates": "UsrParity{run}{side}Setting",
-       "go-tool-missing": "create-sys-setting is not implemented in this server yet (T12); remove this key when it is",
        "args": {"code": "UsrParity{run}{side}Setting", "name": "Parity {run} {side}",
                 "value-type-name": "ShortText", "value": "parity-value",
                 "description": "Created by scripts/compare-mcp-writes.py; safe to delete"}},
       {"kind": "cleanup", "for": "UsrParity{run}{side}Setting", "server": "clio",
-       "why": "Neither server has a delete tool for system settings: find the row's Id, then delete the SysSettings row through clio's odata-delete. Unverified until a stand is approved: that deleting the SysSettings row also removes its SysSettingsValue rows; the T12 author must confirm it on the stand.",
        "calls": [
-         {"tool": "odata-read",
-          "args": {"entity": "SysSettings", "select": ["Id"],
-                   "filters": {"all": [{"field": "Code", "op": "eq", "value": "UsrParity{run}{side}Setting"}]}},
-          "capture": {"id": "$.value[0].id"}},
-         {"tool": "odata-delete", "args": {"entity": "SysSettings", "id": "{id}", "confirm": true}}
+         {"tool": "execute-esq", "clio-run": true,
+          "args": {"query": {"rootSchemaName": "SysSettings", "operationType": 0, "rowCount": 1,
+            "columns": {"items": {"Id": {"expression": {"expressionType": 0, "columnPath": "Id"}}}},
+            "filters": {"filterType": 6, "logicalOperation": 0, "isEnabled": true,
+              "items": {"byCode": {"filterType": 1, "comparisonType": 3, "isEnabled": true,
+                "leftExpression": {"expressionType": 0, "columnPath": "Code"},
+                "rightExpression": {"expressionType": 2, "parameter": {"dataValueType": 1,
+                  "value": "UsrParity{run}{side}Setting"}}}}}}},
+          "capture": {"id": "$.rows[0].id"}},
+         {"tool": "execute-dataservice-batch", "clio-run": true,
+          "args": {"operations": [{"operation": "delete", "schema-name": "VwSysSetting", "record-id": "{id}"}]}}
        ]},
       {"kind": "read-back", "label": "read", "tool": "get-sys-setting",
        "args": {"code": "UsrParity{run}{side}Setting"}},
       {"kind": "expect", "step": "read", "path": "$.value", "equals": "parity-value"},
-      {"kind": "expect", "step": "read", "path": "$.code", "equals": "UsrParity{run}{side}Setting"}
+      {"kind": "expect", "step": "read", "path": "$.code", "equals": "UsrParity{run}{side}Setting"},
+      {"kind": "write", "label": "update", "tool": "update-sys-setting", "clio-run": true,
+       "args": {"code": "UsrParity{run}{side}Setting", "value": "parity-updated"}},
+      {"kind": "read-back", "label": "read updated", "tool": "get-sys-setting",
+       "args": {"code": "UsrParity{run}{side}Setting"}},
+      {"kind": "expect", "step": "read updated", "path": "$.value", "equals": "parity-updated"}
+    ]
+  },
+  {
+    "label": "create-sys-setting integer, refused and accepted updates",
+    "why": "An Integer setting takes a number with surrounding white space, then refuses a non-numeric value before anything is sent (clio's refusal envelope). The refusal comes last because a failed answer ends the scenario.",
+    "steps": [
+      {"kind": "write", "label": "create", "tool": "create-sys-setting", "clio-run": true,
+       "creates": "UsrParity{run}{side}Int",
+       "args": {"code": "UsrParity{run}{side}Int", "name": "Parity {run} {side} integer",
+                "value-type-name": "Integer", "value": "41", "is-cacheable": false}},
+      {"kind": "cleanup", "for": "UsrParity{run}{side}Int", "server": "clio",
+       "calls": [
+         {"tool": "execute-esq", "clio-run": true,
+          "args": {"query": {"rootSchemaName": "SysSettings", "operationType": 0, "rowCount": 1,
+            "columns": {"items": {"Id": {"expression": {"expressionType": 0, "columnPath": "Id"}}}},
+            "filters": {"filterType": 6, "logicalOperation": 0, "isEnabled": true,
+              "items": {"byCode": {"filterType": 1, "comparisonType": 3, "isEnabled": true,
+                "leftExpression": {"expressionType": 0, "columnPath": "Code"},
+                "rightExpression": {"expressionType": 2, "parameter": {"dataValueType": 1,
+                  "value": "UsrParity{run}{side}Int"}}}}}}},
+          "capture": {"id": "$.rows[0].id"}},
+         {"tool": "execute-dataservice-batch", "clio-run": true,
+          "args": {"operations": [{"operation": "delete", "schema-name": "VwSysSetting", "record-id": "{id}"}]}}
+       ]},
+      {"kind": "expect", "step": "create", "path": "$.value", "equals": "41"},
+      {"kind": "write", "label": "update", "tool": "update-sys-setting", "clio-run": true,
+       "args": {"code": "UsrParity{run}{side}Int", "value": " 42 "}},
+      {"kind": "expect", "step": "update", "path": "$.value", "equals": "42"},
+      {"kind": "read-back", "label": "read", "tool": "get-sys-setting",
+       "args": {"code": "UsrParity{run}{side}Int"}},
+      {"kind": "read-back", "label": "refused update", "tool": "update-sys-setting", "clio-run": true,
+       "args": {"code": "UsrParity{run}{side}Int", "value": "forty-two"}}
+    ]
+  },
+  {
+    "label": "create-sys-setting binary, upload a file, download it",
+    "why": "A Binary setting takes its value from value-file-path (the stand's file-security policy refuses inline Base64) and download-sys-setting-file writes the same bytes back. The upload path is relative to the harness's working directory, the repository root; the download goes to a new file named after the setting.",
+    "steps": [
+      {"kind": "write", "label": "create", "tool": "create-sys-setting", "clio-run": true,
+       "creates": "UsrParity{run}{side}Bin",
+       "args": {"code": "UsrParity{run}{side}Bin", "name": "Parity {run} {side} binary", "value-type-name": "Binary"}},
+      {"kind": "cleanup", "for": "UsrParity{run}{side}Bin", "server": "clio",
+       "calls": [
+         {"tool": "execute-esq", "clio-run": true,
+          "args": {"query": {"rootSchemaName": "SysSettings", "operationType": 0, "rowCount": 1,
+            "columns": {"items": {"Id": {"expression": {"expressionType": 0, "columnPath": "Id"}}}},
+            "filters": {"filterType": 6, "logicalOperation": 0, "isEnabled": true,
+              "items": {"byCode": {"filterType": 1, "comparisonType": 3, "isEnabled": true,
+                "leftExpression": {"expressionType": 0, "columnPath": "Code"},
+                "rightExpression": {"expressionType": 2, "parameter": {"dataValueType": 1,
+                  "value": "UsrParity{run}{side}Bin"}}}}}}},
+          "capture": {"id": "$.rows[0].id"}},
+         {"tool": "execute-dataservice-batch", "clio-run": true,
+          "args": {"operations": [{"operation": "delete", "schema-name": "VwSysSetting", "record-id": "{id}"}]}}
+       ]},
+      {"kind": "write", "label": "upload", "tool": "update-sys-setting", "clio-run": true,
+       "args": {"code": "UsrParity{run}{side}Bin", "value-file-path": "scripts/testdata/t12-pixel.png"}},
+      {"kind": "write", "label": "download", "tool": "download-sys-setting-file", "clio-run": true,
+       "args": {"code": "UsrParity{run}{side}Bin", "file-name": "/private/tmp/UsrParity{run}{side}Bin.png"}},
+      {"kind": "expect", "step": "download", "path": "$.bytecount", "equals": 68}
     ]
   }
 ]
