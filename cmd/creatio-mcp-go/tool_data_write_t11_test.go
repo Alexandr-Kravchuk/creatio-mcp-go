@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"path/filepath"
 	"strings"
 	"sync/atomic"
@@ -235,5 +236,24 @@ func TestRunProcessToolAnswersByTheResponseDeadline(t *testing.T) {
 	_, answer := dataWriteTestCall(t, session, "clio-run", "run-process", map[string]any{"environment-name": "parity-stand", "process-name": "X", "processName": "typo"})
 	if !strings.Contains(answer["error"].(string), "processName") {
 		t.Fatalf("unknown key answer %v", answer)
+	}
+}
+
+func TestGetRequestInfoIsReadOnlyAndReachableBothWays(t *testing.T) {
+	dir := t.TempDir()
+	registry := filepath.Join(dir, "RequestRegistry.json")
+	if err := os.WriteFile(registry, []byte(`{"requests":[{"requestType":"crt.ClosePageRequest","description":"Closes","parameters":{}}]}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("CLIO_REQUEST_REGISTRY_LOCAL_FILE", registry)
+	session := dataWriteTestSession(t, func(w http.ResponseWriter, r *http.Request) { http.NotFound(w, r) })
+	for _, params := range callPaths("get-request-info", map[string]any{"request-type": "crt.ClosePageRequest"}) {
+		result, err := session.CallTool(context.Background(), params)
+		if err != nil || result.IsError || !strings.Contains(dataWriteTestText(result), `"mode":"detail"`) {
+			t.Fatalf("%s: %v %v", params.Name, result, err)
+		}
+	}
+	if len(callPaths("get-request-info", nil)) != 2 {
+		t.Fatal("get-request-info must be callable by its raw name")
 	}
 }

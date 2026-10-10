@@ -1,0 +1,18 @@
+[
+  {"label": "request-info list", "tool": "get-request-info", "args": {}},
+  {"label": "request-info list keyword", "tool": "get-request-info", "args": {"search": "close"}},
+  {"label": "request-info list keyword in parameters", "tool": "get-request-info", "args": {"request-type": "list", "search": "record"}},
+  {"label": "request-info detail", "tool": "get-request-info", "args": {"request-type": "crt.ClosePageRequest"},
+   "known-differences": ["$.documentationsource"]},
+  {"label": "request-info detail other case", "tool": "get-request-info", "args": {"request-type": "CRT.OPENPAGEREQUEST"},
+   "known-differences": ["$.documentationsource"]},
+  {"label": "request-info not found by name", "tool": "get-request-info", "args": {"request-type": "page"}},
+  {"label": "request-info not found closest", "tool": "get-request-info", "args": {"request-type": "crt.ClosPageRequst"}},
+  {"label": "request-info not found closest with search", "tool": "get-request-info", "args": {"request-type": "zzzz", "search": "open"}},
+  {"label": "request-info mobile list", "tool": "get-request-info", "args": {"schema-type": "mobile"}},
+  {"label": "request-info unknown schema type", "tool": "get-request-info", "args": {"schema-type": "tablet", "search": "close"}},
+  {"label": "request-info version with environment", "tool": "get-request-info", "args": {"version": "8.3.3"}},
+  {"label": "request-info alias", "tool": "get-request-info", "args": {"requestType": "crt.ClosePageRequest"}},
+  {"label": "request-info unknown key", "tool": "get-request-info", "args": {"kind": "x"}},
+  {"label": "request-info wrong type", "tool": "get-request-info", "args": {"search": 5}}
+]
