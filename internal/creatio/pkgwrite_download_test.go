@@ -105,7 +105,7 @@ func TestPkgWriteDownloadFromFrameworkZip(t *testing.T) {
 	result := DownloadConfigurationFromBuild(workspace, archive)
 	values := strings.Join(pkgWriteValues(result), "|")
 	app := filepath.Join(workspace, ".application", "net-framework")
-	if result.ExitCode != 0 || !strings.HasPrefix(values, "Info:Extracting Creatio from "+archive+"|Info:Extracted to temporary directory: ") ||
+	if result.ExitCode != 0 || !strings.HasPrefix(values, "Info:Extracting Creatio from "+archive+"|Info:Creating temporary directory...|Info:Created temporary directory ") ||
 		!strings.Contains(values, "|Info:Detected NetFramework Creatio|") || !strings.HasSuffix(values, "Info:Configuration download from zip completed successfully") {
 		t.Fatalf("values = %q", values)
 	}

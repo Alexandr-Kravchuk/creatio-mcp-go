@@ -19,7 +19,9 @@ import (
 	"bytes"
 	"compress/gzip"
 	"context"
+	"crypto/rand"
 	"encoding/binary"
+	"encoding/hex"
 	"encoding/json"
 	"encoding/xml"
 	"errors"
@@ -316,21 +318,22 @@ func pkgWriteDownloadFromPath(workspace pkgWriteWorkspace, path string, log *app
 			return pkgWriteNotWorkspace()
 		}
 		log.info("Extracting Creatio from " + path)
-		temporary, err := os.MkdirTemp("", "clio-")
+		err := pkgWriteTempDirectory(log, func(temporary string) error {
+			failed := func(err error) error {
+				log.error("Error downloading configuration from zip: " + err.Error())
+				return err
+			}
+			if err := pkgWriteUnzip(path, temporary); err != nil {
+				return failed(err)
+			}
+			log.info("Extracted to temporary directory: " + temporary)
+			if err := copier.download(temporary, !isFramework(temporary)); err != nil {
+				return failed(err)
+			}
+			return nil
+		})
 		if err != nil {
 			return err
-		}
-		defer os.RemoveAll(temporary)
-		failed := func(err error) error {
-			log.error("Error downloading configuration from zip: " + err.Error())
-			return err
-		}
-		if err := pkgWriteUnzip(path, temporary); err != nil {
-			return failed(err)
-		}
-		log.info("Extracted to temporary directory: " + temporary)
-		if err := copier.download(temporary, !isFramework(temporary)); err != nil {
-			return failed(err)
 		}
 		log.info("Configuration download from zip completed successfully")
 		return nil
@@ -402,6 +405,33 @@ func DownloadConfigurationFromBuild(workspacePath, buildPath string) CommandResu
 }
 
 // ---- from an environment (ApplicationDownloader) ----
+
+// pkgWriteTempDirectory is WorkingDirectoriesProvider.CreateTempDirectory(Action): a folder under
+// <CLIO_WORKING_DIRECTORY or the system temporary folder>/clio named by a fresh GUID, announced before and
+// after it is made, and deleted (and reported deleted) after work, whatever work returned.
+func pkgWriteTempDirectory(log *appWriteLog, work func(string) error) error {
+	base := os.Getenv("CLIO_WORKING_DIRECTORY")
+	if base == "" {
+		base = os.TempDir()
+	}
+	log.info("Creating temporary directory...")
+	random := make([]byte, 16)
+	if _, err := rand.Read(random); err != nil {
+		return err
+	}
+	directory := filepath.Join(base, "clio", hex.EncodeToString(random))
+	if err := os.MkdirAll(directory, 0o755); err != nil {
+		return err
+	}
+	log.info("Created temporary directory " + directory)
+	defer func() {
+		if pkgWriteIsDirectory(directory) {
+			_ = os.RemoveAll(directory)
+			log.info("Deleted temporary directory " + directory)
+		}
+	}()
+	return work(directory)
+}
 
 // pkgWriteDownloadInfo is DownloadInfo.
 type pkgWriteDownloadInfo struct {
@@ -553,11 +583,12 @@ func pkgWriteCsprojReferences(content string) ([]pkgWriteCsprojReference, error)
 // pkgWriteDownloadAll is Downloader.Download: every archive fetched and unpacked in parallel, as clio does
 // (the "Run download" lines therefore come in no fixed order).
 func (c *Client) pkgWriteDownloadAll(ctx context.Context, infos []pkgWriteDownloadInfo, log *appWriteLog) error {
-	temporary, err := os.MkdirTemp("", "clio-")
-	if err != nil {
-		return err
-	}
-	defer os.RemoveAll(temporary)
+	return pkgWriteTempDirectory(log, func(temporary string) error {
+		return c.pkgWriteDownloadInto(ctx, temporary, infos, log)
+	})
+}
+
+func (c *Client) pkgWriteDownloadInto(ctx context.Context, temporary string, infos []pkgWriteDownloadInfo, log *appWriteLog) error {
 	var wait sync.WaitGroup
 	errs := make([]error, len(infos))
 	for index, info := range infos {
@@ -595,13 +626,14 @@ func (c *Client) pkgWriteDownloadAll(ctx context.Context, infos []pkgWriteDownlo
 }
 
 // pkgWriteDownloadPackageDlls is Downloader.DownloadPackageDll for every reference; a failure is a warning.
-func (c *Client) pkgWriteDownloadPackageDlls(ctx context.Context, infos []pkgWriteDownloadInfo, log *appWriteLog) {
-	temporary, err := os.MkdirTemp("", "clio-")
-	if err != nil {
-		log.warning(err.Error())
-		return
-	}
-	defer os.RemoveAll(temporary)
+func (c *Client) pkgWriteDownloadPackageDlls(ctx context.Context, infos []pkgWriteDownloadInfo, log *appWriteLog) error {
+	return pkgWriteTempDirectory(log, func(temporary string) error {
+		c.pkgWriteDownloadDllsInto(ctx, temporary, infos, log)
+		return nil
+	})
+}
+
+func (c *Client) pkgWriteDownloadDllsInto(ctx context.Context, temporary string, infos []pkgWriteDownloadInfo, log *appWriteLog) {
 	var wait sync.WaitGroup
 	for _, info := range infos {
 		wait.Add(1)
@@ -679,7 +711,9 @@ func (c *Client) pkgWriteApplicationDownload(ctx context.Context, workspace pkgW
 			return err
 		}
 		if len(dlls) > 0 {
-			c.pkgWriteDownloadPackageDlls(ctx, dlls, log)
+			if err := c.pkgWriteDownloadPackageDlls(ctx, dlls, log); err != nil {
+				return err
+			}
 		}
 	} else {
 		log.warning("Downloading of referenced package dlls requires " + pkgWriteYellow("cliogate") + " version 2.0.0.29 or higher.")
