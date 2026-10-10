@@ -1,0 +1,140 @@
+[
+  {
+    "label": "create-server-to-server-oauth-app bound to Supervisor",
+    "why": "Creates one OAuth client app named after the run, bound to the Supervisor system user, and removes its OAuthClientApp row through clio's execute-dataservice-batch (clio has no delete-client tool). The client id and secret Creatio generates differ per side.",
+    "steps": [
+      {
+        "kind": "write",
+        "label": "create",
+        "tool": "create-server-to-server-oauth-app",
+        "clio-run": true,
+        "creates": "UsrParity{run}{side}S2s",
+        "args": {
+          "client-name": "UsrParity{run}{side}S2s",
+          "client-description": "Created by scripts/compare-mcp-writes.py; safe to delete"
+        },
+        "known-differences": [
+          "$.app.clientid",
+          "$.app.clientsecret"
+        ],
+        "why": "Creatio generates the client id and secret."
+      },
+      {
+        "kind": "cleanup",
+        "for": "UsrParity{run}{side}S2s",
+        "server": "clio",
+        "calls": [
+          {
+            "tool": "execute-esq",
+            "clio-run": true,
+            "args": {
+              "query": {
+                "rootSchemaName": "OAuthClientApp",
+                "operationType": 0,
+                "rowCount": 1,
+                "columns": {
+                  "items": {
+                    "Id": {
+                      "expression": {
+                        "expressionType": 0,
+                        "columnPath": "Id"
+                      }
+                    }
+                  }
+                },
+                "filters": {
+                  "filterType": 6,
+                  "logicalOperation": 0,
+                  "isEnabled": true,
+                  "items": {
+                    "own": {
+                      "filterType": 1,
+                      "comparisonType": 3,
+                      "isEnabled": true,
+                      "leftExpression": {
+                        "expressionType": 0,
+                        "columnPath": "Name"
+                      },
+                      "rightExpression": {
+                        "expressionType": 2,
+                        "parameter": {
+                          "dataValueType": 1,
+                          "value": "UsrParity{run}{side}S2s"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "capture": {
+              "cleanupId": "$.rows[0].id"
+            }
+          },
+          {
+            "tool": "execute-dataservice-batch",
+            "clio-run": true,
+            "args": {
+              "operations": [
+                {
+                  "operation": "delete",
+                  "schema-name": "OAuthClientApp",
+                  "record-id": "{cleanupId}"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "kind": "read-back",
+        "label": "read",
+        "tool": "execute-esq",
+        "clio-run": true,
+        "args": {
+          "query": {
+            "rootSchemaName": "OAuthClientApp",
+            "operationType": 0,
+            "rowCount": 1,
+            "columns": {
+              "items": {
+                "Id": {
+                  "expression": {
+                    "expressionType": 0,
+                    "columnPath": "Id"
+                  }
+                }
+              }
+            },
+            "filters": {
+              "filterType": 6,
+              "logicalOperation": 0,
+              "isEnabled": true,
+              "items": {
+                "own": {
+                  "filterType": 1,
+                  "comparisonType": 3,
+                  "isEnabled": true,
+                  "leftExpression": {
+                    "expressionType": 0,
+                    "columnPath": "Name"
+                  },
+                  "rightExpression": {
+                    "expressionType": 2,
+                    "parameter": {
+                      "dataValueType": 1,
+                      "value": "UsrParity{run}{side}S2s"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "capture": {
+          "appId": "$.rows[0].id"
+        }
+      }
+    ]
+  }
+]

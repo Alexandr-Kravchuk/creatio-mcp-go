@@ -172,6 +172,18 @@ func mustJSON(t *testing.T, value any) []byte {
 	return encoded
 }
 
+func TestServerToServerOAuthAppThroughClioRun(t *testing.T) {
+	session, _ := newAdminWriteTestSession(t, map[string]func(map[string]any) string{
+		"DataService/json/SyncReply/SelectQuery:SysAdminUnit": func(map[string]any) string { return adminWriteEmptyRows },
+	})
+	args := map[string]any{"environment-name": "t12-env", "system-user": "Robot", "extra": true}
+	answer := adminWriteCall(t, session, "create-server-to-server-oauth-app", args)
+	if answer != `{"success":false,"app":null,"error":"System user 'Robot' was not found. Pass --system-user-id explicitly or resolve an existing user with resolve-oauth-system-user."}` {
+		t.Errorf("missing user = %s", answer)
+	}
+	adminWriteRawNameIsGated(t, session, "create-server-to-server-oauth-app", args)
+}
+
 func TestManageToolsThroughClioRun(t *testing.T) {
 	session, stand := newAdminWriteTestSession(t, map[string]func(map[string]any) string{
 		"DataService/json/SyncReply/SelectQuery:SysAdminUnit": func(map[string]any) string {

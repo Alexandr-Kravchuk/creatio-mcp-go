@@ -58,5 +58,8 @@
   {"label": "manage-access grant missing op", "tool": "manage-access", "clio-run": true, "args": {"action": "grant-operation", "operation-id": "5b1e4b1c-0000-4000-8000-00000000a005", "unit-id": "7f3b869f-34f3-4f20-ab4d-7480a5fdf647"}},
   {"label": "manage-access position none", "tool": "manage-access", "clio-run": true, "args": {"action": "operation-position", "id": "5b1e4b1c-0000-4000-8000-00000000a006"}},
   {"label": "manage-access position missing", "tool": "manage-access", "clio-run": true, "args": {"action": "operation-position", "id": "5b1e4b1c-0000-4000-8000-00000000a006", "position": 1}},
-  {"label": "manage-access unknown env", "tool": "manage-access", "clio-run": true, "args": {"environment-name": "UsrParityNoSuchEnvironment", "action": "operations"}}
+  {"label": "manage-access unknown env", "tool": "manage-access", "clio-run": true, "args": {"environment-name": "UsrParityNoSuchEnvironment", "action": "operations"}},
+  {"label": "create-server-to-server-oauth-app bad user", "tool": "create-server-to-server-oauth-app", "clio-run": true, "args": {"system-user": "UsrParityNoSuchUser", "client-name": "UsrParityNotCreated"}},
+  {"label": "create-server-to-server-oauth-app wrong type", "tool": "create-server-to-server-oauth-app", "clio-run": true, "args": {"system-user": 5}},
+  {"label": "create-server-to-server-oauth-app unknown env", "tool": "create-server-to-server-oauth-app", "clio-run": true, "args": {"environment-name": "UsrParityNoSuchEnvironment"}}
 ]
