@@ -1,0 +1,630 @@
+[
+ {
+  "label": "create ok",
+  "tool": "create-business-process",
+  "clio-run": true,
+  "args": {
+   "descriptor": "{\"name\":\"UsrOk\",\"caption\":\"Ok\",\"elements\":[{\"name\":\"s\",\"type\":\"startEvent\"}],\"amount\":1.50}",
+   "package-name": "UsrPkg"
+  }
+ },
+ {
+  "label": "create fail",
+  "tool": "create-business-process",
+  "clio-run": true,
+  "args": {
+   "descriptor": "{\"name\":\"UsrFail\"}"
+  }
+ },
+ {
+  "label": "create fail no message",
+  "tool": "create-business-process",
+  "clio-run": true,
+  "args": {
+   "descriptor": "{\"name\":\"UsrNoMessage\"}"
+  }
+ },
+ {
+  "label": "create shape",
+  "tool": "create-business-process",
+  "clio-run": true,
+  "args": {
+   "descriptor": "{\"name\":\"UsrShape\"}"
+  }
+ },
+ {
+  "label": "create null",
+  "tool": "create-business-process",
+  "clio-run": true,
+  "args": {
+   "descriptor": "{\"name\":\"UsrNull\"}"
+  }
+ },
+ {
+  "label": "create garbage",
+  "tool": "create-business-process",
+  "clio-run": true,
+  "args": {
+   "descriptor": "{\"name\":\"UsrGarbage\"}"
+  }
+ },
+ {
+  "label": "create bad type",
+  "tool": "create-business-process",
+  "clio-run": true,
+  "args": {
+   "descriptor": "{\"name\":\"UsrBadType\"}"
+  }
+ },
+ {
+  "label": "create array descriptor",
+  "tool": "create-business-process",
+  "clio-run": true,
+  "args": {
+   "descriptor": "[1]"
+  }
+ },
+ {
+  "label": "modify ok",
+  "tool": "modify-business-process",
+  "clio-run": true,
+  "args": {
+   "process-name": "UsrOk",
+   "operations": "[{\"op\":\"removeElement\",\"elementName\":\"A\"},{\"op\":\"x\"}]"
+  }
+ },
+ {
+  "label": "modify compile warning",
+  "tool": "modify-business-process",
+  "clio-run": true,
+  "args": {
+   "process-name": "UsrCompile",
+   "operations": "[]",
+   "confirm-layout-change": true
+  },
+  "known-differences": [
+   "$.note"
+  ],
+  "why": "clio master omits the compile note when a message says a compile is needed (MentionsCompileRequirement, served here); clio 8.1.0.134 adds it anyway."
+ },
+ {
+  "label": "modify redraw",
+  "tool": "modify-business-process",
+  "clio-run": true,
+  "args": {
+   "process-uid": "UsrRedraw",
+   "operations": "[]"
+  }
+ },
+ {
+  "label": "modify no layout elements",
+  "tool": "modify-business-process",
+  "clio-run": true,
+  "args": {
+   "process-name": "UsrNoLayout",
+   "operations": "[]"
+  }
+ },
+ {
+  "label": "modify garbage",
+  "tool": "modify-business-process",
+  "clio-run": true,
+  "args": {
+   "process-name": "UsrGarbage",
+   "operations": "[]"
+  }
+ },
+ {
+  "label": "modify operations object",
+  "tool": "modify-business-process",
+  "clio-run": true,
+  "args": {
+   "process-name": "UsrOk",
+   "operations": "{\"op\":1}"
+  }
+ },
+ {
+  "label": "new version ok",
+  "tool": "modify-business-process-as-new-version",
+  "clio-run": true,
+  "args": {
+   "process-name": "UsrOk",
+   "package-name": "UsrPkg",
+   "operations": "[{\"op\":\"x\"}]"
+  }
+ },
+ {
+  "label": "new version snapshot active",
+  "tool": "modify-business-process-as-new-version",
+  "clio-run": true,
+  "args": {
+   "process-name": "UsrActive"
+  }
+ },
+ {
+  "label": "new version unknown actual",
+  "tool": "modify-business-process-as-new-version",
+  "clio-run": true,
+  "args": {
+   "process-uid": "UsrUnknown",
+   "operations": "[]"
+  }
+ },
+ {
+  "label": "new version fail",
+  "tool": "modify-business-process-as-new-version",
+  "clio-run": true,
+  "args": {
+   "process-name": "UsrFail",
+   "operations": "[]"
+  }
+ },
+ {
+  "label": "set active ok",
+  "tool": "set-active-business-process-version",
+  "clio-run": true,
+  "args": {
+   "version-name": "UsrOk_v2"
+  }
+ },
+ {
+  "label": "set active other version",
+  "tool": "set-active-business-process-version",
+  "clio-run": true,
+  "args": {
+   "version-uid": "aaaaaaaa-0000-0000-0000-000000000009"
+  }
+ },
+ {
+  "label": "set active silent",
+  "tool": "set-active-business-process-version",
+  "clio-run": true,
+  "args": {
+   "version-name": "UsrSilent"
+  }
+ },
+ {
+  "label": "set active fail",
+  "tool": "set-active-business-process-version",
+  "clio-run": true,
+  "args": {
+   "version-name": "UsrFail"
+  }
+ },
+ {
+  "label": "validate clean",
+  "tool": "validate-process-graph",
+  "args": {
+   "nodes": [
+    {
+     "name": "s",
+     "type": "startEvent"
+    },
+    {
+     "name": "g",
+     "type": "exclusiveGateway"
+    },
+    {
+     "name": "a",
+     "type": "readDataUserTask"
+    },
+    {
+     "name": "e",
+     "type": "endEvent"
+    }
+   ],
+   "edges": [
+    {
+     "source": "s",
+     "target": "g"
+    },
+    {
+     "source": "g",
+     "target": "a",
+     "flow-kind": "conditional",
+     "condition": "1 > 0"
+    },
+    {
+     "source": "g",
+     "target": "e",
+     "flow-kind": "default"
+    },
+    {
+     "source": "a",
+     "target": "e"
+    }
+   ]
+  }
+ },
+ {
+  "label": "validate many rules",
+  "tool": "validate-process-graph",
+  "args": {
+   "nodes": [
+    {
+     "name": "s",
+     "type": "startEvent"
+    },
+    {
+     "name": "s2",
+     "type": "startEvent"
+    },
+    {
+     "name": "t",
+     "type": "userTask"
+    },
+    {
+     "name": "x",
+     "type": "bogusType"
+    },
+    {
+     "name": "add",
+     "type": "addDataUserTask"
+    },
+    {
+     "name": "j",
+     "type": "parallelGateway"
+    },
+    {
+     "name": "ev",
+     "type": "eventBasedGateway"
+    },
+    {
+     "name": "e",
+     "type": "endEvent"
+    },
+    {
+     "name": "t",
+     "type": "userTask"
+    },
+    {
+     "type": "userTask"
+    }
+   ],
+   "edges": [
+    {
+     "source": "s",
+     "target": "t"
+    },
+    {
+     "source": "t",
+     "target": "e"
+    },
+    {
+     "source": "t",
+     "target": "add",
+     "flow-kind": "conditional"
+    },
+    {
+     "source": "t",
+     "target": "x",
+     "flow-kind": "default"
+    },
+    {
+     "source": "add",
+     "target": "x"
+    },
+    {
+     "source": "x",
+     "target": "x"
+    },
+    {
+     "source": "s2",
+     "target": "ev",
+     "flow-kind": "conditional",
+     "condition": " "
+    },
+    {
+     "source": "ev",
+     "target": "j",
+     "flow-kind": "default"
+    },
+    {
+     "source": "j",
+     "target": "e",
+     "results": [
+      "Yes"
+     ]
+    },
+    {
+     "source": "ghost",
+     "target": "e"
+    },
+    {}
+   ]
+  }
+ },
+ {
+  "label": "validate R8 and R7",
+  "tool": "validate-process-graph",
+  "args": {
+   "nodes": [
+    {
+     "name": "s",
+     "type": "startEvent"
+    },
+    {
+     "name": "x",
+     "type": "exclusiveGateway"
+    },
+    {
+     "name": "a",
+     "type": "activityUserTask"
+    },
+    {
+     "name": "and",
+     "type": "parallelGateway"
+    },
+    {
+     "name": "e",
+     "type": "endEvent"
+    }
+   ],
+   "edges": [
+    {
+     "source": "s",
+     "target": "x"
+    },
+    {
+     "source": "x",
+     "target": "and",
+     "flow-kind": "default"
+    },
+    {
+     "source": "x",
+     "target": "a",
+     "flow-kind": "conditional",
+     "condition": "1 > 0"
+    },
+    {
+     "source": "a",
+     "target": "and"
+    },
+    {
+     "source": "and",
+     "target": "e"
+    },
+    {
+     "source": "x",
+     "target": "e"
+    }
+   ]
+  }
+ },
+ {
+  "label": "validate results",
+  "tool": "validate-process-graph",
+  "args": {
+   "nodes": [
+    {
+     "name": "s",
+     "type": "startEvent"
+    },
+    {
+     "name": "a",
+     "type": "activityUserTask"
+    },
+    {
+     "name": "yes",
+     "type": "endEvent"
+    },
+    {
+     "name": "no",
+     "type": "endEvent"
+    }
+   ],
+   "edges": [
+    {
+     "source": "s",
+     "target": "a"
+    },
+    {
+     "source": "a",
+     "target": "yes",
+     "flow-kind": "conditional",
+     "condition": "1 > 0",
+     "results": [
+      "Positive"
+     ]
+    },
+    {
+     "source": "a",
+     "target": "no",
+     "flow-kind": "conditional"
+    }
+   ]
+  }
+ },
+ {
+  "label": "validate bad flow kind",
+  "tool": "validate-process-graph",
+  "args": {
+   "nodes": [
+    {
+     "name": "s",
+     "type": "startEvent"
+    }
+   ],
+   "edges": [
+    {
+     "source": "s",
+     "target": "e",
+     "flow-kind": "maybe"
+    }
+   ]
+  }
+ },
+ {
+  "label": "enroll ok",
+  "tool": "enroll-sequence-participants",
+  "clio-run": true,
+  "args": {
+   "sequence-id": "5b1f0c2e-1111-4b6a-9c1e-000000000001",
+   "contact-ids": [
+    "5b1f0c2e-2222-4b6a-9c1e-000000000002"
+   ]
+  }
+ },
+ {
+  "label": "enroll native errors",
+  "tool": "enroll-sequence-participants",
+  "clio-run": true,
+  "args": {
+   "sequence-id": "5b1f0c2e-1111-4b6a-9c1e-000000000003",
+   "contact-ids": [
+    "5b1f0c2e-2222-4b6a-9c1e-000000000002"
+   ]
+  }
+ },
+ {
+  "label": "enroll incompatible counts",
+  "tool": "enroll-sequence-participants",
+  "clio-run": true,
+  "args": {
+   "sequence-id": "5b1f0c2e-1111-4b6a-9c1e-000000000004",
+   "contact-ids": [
+    "5b1f0c2e-2222-4b6a-9c1e-000000000002"
+   ]
+  }
+ },
+ {
+  "label": "enroll http 500",
+  "tool": "enroll-sequence-participants",
+  "clio-run": true,
+  "args": {
+   "sequence-id": "5b1f0c2e-1111-4b6a-9c1e-000000000005",
+   "contact-ids": [
+    "5b1f0c2e-2222-4b6a-9c1e-000000000002"
+   ]
+  }
+ },
+ {
+  "label": "user task create",
+  "tool": "create-user-task",
+  "clio-run": true,
+  "args": {
+   "code": "UsrParityT13Task",
+   "package-name": "UsrParityT13Pkg",
+   "title": "Task",
+   "description": "Does it",
+   "workspace-path": "scripts/fake-stands/t13/workspace",
+   "parameters": [
+    {
+     "code": "Account",
+     "title": "Account",
+     "type": "Lookup",
+     "lookup": "Account",
+     "required": true
+    },
+    {
+     "code": "Rows",
+     "title": "Rows",
+     "type": "Serializable list of composite values",
+     "items": [
+      {
+       "code": "RowId",
+       "title": "Row id",
+       "type": "Guid"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "label": "user task create invalid",
+  "tool": "create-user-task",
+  "clio-run": true,
+  "args": {
+   "code": "UsrParityT13Invalid",
+   "package-name": "UsrParityT13Pkg",
+   "title": "Task",
+   "workspace-path": "scripts/fake-stands/t13/workspace"
+  }
+ },
+ {
+  "label": "user task create unknown lookup",
+  "tool": "create-user-task",
+  "clio-run": true,
+  "args": {
+   "code": "UsrParityT13Task",
+   "package-name": "UsrParityT13Pkg",
+   "title": "Task",
+   "workspace-path": "scripts/fake-stands/t13/workspace",
+   "parameters": [
+    {
+     "code": "C",
+     "title": "C",
+     "type": "lookup",
+     "lookup": "Contact"
+    }
+   ]
+  }
+ },
+ {
+  "label": "user task create bad item parent",
+  "tool": "create-user-task",
+  "clio-run": true,
+  "args": {
+   "code": "UsrParityT13Task",
+   "package-name": "UsrParityT13Pkg",
+   "title": "Task",
+   "workspace-path": "scripts/fake-stands/t13/workspace",
+   "parameters": [
+    {
+     "code": "Plain",
+     "title": "Plain",
+     "type": "Text",
+     "items": [
+      {
+       "code": "X",
+       "title": "X",
+       "type": "Text"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "label": "user task modify",
+  "tool": "modify-user-task-parameters",
+  "clio-run": true,
+  "args": {
+   "user-task-name": "UsrParityT13Task",
+   "workspace-path": "scripts/fake-stands/t13/workspace",
+   "add-parameters": [
+    {
+     "code": "Added",
+     "title": "Added",
+     "type": "Integer"
+    }
+   ],
+   "culture": "uk-UA"
+  }
+ },
+ {
+  "label": "user task modify missing parameter",
+  "tool": "modify-user-task-parameters",
+  "clio-run": true,
+  "args": {
+   "user-task-name": "UsrParityT13Task",
+   "workspace-path": "scripts/fake-stands/t13/workspace",
+   "remove-parameter-names": [
+    "Gone"
+   ]
+  }
+ },
+ {
+  "label": "user task modify not in workspace",
+  "tool": "modify-user-task-parameters",
+  "clio-run": true,
+  "args": {
+   "user-task-name": "UsrOther",
+   "workspace-path": "scripts/fake-stands/t13/workspace",
+   "remove-parameter-names": [
+    "Keep"
+   ]
+  }
+ }
+]

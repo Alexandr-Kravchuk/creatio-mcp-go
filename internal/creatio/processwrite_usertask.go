@@ -575,7 +575,7 @@ func (p *processWriteTaskCommand) modify(ctx context.Context, request ProcessWri
 // post sends one designer request and decodes the answer; a JSON null is "<operation> returned an empty
 // response.".
 func (p *processWriteTaskCommand) post(ctx context.Context, route string, body []byte, operation string, target any) error {
-	payload, err := p.client.callService(ctx, serviceCall{Route: route, Body: body, Timeout: processWriteTaskTimeout, Limit: processWriteTaskResponseBytes})
+	payload, err := p.client.processWritePost(ctx, serviceCall{Route: route, Body: body, Timeout: processWriteTaskTimeout, Limit: processWriteTaskResponseBytes})
 	if err != nil {
 		return err
 	}
@@ -631,7 +631,7 @@ func (p *processWriteTaskCommand) buildPackage(ctx context.Context, name string)
 		PackageName string `json:"packageName"`
 	}{name})
 	p.log.info(fmt.Sprintf("Building package '%s'...", name))
-	_, err := p.client.callService(ctx, serviceCall{Route: "ServiceModel/WorkspaceExplorerService.svc/BuildPackage", Body: body, Timeout: processWriteTaskTimeout, Limit: processWriteTaskResponseBytes})
+	_, err := p.client.processWritePost(ctx, serviceCall{Route: "ServiceModel/WorkspaceExplorerService.svc/BuildPackage", Body: body, Timeout: processWriteTaskTimeout, Limit: processWriteTaskResponseBytes})
 	return err
 }
 
@@ -904,7 +904,7 @@ func (p *processWriteTaskCommand) loadToStorage(ctx context.Context) (string, er
 	failure := func(text string) {
 		p.log.error("Load packages to " + storage + " on a web application ended with error: " + text)
 	}
-	payload, err := p.client.callService(ctx, serviceCall{Route: "ServiceModel/WorkspaceExplorerService.svc/GetIsFileDesignMode", Body: []byte{}, Timeout: 10 * time.Minute, Limit: maxResponseBytes})
+	payload, err := p.client.processWritePost(ctx, serviceCall{Route: "ServiceModel/WorkspaceExplorerService.svc/GetIsFileDesignMode", Body: []byte{}, Timeout: 10 * time.Minute, Limit: maxResponseBytes})
 	if err != nil {
 		return "", err
 	}
@@ -925,7 +925,7 @@ func (p *processWriteTaskCommand) loadToStorage(ctx context.Context) (string, er
 		return "disabled", nil
 	}
 	p.log.add("None", "Start load packages to "+storage+" on a web application")
-	payload, err = p.client.callService(ctx, serviceCall{Route: "ServiceModel/AppInstallerService.svc/LoadPackagesToDB", Body: []byte{}, Timeout: 30 * time.Minute, Limit: maxResponseBytes})
+	payload, err = p.client.processWritePost(ctx, serviceCall{Route: "ServiceModel/AppInstallerService.svc/LoadPackagesToDB", Body: []byte{}, Timeout: 30 * time.Minute, Limit: maxResponseBytes})
 	if err != nil {
 		return "", err
 	}

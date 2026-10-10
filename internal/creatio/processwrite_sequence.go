@@ -111,7 +111,7 @@ func processWriteSequenceParse(response string, submitted int) (processWriteSequ
 	}
 	root, err := parseJNode([]byte(response))
 	if err != nil {
-		return native, fmt.Errorf("The response is not valid JSON: %v", err)
+		return native, errors.New(processWriteJSONError([]byte(response), err))
 	}
 	if !root.isObject() {
 		return native, errors.New("The requested operation requires an element of type 'Object', but the target element has a different type.")
@@ -192,7 +192,7 @@ func (c *Client) processWriteSequenceReadback(ctx context.Context, sequence stri
 	delete(audience, "rootSchemaName")
 	query["filters"].(map[string]any)["items"].(map[string]any)["audience"] = audience
 	body, _ := json.Marshal(query)
-	payload, err := c.callService(ctx, serviceCall{Route: "DataService/json/SyncReply/SelectQuery", Body: body, Timeout: 10 * time.Second,
+	payload, err := c.processWritePost(ctx, serviceCall{Route: "DataService/json/SyncReply/SelectQuery", Body: body, Timeout: 10 * time.Second,
 		Limit: maxResponseBytes, Label: "DataService"})
 	if err != nil {
 		return failed(err.Error())
@@ -201,8 +201,11 @@ func (c *Client) processWriteSequenceReadback(ctx context.Context, sequence stri
 		return failed(fmt.Sprintf("Response exceeded the %d-byte limit.", processWriteSequenceMaxBytes))
 	}
 	root, err := parseJNode(payload)
-	if err != nil || !root.isObject() {
-		return failed("The response is not valid JSON.")
+	if err != nil {
+		return failed(processWriteJSONError(payload, err))
+	}
+	if !root.isObject() {
+		return failed("The requested operation requires an element of type 'Object', but the target element has a different type.")
 	}
 	if success := root.props["success"]; success == nil || success.kind != jkBool || !success.flag {
 		if success == nil {
@@ -239,7 +242,8 @@ func (c *Client) processWriteSequenceReadback(ctx context.Context, sequence stri
 func processWriteSequenceText(text string) *string { return &text }
 
 // processWriteSendOnce is clio's ExecuteNonReplayablePostRequest: one authenticated POST, never replayed
-// after a re-login and never redirected; a non-2xx status is a failure, as clio's client raises it.
+// after a re-login and never redirected. The body comes back whatever the status, as Creatio.Client hands
+// it back; only a transport failure fails.
 func (c *Client) processWriteSendOnce(ctx context.Context, route string, body []byte, timeout time.Duration) (string, error) {
 	requestCtx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
@@ -262,9 +266,6 @@ func (c *Client) processWriteSendOnce(ctx context.Context, route string, body []
 	payload, err := readResponseLimit(response, maxResponseBytes)
 	if err != nil {
 		return "", err
-	}
-	if response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices {
-		return "", fmt.Errorf("The remote server returned an error: (%d) %s.", response.StatusCode, http.StatusText(response.StatusCode))
 	}
 	return strings.TrimPrefix(string(payload), "\xef\xbb\xbf"), nil
 }

@@ -202,7 +202,7 @@ func processWriteGateFailure(err error) ProcessWriteResult {
 func (c *Client) processWriteDesign(ctx context.Context, method string, request *jnode, unknown string) (*jnode, error) {
 	body := newObject()
 	body.set("request", request)
-	payload, err := c.callService(ctx, serviceCall{Route: "rest/ProcessDesignService/" + method, Body: body.stjJSON(),
+	payload, err := c.processWritePost(ctx, serviceCall{Route: "rest/ProcessDesignService/" + method, Body: body.stjJSON(),
 		Timeout: processWriteServiceTimeout, Limit: maxResponseBytes, Label: "ProcessDesignService"})
 	if err != nil {
 		return nil, err
@@ -222,6 +222,40 @@ func (c *Client) processWriteDesign(ctx context.Context, method string, request 
 		return nil, fmt.Errorf("%s returned an unexpected response shape.", method)
 	}
 	return result, nil
+}
+
+// processWritePost is clio's ExecutePostRequest: the answer body whatever its HTTP status, because
+// Creatio.Client hands an error status's body back instead of raising; only a transport failure fails.
+func (c *Client) processWritePost(ctx context.Context, call serviceCall) ([]byte, error) {
+	response, err := c.serviceRequest(ctx, call)
+	if err != nil {
+		return nil, err
+	}
+	return response.payload, nil
+}
+
+// processWriteJSONError is the System.Text.Json reader's text for a body that does not start a JSON value
+// (JsonDocument.Parse reports no path); other malformations keep Go's wording.
+func processWriteJSONError(payload []byte, fallback error) string {
+	line, column := 0, 0
+	for _, b := range payload {
+		switch b {
+		case ' ', '\t', '\r':
+			column++
+			continue
+		case '\n':
+			line, column = line+1, 0
+			continue
+		}
+		if strings.ContainsRune(`{["-0123456789tfn`, rune(b)) {
+			break
+		}
+		return fmt.Sprintf("'%c' is an invalid start of a value. LineNumber: %d | BytePositionInLine: %d.", rune(b), line, column)
+	}
+	if strings.TrimSpace(string(payload)) == "" {
+		return fmt.Sprintf("The input does not contain any JSON tokens. Expected the input to start with a valid JSON token, while isFinalBlock is true. LineNumber: %d | BytePositionInLine: %d.", line, column)
+	}
+	return fallback.Error()
 }
 
 // processWriteProperty is a case-insensitive property read (PropertyNameCaseInsensitive); the last

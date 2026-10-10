@@ -247,12 +247,7 @@ func (c *Client) processWritePing(ctx context.Context, log *appWriteLog) (bool, 
 	var payload []byte
 	var err error
 	for attempt := 1; attempt <= processWriteInstallTimings.pingAttempts; attempt++ {
-		var response serviceResponse
-		response, err = c.serviceRequest(ctx, serviceCall{Route: processWriteInstallPingPath, Body: []byte("{}"), Timeout: processWriteInstallTimings.pingTimeout, Label: "ProcessDesignService"})
-		if err == nil && (response.status < http.StatusOK || response.status >= http.StatusMultipleChoices) {
-			err = fmt.Errorf("The remote server returned an error: (%d) %s.", response.status, http.StatusText(response.status))
-		}
-		payload = response.payload
+		payload, err = c.processWritePost(ctx, serviceCall{Route: processWriteInstallPingPath, Body: []byte("{}"), Timeout: processWriteInstallTimings.pingTimeout, Label: "ProcessDesignService"})
 		if err == nil || attempt == processWriteInstallTimings.pingAttempts || !processWriteSleep(ctx, processWriteInstallTimings.pingDelay) {
 			break
 		}
@@ -269,7 +264,7 @@ func (c *Client) processWritePing(ctx context.Context, log *appWriteLog) (bool, 
 	}
 	root, parseErr := parseJNode(payload)
 	if parseErr != nil {
-		log.error(fmt.Sprintf("%s Ping did not answer: %s", processBuilderPackageName, parseErr.Error()))
+		log.error(fmt.Sprintf("%s Ping did not answer: %s", processBuilderPackageName, processWriteJSONError(payload, parseErr)))
 		return false, ""
 	}
 	result := root.get("PingResult")

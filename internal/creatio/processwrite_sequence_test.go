@@ -78,11 +78,11 @@ func TestEnrollSequenceParticipantsSubmitsOnceAndReadsBack(t *testing.T) {
 }
 
 func TestEnrollSequenceParticipantsReportsTheNativeOutcome(t *testing.T) {
-	client, _ := sequenceServer(t, `{"success":false,"addedCount":1,"failedCount":1,"errorMessages":["Contact is already enrolled."],"errorInfo":{"message":"password=s3cret"}}`, 200,
+	client, _ := sequenceServer(t, `{"success":false,"addedCount":1,"failedCount":1,"errorMessages":["Contact is already enrolled."],"errorInfo":{"message":"password=replace-me-please"}}`, 200,
 		`{"success":true,"rows":[]}`)
 	result, err := client.EnrollSequenceParticipants(context.Background(), sequenceID, []string{contactA, contactB})
 	if err != nil || result.Success || *result.PlatformSuccess || *result.FailedCount != 1 || len(result.Errors) != 2 ||
-		result.Errors[0] != "[untrusted-source-text begin] Contact is already enrolled. [untrusted-source-text end]" || strings.Contains(result.Errors[1], "s3cret") ||
+		result.Errors[0] != "[untrusted-source-text begin] Contact is already enrolled. [untrusted-source-text end]" || strings.Contains(result.Errors[1], "replace-me-please") ||
 		result.Readback.State != "incomplete" || *result.Readback.Error != "Fewer visible participants than the native added count; verify permissions and current records before resubmission." ||
 		result.Diagnostic.SideEffect != "unknown" || *result.Diagnostic.Message != result.Errors[0] {
 		t.Fatalf("%+v %v", result, err)
@@ -99,7 +99,8 @@ func TestEnrollSequenceParticipantsIsUncertainWhenTheAnswerCannotBeTrusted(t *te
 		{`{"success":true,"addedCount":3,"failedCount":0}`, 200, true, "Native enrollment returned incompatible counts."},
 		{`{"success":true,"failedCount":0}`, 200, true, "The given key was not present in the dictionary."},
 		{`{"success":"yes","addedCount":0,"failedCount":0}`, 200, true, "The requested operation requires an element of type 'Boolean'"},
-		{`{}`, 500, false, "The remote server returned an error: (500) Internal Server Error."},
+		{`{}`, 500, true, "The given key was not present in the dictionary."},
+		{`<html>Server Error</html>`, 500, true, "'<' is an invalid start of a value. LineNumber: 0 | BytePositionInLine: 0."},
 	}
 	for _, item := range cases {
 		client, _ := sequenceServer(t, item.native, item.status, `{"success":false}`)
