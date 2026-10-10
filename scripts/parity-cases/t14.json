@@ -1,0 +1,31 @@
+[
+  {"tool": "upload-image", "clio-run": true, "args": {"file": "scripts/testdata/t14/absent.png"}, "label": "upload-image missing file"},
+  {"tool": "upload-image", "clio-run": true, "args": {"file": "scripts/testdata/t14/empty.png"}, "label": "upload-image empty file"},
+  {"tool": "upload-image", "clio-run": true, "args": {"file": "scripts/testdata/t14/notes.txt"}, "label": "upload-image unsupported extension"},
+  {"tool": "upload-image", "clio-run": true, "args": {"file": " "}, "label": "upload-image blank file"},
+  {"tool": "upload-image", "clio-run": true, "args": {"environment-name": " ", "file": "x.png"}, "label": "upload-image blank environment"},
+  {"tool": "upload-image", "clio-run": true, "args": {"environment_name": "x", "file": "x.png", "image": "y"}, "label": "upload-image legacy and unknown keys"},
+  {"tool": "upload-image", "clio-run": true, "args": {"environment-name": "__missing_parity_env__", "file": "x.png"}, "label": "upload-image unknown environment"},
+  {"tool": "upload-image", "clio-run": true, "args": {"file": 7}, "label": "upload-image file of the wrong type"},
+
+  {"tool": "set-logo", "clio-run": true, "args": {}, "label": "set-logo no image"},
+  {"tool": "set-logo", "clio-run": true, "args": {"logo": " ", "favicon": ""}, "label": "set-logo blank images"},
+  {"tool": "set-logo", "clio-run": true, "args": {"logo": "scripts/testdata/t14/absent.png", "favicon": "scripts/testdata/t14/absent.ico"}, "label": "set-logo files not found"},
+  {"tool": "set-logo", "clio-run": true, "args": {"favicon": "scripts/testdata/t14/notes.txt"}, "label": "set-logo unsupported favicon format"},
+  {"tool": "set-logo", "clio-run": true, "args": {"logo": "scripts/testdata/t14/logo.tiff", "dark-logo": "scripts/testdata/t14/notes.txt"}, "label": "set-logo every slot refused by format"},
+  {"tool": "set-logo", "clio-run": true, "args": {"loginLogo": "x.png", "package-name": "p", "other": 1}, "label": "set-logo legacy and unknown keys"},
+  {"tool": "set-logo", "clio-run": true, "args": {"environment-name": "", "logo": "x.png"}, "label": "set-logo empty environment"},
+  {"tool": "set-logo", "clio-run": true, "args": {"environment-name": "__missing_parity_env__", "logo": "x.png"}, "label": "set-logo unknown environment"},
+  {"tool": "set-logo", "clio-run": true, "args": {"logo": ["x.png"]}, "label": "set-logo logo of the wrong type"},
+
+  {"tool": "set-background-image", "clio-run": true, "args": {}, "label": "set-background-image no source"},
+  {"tool": "set-background-image", "clio-run": true, "args": {"file": "x.png", "image-id": "y"}, "label": "set-background-image both sources"},
+  {"tool": "set-background-image", "clio-run": true, "args": {"image-id": "not-a-guid"}, "label": "set-background-image invalid id"},
+  {"tool": "set-background-image", "clio-run": true, "args": {"image-id": "00000000-0000-0000-0000-000000000000"}, "label": "set-background-image empty id"},
+  {"tool": "set-background-image", "clio-run": true, "args": {"image-id": "5a2f3c7e-0c1d-4e8b-9f61-7d3b2a1c0e94"}, "label": "set-background-image unknown image"},
+  {"tool": "set-background-image", "clio-run": true, "args": {"file": "scripts/testdata/t14/notes.txt"}, "label": "set-background-image unsupported file"},
+  {"tool": "set-background-image", "clio-run": true, "args": {"file": "scripts/testdata/t14/absent.png"}, "label": "set-background-image missing file"},
+  {"tool": "set-background-image", "clio-run": true, "args": {"imageId": "x", "keep_icon_background": true, "zzz": 1}, "label": "set-background-image legacy and unknown keys"},
+  {"tool": "set-background-image", "clio-run": true, "args": {"image-id": "x", "keep-icon-background": "yes"}, "label": "set-background-image keep flag of the wrong type"},
+  {"tool": "set-background-image", "clio-run": true, "args": {"environment-name": "__missing_parity_env__", "image-id": "x"}, "label": "set-background-image unknown environment"}
+]
