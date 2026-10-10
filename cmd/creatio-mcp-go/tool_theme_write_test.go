@@ -19,7 +19,8 @@ func TestThemePackageEmailValidationThroughExecutor(t *testing.T) {
 		{"delete-theme", map[string]any{"environment-name": "unused"}, "id is required"},
 		{"build-theme", map[string]any{}, "primary is required"},
 		{"set-user-theme", map[string]any{"environment-name": "unused", "reset": true, "theme": "other"}, "Specify either"},
-		{"update-email-template", map[string]any{"environment-name": "unused", "email-id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"}, "confirm=true is required"},
+		{"update-email-template", map[string]any{"environment-name": "unused", "email-id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", "format": "legacy", "expected-checksum": "x"}, "confirm=true is required"},
+		{"update-email-template", map[string]any{"environment-name": "unused", "email-id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"}, "must be an object"},
 	}
 	for _, c := range cases {
 		for _, call := range callPaths(c.tool, c.args) {
@@ -28,6 +29,9 @@ func TestThemePackageEmailValidationThroughExecutor(t *testing.T) {
 				t.Fatal(err)
 			}
 			body, _ := json.Marshal(result.StructuredContent)
+			if text, ok := result.Content[0].(*mcp.TextContent); ok && result.StructuredContent == nil {
+				body = []byte(text.Text)
+			}
 			if !containsTestText(string(body), c.error) {
 				t.Errorf("%s = %s expected %s", c.tool, body, c.error)
 			}

@@ -28,11 +28,11 @@ type EmailTemplateUpdateOptions struct {
 }
 type EmailTemplateUpdateResult struct {
 	Success  bool    `json:"success"`
-	Error    *string `json:"error"`
-	EmailID  *string `json:"email-id"`
-	Format   *string `json:"format"`
+	Error    *string `json:"error,omitempty"`
+	EmailID  *string `json:"email-id,omitempty"`
+	Format   *string `json:"format,omitempty"`
 	Created  bool    `json:"created"`
-	Checksum *string `json:"checksum"`
+	Checksum *string `json:"checksum,omitempty"`
 }
 
 func EmailTemplateUpdateFailure(message string) EmailTemplateUpdateResult {

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/Alexandr-Kravchuk/creatio-mcp-go/internal/creatio"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"strings"
@@ -10,6 +11,17 @@ import (
 
 func init() {
 	registerTool(map[string]any{"name": "update-email-template"}, func(ctx context.Context, envs *environments, args map[string]any) (*mcp.CallToolResult, error) {
+		// EmailTemplateUpdateArgs declares email-id, environment-name, format and expected-checksum as C#
+		// `required` members: the binder refuses a call that leaves one out before the tool runs.
+		for _, name := range []string{"email-id", "environment-name", "format", "expected-checksum"} {
+			present := false
+			for key := range args {
+				present = present || strings.EqualFold(key, name)
+			}
+			if !present {
+				return nil, fmt.Errorf("invalid-parameter-type: argument 'args' for MCP tool 'update-email-template' must be an object. Received an incompatible JSON value.")
+			}
+		}
 		var input creatio.EmailTemplateUpdateOptions
 		body, err := json.Marshal(withoutEnvironmentArgs(args, scopeName))
 		if err != nil {
