@@ -103,3 +103,43 @@ func TestDataServiceBatchToolThroughExecutorsAndGate(t *testing.T) {
 		t.Fatalf("validation sent a request: posts=%d", posts)
 	}
 }
+
+func TestDataBindingDbToolsThroughExecutorsAndGate(t *testing.T) {
+	writes := 0
+	session := dataWriteTestSession(t, func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasSuffix(r.URL.Path, "/SelectQuery") {
+			_, _ = io.WriteString(w, `{"success":true,"rows":[{"Name":"UsrParityPkg","UId":"66666666-6666-6666-6666-666666666666","InstallType":0}]}`)
+			return
+		}
+		writes++
+		_, _ = io.WriteString(w, `{"success":true}`)
+	})
+	cases := map[string]map[string]any{
+		"create-data-binding-db":     {"package-name": "UsrParityNone", "schema-name": "ContactType"},
+		"upsert-data-binding-row-db": {"package-name": "UsrParityNone", "binding-name": "B", "values": "{}"},
+		"remove-data-binding-row-db": {"package-name": "UsrParityNone", "binding-name": "B", "key-value": "1"},
+	}
+	for tool, args := range cases {
+		args["environment-name"] = "parity-stand"
+		raw, _ := dataWriteTestCall(t, session, "", tool, args)
+		if !raw.IsError || !strings.Contains(dataWriteTestText(raw), "was NOT executed") {
+			t.Fatalf("%s raw call escaped the write gate: %s", tool, dataWriteTestText(raw))
+		}
+		for _, executor := range []string{"clio-run", "clio-run-destructive"} {
+			result, answer := dataWriteTestCall(t, session, executor, tool, args)
+			messages, _ := answer["execution-log-messages"].([]any)
+			if result.IsError || answer["exit-code"] != float64(1) || len(messages) != 1 ||
+				messages[0].(map[string]any)["value"] != "Package 'UsrParityNone' was not found in the environment. Check the name against list-packages." {
+				t.Fatalf("%s %s answer %s", executor, tool, dataWriteTestText(result))
+			}
+		}
+	}
+	result, _ := dataWriteTestCall(t, session, "clio-run", "create-data-binding-db",
+		map[string]any{"environment-name": "parity-stand", "package-name": "P", "schema-name": "S", "rows": []any{}})
+	if !result.IsError || !strings.Contains(dataWriteTestText(result), "argument 'rows' for MCP tool 'create-data-binding-db' must be a string") {
+		t.Fatalf("rows binding %s", dataWriteTestText(result))
+	}
+	if writes != 0 {
+		t.Fatalf("writes=%d", writes)
+	}
+}

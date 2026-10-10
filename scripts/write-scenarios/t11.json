@@ -358,5 +358,640 @@
         "equals": 1
       }
     ]
+  },
+  {
+    "label": "DB-first data binding in an own application package",
+    "why": "create-app makes each side's package (through clio, as T9 does); the binding ships rows of the stock ContactType lookup that the run inserts itself, named UsrParity{run}{side}Row*. upsert updates one and inserts another; remove-data-binding-row-db deletes both live rows and, with the last one, the binding. Row and binding ids are captured by name so the read-backs compare.",
+    "steps": [
+      {
+        "kind": "write",
+        "label": "create app",
+        "tool": "create-app",
+        "server": "clio",
+        "clio-run": true,
+        "creates": "UsrParity{run}{side}",
+        "retry-while": "temporarily unavailable",
+        "retry-seconds": 300,
+        "args": {
+          "name": "Parity {run} {side}",
+          "code": "Parity{run}{side}",
+          "template-code": "AppFreedomUI",
+          "with-mobile-pages": false
+        },
+        "capture": {
+          "pkg": "$.packagename"
+        },
+        "known-differences": [
+          "$.applicationname",
+          "$.entities[0].caption",
+          "$.entities[0].uid",
+          "$.pages[0].uid",
+          "$.pages[1].uid",
+          "$.pages[2].uid",
+          "$.dataforge.warnings[0]",
+          "$.dataforge.warnings[1]"
+        ],
+        "why": "Setup through clio on both sides; ids and the display name differ per side."
+      },
+      {
+        "kind": "cleanup",
+        "for": "UsrParity{run}{side}",
+        "server": "clio",
+        "calls": [
+          {
+            "tool": "delete-app",
+            "clio-run": true,
+            "args": {
+              "app-name": "UsrParity{run}{side}"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "write",
+        "label": "create binding",
+        "tool": "create-data-binding-db",
+        "clio-run": true,
+        "creates": "UsrParity{run}{side}Row1",
+        "args": {
+          "package-name": "{pkg}",
+          "schema-name": "ContactType",
+          "binding-name": "UsrParity{run}{side}Bind",
+          "rows": "[{\"values\": {\"Name\": \"UsrParity{run}{side}Row1\", \"Description\": \"Parity one\"}}]"
+        },
+        "known-differences": [
+          "$.executionlogmessages[0].value"
+        ],
+        "why": "The created-row line carries the row id the server generated, which differs per side."
+      },
+      {
+        "kind": "cleanup",
+        "for": "UsrParity{run}{side}Row1",
+        "server": "clio",
+        "calls": [
+          {
+            "tool": "execute-esq",
+            "clio-run": true,
+            "args": {
+              "query": {
+                "rootSchemaName": "ContactType",
+                "operationType": 0,
+                "rowCount": 1,
+                "columns": {
+                  "items": {
+                    "Id": {
+                      "expression": {
+                        "expressionType": 0,
+                        "columnPath": "Id"
+                      }
+                    },
+                    "Name": {
+                      "expression": {
+                        "expressionType": 0,
+                        "columnPath": "Name"
+                      }
+                    }
+                  }
+                },
+                "filters": {
+                  "filterType": 6,
+                  "isEnabled": true,
+                  "logicalOperation": 0,
+                  "items": {
+                    "own": {
+                      "filterType": 1,
+                      "comparisonType": 3,
+                      "isEnabled": true,
+                      "leftExpression": {
+                        "expressionType": 0,
+                        "columnPath": "Name"
+                      },
+                      "rightExpression": {
+                        "expressionType": 2,
+                        "parameter": {
+                          "dataValueType": 1,
+                          "value": "UsrParity{run}{side}Row1"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "capture": {
+              "cleanupId": "$.rows[0].id"
+            }
+          },
+          {
+            "tool": "execute-dataservice-batch",
+            "clio-run": true,
+            "destructive": true,
+            "args": {
+              "operations": [
+                {
+                  "operation": "delete",
+                  "schema-name": "ContactType",
+                  "record-id": "{cleanupId}"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "kind": "read-back",
+        "label": "row1 id",
+        "tool": "execute-esq",
+        "clio-run": true,
+        "args": {
+          "query": {
+            "rootSchemaName": "ContactType",
+            "operationType": 0,
+            "rowCount": 1,
+            "columns": {
+              "items": {
+                "Id": {
+                  "expression": {
+                    "expressionType": 0,
+                    "columnPath": "Id"
+                  }
+                },
+                "Name": {
+                  "expression": {
+                    "expressionType": 0,
+                    "columnPath": "Name"
+                  }
+                },
+                "Description": {
+                  "expression": {
+                    "expressionType": 0,
+                    "columnPath": "Description"
+                  }
+                }
+              }
+            },
+            "filters": {
+              "filterType": 6,
+              "isEnabled": true,
+              "logicalOperation": 0,
+              "items": {
+                "own": {
+                  "filterType": 1,
+                  "comparisonType": 3,
+                  "isEnabled": true,
+                  "leftExpression": {
+                    "expressionType": 0,
+                    "columnPath": "Name"
+                  },
+                  "rightExpression": {
+                    "expressionType": 2,
+                    "parameter": {
+                      "dataValueType": 1,
+                      "value": "UsrParity{run}{side}Row1"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "capture": {
+          "row1": "$.rows[0].id"
+        }
+      },
+      {
+        "kind": "read-back",
+        "label": "binding id",
+        "tool": "execute-esq",
+        "clio-run": true,
+        "args": {
+          "query": {
+            "rootSchemaName": "SysPackageSchemaData",
+            "operationType": 0,
+            "rowCount": 1,
+            "columns": {
+              "items": {
+                "UId": {
+                  "expression": {
+                    "expressionType": 0,
+                    "columnPath": "UId"
+                  }
+                },
+                "Name": {
+                  "expression": {
+                    "expressionType": 0,
+                    "columnPath": "Name"
+                  }
+                }
+              }
+            },
+            "filters": {
+              "filterType": 6,
+              "isEnabled": true,
+              "logicalOperation": 0,
+              "items": {
+                "own": {
+                  "filterType": 1,
+                  "comparisonType": 3,
+                  "isEnabled": true,
+                  "leftExpression": {
+                    "expressionType": 0,
+                    "columnPath": "Name"
+                  },
+                  "rightExpression": {
+                    "expressionType": 2,
+                    "parameter": {
+                      "dataValueType": 1,
+                      "value": "UsrParity{run}{side}Bind"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "capture": {
+          "binduid": "$.rows[0].uid"
+        }
+      },
+      {
+        "kind": "read-back",
+        "label": "read created binding",
+        "tool": "read-data-binding-db",
+        "args": {
+          "package-name": "{pkg}",
+          "binding-name": "UsrParity{run}{side}Bind"
+        }
+      },
+      {
+        "kind": "write",
+        "label": "upsert existing row",
+        "tool": "upsert-data-binding-row-db",
+        "clio-run": true,
+        "target": "UsrParity{run}{side}Row1",
+        "args": {
+          "package-name": "{pkg}",
+          "binding-name": "UsrParity{run}{side}Bind",
+          "values": "{\"Id\": \"{row1}\", \"Description\": \"Parity two\"}"
+        }
+      },
+      {
+        "kind": "write",
+        "label": "upsert new row",
+        "tool": "upsert-data-binding-row-db",
+        "clio-run": true,
+        "creates": "UsrParity{run}{side}Row2",
+        "args": {
+          "package-name": "{pkg}",
+          "binding-name": "UsrParity{run}{side}Bind",
+          "values": "{\"Name\": \"UsrParity{run}{side}Row2\"}"
+        }
+      },
+      {
+        "kind": "cleanup",
+        "for": "UsrParity{run}{side}Row2",
+        "server": "clio",
+        "calls": [
+          {
+            "tool": "execute-esq",
+            "clio-run": true,
+            "args": {
+              "query": {
+                "rootSchemaName": "ContactType",
+                "operationType": 0,
+                "rowCount": 1,
+                "columns": {
+                  "items": {
+                    "Id": {
+                      "expression": {
+                        "expressionType": 0,
+                        "columnPath": "Id"
+                      }
+                    },
+                    "Name": {
+                      "expression": {
+                        "expressionType": 0,
+                        "columnPath": "Name"
+                      }
+                    }
+                  }
+                },
+                "filters": {
+                  "filterType": 6,
+                  "isEnabled": true,
+                  "logicalOperation": 0,
+                  "items": {
+                    "own": {
+                      "filterType": 1,
+                      "comparisonType": 3,
+                      "isEnabled": true,
+                      "leftExpression": {
+                        "expressionType": 0,
+                        "columnPath": "Name"
+                      },
+                      "rightExpression": {
+                        "expressionType": 2,
+                        "parameter": {
+                          "dataValueType": 1,
+                          "value": "UsrParity{run}{side}Row2"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "capture": {
+              "cleanupId": "$.rows[0].id"
+            }
+          },
+          {
+            "tool": "execute-dataservice-batch",
+            "clio-run": true,
+            "destructive": true,
+            "args": {
+              "operations": [
+                {
+                  "operation": "delete",
+                  "schema-name": "ContactType",
+                  "record-id": "{cleanupId}"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "kind": "read-back",
+        "label": "row2 id",
+        "tool": "execute-esq",
+        "clio-run": true,
+        "args": {
+          "query": {
+            "rootSchemaName": "ContactType",
+            "operationType": 0,
+            "rowCount": 1,
+            "columns": {
+              "items": {
+                "Id": {
+                  "expression": {
+                    "expressionType": 0,
+                    "columnPath": "Id"
+                  }
+                },
+                "Name": {
+                  "expression": {
+                    "expressionType": 0,
+                    "columnPath": "Name"
+                  }
+                },
+                "Description": {
+                  "expression": {
+                    "expressionType": 0,
+                    "columnPath": "Description"
+                  }
+                }
+              }
+            },
+            "filters": {
+              "filterType": 6,
+              "isEnabled": true,
+              "logicalOperation": 0,
+              "items": {
+                "own": {
+                  "filterType": 1,
+                  "comparisonType": 3,
+                  "isEnabled": true,
+                  "leftExpression": {
+                    "expressionType": 0,
+                    "columnPath": "Name"
+                  },
+                  "rightExpression": {
+                    "expressionType": 2,
+                    "parameter": {
+                      "dataValueType": 1,
+                      "value": "UsrParity{run}{side}Row2"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "capture": {
+          "row2": "$.rows[0].id"
+        }
+      },
+      {
+        "kind": "read-back",
+        "label": "read upserted binding",
+        "tool": "read-data-binding-db",
+        "args": {
+          "package-name": "{pkg}",
+          "binding-name": "UsrParity{run}{side}Bind"
+        }
+      },
+      {
+        "kind": "read-back",
+        "label": "row1 after upsert",
+        "tool": "execute-esq",
+        "clio-run": true,
+        "args": {
+          "query": {
+            "rootSchemaName": "ContactType",
+            "operationType": 0,
+            "rowCount": 1,
+            "columns": {
+              "items": {
+                "Id": {
+                  "expression": {
+                    "expressionType": 0,
+                    "columnPath": "Id"
+                  }
+                },
+                "Name": {
+                  "expression": {
+                    "expressionType": 0,
+                    "columnPath": "Name"
+                  }
+                },
+                "Description": {
+                  "expression": {
+                    "expressionType": 0,
+                    "columnPath": "Description"
+                  }
+                }
+              }
+            },
+            "filters": {
+              "filterType": 6,
+              "isEnabled": true,
+              "logicalOperation": 0,
+              "items": {
+                "own": {
+                  "filterType": 1,
+                  "comparisonType": 3,
+                  "isEnabled": true,
+                  "leftExpression": {
+                    "expressionType": 0,
+                    "columnPath": "Name"
+                  },
+                  "rightExpression": {
+                    "expressionType": 2,
+                    "parameter": {
+                      "dataValueType": 1,
+                      "value": "UsrParity{run}{side}Row1"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "kind": "expect",
+        "step": "row1 after upsert",
+        "path": "$.rows[0].description",
+        "equals": "Parity two"
+      },
+      {
+        "kind": "write",
+        "label": "remove first row",
+        "tool": "remove-data-binding-row-db",
+        "clio-run": true,
+        "target": "UsrParity{run}{side}Row1",
+        "args": {
+          "package-name": "{pkg}",
+          "binding-name": "UsrParity{run}{side}Bind",
+          "key-value": "{row1}"
+        }
+      },
+      {
+        "kind": "read-back",
+        "label": "read after first removal",
+        "tool": "read-data-binding-db",
+        "args": {
+          "package-name": "{pkg}",
+          "binding-name": "UsrParity{run}{side}Bind"
+        }
+      },
+      {
+        "kind": "write",
+        "label": "remove last row",
+        "tool": "remove-data-binding-row-db",
+        "clio-run": true,
+        "target": "UsrParity{run}{side}Row2",
+        "args": {
+          "package-name": "{pkg}",
+          "binding-name": "UsrParity{run}{side}Bind",
+          "key-value": "{row2}"
+        }
+      },
+      {
+        "kind": "read-back",
+        "label": "binding gone",
+        "tool": "execute-esq",
+        "clio-run": true,
+        "args": {
+          "query": {
+            "rootSchemaName": "SysPackageSchemaData",
+            "operationType": 0,
+            "rowCount": 1,
+            "columns": {
+              "items": {
+                "UId": {
+                  "expression": {
+                    "expressionType": 0,
+                    "columnPath": "UId"
+                  }
+                },
+                "Name": {
+                  "expression": {
+                    "expressionType": 0,
+                    "columnPath": "Name"
+                  }
+                }
+              }
+            },
+            "filters": {
+              "filterType": 6,
+              "isEnabled": true,
+              "logicalOperation": 0,
+              "items": {
+                "own": {
+                  "filterType": 1,
+                  "comparisonType": 3,
+                  "isEnabled": true,
+                  "leftExpression": {
+                    "expressionType": 0,
+                    "columnPath": "Name"
+                  },
+                  "rightExpression": {
+                    "expressionType": 2,
+                    "parameter": {
+                      "dataValueType": 1,
+                      "value": "UsrParity{run}{side}Bind"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "kind": "read-back",
+        "label": "rows gone",
+        "tool": "execute-esq",
+        "clio-run": true,
+        "args": {
+          "query": {
+            "rootSchemaName": "ContactType",
+            "operationType": 0,
+            "rowCount": 1,
+            "columns": {
+              "items": {
+                "Id": {
+                  "expression": {
+                    "expressionType": 0,
+                    "columnPath": "Id"
+                  }
+                },
+                "Name": {
+                  "expression": {
+                    "expressionType": 0,
+                    "columnPath": "Name"
+                  }
+                }
+              }
+            },
+            "filters": {
+              "filterType": 6,
+              "isEnabled": true,
+              "logicalOperation": 0,
+              "items": {
+                "own": {
+                  "filterType": 1,
+                  "comparisonType": 3,
+                  "isEnabled": true,
+                  "leftExpression": {
+                    "expressionType": 0,
+                    "columnPath": "Name"
+                  },
+                  "rightExpression": {
+                    "expressionType": 2,
+                    "parameter": {
+                      "dataValueType": 1,
+                      "value": "UsrParity{run}{side}Row2"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    ]
   }
 ]

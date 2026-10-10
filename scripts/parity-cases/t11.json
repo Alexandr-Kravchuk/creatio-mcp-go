@@ -2,19 +2,32 @@
   {
     "label": "batch missing environment",
     "tool": "execute-dataservice-batch",
-    "args": {"environment-name": "", "operations": []},
+    "args": {
+      "environment-name": "",
+      "operations": []
+    },
     "clio-run": true
   },
   {
     "label": "batch empty operations",
     "tool": "execute-dataservice-batch",
-    "args": {"operations": []},
+    "args": {
+      "operations": []
+    },
     "clio-run": true
   },
   {
     "label": "batch invalid operation",
     "tool": "execute-dataservice-batch",
-    "args": {"operations": [{"operation": "replace", "schema-name": "Contact", "record-id": "00000000-0000-0000-0000-000000000001"}]},
+    "args": {
+      "operations": [
+        {
+          "operation": "replace",
+          "schema-name": "Contact",
+          "record-id": "00000000-0000-0000-0000-000000000001"
+        }
+      ]
+    },
     "clio-run": true
   },
   {
@@ -26,13 +39,19 @@
   {
     "label": "sql invalid view",
     "tool": "execute-sql-script",
-    "args": {"script": "SELECT 1", "view": "invalid"},
+    "args": {
+      "script": "SELECT 1",
+      "view": "invalid"
+    },
     "clio-run": true
   },
   {
     "label": "sql csv missing destination",
     "tool": "execute-sql-script",
-    "args": {"script": "SELECT 1", "view": "csv"},
+    "args": {
+      "script": "SELECT 1",
+      "view": "csv"
+    },
     "clio-run": true
   },
   {
@@ -44,7 +63,10 @@
   {
     "label": "run-process unknown key",
     "tool": "run-process",
-    "args": {"process-name": "UsrParityNeverLaunch", "processName": "typo"},
+    "args": {
+      "process-name": "UsrParityNeverLaunch",
+      "processName": "typo"
+    },
     "clio-run": true
   },
   {
@@ -124,5 +146,120 @@
       "id": "00000000-0000-0000-0000-000000000001"
     },
     "clio-run": true
+  },
+  {
+    "label": "binding-db create unknown package",
+    "tool": "create-data-binding-db",
+    "clio-run": true,
+    "args": {
+      "package-name": "UsrParityNoSuchPkg",
+      "schema-name": "Contact"
+    }
+  },
+  {
+    "label": "binding-db create blank package",
+    "tool": "create-data-binding-db",
+    "clio-run": true,
+    "args": {
+      "package-name": "",
+      "schema-name": "Contact"
+    }
+  },
+  {
+    "label": "binding-db create rows not json",
+    "tool": "create-data-binding-db",
+    "clio-run": true,
+    "args": {
+      "package-name": "Custom",
+      "schema-name": "Contact",
+      "rows": "not json"
+    }
+  },
+  {
+    "label": "binding-db create rows not array",
+    "tool": "create-data-binding-db",
+    "clio-run": true,
+    "args": {
+      "package-name": "Custom",
+      "schema-name": "Contact",
+      "rows": "{}"
+    }
+  },
+  {
+    "label": "binding-db create unknown schema",
+    "tool": "create-data-binding-db",
+    "clio-run": true,
+    "args": {
+      "package-name": "Custom",
+      "schema-name": "UsrParityNoSuchSchema"
+    }
+  },
+  {
+    "label": "binding-db create rows not a string",
+    "tool": "create-data-binding-db",
+    "clio-run": true,
+    "args": {
+      "package-name": "Custom",
+      "schema-name": "Contact",
+      "rows": [
+        {
+          "values": {
+            "Name": "x"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "label": "binding-db upsert unknown binding",
+    "tool": "upsert-data-binding-row-db",
+    "clio-run": true,
+    "args": {
+      "package-name": "Custom",
+      "binding-name": "UsrParityNoSuchBinding",
+      "values": "{}"
+    }
+  },
+  {
+    "label": "binding-db remove unknown binding",
+    "tool": "remove-data-binding-row-db",
+    "clio-run": true,
+    "args": {
+      "package-name": "Custom",
+      "binding-name": "UsrParityNoSuchBinding",
+      "key-value": "00000000-0000-0000-0000-000000000001"
+    }
+  },
+  {
+    "label": "binding-db remove unknown package",
+    "tool": "remove-data-binding-row-db",
+    "clio-run": true,
+    "args": {
+      "package-name": "UsrParityNoSuchPkg",
+      "binding-name": "x",
+      "key-value": "1"
+    }
+  },
+  {
+    "label": "batch operations not an array",
+    "tool": "execute-dataservice-batch",
+    "clio-run": true,
+    "args": {
+      "operations": "x"
+    }
+  },
+  {
+    "label": "batch record-id not a uuid",
+    "tool": "execute-dataservice-batch",
+    "clio-run": true,
+    "args": {
+      "operations": [
+        {
+          "operation": "insert",
+          "schema-name": "Contact",
+          "record-id": "nope"
+        }
+      ]
+    }
   }
 ]
