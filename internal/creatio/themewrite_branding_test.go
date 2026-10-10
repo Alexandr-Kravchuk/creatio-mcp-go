@@ -369,3 +369,123 @@ func TestSetLogoReportsBindingProblems(t *testing.T) {
 		t.Errorf("warnings = %v", result.Warnings)
 	}
 }
+
+func TestSetBackgroundUploadsRegistersConfiguresAndBinds(t *testing.T) {
+	fake := newThemeWriteFake(t)
+	image := themeWriteTestImage(t, "background.png", []byte("png bytes"))
+
+	result := fake.client().SetBackground(t.Context(), SetBackgroundRequest{File: image})
+
+	if !result.Success || result.Error != "" || result.Package != "UsrBrand" {
+		t.Fatalf("result = %#v", result)
+	}
+	if strings.Join(result.Bound, ",") != "image,gallery-membership,background-config,panel-icon-off-state" || len(result.Warnings) != 0 {
+		t.Errorf("bound = %v warnings = %v", result.Bound, result.Warnings)
+	}
+	want := []string{
+		"upload " + result.ImageID,
+		"odata SysImageInTag Entity/Id eq " + result.ImageID + " and Tag/Id eq 273c2402-7cae-456b-a9c4-067d2024f1a7",
+		`odata POST SysImageInTag {"EntityId":"` + result.ImageID + `","TagId":"273c2402-7cae-456b-a9c4-067d2024f1a7"}`,
+		`PostSysSettingsValues CrtBackgroundConfig={"imageId":"` + result.ImageID + `","mode":"Image"}`,
+		"BatchQuery UpdateQuery",
+		"ClearFeaturesCacheForAllUsers UsePanelIconBackground",
+		"SaveSchema SysImage_ShellBackground",
+		"SaveSchema SysImageInTag_ShellBackground",
+		"SaveSchema SysSettingsValue_CrtBackgroundConfig",
+		"SaveSchema Feature_UsePanelIconBackground",
+		"SaveSchema AdminUnitFeatureState_UsePanelIconBackground",
+	}
+	position := 0
+	for _, entry := range fake.requests {
+		if position < len(want) && entry == want[position] {
+			position++
+		}
+	}
+	if position != len(want) {
+		t.Fatalf("request %q missing or out of order in %v", want[position], fake.requests)
+	}
+}
+
+func TestSetBackgroundByIdAndItsRefusals(t *testing.T) {
+	fake := newThemeWriteFake(t)
+	fake.images["12345678-1234-1234-1234-1234567890ab"] = true
+	fake.featureStates["eeeeeeee-0000-0000-0000-000000000001"] = 0
+
+	result := fake.client().SetBackground(t.Context(), SetBackgroundRequest{ImageID: "{12345678-1234-1234-1234-1234567890AB}", KeepIconBackground: true})
+
+	if !result.Success || result.ImageID != "12345678-1234-1234-1234-1234567890ab" {
+		t.Fatalf("result = %#v", result)
+	}
+	if len(result.Warnings) != 1 || !strings.HasPrefix(result.Warnings[0], "The UsePanelIconBackground feature was left as is (keep-icon-background)") {
+		t.Errorf("warnings = %v", result.Warnings)
+	}
+	if fake.count("BatchQuery") != 0 || fake.count("ClearFeaturesCacheForAllUsers") != 0 {
+		t.Errorf("the feature was touched although kept")
+	}
+
+	cases := map[string]string{
+		"not-a-guid":                           "image-id 'not-a-guid' is not a valid id. Pass the id printed by upload-image.",
+		"00000000-0000-0000-0000-000000000000": "image-id '00000000-0000-0000-0000-000000000000' is not a valid id. Pass the id printed by upload-image.",
+		"aaaaaaaa-1234-1234-1234-1234567890ab": "No uploaded image with id 'aaaaaaaa-1234-1234-1234-1234567890ab' was found in the environment. " +
+			"Upload the file first with upload-image and pass the id it prints.",
+	}
+	for id, want := range cases {
+		if result := fake.client().SetBackground(t.Context(), SetBackgroundRequest{ImageID: id}); result.Success || result.Error != want {
+			t.Errorf("%s: %#v", id, result)
+		}
+	}
+	if result := fake.client().SetBackground(t.Context(), SetBackgroundRequest{ImageID: "x", File: "y"}); result.Error != SetBackgroundBothSourcesError {
+		t.Errorf("both: %#v", result)
+	}
+}
+
+func TestSetBackgroundBindingRefusalsBecomeWarnings(t *testing.T) {
+	fake := newThemeWriteFake(t)
+	fake.images["12345678-1234-1234-1234-1234567890ab"] = true
+	// The feature is not defined: the turn-off leaves it alone, and its off-state binding is refused (and a
+	// previously shipped folder of it removed) while the rest binds.
+	delete(fake.features, "UsePanelIconBackground")
+	fake.bindings["Feature_UsePanelIconBackground"] = "Feature"
+	result := fake.client().SetBackground(t.Context(), SetBackgroundRequest{ImageID: "12345678-1234-1234-1234-1234567890ab", Package: "UsrBrand"})
+	if !result.Success || strings.Join(result.Bound, ",") != "image,gallery-membership,background-config" {
+		t.Fatalf("result = %#v", result)
+	}
+	wantWarnings := "UsePanelIconBackground: the feature is not defined on this environment|" +
+		"Feature_UsePanelIconBackground: previously shipped binding removed, it no longer has a source row"
+	if strings.Join(result.Warnings, "|") != wantWarnings || fake.count("BatchQuery") != 0 {
+		t.Errorf("warnings = %v", result.Warnings)
+	}
+
+	fake = newThemeWriteFake(t)
+	fake.images["12345678-1234-1234-1234-1234567890ab"] = true
+	fake.refuse["CrtBackgroundConfig"] = true
+	result = fake.client().SetBackground(t.Context(), SetBackgroundRequest{ImageID: "12345678-1234-1234-1234-1234567890ab"})
+	if result.Success || result.Error != "The image is in the background gallery, but writing the CrtBackgroundConfig setting failed." {
+		t.Fatalf("refused config: %#v", result)
+	}
+
+	fake = newThemeWriteFake(t)
+	fake.images["12345678-1234-1234-1234-1234567890ab"] = true
+	fake.bindings["SysImageInTag_ShellBackground"] = "Contact"
+	result = fake.client().SetBackground(t.Context(), SetBackgroundRequest{ImageID: "12345678-1234-1234-1234-1234567890ab"})
+	want := "The background was applied (image 12345678-1234-1234-1234-1234567890ab), but binding it into package 'UsrBrand' failed: " +
+		"Package data binding 'SysImageInTag_ShellBackground' already exists for schema 'Contact', but this delivery needs it for " +
+		"'SysImageInTag'. Rename or remove the existing binding first. Already bound and left in place: image."
+	if result.Success || result.Error != want || result.Package != "UsrBrand" || strings.Join(result.Bound, ",") != "image" {
+		t.Fatalf("collision: %#v", result)
+	}
+}
+
+func TestThemeWriteReadOffState(t *testing.T) {
+	cases := map[string]string{`0`: "true", `1`: "false", `false`: "true", `true`: "false", `"0"`: "true", `"True"`: "false",
+		`" 1 "`: "false", `"x"`: "nil", `null`: "nil", `1.5`: "nil"}
+	for raw, want := range cases {
+		got := "nil"
+		if off := themeWriteReadOffState(json.RawMessage(raw)); off != nil {
+			got = fmt.Sprint(*off)
+		}
+		if got != want {
+			t.Errorf("%s = %s, want %s", raw, got, want)
+		}
+	}
+}

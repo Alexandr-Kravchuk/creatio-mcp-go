@@ -137,3 +137,70 @@ func invokeSetLogo(ctx context.Context, envs *environments, args map[string]any)
 	}
 	return structuredToolResult(answer), nil
 }
+
+var setBackgroundImageSpec = themeWriteArgSpec{
+	tool:    "set-background-image",
+	strings: []string{"environment-name", "image-id", "file", "package"},
+	bools:   []string{"keep-icon-background"},
+	aliases: map[string]string{"imageId": "image-id", "image_id": "image-id", "packageName": "package",
+		"package_name": "package", "package-name": "package", "keepIconBackground": "keep-icon-background",
+		"keep_icon_background": "keep-icon-background"},
+	hint: "Valid: environment-name, file, image-id, package, keep-icon-background.",
+}
+
+func init() {
+	// clio: [McpServerTool(ReadOnly = false, Destructive = true, Idempotent = true, OpenWorld = false)]
+	registerTool(map[string]any{"name": "set-background-image"}, invokeSetBackgroundImage,
+		withAnnotations(toolAnnotations{Destructive: true, Idempotent: true}))
+}
+
+func invokeSetBackgroundImage(ctx context.Context, envs *environments, args map[string]any) (*mcp.CallToolResult, error) {
+	bound, err := setBackgroundImageSpec.bind(args)
+	if err != nil {
+		return nil, err
+	}
+	fail := func(message string) *mcp.CallToolResult {
+		return structuredToolResult(creatio.SetBackgroundToolFailure(message))
+	}
+	if refusal := setBackgroundImageSpec.aliasError(bound); refusal != "" {
+		return fail(refusal), nil
+	}
+	if strings.TrimSpace(bound.str("environment-name")) == "" {
+		return fail(themeWriteEnvironmentRequired), nil
+	}
+	hasFile, hasImageID := strings.TrimSpace(bound.str("file")) != "", strings.TrimSpace(bound.str("image-id")) != ""
+	if hasFile && hasImageID {
+		return fail(creatio.SetBackgroundBothSourcesError), nil
+	}
+	if !hasFile && !hasImageID {
+		return fail(creatio.SetBackgroundNoSourceError), nil
+	}
+	client, failure, err := envs.resolve("set-background-image", bound.raw, scopeName)
+	if err != nil {
+		return nil, err
+	}
+	if failure != nil {
+		return fail(redacted(failure)), nil
+	}
+	keep := bound.flags["keep-icon-background"] != nil && *bound.flags["keep-icon-background"]
+	result := client.SetBackground(ctx, creatio.SetBackgroundRequest{ImageID: bound.str("image-id"), File: bound.str("file"),
+		Package: bound.str("package"), KeepIconBackground: keep})
+	if result.Fault != nil {
+		// clio's command threw: BaseTool.ExecuteResolved answers the redacted message alone.
+		return fail(redacted(result.Fault)), nil
+	}
+	answer := creatio.SetBackgroundToolResult{Success: result.Success, Package: result.Package,
+		Warnings: themeWriteRedactAll(result.Warnings)}
+	if len(result.Bound) > 0 {
+		answer.Bound = result.Bound
+	}
+	if result.Success {
+		answer.ImageID = result.ImageID
+	} else {
+		answer.Error = "SetBackground returned success=false."
+		if strings.TrimSpace(result.Error) != "" {
+			answer.Error = redact.Text(result.Error)
+		}
+	}
+	return structuredToolResult(answer), nil
+}

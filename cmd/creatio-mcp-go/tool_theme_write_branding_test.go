@@ -158,3 +158,57 @@ func TestSetLogoThroughExecutorsAndRefusals(t *testing.T) {
 		t.Fatalf("direct call was not gated")
 	}
 }
+
+func TestSetBackgroundImageThroughExecutorsAndRefusals(t *testing.T) {
+	var mu sync.Mutex
+	var routes []string
+	session := themeWriteBrandingStand(t, func(w http.ResponseWriter, r *http.Request) {
+		mu.Lock()
+		defer mu.Unlock()
+		routes = append(routes, r.URL.Path)
+		switch r.URL.Path {
+		case "/0/odata/SysImage":
+			// The image does not exist.
+			_, _ = w.Write([]byte(`{"value":[]}`))
+		default:
+			t.Errorf("unexpected %s %s", r.Method, r.URL.Path)
+		}
+	})
+	cases := []struct {
+		args map[string]any
+		want string
+	}{
+		{map[string]any{"environment-name": "brand-env", "imageId": "x"}, "Rename: 'imageId' -> 'image-id'."},
+		{map[string]any{"image-id": "x"}, "environment-name is required and cannot be empty."},
+		{map[string]any{"environment-name": "brand-env", "image-id": "x", "file": "y.png"}, "Pass either a file or an image-id, not both."},
+		{map[string]any{"environment-name": "brand-env", "keep-icon-background": true}, "Pass a file to upload (file) or the id of an already-uploaded image (image-id)."},
+		{map[string]any{"environment-name": "brand-env", "image-id": "nope"}, "image-id 'nope' is not a valid id. Pass the id printed by upload-image."},
+		{map[string]any{"environment-name": "brand-env", "image-id": "12345678-1234-1234-1234-1234567890ab"},
+			"No uploaded image with id '12345678-1234-1234-1234-1234567890ab' was found in the environment. Upload the file first with upload-image and pass the id it prints."},
+	}
+	for _, executor := range []string{"clio-run", "clio-run-destructive"} {
+		for _, c := range cases {
+			decoded, _ := themeWriteBrandingCall(t, session, &mcp.CallToolParams{Name: executor,
+				Arguments: map[string]any{"command": "set-background-image", "args": c.args}})
+			if decoded["success"] != false || decoded["error"] != c.want || decoded["image-id"] != nil {
+				t.Errorf("%s %v: %#v\nwant %q", executor, c.args, decoded, c.want)
+			}
+		}
+	}
+	// A boolean given as text is clio's argument-binding failure, raised before the tool runs.
+	_, result := themeWriteBrandingCall(t, session, &mcp.CallToolParams{Name: "clio-run", Arguments: map[string]any{
+		"command": "set-background-image", "args": map[string]any{"environment-name": "brand-env", "image-id": "x", "keep-icon-background": "yes"}}})
+	if text := result.Content[0].(*mcp.TextContent).Text; !strings.Contains(text, "invalid-parameter-type: argument 'keep-icon-background'") {
+		t.Errorf("bool binding: %s", text)
+	}
+	mu.Lock()
+	before := len(routes)
+	mu.Unlock()
+	_, result = themeWriteBrandingCall(t, session, &mcp.CallToolParams{Name: "set-background-image",
+		Arguments: map[string]any{"environment-name": "brand-env", "image-id": "12345678-1234-1234-1234-1234567890ab"}})
+	mu.Lock()
+	defer mu.Unlock()
+	if !result.IsError || len(routes) != before {
+		t.Fatalf("direct call was not gated")
+	}
+}
