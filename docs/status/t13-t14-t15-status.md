@@ -77,9 +77,9 @@ byte-for-byte read-back).
   Implemented and mock-tested (request order, payloads, refusals, partial failures, binding collisions);
   scenarios in `scripts/write-scenarios/window/t14.json` bind into an app package the run creates and
   remove it with `delete-app`. The logo/background settings themselves stay changed after such a run.
-- Read parity, `scripts/parity-cases/t14.json`: 57 cases, 57 match against clio 8.1.0.134 — every
+- Read parity, `scripts/parity-cases/t14.json`: 58 cases, 58 match against clio 8.1.0.134 — every
   refusal the three branding tools give before a write, 24 `advise-theme-palette` cases over all eight
-  operations, 6 `update-email-template` refusals.
+  operations, 7 `update-email-template` refusals.
 
 Closed gaps:
 - `update-email-template` "binding failure" was a probe error, not a clio defect: clio's

@@ -1,7 +1,7 @@
 [
   {
     "label": "set-logo into an own app package, read the binding back, delete the app",
-    "why": "T14, window-only: set-logo writes the stand-wide Binary logo settings (LogoImage, MenuLogoImage, ConfigurationPageLogoImage, CrtAppToolbarLogo) and HideSplashScreenLogoImage for every user, and nothing reverts them; other agents share the stand. The bindings land in a package the run creates (the app's package), so delete-app removes them. The logo settings keep the fixture image afterwards: restore the stand's own logos by hand if they matter. Both sides write the same file, so the end state does not depend on which side ran last.",
+    "why": "T14, window-only: set-logo writes the stand-wide Binary logo settings (LogoImage, MenuLogoImage, ConfigurationPageLogoImage, CrtAppToolbarLogo) and HideSplashScreenLogoImage for every user, and nothing reverts them; other agents share the stand. The bindings land in a package the run creates (the app's package), so delete-app removes them. The logo settings keep the fixture image afterwards: restore the stand's own logos by hand if they matter. Both sides write the same file, so the end state does not depend on which side ran last. The package is the one create-app reports (package-name), captured per side.",
     "steps": [
       {
         "kind": "write",
@@ -18,12 +18,27 @@
           "icon-background": "#247EE5",
           "with-mobile-pages": false
         },
-        "known-differences": ["$.warnings", "$.nextstep", "$.dataforge.health.correlationid", "$.entities[0].uid", "$.entities[1].uid",
-          "$.entities[2].uid", "$.pages[0].uid", "$.pages[1].uid", "$.pages[2].uid", "$.pages[3].uid", "$.applicationid", "$.packageuid"],
+        "known-differences": [
+          "$.warnings",
+          "$.nextstep",
+          "$.dataforge.health.correlationid",
+          "$.entities[0].uid",
+          "$.entities[1].uid",
+          "$.entities[2].uid",
+          "$.pages[0].uid",
+          "$.pages[1].uid",
+          "$.pages[2].uid",
+          "$.pages[3].uid",
+          "$.applicationid",
+          "$.packageuid"
+        ],
         "why": "As in t7.json: GUIDs are created per side; warnings/next-step come from master's navigation cache reset.",
         "retry-while": "rebuilding the OData library",
         "retry-attempts": 6,
-        "retry-delay-seconds": 30
+        "retry-delay-seconds": 30,
+        "capture": {
+          "pkgname": "$.packagename"
+        }
       },
       {
         "kind": "write",
@@ -32,30 +47,45 @@
         "clio-run": true,
         "args": {
           "logo": "scripts/testdata/t14/logo.png",
-          "package": "UsrParity{run}{side}App"
+          "package": "{pkgname}"
         }
       },
-      {"kind": "expect", "step": "set-logo", "path": "$.success", "equals": true, "side": "both"},
-      {"kind": "expect", "step": "set-logo", "path": "$.package", "equals": "UsrParity{run}{side}App", "side": "both"},
+      {
+        "kind": "expect",
+        "step": "set-logo",
+        "path": "$.success",
+        "equals": true,
+        "side": "both"
+      },
       {
         "kind": "read-back",
         "label": "read-data-binding-db SysSettingsValue_LogoImage",
         "tool": "read-data-binding-db",
-        "args": {"package-name": "UsrParity{run}{side}App", "binding-name": "SysSettingsValue_LogoImage"}
+        "args": {
+          "package-name": "{pkgname}",
+          "binding-name": "SysSettingsValue_LogoImage"
+        }
       },
       {
         "kind": "cleanup",
         "for": "UsrParity{run}{side}App",
         "server": "own",
         "calls": [
-          {"tool": "delete-app", "clio-run": true, "settle-seconds": 120, "args": {"app-name": "UsrParity{run}{side}App"}}
+          {
+            "tool": "delete-app",
+            "clio-run": true,
+            "settle-seconds": 120,
+            "args": {
+              "app-name": "UsrParity{run}{side}App"
+            }
+          }
         ]
       }
     ]
   },
   {
     "label": "set-background-image from a file into an own app package, read the bindings back, delete the app",
-    "why": "T14, window-only: set-background-image rewrites the stand-wide CrtBackgroundConfig and turns UsePanelIconBackground off for all users, and nothing reverts them; other agents share the stand. The bindings land in the app package the run creates, and delete-app removes them. The two uploaded SysImage rows are left in place on purpose: CrtBackgroundConfig points at the go side's image after the run, and removing it would leave a background the shell cannot render. Restore the background by hand if it matters.",
+    "why": "T14, window-only: set-background-image rewrites the stand-wide CrtBackgroundConfig and turns UsePanelIconBackground off for all users, and nothing reverts them; other agents share the stand. The bindings land in the app package the run creates, and delete-app removes them. The two uploaded SysImage rows are left in place on purpose: CrtBackgroundConfig points at the go side's image after the run, and removing it would leave a background the shell cannot render. Restore the background by hand if it matters. The package is the one create-app reports (package-name), captured per side.",
     "steps": [
       {
         "kind": "write",
@@ -72,12 +102,27 @@
           "icon-background": "#247EE5",
           "with-mobile-pages": false
         },
-        "known-differences": ["$.warnings", "$.nextstep", "$.dataforge.health.correlationid", "$.entities[0].uid", "$.entities[1].uid",
-          "$.entities[2].uid", "$.pages[0].uid", "$.pages[1].uid", "$.pages[2].uid", "$.pages[3].uid", "$.applicationid", "$.packageuid"],
+        "known-differences": [
+          "$.warnings",
+          "$.nextstep",
+          "$.dataforge.health.correlationid",
+          "$.entities[0].uid",
+          "$.entities[1].uid",
+          "$.entities[2].uid",
+          "$.pages[0].uid",
+          "$.pages[1].uid",
+          "$.pages[2].uid",
+          "$.pages[3].uid",
+          "$.applicationid",
+          "$.packageuid"
+        ],
         "why": "As in t7.json: GUIDs are created per side; warnings/next-step come from master's navigation cache reset.",
         "retry-while": "rebuilding the OData library",
         "retry-attempts": 6,
-        "retry-delay-seconds": 30
+        "retry-delay-seconds": 30,
+        "capture": {
+          "pkgname": "$.packagename"
+        }
       },
       {
         "kind": "write",
@@ -86,32 +131,54 @@
         "clio-run": true,
         "args": {
           "file": "scripts/testdata/t14/logo.png",
-          "package": "UsrParity{run}{side}App"
+          "package": "{pkgname}"
         },
-        "capture": {"imageid": "$.imageid"},
-        "known-differences": ["$.imageid"],
+        "capture": {
+          "imageid": "$.imageid"
+        },
+        "known-differences": [
+          "$.imageid"
+        ],
         "why": "Each side uploads its own image."
       },
-      {"kind": "expect", "step": "set-background-image", "path": "$.success", "equals": true, "side": "both"},
-      {"kind": "expect", "step": "set-background-image", "path": "$.package", "equals": "UsrParity{run}{side}App", "side": "both"},
+      {
+        "kind": "expect",
+        "step": "set-background-image",
+        "path": "$.success",
+        "equals": true,
+        "side": "both"
+      },
       {
         "kind": "read-back",
         "label": "read-data-binding-db SysImage_ShellBackground",
         "tool": "read-data-binding-db",
-        "args": {"package-name": "UsrParity{run}{side}App", "binding-name": "SysImage_ShellBackground"}
+        "args": {
+          "package-name": "{pkgname}",
+          "binding-name": "SysImage_ShellBackground"
+        }
       },
       {
         "kind": "read-back",
         "label": "read-data-binding-db SysSettingsValue_CrtBackgroundConfig",
         "tool": "read-data-binding-db",
-        "args": {"package-name": "UsrParity{run}{side}App", "binding-name": "SysSettingsValue_CrtBackgroundConfig"}
+        "args": {
+          "package-name": "{pkgname}",
+          "binding-name": "SysSettingsValue_CrtBackgroundConfig"
+        }
       },
       {
         "kind": "cleanup",
         "for": "UsrParity{run}{side}App",
         "server": "own",
         "calls": [
-          {"tool": "delete-app", "clio-run": true, "settle-seconds": 120, "args": {"app-name": "UsrParity{run}{side}App"}}
+          {
+            "tool": "delete-app",
+            "clio-run": true,
+            "settle-seconds": 120,
+            "args": {
+              "app-name": "UsrParity{run}{side}App"
+            }
+          }
         ]
       }
     ]
