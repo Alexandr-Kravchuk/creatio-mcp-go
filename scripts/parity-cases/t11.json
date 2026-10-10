@@ -1,5 +1,53 @@
 [
   {
+    "label": "batch missing environment",
+    "tool": "execute-dataservice-batch",
+    "args": {"environment-name": "", "operations": []},
+    "clio-run": true
+  },
+  {
+    "label": "batch empty operations",
+    "tool": "execute-dataservice-batch",
+    "args": {"operations": []},
+    "clio-run": true
+  },
+  {
+    "label": "batch invalid operation",
+    "tool": "execute-dataservice-batch",
+    "args": {"operations": [{"operation": "replace", "schema-name": "Contact", "record-id": "00000000-0000-0000-0000-000000000001"}]},
+    "clio-run": true
+  },
+  {
+    "label": "sql missing input",
+    "tool": "execute-sql-script",
+    "args": {},
+    "clio-run": true
+  },
+  {
+    "label": "sql invalid view",
+    "tool": "execute-sql-script",
+    "args": {"script": "SELECT 1", "view": "invalid"},
+    "clio-run": true
+  },
+  {
+    "label": "sql csv missing destination",
+    "tool": "execute-sql-script",
+    "args": {"script": "SELECT 1", "view": "csv"},
+    "clio-run": true
+  },
+  {
+    "label": "run-process missing code",
+    "tool": "run-process",
+    "args": {},
+    "clio-run": true
+  },
+  {
+    "label": "run-process unknown key",
+    "tool": "run-process",
+    "args": {"process-name": "UsrParityNeverLaunch", "processName": "typo"},
+    "clio-run": true
+  },
+  {
     "label": "odata-create missing",
     "tool": "odata-create",
     "args": {},
