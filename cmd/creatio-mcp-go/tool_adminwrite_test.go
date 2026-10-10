@@ -171,3 +171,44 @@ func mustJSON(t *testing.T, value any) []byte {
 	}
 	return encoded
 }
+
+func TestManageToolsThroughClioRun(t *testing.T) {
+	session, stand := newAdminWriteTestSession(t, map[string]func(map[string]any) string{
+		"DataService/json/SyncReply/SelectQuery:SysAdminUnit": func(map[string]any) string {
+			return `{"success":true,"rows":[{"Id":"a29a3ba5-4b0d-de11-9a51-005056c00008","Name":"All employees","SysAdminUnitTypeValue":0,` +
+				`"ParentRole":"","Active":true,"Contact":"","ConnectionType":0,"SynchronizeWithLDAP":false,"ForceChangePassword":false}]}`
+		},
+	})
+	for _, c := range []struct {
+		tool string
+		args map[string]any
+		want string
+	}{
+		{"manage-user", map[string]any{"action": "bogus"}, "Unknown user action. Use list, create, update, delete, lock-status, unlock or password."},
+		{"manage-role", map[string]any{"action": "delete", "id": "a29a3ba5-4b0d-de11-9a51-005056c00008"},
+			"Built-in root and system-administrator roles cannot be deleted by this command."},
+		{"manage-license", map[string]any{"action": "user-assign"}, "Administration IDs must be nonempty GUIDs."},
+		{"manage-access", map[string]any{"action": "ip-delete"}, "Administration IDs must be nonempty GUIDs."},
+	} {
+		args := map[string]any{"environment-name": "t12-env"}
+		for key, value := range c.args {
+			args[key] = value
+		}
+		answer := adminWriteCall(t, session, c.tool, args)
+		if answer != `{"exit-code":1,"execution-log-messages":[{"message-type":"Error","value":`+string(mustJSON(t, c.want))+`}]}` {
+			t.Errorf("%s = %s", c.tool, answer)
+		}
+		adminWriteRawNameIsGated(t, session, c.tool, args)
+	}
+	if reads := stand.bodies("DataService/json/SyncReply/SelectQuery:SysAdminUnit"); len(reads) != 1 {
+		t.Errorf("SysAdminUnit reads = %d", len(reads))
+	}
+	typed := adminWriteCall(t, session, "manage-user", map[string]any{"environment-name": "t12-env", "action": "delete", "id": "nope"})
+	if !strings.Contains(typed, "invalid-parameter-type: argument 'id' for MCP tool 'manage-user' must be an object.") {
+		t.Errorf("bad id = %s", typed)
+	}
+	missing := adminWriteCall(t, session, "manage-role", map[string]any{"environment-name": "other", "action": "list"})
+	if !strings.HasPrefix(missing, `{"exit-code":1,"execution-log-messages":[{"message-type":"Error","value":"[EnvironmentResolutionException] Environment with key 'other' not found.`) {
+		t.Errorf("unknown environment = %s", missing)
+	}
+}

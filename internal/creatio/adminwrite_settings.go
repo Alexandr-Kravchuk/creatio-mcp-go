@@ -212,7 +212,7 @@ func (c *Client) adminWriteCreate(ctx context.Context, in AdminWriteCreateSettin
 			body = append(body, field{"referenceSchemaUId", uid})
 		}
 	}
-	raw, err := c.adminWritePost(ctx, "InsertSysSettingRequest", toJNode(body).stjJSON())
+	raw, err := c.adminWriteSettingPost(ctx, "InsertSysSettingRequest", toJNode(body).stjJSON())
 	if err != nil {
 		return AdminWriteCreateSettingResult{}, err
 	}
@@ -481,7 +481,7 @@ func (c *Client) adminWriteUpdateValue(ctx context.Context, code, value, valueTy
 	values := newObject()
 	values.set(code, payload)
 	body := toJNode(orderedFields{{"isPersonal", false}, {"sysSettingsValues", values}})
-	raw, err := c.adminWritePost(ctx, "PostSysSettingsValues", body.stjJSON())
+	raw, err := c.adminWriteSettingPost(ctx, "PostSysSettingsValues", body.stjJSON())
 	if err != nil {
 		return false, err
 	}
@@ -517,7 +517,7 @@ func (c *Client) adminWriteLookupByDisplayValue(ctx context.Context, entity, dis
 		{"useLocalization", true},
 		{"columns", orderedFields{{"items", orderedFields{{"Id", orderedFields{{"expression", orderedFields{{"expressionType", 0}, {"columnPath", "Id"}}}}}}}}},
 	})
-	raw, err := c.adminWritePost(ctx, "SelectQuery", query.newtonsoftJSON())
+	raw, err := c.adminWriteSettingPost(ctx, "SelectQuery", query.newtonsoftJSON())
 	if err != nil {
 		return "", err
 	}
@@ -545,9 +545,9 @@ func (c *Client) adminWriteLookupByDisplayValue(ctx context.Context, entity, dis
 	return emptyGUID, nil
 }
 
-// adminWritePost sends a DataService write and returns its body whatever it is: the caller decides whether
+// adminWriteSettingPost sends a DataService write and returns its body whatever it is: the caller decides whether
 // it is the response the operation expects.
-func (c *Client) adminWritePost(ctx context.Context, endpoint string, body []byte) ([]byte, error) {
+func (c *Client) adminWriteSettingPost(ctx context.Context, endpoint string, body []byte) ([]byte, error) {
 	response, err := c.serviceRequest(ctx, serviceCall{Route: "DataService/json/SyncReply/" + endpoint, Body: body,
 		Timeout: adminWriteWriteTimeout, Limit: maxResponseBytes})
 	if err != nil {

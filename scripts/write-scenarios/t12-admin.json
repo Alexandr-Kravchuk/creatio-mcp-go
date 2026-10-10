@@ -1,0 +1,1184 @@
+[
+  {
+    "label": "manage-role, manage-access and manage-license on roles this run creates",
+    "why": "A functional role under All employees and a division beside it, with ids the harness generates. Creatio adds a managers group under the division, which is found with ensure-manager and deleted before the division. The role gets an IP rule, a functional association with the division (removed again through cliogate's RemoveFunctionalRoleAssociation) and a grant of the stock CanExportGrid operation, which is denied and revoked again. clio's update, delete and association writes call AdministrationService.ActualizeAdminUnitInRole, which recomputes role membership for the stand. operation-position is window-only: it clears the stand's rights cache.",
+    "steps": [
+      {
+        "kind": "write",
+        "label": "create role",
+        "tool": "manage-role",
+        "clio-run": true,
+        "args": {
+          "action": "create",
+          "id": "{guid1}",
+          "name": "UsrParity{run}{side}Role",
+          "type": 6,
+          "parent-id": "a29a3ba5-4b0d-de11-9a51-005056c00008"
+        },
+        "creates": "UsrParity{run}{side}Role"
+      },
+      {
+        "kind": "cleanup",
+        "for": "UsrParity{run}{side}Role",
+        "server": "clio",
+        "calls": [
+          {
+            "tool": "execute-esq",
+            "clio-run": true,
+            "args": {
+              "query": {
+                "rootSchemaName": "SysAdminUnit",
+                "operationType": 0,
+                "rowCount": 1,
+                "columns": {
+                  "items": {
+                    "Id": {
+                      "expression": {
+                        "expressionType": 0,
+                        "columnPath": "Id"
+                      }
+                    }
+                  }
+                },
+                "filters": {
+                  "filterType": 6,
+                  "logicalOperation": 0,
+                  "isEnabled": true,
+                  "items": {
+                    "own": {
+                      "filterType": 1,
+                      "comparisonType": 3,
+                      "isEnabled": true,
+                      "leftExpression": {
+                        "expressionType": 0,
+                        "columnPath": "Id"
+                      },
+                      "rightExpression": {
+                        "expressionType": 2,
+                        "parameter": {
+                          "dataValueType": 0,
+                          "value": "{guid1}"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "capture": {
+              "cleanupId": "$.rows[0].id"
+            }
+          },
+          {
+            "tool": "manage-role",
+            "clio-run": true,
+            "args": {
+              "action": "delete",
+              "id": "{cleanupId}"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "read-back",
+        "label": "list role",
+        "tool": "inspect-role",
+        "args": {
+          "action": "list",
+          "id": "{guid1}"
+        }
+      },
+      {
+        "kind": "write",
+        "label": "rename role",
+        "tool": "manage-role",
+        "clio-run": true,
+        "args": {
+          "action": "update",
+          "id": "{guid1}",
+          "name": "UsrParity{run}{side}RoleRenamed"
+        }
+      },
+      {
+        "kind": "write",
+        "label": "create division",
+        "tool": "manage-role",
+        "clio-run": true,
+        "args": {
+          "action": "create",
+          "id": "{guid3}",
+          "name": "UsrParity{run}{side}Div",
+          "type": 1,
+          "parent-id": "a29a3ba5-4b0d-de11-9a51-005056c00008"
+        },
+        "creates": "UsrParity{run}{side}Div"
+      },
+      {
+        "kind": "cleanup",
+        "for": "UsrParity{run}{side}Div",
+        "server": "clio",
+        "calls": [
+          {
+            "tool": "execute-esq",
+            "clio-run": true,
+            "args": {
+              "query": {
+                "rootSchemaName": "SysAdminUnit",
+                "operationType": 0,
+                "rowCount": 1,
+                "columns": {
+                  "items": {
+                    "Id": {
+                      "expression": {
+                        "expressionType": 0,
+                        "columnPath": "Id"
+                      }
+                    }
+                  }
+                },
+                "filters": {
+                  "filterType": 6,
+                  "logicalOperation": 0,
+                  "isEnabled": true,
+                  "items": {
+                    "own": {
+                      "filterType": 1,
+                      "comparisonType": 3,
+                      "isEnabled": true,
+                      "leftExpression": {
+                        "expressionType": 0,
+                        "columnPath": "ParentRole"
+                      },
+                      "rightExpression": {
+                        "expressionType": 2,
+                        "parameter": {
+                          "dataValueType": 0,
+                          "value": "{guid3}"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "capture": {
+              "managerId": "$.rows[0].id"
+            }
+          },
+          {
+            "tool": "manage-role",
+            "clio-run": true,
+            "args": {
+              "action": "delete",
+              "id": "{managerId}"
+            }
+          },
+          {
+            "tool": "execute-esq",
+            "clio-run": true,
+            "args": {
+              "query": {
+                "rootSchemaName": "SysAdminUnit",
+                "operationType": 0,
+                "rowCount": 1,
+                "columns": {
+                  "items": {
+                    "Id": {
+                      "expression": {
+                        "expressionType": 0,
+                        "columnPath": "Id"
+                      }
+                    }
+                  }
+                },
+                "filters": {
+                  "filterType": 6,
+                  "logicalOperation": 0,
+                  "isEnabled": true,
+                  "items": {
+                    "own": {
+                      "filterType": 1,
+                      "comparisonType": 3,
+                      "isEnabled": true,
+                      "leftExpression": {
+                        "expressionType": 0,
+                        "columnPath": "Id"
+                      },
+                      "rightExpression": {
+                        "expressionType": 2,
+                        "parameter": {
+                          "dataValueType": 0,
+                          "value": "{guid3}"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "capture": {
+              "cleanupId": "$.rows[0].id"
+            }
+          },
+          {
+            "tool": "manage-role",
+            "clio-run": true,
+            "args": {
+              "action": "delete",
+              "id": "{cleanupId}"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "read-back",
+        "label": "find managers group",
+        "tool": "execute-esq",
+        "clio-run": true,
+        "args": {
+          "query": {
+            "rootSchemaName": "SysAdminUnit",
+            "operationType": 0,
+            "rowCount": 1,
+            "columns": {
+              "items": {
+                "Id": {
+                  "expression": {
+                    "expressionType": 0,
+                    "columnPath": "Id"
+                  }
+                }
+              }
+            },
+            "filters": {
+              "filterType": 6,
+              "logicalOperation": 0,
+              "isEnabled": true,
+              "items": {
+                "own": {
+                  "filterType": 1,
+                  "comparisonType": 3,
+                  "isEnabled": true,
+                  "leftExpression": {
+                    "expressionType": 0,
+                    "columnPath": "ParentRole"
+                  },
+                  "rightExpression": {
+                    "expressionType": 2,
+                    "parameter": {
+                      "dataValueType": 0,
+                      "value": "{guid3}"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "capture": {
+          "managerId": "$.rows[0].id"
+        }
+      },
+      {
+        "kind": "read-back",
+        "label": "ensure manager",
+        "tool": "manage-role",
+        "args": {
+          "action": "ensure-manager",
+          "parent-id": "{guid3}"
+        },
+        "clio-run": true
+      },
+      {
+        "kind": "write",
+        "label": "add functional",
+        "tool": "manage-role",
+        "clio-run": true,
+        "args": {
+          "action": "add-functional",
+          "id": "{guid3}",
+          "functional-id": "{guid1}"
+        },
+        "known-differences": [
+          "$.executionlogmessages[0].value"
+        ],
+        "why": "The answer holds the row Creatio just made, whose Id it generates per side; the read-back after capturing that Id compares the rest."
+      },
+      {
+        "kind": "read-back",
+        "label": "find association",
+        "tool": "execute-esq",
+        "clio-run": true,
+        "args": {
+          "query": {
+            "rootSchemaName": "SysFuncRoleInOrgRole",
+            "operationType": 0,
+            "rowCount": 1,
+            "columns": {
+              "items": {
+                "Id": {
+                  "expression": {
+                    "expressionType": 0,
+                    "columnPath": "Id"
+                  }
+                }
+              }
+            },
+            "filters": {
+              "filterType": 6,
+              "logicalOperation": 0,
+              "isEnabled": true,
+              "items": {
+                "own": {
+                  "filterType": 1,
+                  "comparisonType": 3,
+                  "isEnabled": true,
+                  "leftExpression": {
+                    "expressionType": 0,
+                    "columnPath": "OrgRole"
+                  },
+                  "rightExpression": {
+                    "expressionType": 2,
+                    "parameter": {
+                      "dataValueType": 0,
+                      "value": "{guid3}"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "capture": {
+          "associationId": "$.rows[0].id"
+        }
+      },
+      {
+        "kind": "read-back",
+        "label": "functional roles",
+        "tool": "inspect-role",
+        "args": {
+          "action": "functional-roles",
+          "id": "{guid3}"
+        }
+      },
+      {
+        "kind": "write",
+        "label": "remove functional",
+        "tool": "manage-role",
+        "clio-run": true,
+        "args": {
+          "action": "remove-functional",
+          "id": "{guid3}",
+          "functional-id": "{guid1}"
+        }
+      },
+      {
+        "kind": "write",
+        "label": "create ip rule",
+        "tool": "manage-access",
+        "clio-run": true,
+        "args": {
+          "action": "ip-create",
+          "id": "{guid2}",
+          "unit-id": "{guid1}",
+          "begin-ip": "10.250.0.1",
+          "end-ip": "10.250.0.9"
+        },
+        "creates": "UsrParity{run}{side}Ip"
+      },
+      {
+        "kind": "cleanup",
+        "for": "UsrParity{run}{side}Ip",
+        "server": "clio",
+        "calls": [
+          {
+            "tool": "execute-esq",
+            "clio-run": true,
+            "args": {
+              "query": {
+                "rootSchemaName": "SysAdminUnitIPRange",
+                "operationType": 0,
+                "rowCount": 1,
+                "columns": {
+                  "items": {
+                    "Id": {
+                      "expression": {
+                        "expressionType": 0,
+                        "columnPath": "Id"
+                      }
+                    }
+                  }
+                },
+                "filters": {
+                  "filterType": 6,
+                  "logicalOperation": 0,
+                  "isEnabled": true,
+                  "items": {
+                    "own": {
+                      "filterType": 1,
+                      "comparisonType": 3,
+                      "isEnabled": true,
+                      "leftExpression": {
+                        "expressionType": 0,
+                        "columnPath": "Id"
+                      },
+                      "rightExpression": {
+                        "expressionType": 2,
+                        "parameter": {
+                          "dataValueType": 0,
+                          "value": "{guid2}"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "capture": {
+              "cleanupId": "$.rows[0].id"
+            }
+          },
+          {
+            "tool": "manage-access",
+            "clio-run": true,
+            "args": {
+              "action": "ip-delete",
+              "id": "{cleanupId}",
+              "unit-id": "{guid1}"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "write",
+        "label": "update ip rule",
+        "tool": "manage-access",
+        "clio-run": true,
+        "args": {
+          "action": "ip-update",
+          "id": "{guid2}",
+          "unit-id": "{guid1}",
+          "begin-ip": "10.250.0.1",
+          "end-ip": "10.250.0.20"
+        }
+      },
+      {
+        "kind": "read-back",
+        "label": "ip rules",
+        "tool": "inspect-access",
+        "args": {
+          "action": "ip-list",
+          "unit-id": "{guid1}"
+        }
+      },
+      {
+        "kind": "write",
+        "label": "delete ip rule",
+        "tool": "manage-access",
+        "clio-run": true,
+        "args": {
+          "action": "ip-delete",
+          "id": "{guid2}",
+          "unit-id": "{guid1}"
+        }
+      },
+      {
+        "kind": "write",
+        "label": "grant operation",
+        "tool": "manage-access",
+        "clio-run": true,
+        "args": {
+          "action": "grant-operation",
+          "operation-id": "23394dfa-23ce-4600-8672-d9315af810a2",
+          "unit-id": "{guid1}"
+        },
+        "creates": "UsrParity{run}{side}Grant",
+        "known-differences": [
+          "$.executionlogmessages[0].value"
+        ],
+        "why": "The answer holds the row Creatio just made, whose Id it generates per side; the read-back after capturing that Id compares the rest."
+      },
+      {
+        "kind": "cleanup",
+        "for": "UsrParity{run}{side}Grant",
+        "server": "clio",
+        "calls": [
+          {
+            "tool": "execute-esq",
+            "clio-run": true,
+            "args": {
+              "query": {
+                "rootSchemaName": "SysAdminOperationGrantee",
+                "operationType": 0,
+                "rowCount": 1,
+                "columns": {
+                  "items": {
+                    "Id": {
+                      "expression": {
+                        "expressionType": 0,
+                        "columnPath": "Id"
+                      }
+                    }
+                  }
+                },
+                "filters": {
+                  "filterType": 6,
+                  "logicalOperation": 0,
+                  "isEnabled": true,
+                  "items": {
+                    "own": {
+                      "filterType": 1,
+                      "comparisonType": 3,
+                      "isEnabled": true,
+                      "leftExpression": {
+                        "expressionType": 0,
+                        "columnPath": "SysAdminUnit"
+                      },
+                      "rightExpression": {
+                        "expressionType": 2,
+                        "parameter": {
+                          "dataValueType": 0,
+                          "value": "{guid1}"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "capture": {
+              "cleanupId": "$.rows[0].id"
+            }
+          },
+          {
+            "tool": "manage-access",
+            "clio-run": true,
+            "args": {
+              "action": "revoke-operation",
+              "operation-id": "23394dfa-23ce-4600-8672-d9315af810a2",
+              "unit-id": "{guid1}"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "read-back",
+        "label": "find grant",
+        "tool": "execute-esq",
+        "clio-run": true,
+        "args": {
+          "query": {
+            "rootSchemaName": "SysAdminOperationGrantee",
+            "operationType": 0,
+            "rowCount": 1,
+            "columns": {
+              "items": {
+                "Id": {
+                  "expression": {
+                    "expressionType": 0,
+                    "columnPath": "Id"
+                  }
+                }
+              }
+            },
+            "filters": {
+              "filterType": 6,
+              "logicalOperation": 0,
+              "isEnabled": true,
+              "items": {
+                "own": {
+                  "filterType": 1,
+                  "comparisonType": 3,
+                  "isEnabled": true,
+                  "leftExpression": {
+                    "expressionType": 0,
+                    "columnPath": "SysAdminUnit"
+                  },
+                  "rightExpression": {
+                    "expressionType": 2,
+                    "parameter": {
+                      "dataValueType": 0,
+                      "value": "{guid1}"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "capture": {
+          "grantId": "$.rows[0].id"
+        }
+      },
+      {
+        "kind": "write",
+        "label": "deny operation",
+        "tool": "manage-access",
+        "clio-run": true,
+        "args": {
+          "action": "deny-operation",
+          "operation-id": "23394dfa-23ce-4600-8672-d9315af810a2",
+          "unit-id": "{guid1}"
+        },
+        "known-differences": [
+          "$.executionlogmessages[0].value"
+        ],
+        "why": "Position is the grant's priority among every grant of the operation; both sides' grants exist at once, so their positions differ by one. The grant row itself is compared through its captured Id."
+      },
+      {
+        "kind": "write",
+        "label": "revoke operation",
+        "tool": "manage-access",
+        "clio-run": true,
+        "args": {
+          "action": "revoke-operation",
+          "operation-id": "23394dfa-23ce-4600-8672-d9315af810a2",
+          "unit-id": "{guid1}"
+        }
+      },
+      {
+        "kind": "read-back",
+        "label": "role licenses",
+        "tool": "inspect-license",
+        "args": {
+          "action": "role-list",
+          "role-id": "{guid1}"
+        }
+      },
+      {
+        "kind": "write",
+        "label": "delete managers group",
+        "tool": "manage-role",
+        "clio-run": true,
+        "args": {
+          "action": "delete",
+          "id": "{managerId}"
+        }
+      },
+      {
+        "kind": "write",
+        "label": "delete division",
+        "tool": "manage-role",
+        "clio-run": true,
+        "args": {
+          "action": "delete",
+          "id": "{guid3}"
+        }
+      },
+      {
+        "kind": "write",
+        "label": "delete role",
+        "tool": "manage-role",
+        "clio-run": true,
+        "args": {
+          "action": "delete",
+          "id": "{guid1}"
+        }
+      }
+    ]
+  },
+  {
+    "label": "manage-user lifecycle on an account this run creates",
+    "why": "Needs CLIO_ADMIN_PASSWORD_T12 in the harness's environment (both servers inherit it; clio and this server read the password from that variable, never from the arguments). The account gets its own contact (made through clio's odata-create), joins and leaves a role this run creates, receives and loses a delegation from that role, is deactivated, reactivated, unlocked, given a new password and deleted. No license is assigned: the stand lists no license packages.",
+    "steps": [
+      {
+        "kind": "write",
+        "label": "contact",
+        "tool": "odata-create",
+        "clio-run": true,
+        "server": "clio",
+        "creates": "UsrParity{run}{side}Contact",
+        "args": {
+          "entity": "Contact",
+          "rows": [
+            {
+              "Name": "UsrParity{run}{side}Contact"
+            }
+          ]
+        },
+        "capture": {
+          "contactId": "$.results[0].id"
+        }
+      },
+      {
+        "kind": "cleanup",
+        "for": "UsrParity{run}{side}Contact",
+        "server": "clio",
+        "calls": [
+          {
+            "tool": "execute-esq",
+            "clio-run": true,
+            "args": {
+              "query": {
+                "rootSchemaName": "Contact",
+                "operationType": 0,
+                "rowCount": 1,
+                "columns": {
+                  "items": {
+                    "Id": {
+                      "expression": {
+                        "expressionType": 0,
+                        "columnPath": "Id"
+                      }
+                    }
+                  }
+                },
+                "filters": {
+                  "filterType": 6,
+                  "logicalOperation": 0,
+                  "isEnabled": true,
+                  "items": {
+                    "own": {
+                      "filterType": 1,
+                      "comparisonType": 3,
+                      "isEnabled": true,
+                      "leftExpression": {
+                        "expressionType": 0,
+                        "columnPath": "Name"
+                      },
+                      "rightExpression": {
+                        "expressionType": 2,
+                        "parameter": {
+                          "dataValueType": 1,
+                          "value": "UsrParity{run}{side}Contact"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "capture": {
+              "cleanupId": "$.rows[0].id"
+            }
+          },
+          {
+            "tool": "execute-dataservice-batch",
+            "clio-run": true,
+            "args": {
+              "operations": [
+                {
+                  "operation": "delete",
+                  "schema-name": "Contact",
+                  "record-id": "{cleanupId}"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "kind": "write",
+        "label": "create role",
+        "tool": "manage-role",
+        "clio-run": true,
+        "args": {
+          "action": "create",
+          "id": "{guid2}",
+          "name": "UsrParity{run}{side}URole",
+          "type": 6,
+          "parent-id": "a29a3ba5-4b0d-de11-9a51-005056c00008"
+        },
+        "creates": "UsrParity{run}{side}URole"
+      },
+      {
+        "kind": "cleanup",
+        "for": "UsrParity{run}{side}URole",
+        "server": "clio",
+        "calls": [
+          {
+            "tool": "execute-esq",
+            "clio-run": true,
+            "args": {
+              "query": {
+                "rootSchemaName": "SysAdminUnit",
+                "operationType": 0,
+                "rowCount": 1,
+                "columns": {
+                  "items": {
+                    "Id": {
+                      "expression": {
+                        "expressionType": 0,
+                        "columnPath": "Id"
+                      }
+                    }
+                  }
+                },
+                "filters": {
+                  "filterType": 6,
+                  "logicalOperation": 0,
+                  "isEnabled": true,
+                  "items": {
+                    "own": {
+                      "filterType": 1,
+                      "comparisonType": 3,
+                      "isEnabled": true,
+                      "leftExpression": {
+                        "expressionType": 0,
+                        "columnPath": "Id"
+                      },
+                      "rightExpression": {
+                        "expressionType": 2,
+                        "parameter": {
+                          "dataValueType": 0,
+                          "value": "{guid2}"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "capture": {
+              "cleanupId": "$.rows[0].id"
+            }
+          },
+          {
+            "tool": "manage-role",
+            "clio-run": true,
+            "args": {
+              "action": "delete",
+              "id": "{cleanupId}"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "write",
+        "label": "create user",
+        "tool": "manage-user",
+        "clio-run": true,
+        "args": {
+          "action": "create",
+          "id": "{guid1}",
+          "user-login": "UsrParity{run}{side}User",
+          "contact-id": "{contactId}",
+          "password-env": "CLIO_ADMIN_PASSWORD_T12"
+        },
+        "creates": "UsrParity{run}{side}User"
+      },
+      {
+        "kind": "cleanup",
+        "for": "UsrParity{run}{side}User",
+        "server": "clio",
+        "calls": [
+          {
+            "tool": "execute-esq",
+            "clio-run": true,
+            "args": {
+              "query": {
+                "rootSchemaName": "SysAdminUnit",
+                "operationType": 0,
+                "rowCount": 1,
+                "columns": {
+                  "items": {
+                    "Id": {
+                      "expression": {
+                        "expressionType": 0,
+                        "columnPath": "Id"
+                      }
+                    }
+                  }
+                },
+                "filters": {
+                  "filterType": 6,
+                  "logicalOperation": 0,
+                  "isEnabled": true,
+                  "items": {
+                    "own": {
+                      "filterType": 1,
+                      "comparisonType": 3,
+                      "isEnabled": true,
+                      "leftExpression": {
+                        "expressionType": 0,
+                        "columnPath": "Id"
+                      },
+                      "rightExpression": {
+                        "expressionType": 2,
+                        "parameter": {
+                          "dataValueType": 0,
+                          "value": "{guid1}"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "capture": {
+              "cleanupId": "$.rows[0].id"
+            }
+          },
+          {
+            "tool": "manage-user",
+            "clio-run": true,
+            "args": {
+              "action": "delete",
+              "id": "{cleanupId}"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "read-back",
+        "label": "list user",
+        "tool": "inspect-user",
+        "args": {
+          "action": "list",
+          "id": "{guid1}"
+        }
+      },
+      {
+        "kind": "write",
+        "label": "deactivate",
+        "tool": "manage-user",
+        "clio-run": true,
+        "args": {
+          "action": "update",
+          "id": "{guid1}",
+          "active": false
+        }
+      },
+      {
+        "kind": "write",
+        "label": "reactivate",
+        "tool": "manage-user",
+        "clio-run": true,
+        "args": {
+          "action": "update",
+          "id": "{guid1}",
+          "active": true
+        }
+      },
+      {
+        "kind": "read-back",
+        "label": "lock status",
+        "tool": "inspect-user",
+        "args": {
+          "action": "lock-status",
+          "id": "{guid1}"
+        }
+      },
+      {
+        "kind": "write",
+        "label": "unlock",
+        "tool": "manage-user",
+        "clio-run": true,
+        "args": {
+          "action": "unlock",
+          "id": "{guid1}"
+        }
+      },
+      {
+        "kind": "write",
+        "label": "password",
+        "tool": "manage-user",
+        "clio-run": true,
+        "args": {
+          "action": "password",
+          "id": "{guid1}",
+          "password-env": "CLIO_ADMIN_PASSWORD_T12",
+          "force-change-password": false
+        }
+      },
+      {
+        "kind": "write",
+        "label": "add member",
+        "tool": "manage-role",
+        "clio-run": true,
+        "args": {
+          "action": "add-member",
+          "id": "{guid2}",
+          "user-id": "{guid1}"
+        },
+        "known-differences": [
+          "$.executionlogmessages[0].value"
+        ],
+        "why": "The answer holds the row Creatio just made, whose Id it generates per side; the read-back after capturing that Id compares the rest."
+      },
+      {
+        "kind": "read-back",
+        "label": "find membership",
+        "tool": "execute-esq",
+        "clio-run": true,
+        "args": {
+          "query": {
+            "rootSchemaName": "SysUserInRole",
+            "operationType": 0,
+            "rowCount": 1,
+            "columns": {
+              "items": {
+                "Id": {
+                  "expression": {
+                    "expressionType": 0,
+                    "columnPath": "Id"
+                  }
+                }
+              }
+            },
+            "filters": {
+              "filterType": 6,
+              "logicalOperation": 0,
+              "isEnabled": true,
+              "items": {
+                "own": {
+                  "filterType": 1,
+                  "comparisonType": 3,
+                  "isEnabled": true,
+                  "leftExpression": {
+                    "expressionType": 0,
+                    "columnPath": "SysUser"
+                  },
+                  "rightExpression": {
+                    "expressionType": 2,
+                    "parameter": {
+                      "dataValueType": 0,
+                      "value": "{guid1}"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "capture": {
+          "membershipId": "$.rows[0].id"
+        }
+      },
+      {
+        "kind": "read-back",
+        "label": "members",
+        "tool": "inspect-role",
+        "args": {
+          "action": "members",
+          "id": "{guid2}"
+        }
+      },
+      {
+        "kind": "read-back",
+        "label": "memberships",
+        "tool": "inspect-role",
+        "args": {
+          "action": "memberships",
+          "user-id": "{guid1}"
+        }
+      },
+      {
+        "kind": "write",
+        "label": "remove member",
+        "tool": "manage-role",
+        "clio-run": true,
+        "args": {
+          "action": "remove-member",
+          "id": "{guid2}",
+          "user-id": "{guid1}"
+        }
+      },
+      {
+        "kind": "write",
+        "label": "delegate",
+        "tool": "manage-access",
+        "clio-run": true,
+        "args": {
+          "action": "delegate",
+          "grantor-id": "{guid2}",
+          "unit-id": "{guid1}"
+        },
+        "known-differences": [
+          "$.executionlogmessages[0].value"
+        ],
+        "why": "The answer holds the row Creatio just made, whose Id it generates per side; the read-back after capturing that Id compares the rest."
+      },
+      {
+        "kind": "read-back",
+        "label": "find delegation",
+        "tool": "execute-esq",
+        "clio-run": true,
+        "args": {
+          "query": {
+            "rootSchemaName": "SysAdminUnitGrantedRight",
+            "operationType": 0,
+            "rowCount": 1,
+            "columns": {
+              "items": {
+                "Id": {
+                  "expression": {
+                    "expressionType": 0,
+                    "columnPath": "Id"
+                  }
+                }
+              }
+            },
+            "filters": {
+              "filterType": 6,
+              "logicalOperation": 0,
+              "isEnabled": true,
+              "items": {
+                "own": {
+                  "filterType": 1,
+                  "comparisonType": 3,
+                  "isEnabled": true,
+                  "leftExpression": {
+                    "expressionType": 0,
+                    "columnPath": "GranteeSysAdminUnit"
+                  },
+                  "rightExpression": {
+                    "expressionType": 2,
+                    "parameter": {
+                      "dataValueType": 0,
+                      "value": "{guid1}"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "capture": {
+          "delegationId": "$.rows[0].id"
+        }
+      },
+      {
+        "kind": "read-back",
+        "label": "delegations",
+        "tool": "inspect-access",
+        "args": {
+          "action": "delegations",
+          "unit-id": "{guid1}"
+        }
+      },
+      {
+        "kind": "write",
+        "label": "revoke delegation",
+        "tool": "manage-access",
+        "clio-run": true,
+        "args": {
+          "action": "revoke-delegation",
+          "grantor-id": "{guid2}",
+          "unit-id": "{guid1}"
+        }
+      },
+      {
+        "kind": "write",
+        "label": "delete user",
+        "tool": "manage-user",
+        "clio-run": true,
+        "args": {
+          "action": "delete",
+          "id": "{guid1}"
+        }
+      },
+      {
+        "kind": "write",
+        "label": "delete role",
+        "tool": "manage-role",
+        "clio-run": true,
+        "args": {
+          "action": "delete",
+          "id": "{guid2}"
+        }
+      }
+    ]
+  }
+]

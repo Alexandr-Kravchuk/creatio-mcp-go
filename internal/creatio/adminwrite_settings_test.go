@@ -167,14 +167,14 @@ func adminWriteFilterValue(query map[string]any, column string) string {
 	return ""
 }
 
-func adminWriteString(value string) *string { return &value }
-func adminWriteFlag(value bool) *bool       { return &value }
+func adminWriteStr(value string) *string { return &value }
+func adminWriteFlag(value bool) *bool    { return &value }
 
 func TestCreateSysSettingInsertsThenAssignsTheValue(t *testing.T) {
 	stand, client := newAdminWriteFakeStand(t)
 	result := client.CreateSysSetting(context.Background(), AdminWriteCreateSetting{
-		Code: adminWriteString("UsrParityExample"), Name: adminWriteString("Example"), ValueTypeName: adminWriteString("ShortText"),
-		Description: adminWriteString("own setting"), Value: adminWriteString("first")})
+		Code: adminWriteStr("UsrParityExample"), Name: adminWriteStr("Example"), ValueTypeName: adminWriteStr("ShortText"),
+		Description: adminWriteStr("own setting"), Value: adminWriteStr("first")})
 	if !result.Success || result.Value == nil || *result.Value != "first" || result.Error != "" || result.Warning != "" {
 		t.Fatalf("create = %#v", result)
 	}
@@ -195,8 +195,8 @@ func TestCreateSysSettingInsertsThenAssignsTheValue(t *testing.T) {
 func TestCreateSysSettingAliasesAndLookupReference(t *testing.T) {
 	stand, client := newAdminWriteFakeStand(t)
 	stand.schemas["Contact"] = "16BE3651-8FE2-4159-8DD0-A803D4683DD3"
-	result := client.CreateSysSetting(context.Background(), AdminWriteCreateSetting{Code: adminWriteString("UsrParityLookup"),
-		Name: adminWriteString("Lookup"), ValueTypeName: adminWriteString("Lookup"), ReferenceSchemaName: adminWriteString("Contact"),
+	result := client.CreateSysSetting(context.Background(), AdminWriteCreateSetting{Code: adminWriteStr("UsrParityLookup"),
+		Name: adminWriteStr("Lookup"), ValueTypeName: adminWriteStr("Lookup"), ReferenceSchemaName: adminWriteStr("Contact"),
 		IsCacheable: adminWriteFlag(false), IsPersonal: adminWriteFlag(true)})
 	if !result.Success || result.Value != nil || result.ValueTypeName != "Lookup" {
 		t.Fatalf("create = %#v", result)
@@ -206,8 +206,8 @@ func TestCreateSysSettingAliasesAndLookupReference(t *testing.T) {
 		t.Errorf("insert body = %s", got)
 	}
 	stand, client = newAdminWriteFakeStand(t)
-	result = client.CreateSysSetting(context.Background(), AdminWriteCreateSetting{Code: adminWriteString("UsrParityMoney"),
-		Name: adminWriteString("Money"), ValueTypeName: adminWriteString("Currency")})
+	result = client.CreateSysSetting(context.Background(), AdminWriteCreateSetting{Code: adminWriteStr("UsrParityMoney"),
+		Name: adminWriteStr("Money"), ValueTypeName: adminWriteStr("Currency")})
 	if !result.Success || result.ValueTypeName != "Currency" || !strings.HasPrefix(stand.body("InsertSysSettingRequest"), `{"valueTypeName":"Money"`) {
 		t.Fatalf("currency create = %#v, body %s", result, stand.body("InsertSysSettingRequest"))
 	}
@@ -216,16 +216,16 @@ func TestCreateSysSettingAliasesAndLookupReference(t *testing.T) {
 func TestCreateSysSettingRefusalsAndPartialSuccess(t *testing.T) {
 	stand, client := newAdminWriteFakeStand(t)
 	stand.insertAnswer = `{"success":false,"id":"00000000-0000-0000-0000-000000000000","responseStatus":{"ErrorCode":"x","Message":"Code UsrParityTaken already exists"}}`
-	result := client.CreateSysSetting(context.Background(), AdminWriteCreateSetting{Code: adminWriteString("UsrParityTaken"),
-		Name: adminWriteString("Taken"), ValueTypeName: adminWriteString("Text")})
+	result := client.CreateSysSetting(context.Background(), AdminWriteCreateSetting{Code: adminWriteStr("UsrParityTaken"),
+		Name: adminWriteStr("Taken"), ValueTypeName: adminWriteStr("Text")})
 	wantCause := "[untrusted-source-text begin] Code UsrParityTaken already exists [untrusted-source-text end]"
 	if result.Success || result.ErrorCategory != "ProviderFailure" || result.Cause != wantCause || result.Error != "Failed creating sys-setting: "+wantCause {
 		t.Fatalf("refused create = %#v", result)
 	}
 
 	stand, client = newAdminWriteFakeStand(t)
-	result = client.CreateSysSetting(context.Background(), AdminWriteCreateSetting{Code: adminWriteString("UsrParityInt"),
-		Name: adminWriteString("Int"), ValueTypeName: adminWriteString("Integer"), Value: adminWriteString("forty")})
+	result = client.CreateSysSetting(context.Background(), AdminWriteCreateSetting{Code: adminWriteStr("UsrParityInt"),
+		Name: adminWriteStr("Int"), ValueTypeName: adminWriteStr("Integer"), Value: adminWriteStr("forty")})
 	if !result.Success || result.Warning != "Sys-setting was created, but the initial value could not be applied." || result.Value != nil {
 		t.Fatalf("partial create = %#v", result)
 	}
@@ -237,13 +237,13 @@ func TestCreateSysSettingRefusalsAndPartialSuccess(t *testing.T) {
 		input AdminWriteCreateSetting
 		want  string
 	}{
-		{AdminWriteCreateSetting{Name: adminWriteString("x"), ValueTypeName: adminWriteString("Text")}, "code is required."},
-		{AdminWriteCreateSetting{Code: adminWriteString("x"), ValueTypeName: adminWriteString("Text")}, "name is required."},
-		{AdminWriteCreateSetting{Code: adminWriteString("x"), Name: adminWriteString(" ")}, "name is required."},
-		{AdminWriteCreateSetting{Code: adminWriteString("x"), Name: adminWriteString("y")}, "value-type-name is required."},
-		{AdminWriteCreateSetting{Code: adminWriteString("x"), Name: adminWriteString("y"), ValueTypeName: adminWriteString("text")},
+		{AdminWriteCreateSetting{Name: adminWriteStr("x"), ValueTypeName: adminWriteStr("Text")}, "code is required."},
+		{AdminWriteCreateSetting{Code: adminWriteStr("x"), ValueTypeName: adminWriteStr("Text")}, "name is required."},
+		{AdminWriteCreateSetting{Code: adminWriteStr("x"), Name: adminWriteStr(" ")}, "name is required."},
+		{AdminWriteCreateSetting{Code: adminWriteStr("x"), Name: adminWriteStr("y")}, "value-type-name is required."},
+		{AdminWriteCreateSetting{Code: adminWriteStr("x"), Name: adminWriteStr("y"), ValueTypeName: adminWriteStr("text")},
 			"Unsupported value-type-name 'text'. Allowed values: Text, ShortText, MediumText, LongText, SecureText, MaxSizeText, Boolean, DateTime, Date, Time, Integer, Money, Float, Lookup, Currency, Decimal, Binary."},
-		{AdminWriteCreateSetting{Code: adminWriteString("x"), Name: adminWriteString("y"), ValueTypeName: adminWriteString("Lookup")},
+		{AdminWriteCreateSetting{Code: adminWriteStr("x"), Name: adminWriteStr("y"), ValueTypeName: adminWriteStr("Lookup")},
 			"reference-schema-name is required when value-type-name is 'Lookup'."},
 	} {
 		stand, client = newAdminWriteFakeStand(t)
@@ -283,18 +283,18 @@ func TestUpdateSysSettingConvertsValuesByTheExistingType(t *testing.T) {
 func TestUpdateSysSettingRefusalsAndFailures(t *testing.T) {
 	stand, client := newAdminWriteFakeStand(t)
 	stand.settings["UsrCount"] = &adminWriteFakeSetting{id: "11111111-1111-1111-1111-111111111111", valueType: "Integer"}
-	result := client.UpdateSysSetting(context.Background(), AdminWriteUpdateSetting{Code: adminWriteString("UsrCount"), Value: adminWriteString("1.5")})
+	result := client.UpdateSysSetting(context.Background(), AdminWriteUpdateSetting{Code: adminWriteStr("UsrCount"), Value: adminWriteStr("1.5")})
 	if result.Success || result.Error != adminWriteRefusedUpdateError || result.Cause != adminWriteRefusedUpdateCause || result.ErrorCategory != "ProviderFailure" {
 		t.Fatalf("refused update = %#v", result)
 	}
 
 	stand.saveAnswer = `<html><body>gateway</body></html>`
-	result = client.UpdateSysSetting(context.Background(), AdminWriteUpdateSetting{Code: adminWriteString("UsrCount"), Value: adminWriteString("2")})
+	result = client.UpdateSysSetting(context.Background(), AdminWriteUpdateSetting{Code: adminWriteStr("UsrCount"), Value: adminWriteStr("2")})
 	if result.ErrorCategory != "Network" || result.Error != "Creatio returned a non-JSON response updating sys-setting." {
 		t.Fatalf("non-JSON update = %#v", result)
 	}
 	stand.saveAnswer = `[1]`
-	result = client.UpdateSysSetting(context.Background(), AdminWriteUpdateSetting{Code: adminWriteString("UsrCount"), Value: adminWriteString("2")})
+	result = client.UpdateSysSetting(context.Background(), AdminWriteUpdateSetting{Code: adminWriteStr("UsrCount"), Value: adminWriteStr("2")})
 	if result.ErrorCategory != "Network" || result.Error != "Creatio returned a response of an unexpected shape updating sys-setting." {
 		t.Fatalf("wrong-shape update = %#v", result)
 	}
@@ -304,9 +304,9 @@ func TestUpdateSysSettingRefusalsAndFailures(t *testing.T) {
 		input AdminWriteUpdateSetting
 		want  string
 	}{
-		{AdminWriteUpdateSetting{Value: adminWriteString("x")}, "code is required."},
-		{AdminWriteUpdateSetting{Code: adminWriteString("UsrCount")}, "value is required (supply 'value' or 'value-file-path')."},
-		{AdminWriteUpdateSetting{Code: adminWriteString("UsrCount"), Value: adminWriteString("x"), ValueFilePath: adminWriteString("/tmp/x")},
+		{AdminWriteUpdateSetting{Value: adminWriteStr("x")}, "code is required."},
+		{AdminWriteUpdateSetting{Code: adminWriteStr("UsrCount")}, "value is required (supply 'value' or 'value-file-path')."},
+		{AdminWriteUpdateSetting{Code: adminWriteStr("UsrCount"), Value: adminWriteStr("x"), ValueFilePath: adminWriteStr("/tmp/x")},
 			"Provide either 'value' or 'value-file-path', not both."},
 	} {
 		result = client.UpdateSysSetting(context.Background(), c.input)
@@ -337,26 +337,26 @@ func TestUpdateSysSettingUploadsAFileUnderTheFilePolicy(t *testing.T) {
 	stand.settings["FileExtensionsDenyList"] = &adminWriteFakeSetting{id: "55555555-5555-5555-5555-555555555555", valueType: "MaxSizeText",
 		value: map[string]any{"TextValue": ".exe, .bat"}}
 
-	result := client.UpdateSysSetting(context.Background(), AdminWriteUpdateSetting{Code: adminWriteString("UsrLogo"), ValueFilePath: &png})
+	result := client.UpdateSysSetting(context.Background(), AdminWriteUpdateSetting{Code: adminWriteStr("UsrLogo"), ValueFilePath: &png})
 	if !result.Success {
 		t.Fatalf("upload = %#v", result)
 	}
 	if got := stand.body("PostSysSettingsValues"); got != `{"isPersonal":false,"sysSettingsValues":{"UsrLogo":"AQID"}}` {
 		t.Errorf("upload body = %s", got)
 	}
-	result = client.UpdateSysSetting(context.Background(), AdminWriteUpdateSetting{Code: adminWriteString("UsrLogo"), ValueFilePath: &exe})
+	result = client.UpdateSysSetting(context.Background(), AdminWriteUpdateSetting{Code: adminWriteStr("UsrLogo"), ValueFilePath: &exe})
 	if result.Success || result.Error != "Cannot upload 'tool.exe': files with extension '.exe' are not allowed in this environment (DenyList file-security policy)." {
 		t.Errorf("denied upload = %#v", result)
 	}
-	result = client.UpdateSysSetting(context.Background(), AdminWriteUpdateSetting{Code: adminWriteString("UsrLogo"), Value: adminWriteString("AQID")})
+	result = client.UpdateSysSetting(context.Background(), AdminWriteUpdateSetting{Code: adminWriteStr("UsrLogo"), Value: adminWriteStr("AQID")})
 	if result.Success || !strings.HasPrefix(result.Error, "Sys-setting 'UsrLogo' is Binary and this environment has an active file-security policy.") {
 		t.Errorf("inline binary = %#v", result)
 	}
-	result = client.UpdateSysSetting(context.Background(), AdminWriteUpdateSetting{Code: adminWriteString("UsrText"), ValueFilePath: &png})
+	result = client.UpdateSysSetting(context.Background(), AdminWriteUpdateSetting{Code: adminWriteStr("UsrText"), ValueFilePath: &png})
 	if result.Success || result.Error != "Cannot upload a file to sys-setting 'UsrText': it is type 'Text', not Binary. A file value can only be written to a Binary setting." {
 		t.Errorf("file on text = %#v", result)
 	}
-	result = client.UpdateSysSetting(context.Background(), AdminWriteUpdateSetting{Code: adminWriteString("UsrMissing"), ValueFilePath: &png})
+	result = client.UpdateSysSetting(context.Background(), AdminWriteUpdateSetting{Code: adminWriteStr("UsrMissing"), ValueFilePath: &png})
 	if result.Success || !strings.HasPrefix(result.Error, "Sys-setting 'UsrMissing' was not found or is not readable by the current user.") {
 		t.Errorf("file on missing = %#v", result)
 	}
