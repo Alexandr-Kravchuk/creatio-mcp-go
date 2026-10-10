@@ -116,6 +116,19 @@ class WriteHarnessTest(unittest.TestCase):
         self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
         self.assertEqual(self.stand()["_calls"].count("go:create-sys-setting"), 1)
 
+    def test_guid_placeholders_are_fresh_per_side_and_compared_as_templates(self):
+        scenario = json.loads(json.dumps(SCENARIO))
+        scenario[0]["steps"][0]["args"]["value"] = "{guid1}"
+        scenario[0]["steps"][1]["calls"][0]["args"]["note"] = "{guid1}"
+        scenario[0]["steps"][3]["equals"] = "{guid1}"
+        result = self.run_harness(scenarios=scenario)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        notes = {record["side"]: record["cleanup"][0]["calls"][0]["args"]["note"]
+                 for record in self.ledger() if record["event"] == "create"}
+        self.assertEqual(sorted(notes), ["clio", "go"])
+        self.assertNotEqual(notes["clio"], notes["go"])
+        self.assertTrue(all(len(note) == 36 and note.count("-") == 4 for note in notes.values()))
+
     def test_variables_mode_gives_go_one_environment_and_no_name(self):
         result = self.run_harness("--go-env-mode=variables")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
@@ -221,7 +234,7 @@ class WriteHarnessTest(unittest.TestCase):
                                  "--run-id", "plan", "--scenarios", *scenarios],
                                 capture_output=True, text=True, env={**os.environ, "HOME": str(self.home)}, timeout=60)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertIn("skipped: create-sys-setting is not implemented", result.stdout)
+        self.assertIn("scenario create-sys-setting text, update, read back, remove\n", result.stdout)
         self.assertFalse(self.state.exists())
 
 
