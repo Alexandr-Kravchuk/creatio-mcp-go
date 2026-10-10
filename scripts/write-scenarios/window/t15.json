@@ -1,0 +1,188 @@
+[
+  {
+    "label": "compile-creatio of a run-named application package, then compile-status",
+    "why": "T15, window-only: a compile reloads the runtime for every user of the stand, so it runs only when no other agent uses it. Each side creates its own application (create-app makes the package), compiles that one package through its own server (RebuildPackage, waited until the compilation history settles) and reads its own compile-status. The log lines carry per-side package names and history rows, so only the exit codes and the status are compared.",
+    "steps": [
+      {
+        "kind": "write",
+        "label": "create-app",
+        "tool": "create-app",
+        "clio-run": true,
+        "creates": "UsrParity{run}{side}Cmp",
+        "args": {
+          "name": "UsrParity{run}{side}Cmp",
+          "code": "UsrParity{run}{side}Cmp",
+          "template-code": "AppFreedomUI",
+          "with-mobile-pages": false,
+          "description": "Created by scripts/compare-mcp-writes.py; safe to delete"
+        },
+        "capture": {"pkg": "$.package-name"}
+      },
+      {
+        "kind": "cleanup",
+        "for": "UsrParity{run}{side}Cmp",
+        "server": "own",
+        "calls": [{"tool": "delete-app", "clio-run": true, "settle-seconds": 60, "args": {"app-name": "UsrParity{run}{side}Cmp"}}]
+      },
+      {
+        "kind": "write",
+        "label": "compile-creatio package-name",
+        "tool": "compile-creatio",
+        "clio-run": true,
+        "settle-seconds": 30,
+        "args": {"package-name": "{pkg}"},
+        "known-differences": ["$.executionlogmessages", "$.correlationid"],
+        "why": "A package compile may answer in-progress (exit 0) after the response deadline (45 s on master, 150 s on 8.1.0.134); compile-status below carries the verdict."
+      },
+      {"kind": "expect", "step": "compile-creatio package-name", "path": "$.exitCode", "equals": 0},
+      {
+        "kind": "read-back",
+        "label": "compile-status",
+        "tool": "compile-status",
+        "retry-while": "\"running\"",
+        "retry-attempts": 60,
+        "retry-delay-seconds": 20,
+        "args": {},
+        "known-differences": ["$.operationid", "$.startedutc", "$.finishedutc", "$.messagetail"],
+        "why": "Each server reports its own operation; ids, times and the history lines differ."
+      },
+      {"kind": "expect", "step": "compile-status", "path": "$.status", "equals": "succeeded"}
+    ]
+  },
+  {
+    "label": "compile-creatio full compilation, then compile-status",
+    "why": "T15, window-only: a full compile (Rebuild) takes 3-20 minutes and reloads the runtime for everyone. Both sides compile the whole configuration one after the other; the second side's compile is refused by the platform while the first runs, so the operator runs this scenario alone and lets compile-status settle between the two sides. Nothing is created.",
+    "steps": [
+      {
+        "kind": "write",
+        "label": "compile-creatio full",
+        "tool": "compile-creatio",
+        "clio-run": true,
+        "args": {},
+        "known-differences": ["$.executionlogmessages", "$.correlationid"]
+      },
+      {"kind": "expect", "step": "compile-creatio full", "path": "$.exitCode", "equals": 0},
+      {
+        "kind": "read-back",
+        "label": "compile-status",
+        "tool": "compile-status",
+        "retry-while": "\"running\"",
+        "retry-attempts": 90,
+        "retry-delay-seconds": 20,
+        "args": {},
+        "known-differences": ["$.operationid", "$.startedutc", "$.finishedutc", "$.messagetail"]
+      },
+      {"kind": "expect", "step": "compile-status", "path": "$.status", "equals": "succeeded"}
+    ]
+  },
+  {
+    "label": "restart-by-environment-name with the readiness wait, then restart-status",
+    "why": "T15, window-only: restarts the application for every user. Each side restarts the stand through its own server; the answer is the restart request's own result once an authenticated DataService round-trip answers again, or an in-progress note after the response deadline, after which restart-status reports ready. Nothing is created.",
+    "steps": [
+      {
+        "kind": "write",
+        "label": "restart-by-environment-name",
+        "tool": "restart-by-environment-name",
+        "clio-run": true,
+        "clio-environment-key": "environmentName",
+        "settle-seconds": 30,
+        "args": {"waitTimeoutSeconds": 900},
+        "known-differences": ["$.executionlogmessages", "$.correlationid"]
+      },
+      {"kind": "expect", "step": "restart-by-environment-name", "path": "$.exitCode", "equals": 0},
+      {
+        "kind": "read-back",
+        "label": "restart-status",
+        "tool": "restart-status",
+        "retry-while": "\"running\"",
+        "retry-attempts": 60,
+        "retry-delay-seconds": 15,
+        "args": {},
+        "known-differences": ["$.operationid", "$.startedutc", "$.finishedutc"]
+      },
+      {"kind": "expect", "step": "restart-status", "path": "$.status", "equals": "ready"}
+    ]
+  },
+  {
+    "label": "restart-by-environment-name without waiting",
+    "why": "T15, window-only: the restart request alone (waitReady false) answers 'Done restart-web-app'. Run it after the previous scenario has settled.",
+    "steps": [
+      {
+        "kind": "write",
+        "label": "restart-by-environment-name waitReady false",
+        "tool": "restart-by-environment-name",
+        "clio-run": true,
+        "clio-environment-key": "environmentName",
+        "settle-seconds": 120,
+        "args": {"waitReady": false},
+        "known-differences": ["$.correlationid"]
+      },
+      {"kind": "expect", "step": "restart-by-environment-name waitReady false", "path": "$.exitCode", "equals": 0}
+    ]
+  },
+  {
+    "label": "pkg-to-file-system and pkg-to-db",
+    "why": "T15, window-only: both load every package between the configuration database and the file system of the whole stand. On a stand without file system development mode both sides answer the same 'disabled file design mode' failure (compared as is); with FSM on they synchronize, and the operator turns FSM on only for this window.",
+    "steps": [
+      {
+        "kind": "write",
+        "label": "pkg-to-file-system",
+        "tool": "pkg-to-file-system",
+        "clio-run": true,
+        "clio-environment-key": "environmentName",
+        "args": {},
+        "known-differences": ["$.correlationid"]
+      },
+      {
+        "kind": "write",
+        "label": "pkg-to-db",
+        "tool": "pkg-to-db",
+        "clio-run": true,
+        "clio-environment-key": "environmentName",
+        "args": {},
+        "known-differences": ["$.correlationid"]
+      }
+    ]
+  },
+  {
+    "label": "install-gate, then the installed cliogate",
+    "why": "T15, window-only: installs clio's bundled cliogate (this server reads it from the newest clio .NET tool) and restarts the application. Reinstalling the version already there is harmless but reloads the stand. The upload and installation log lines carry per-side timing, so only the exit codes and the read-back are compared.",
+    "steps": [
+      {
+        "kind": "write",
+        "label": "install-gate",
+        "tool": "install-gate",
+        "clio-run": true,
+        "settle-seconds": 180,
+        "args": {},
+        "known-differences": ["$.executionlogmessages", "$.correlationid"]
+      },
+      {"kind": "expect", "step": "install-gate", "path": "$.exitCode", "equals": 0},
+      {"kind": "read-back", "label": "list-packages cliogate", "tool": "list-packages", "args": {"filter": "cliogate"}}
+    ]
+  },
+  {
+    "label": "install-dashboards-migrator",
+    "why": "T15, window-only: installs clio's bundled CrtDashboardsMigratorApp (needs Creatio 8.3.1+), runs a configuration build and waits for the restart, then pings the package's own service. On an older stand both sides fail the outcome check the same way.",
+    "steps": [
+      {
+        "kind": "write",
+        "label": "install-dashboards-migrator",
+        "tool": "install-dashboards-migrator",
+        "clio-run": true,
+        "settle-seconds": 60,
+        "args": {},
+        "known-differences": ["$.executionlogmessages", "$.correlationid"]
+      },
+      {"kind": "read-back", "label": "list-packages CrtDashboardsMigratorApp", "tool": "list-packages", "args": {"filter": "CrtDashboardsMigratorApp"}}
+    ]
+  },
+  {
+    "label": "dataforge-update and dataforge-initialize",
+    "why": "T15, window-only: both schedule Data Forge index work for the whole stand (Creatio 10.0.0+). The answers carry no per-side value.",
+    "steps": [
+      {"kind": "write", "label": "dataforge-update", "tool": "dataforge-update", "clio-run": true, "args": {}},
+      {"kind": "write", "label": "dataforge-initialize", "tool": "dataforge-initialize", "clio-run": true, "settle-seconds": 60, "args": {}}
+    ]
+  }
+]
