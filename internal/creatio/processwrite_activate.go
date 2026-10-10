@@ -129,6 +129,9 @@ func processWriteActivationMatches(request ProcessWriteActivateRequest, name, ui
 	return requested == reported
 }
 
+// ProcessWriteParseGUID is processWriteParseGUID for the tool layer.
+func ProcessWriteParseGUID(value string) string { return processWriteParseGUID(value) }
+
 // processWriteParseGUID is Guid.TryParse: the five forms .NET accepts (D, N, B, P, X is not needed here),
 // surrounding white space allowed; it returns the lower-case D form, or "" when the text is no GUID.
 func processWriteParseGUID(value string) string {
