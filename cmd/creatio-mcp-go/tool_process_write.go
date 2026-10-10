@@ -121,7 +121,113 @@ func processWriteEnvironment(ctx context.Context, envs *environments, tool strin
 	return client, nil, nil
 }
 
+// processWriteBoolArg reads an optional boolean the way clio's binder does: absent or null is unset.
+func processWriteBoolArg(args map[string]any, tool, name string) (bool, error) {
+	value, ok := args[name]
+	if !ok || value == nil {
+		return false, nil
+	}
+	flag, ok := value.(bool)
+	if !ok {
+		return false, fmt.Errorf("invalid-parameter-type: argument '%s' for MCP tool '%s' must be a boolean. Received an incompatible JSON value.", name, tool)
+	}
+	return flag, nil
+}
+
 func init() {
+	registerTool(map[string]any{"name": "create-business-process"},
+		func(ctx context.Context, envs *environments, args map[string]any) (*mcp.CallToolResult, error) {
+			const tool = "create-business-process"
+			values, err := processWriteStrings(tool, args, "environment-name", "package-name")
+			if err != nil {
+				return nil, err
+			}
+			if refusal := unknownArgumentError(args, "environment-name", "package-name", "descriptor"); refusal != "" {
+				return structuredToolResult(creatio.ProcessWriteFailure(refusal)), nil
+			}
+			if refusal := processWriteBlankEnvironment(args); refusal != nil {
+				return refusal, nil
+			}
+			descriptor, refusal := processWriteJSONDocument(args, "descriptor", false)
+			if refusal != "" {
+				return structuredToolResult(creatio.ProcessWriteFailure(refusal)), nil
+			}
+			client, failure, err := processWriteEnvironment(ctx, envs, tool, args)
+			if failure != nil || err != nil {
+				return failure, err
+			}
+			return structuredToolResult(client.CreateBusinessProcess(ctx, creatio.ProcessWriteBuildRequest{
+				Environment: values["environment-name"], Descriptor: descriptor, PackageName: values["package-name"],
+			})), nil
+		}, withAnnotations(toolAnnotations{ReadOnly: false, Destructive: true, Idempotent: false, OpenWorld: false}))
+
+	registerTool(map[string]any{"name": "modify-business-process"},
+		func(ctx context.Context, envs *environments, args map[string]any) (*mcp.CallToolResult, error) {
+			const tool = "modify-business-process"
+			values, err := processWriteStrings(tool, args, "environment-name", "process-name", "process-uid")
+			if err != nil {
+				return nil, err
+			}
+			confirm, err := processWriteBoolArg(args, tool, "confirm-layout-change")
+			if err != nil {
+				return nil, err
+			}
+			if refusal := unknownArgumentError(args, "environment-name", "process-name", "process-uid", "operations", "confirm-layout-change"); refusal != "" {
+				return structuredToolResult(creatio.ProcessWriteFailure(refusal)), nil
+			}
+			if refusal := processWriteBlankEnvironment(args); refusal != nil {
+				return refusal, nil
+			}
+			if refusal := processWriteTarget(values["process-name"], values["process-uid"], "process-name", "process-uid"); refusal != nil {
+				return refusal, nil
+			}
+			operations, refusal := processWriteJSONDocument(args, "operations", true)
+			if refusal != "" {
+				return structuredToolResult(creatio.ProcessWriteFailure(refusal)), nil
+			}
+			client, failure, err := processWriteEnvironment(ctx, envs, tool, args)
+			if failure != nil || err != nil {
+				return failure, err
+			}
+			return structuredToolResult(client.ModifyBusinessProcess(ctx, creatio.ProcessWriteModifyRequest{
+				Environment: values["environment-name"], ProcessName: values["process-name"], ProcessUID: values["process-uid"],
+				Operations: operations, ConfirmLayoutChange: confirm,
+			})), nil
+		}, withAnnotations(toolAnnotations{ReadOnly: false, Destructive: true, Idempotent: false, OpenWorld: false}))
+
+	registerTool(map[string]any{"name": "modify-business-process-as-new-version"},
+		func(ctx context.Context, envs *environments, args map[string]any) (*mcp.CallToolResult, error) {
+			const tool = "modify-business-process-as-new-version"
+			values, err := processWriteStrings(tool, args, "environment-name", "process-name", "process-uid", "package-name")
+			if err != nil {
+				return nil, err
+			}
+			if refusal := unknownArgumentError(args, "environment-name", "process-name", "process-uid", "package-name", "operations"); refusal != "" {
+				return structuredToolResult(creatio.ProcessWriteFailure(refusal)), nil
+			}
+			if refusal := processWriteBlankEnvironment(args); refusal != nil {
+				return refusal, nil
+			}
+			if refusal := processWriteTarget(values["process-name"], values["process-uid"], "process-name", "process-uid"); refusal != nil {
+				return refusal, nil
+			}
+			operations := ""
+			if !processWriteAbsentJSONDocument(args, "operations") {
+				var refusal string
+				if operations, refusal = processWriteJSONDocument(args, "operations", true); refusal != "" {
+					return structuredToolResult(creatio.ProcessWriteFailure(refusal)), nil
+				}
+			}
+			client, failure, err := processWriteEnvironment(ctx, envs, tool, args)
+			if failure != nil || err != nil {
+				return failure, err
+			}
+			return structuredToolResult(client.ModifyBusinessProcessAsNewVersion(ctx, creatio.ProcessWriteModifyRequest{
+				Environment: values["environment-name"], ProcessName: values["process-name"], ProcessUID: values["process-uid"],
+				Operations: operations, PackageName: values["package-name"],
+			})), nil
+		}, withAnnotations(toolAnnotations{ReadOnly: false, Destructive: false, Idempotent: false, OpenWorld: false}))
+
 	registerTool(map[string]any{"name": "set-active-business-process-version"},
 		func(ctx context.Context, envs *environments, args map[string]any) (*mcp.CallToolResult, error) {
 			const tool = "set-active-business-process-version"

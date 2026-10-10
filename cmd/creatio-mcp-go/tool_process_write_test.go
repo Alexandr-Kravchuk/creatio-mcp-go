@@ -129,9 +129,100 @@ func TestSetActiveBusinessProcessVersionMCP(t *testing.T) {
 	}
 }
 
+func TestProcessDesignWritesMCP(t *testing.T) {
+	session, seen := processWriteTestServer(t, "99.0.0.0", func(path, body string) string {
+		switch {
+		case strings.HasSuffix(path, "/BuildProcess"):
+			return `{"BuildProcessResult":{"success":true,"schemaName":"UsrP","schemaUId":"u1"}}`
+		case strings.HasSuffix(path, "/ModifyProcess"):
+			return `{"ModifyProcessResult":{"success":true,"schemaName":"UsrP","schemaUId":"u1","appliedOperations":1}}`
+		case strings.HasSuffix(path, "/ModifyProcessAsNewVersion"):
+			return `{"ModifyProcessAsNewVersionResult":{"success":true,"versionName":"UsrP_v2","version":2,"isActiveVersion":false}}`
+		}
+		return `{}`
+	})
+	successes := []struct {
+		tool  string
+		args  map[string]any
+		route string
+		body  string
+		last  string
+	}{
+		{"create-business-process", map[string]any{"descriptor": map[string]any{"name": "UsrP"}, "package-name": "UsrPkg"}, "BuildProcess",
+			`{"request":{"name":"UsrP","packageName":"UsrPkg"}}`, "Info: Process 'UsrP' created (UId: u1)."},
+		{"create-business-process", map[string]any{"descriptor": `{"name":"UsrP"}`}, "BuildProcess", `{"request":{"name":"UsrP"}}`, "Info: Process 'UsrP' created (UId: u1)."},
+		{"modify-business-process", map[string]any{"process-name": "UsrP", "operations": []any{map[string]any{"op": "x"}}, "confirm-layout-change": true}, "ModifyProcess",
+			`{"request":{"name":"UsrP","operations":[{"op":"x"}],"confirmLayoutChange":true}}`, "Info: Process 'UsrP' edited (1 operation(s) applied; UId: u1)."},
+		{"modify-business-process-as-new-version", map[string]any{"process-uid": "u1", "operations": " "}, "ModifyProcessAsNewVersion",
+			`{"request":{"uid":"u1","operations":[]}}`, "Info: The source version is still the actual one and keeps running. ASK THE USER to open this version and say whether to make it actual; call set-active-business-process-version only once they have. Do not chain the two - a version is created inactive precisely so they get to look first."},
+	}
+	for _, item := range successes {
+		answer, _ := processWriteCall(t, session, item.tool, item.args)
+		code, messages, note := processWriteEnvelope(t, answer)
+		if code != 0 || note != "compile-creatio not required" || messages[len(messages)-1] != item.last {
+			t.Errorf("%s: %d %q %q", item.tool, code, note, messages)
+		}
+		if body := seen()["/0/rest/ProcessDesignService/"+item.route]; body != item.body {
+			t.Errorf("%s body = %s", item.tool, body)
+		}
+	}
+	refusals := []struct {
+		tool string
+		args map[string]any
+		code int
+		want string
+	}{
+		{"create-business-process", map[string]any{}, 1, "descriptor is required and cannot be empty."},
+		{"create-business-process", map[string]any{"descriptor": "  "}, 1, "descriptor is required and cannot be empty."},
+		{"create-business-process", map[string]any{"descriptor": []any{}}, 1, "descriptor must be a JSON object, or a string holding one. Received a JSON array."},
+		{"create-business-process", map[string]any{"descriptor": true, "x": 1}, 1, "Unknown args: 'x'. Valid: environment-name, package-name, descriptor."},
+		{"create-business-process", map[string]any{"descriptor": "{}", "environment-name": ""}, -1, "environment-name is required and cannot be empty."},
+		{"modify-business-process", map[string]any{"operations": "[]"}, -1, "one of process-name or process-uid is required."},
+		{"modify-business-process", map[string]any{"process-name": "a"}, 1, "operations is required and cannot be empty."},
+		{"modify-business-process", map[string]any{"process-name": "a", "operations": 3}, 1, "operations must be a JSON array, or a string holding one. Received a JSON number."},
+		{"modify-business-process", map[string]any{"process-name": "a", "process-uid": "b", "operations": "[]"}, -1, "Provide only one of process-name or process-uid, not both."},
+		{"modify-business-process-as-new-version", map[string]any{"process-name": "a", "operations": false}, 1, "operations must be a JSON array, or a string holding one. Received a JSON boolean."},
+		{"modify-business-process-as-new-version", map[string]any{"process-name": "a", "confirm-layout-change": true}, 1, "Unknown args: 'confirm-layout-change'. Valid: environment-name, process-name, process-uid, package-name, operations."},
+	}
+	for _, item := range refusals {
+		answer, _ := processWriteCall(t, session, item.tool, item.args)
+		code, messages, note := processWriteEnvelope(t, answer)
+		if code != item.code || len(messages) != 1 || messages[0] != "Error: "+item.want || note != "" {
+			t.Errorf("%s %v: %d %q", item.tool, item.args, code, messages)
+		}
+	}
+	_, result := processWriteCall(t, session, "modify-business-process", map[string]any{"process-name": "a", "operations": "[]", "confirm-layout-change": "yes"})
+	if !result.IsError || !strings.Contains(result.Content[0].(*mcp.TextContent).Text, "argument 'confirm-layout-change' for MCP tool 'modify-business-process' must be a boolean") {
+		t.Fatalf("binding %#v", result)
+	}
+}
+
+func TestProcessDesignWritesRefuseWithoutCrtProcessBuilder(t *testing.T) {
+	session, seen := processWriteTestServer(t, "", func(path, body string) string { return `{}` })
+	for tool, args := range map[string]map[string]any{
+		"create-business-process":                map[string]any{"descriptor": "{}"},
+		"modify-business-process":                map[string]any{"process-name": "a", "operations": "[]"},
+		"modify-business-process-as-new-version": map[string]any{"process-name": "a"},
+	} {
+		answer, _ := processWriteCall(t, session, tool, args)
+		code, messages, _ := processWriteEnvelope(t, answer)
+		if code != 1 || len(messages) != 1 || !strings.HasPrefix(messages[0], "Error: To use this command, you need to install the CrtProcessBuilder package version 1.6.6.77 or higher.") {
+			t.Errorf("%s: %d %q", tool, code, messages)
+		}
+	}
+	for path := range seen() {
+		if strings.Contains(path, "ProcessDesignService") {
+			t.Fatalf("the service was called: %s", path)
+		}
+	}
+}
+
 func TestProcessWriteAnnotationsMatchClio(t *testing.T) {
 	expected := map[string]toolAnnotations{
-		"set-active-business-process-version": {Destructive: true, Idempotent: true},
+		"set-active-business-process-version":    {Destructive: true, Idempotent: true},
+		"create-business-process":                {Destructive: true},
+		"modify-business-process":                {Destructive: true},
+		"modify-business-process-as-new-version": {},
 	}
 	for name, want := range expected {
 		got := annotationsOf(name)
