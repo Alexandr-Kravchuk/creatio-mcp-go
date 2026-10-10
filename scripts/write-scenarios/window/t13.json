@@ -1,0 +1,265 @@
+[
+  {
+    "label": "Install CrtProcessBuilder",
+    "why": "WINDOW ONLY: install-process-builder installs a source package, which the stand compiles and then restarts for - a stand-wide build and restart. Both sides install the same archive (the installed clio's), so the second install is a same-version reinstall; the package stays, which is what the process-designer scenario below needs. Nothing is created per side and nothing is cleaned up.",
+    "steps": [
+      {
+        "kind": "write",
+        "label": "install through clio",
+        "tool": "install-process-builder",
+        "server": "clio",
+        "clio-run": true,
+        "args": {},
+        "why": "Both sides' install goes through clio first, so the package is present when the Go call runs."
+      },
+      {
+        "kind": "write",
+        "label": "reinstall through each server",
+        "tool": "install-process-builder",
+        "clio-run": true,
+        "args": {},
+        "known-differences": [
+          "$.executionlogmessages"
+        ],
+        "why": "The install log (upload, backup, install log lines, health checks) is timing-dependent; exit-code is compared."
+      },
+      {
+        "kind": "read-back",
+        "label": "the package gate passes",
+        "tool": "validate-process-graph",
+        "args": {
+          "nodes": [
+            {
+              "name": "s",
+              "type": "startEvent"
+            },
+            {
+              "name": "e",
+              "type": "endEvent"
+            }
+          ],
+          "edges": [
+            {
+              "source": "s",
+              "target": "e"
+            }
+          ]
+        }
+      },
+      {
+        "kind": "expect",
+        "step": "the package gate passes",
+        "path": "$.success",
+        "equals": true
+      }
+    ]
+  },
+  {
+    "label": "Process designer chain in an own app: build, edit, version, activate",
+    "why": "WINDOW ONLY: needs CrtProcessBuilder on the stand (the scenario above). The app is created through clio on both sides; each side builds its own process in the app's package, edits it, saves a new version and makes that version actual, reading the process back after each step. Removing the app removes the package with the process and its version.",
+    "steps": [
+      {
+        "kind": "write",
+        "label": "create app",
+        "tool": "create-app",
+        "server": "clio",
+        "clio-run": true,
+        "creates": "UsrParity{run}{side}Bp",
+        "retry-while": "temporarily unavailable",
+        "retry-seconds": 300,
+        "args": {
+          "name": "Parity {run} {side} Bp",
+          "code": "Parity{run}{side}Bp",
+          "template-code": "AppFreedomUI",
+          "with-mobile-pages": false
+        },
+        "capture": {
+          "pkg": "$.packagename"
+        },
+        "known-differences": [
+          "$.applicationname",
+          "$.entities[0].caption",
+          "$.entities[0].uid",
+          "$.pages[0].uid",
+          "$.pages[1].uid",
+          "$.pages[2].uid",
+          "$.dataforge.warnings[0]",
+          "$.dataforge.warnings[1]"
+        ],
+        "why": "Setup through clio on both sides; ids and the display name differ per side."
+      },
+      {
+        "kind": "cleanup",
+        "for": "UsrParity{run}{side}Bp",
+        "server": "clio",
+        "calls": [
+          {
+            "tool": "delete-app",
+            "clio-run": true,
+            "args": {
+              "app-name": "UsrParity{run}{side}Bp"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "write",
+        "label": "validate the planned graph",
+        "tool": "validate-process-graph",
+        "args": {
+          "nodes": [
+            {
+              "name": "Start1",
+              "type": "startEvent"
+            },
+            {
+              "name": "Formula1",
+              "type": "formulaTask"
+            },
+            {
+              "name": "End1",
+              "type": "endEvent"
+            }
+          ],
+          "edges": [
+            {
+              "source": "Start1",
+              "target": "Formula1"
+            },
+            {
+              "source": "Formula1",
+              "target": "End1"
+            }
+          ]
+        }
+      },
+      {
+        "kind": "write",
+        "label": "build the process",
+        "tool": "create-business-process",
+        "clio-run": true,
+        "args": {
+          "package-name": "{pkg}",
+          "descriptor": {
+            "name": "UsrParity{run}{side}BpProc",
+            "caption": "Parity {run} {side} process",
+            "elements": [
+              {
+                "name": "Start1",
+                "type": "startEvent",
+                "caption": "Start"
+              },
+              {
+                "name": "End1",
+                "type": "endEvent",
+                "caption": "End"
+              }
+            ],
+            "flows": [
+              {
+                "source": "Start1",
+                "target": "End1"
+              }
+            ]
+          }
+        },
+        "known-differences": [
+          "$.executionlogmessages[1].value"
+        ],
+        "why": "The created schema's UId differs per side. clio 8.1.0.134 binds descriptor as a string; master (served here) also takes the object sent here."
+      },
+      {
+        "kind": "read-back",
+        "label": "describe the built process",
+        "tool": "describe-business-process",
+        "args": {
+          "process-name": "UsrParity{run}{side}BpProc"
+        },
+        "known-differences": [
+          "$.executionlogmessages[0].value"
+        ],
+        "why": "The graph carries per-side UIds."
+      },
+      {
+        "kind": "write",
+        "label": "add an element",
+        "tool": "modify-business-process",
+        "clio-run": true,
+        "args": {
+          "process-name": "UsrParity{run}{side}BpProc",
+          "operations": [
+            {
+              "op": "removeFlow",
+              "source": "Start1",
+              "target": "End1"
+            },
+            {
+              "op": "addElement",
+              "element": {
+                "name": "Formula1",
+                "type": "formulaTask",
+                "caption": "Formula"
+              }
+            },
+            {
+              "op": "addFlow",
+              "source": "Start1",
+              "target": "Formula1"
+            },
+            {
+              "op": "addFlow",
+              "source": "Formula1",
+              "target": "End1"
+            }
+          ]
+        },
+        "known-differences": [
+          "$.executionlogmessages[1].value"
+        ],
+        "why": "The process UId differs per side."
+      },
+      {
+        "kind": "write",
+        "label": "save a new version",
+        "tool": "modify-business-process-as-new-version",
+        "clio-run": true,
+        "args": {
+          "process-name": "UsrParity{run}{side}BpProc",
+          "package-name": "{pkg}"
+        },
+        "capture": {
+          "version": "$.executionlogmessages[1].value"
+        },
+        "known-differences": [
+          "$.executionlogmessages[1].value"
+        ],
+        "why": "The version's name and UIds differ per side."
+      },
+      {
+        "kind": "write",
+        "label": "make the original actual again",
+        "tool": "set-active-business-process-version",
+        "clio-run": true,
+        "args": {
+          "version-name": "UsrParity{run}{side}BpProc"
+        },
+        "known-differences": [
+          "$.executionlogmessages[1].value"
+        ],
+        "why": "The activated schema's UId differs per side."
+      },
+      {
+        "kind": "read-back",
+        "label": "describe after activation",
+        "tool": "describe-business-process",
+        "args": {
+          "process-name": "UsrParity{run}{side}BpProc"
+        },
+        "known-differences": [
+          "$.executionlogmessages[0].value"
+        ],
+        "why": "The graph and its version family carry per-side UIds."
+      }
+    ]
+  }
+]
