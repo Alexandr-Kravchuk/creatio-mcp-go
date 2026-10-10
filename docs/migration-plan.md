@@ -214,7 +214,7 @@ from five sibling worktrees was preserved and integrated. This checkpoint adds
 | T12 settings/access | 1, then 12 in the third round (all 13) | 0; `set-fsm-mode`, `regenerate-identity-signing-key` and `manage-access operation-position` live runs are window-only | [T9/T11/T12 status](status/t9-t11-t12-status.md) |
 | T13 processes | 1 | 10 | [T13/T14/T15 status](status/t13-t14-t15-status.md) |
 | T14 themes/email | 8, then 3 in the third round (all 11) | 0; `set-logo` / `set-background-image` live writes await the window run | [T13/T14/T15 status](status/t13-t14-t15-status.md) |
-| T15 packages/operations | 4 | 12 | [T13/T14/T15 status](status/t13-t14-t15-status.md) |
+| T15 packages/operations | 4, then 12 in the third round (all 16) | 0; compile, restart, FSM loads, installs, Data Forge and custom logging await the window run | [T13/T14/T15 status](status/t13-t14-t15-status.md) |
 
 Final contract comparison: **220 match, 0 unexplained differences**; remaining
 not-ported tools and unknown-name suggestions are explicitly classified. The combined
