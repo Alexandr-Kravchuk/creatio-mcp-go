@@ -40,10 +40,7 @@ against the stand while other workstreams are active. Mocks cover the implemente
 
 Remaining tools (not registered as stubs):
 
-- T13: `create-business-process`, `modify-business-process`,
-  `modify-business-process-as-new-version`, `set-active-business-process-version`, `create-user-task`,
-  `modify-user-task-parameters`, `register-process-element`, `enroll-sequence-participants`,
-  `validate-process-graph`, `install-process-builder`.
+- T13: none since the third round (2026-10-10, below); at this checkpoint all ten listed there remained.
 - T14: `upload-image`, `set-logo`, `set-background-image`.
 - T15: none since the third round (see "T15 third round" below).
 
@@ -184,3 +181,76 @@ Known gaps (T15):
 - `add-custom-logging` restarts with the restart tools' 30 s request timeout (clio: 100 s).
 - `watch-compilation` and `create-package` are not in the 8.1.0.134 index and were not ported; T10's
   window scenarios still name `create-package`.
+
+## T13 third round (2026-10-10)
+
+All 11 T13 tools are served (clio master 914dab286). New in this round: `create-business-process`,
+`modify-business-process`, `modify-business-process-as-new-version`, `set-active-business-process-version`,
+`validate-process-graph`, `register-process-element`, `enroll-sequence-participants`, `create-user-task`,
+`modify-user-task-parameters`, `install-process-builder`. The `codex-t13` partial work did not build and
+was largely rewritten (wrong exit codes, string-only documents, the presence wording instead of the
+version gate, no pre-call log line, alphabetical descriptor JSON, a struct decode that turned missing
+enrollment counts into zeros); its change to the shared `internal/creatio/command.go` was dropped (the
+compile note lives in the area's own envelope type, `ProcessWriteResult`). No shared file was changed.
+
+What the stand can and cannot show. `s16123120` has no CrtProcessBuilder, so the four
+ProcessDesignService writes and `validate-process-graph` refuse there at the package gate; the
+user-task tools need a local workspace linked to a stand package, which the write harness cannot stage;
+`install-process-builder` is a stand-wide build and restart. Hence:
+
+- Read parity, `scripts/parity-cases/t13.json`: 51 cases (every argument refusal, the package gates,
+  binder refusals, an enrollment with random ids) — 44 match, 5 both-failed and 1 known-diff, all six
+  where clio master (served here) differs from clio 8.1.0.134 (below), 0 mismatches. The enrollment
+  case POSTs to the native `SequenceParticipantBulkAddService` with random sequence and contact ids:
+  it enrolls nobody (added 0) and creates nothing, but it is a write endpoint.
+- Success and failure paths against a canned Creatio, `scripts/fake-stands/t13` (how to run it is in
+  `fake_creatio.py`): 38 cases through both servers — every ProcessDesignService answer shape (success,
+  failure texts, layout-change relay, version report, activation read-back, UNKNOWN / empty / shape
+  texts), the validator on rule-heavy graphs, enrollment outcomes, user-task create/modify with
+  lookups, composite items and save refusals — 37 match, 1 known-diff (compile note, below). The
+  request bodies the two servers sent are the same on all 12 routes (parsed JSON, generated parameter
+  uIds blanked).
+- `register-process-element` (offline): run against a fixture workspace with clio 8.1.0.134 and Go; the
+  SQL scripts are byte-identical, the descriptors differ only in the random UId and the timestamp.
+- Unit and MCP-level tests per tool (request shapes, success, failure, binding, both executors, raw-name
+  confirmation, annotations); the validator carries clio's ProcessGraphValidatorTests cases.
+- Write scenarios: `scripts/write-scenarios/window/t13.json` — install-process-builder, then the
+  process designer chain in an own app (validate, build, describe, edit, new version, activate,
+  describe; delete-app removes the process). There is no non-window T13 scenario: no T13 tool can
+  create a stand object outside the window. The write harness was not run, so the ledger is untouched
+  and nothing is left on the stand.
+
+clio master versus 8.1.0.134 (measured; this server follows master):
+- The build/modify gate asks for CrtProcessBuilder 1.6.6.77; 8.1.0.134 names 1.6.2.1.
+- `descriptor` / `operations` take a JSON object/array or a string holding one; 8.1.0.134 binds a
+  string only. A missing document is exit 1 (FromValidationError); 8.1.0.134 gives -1.
+- The compile note is left out when a message says a compile is needed (`MentionsCompileRequirement`);
+  8.1.0.134 adds it anyway.
+- One deliberate exception: `register-process-element` writes its SQL with CRLF lines as the released
+  8.1.0.134 does (its raw string literal is compiled from a CRLF checkout), not with master's LF source;
+  clio compares an existing script with line endings normalized, so either form is accepted on a re-run.
+
+Known gaps:
+- Not ported: the post-write configuration-block verification of `create-business-process` and
+  `modify-business-process` (clio's `WarnOnDiscardedConfigurationBlocks`: BlockExpectationIntent,
+  AccessRights/Approval/Email/FlowLabel expectations, BlockExpectationReporter). It runs only when the
+  descriptor or operations carry an `accessRights` block, an `approval` block, a flow `label`, or `[#…#]`
+  macros in a sendEmail body; clio then reads the process back (DescribeProcess and the process library)
+  and adds warnings about blocks the server dropped. Go answers the same build/edit without those
+  warnings; modify's "ignored on addElement" access-rights warning is part of the same gap.
+- A `descriptor` / `operations` sent as a JSON object reaches Go as a map, so it is forwarded with its
+  keys in alphabetical order; clio keeps the caller's order. A string-held document keeps its order.
+  The server reads both the same.
+- Failure texts that clio takes from .NET exceptions (an HTTP transport failure, a JSON reader fault
+  past the first character, a missing file) carry Go's or an approximated wording.
+- No request retries: clio's user-task designer calls retry 3 times, its file-design-mode calls 30 times,
+  the CrtProcessBuilder Ping 3 times (the Ping retry is ported).
+- User tasks: an absent `workspace-path` walks up from the server's working directory to a `.clio`
+  folder, as clio does from its own; an absent `package-name` is treated as empty (clio raises .NET's
+  null-argument text).
+- `install-process-builder`: the archive is the newest installed clio's (`~/.dotnet/tools/.store/clio`);
+  without one the refusal names a placeholder path. The one-build-per-target reservation is this tool's
+  own (clio shares it with compile-creatio, not served yet). The health wait polls the health route
+  anonymously like clio's HealthCheckCommand, with an approximated certificate/timeout behaviour. The
+  same installed archive also feeds the gates' convergence check ("This clio carries ..."); without an
+  installed clio there is no convergence refusal.
