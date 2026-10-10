@@ -34,9 +34,7 @@ agent ran no write harness or ledger-producing run.
 
 T9: see "T9 pages, second round" below.
 
-T11 unimplemented: `execute-dataservice-batch`, `execute-sql-script`, `run-process`,
-`create-data-binding`, `add-data-binding-row`, `remove-data-binding-row`,
-`create-data-binding-db`, `upsert-data-binding-row-db`, `remove-data-binding-row-db`.
+T11: all twelve tools are served; see "T11 data, third round" below.
 
 T12: see "T12 settings, users and access, third round" below (all 13 served).
 The W6 narrative additionally mentions `create-oauth-technical-user`, which is outside
@@ -199,3 +197,51 @@ Gaps vs clio:
 - No `correlation-id` in any envelope (this server writes no log the id could name). The
   sys-setting Unknown/non-JSON recovery texts are clio 8.1.0.134's (master adds a `--debug`
   sentence), as get-sys-setting already does.
+
+
+## T11 data, third round (2026-10-10)
+
+All twelve T11 tools are served, plus `get-request-info` (listed under T6 in the appendix,
+assigned to this round). The earlier Codex draft (`codex-t11`) was imported as one commit; the
+batch port was kept, the SQL rendering and run-process were rewritten. Code:
+`internal/creatio/datawrite_{batch,sql,process,binding_db,binding_local,requestinfo}.go`,
+`cmd/creatio-mcp-go/tool_data_write_{batch,sql,process}.go`, `tool_data_binding_{db,local}.go`,
+`tool_get_request_info.go`. Read cases: `scripts/parity-cases/t11.json` (57 match) and
+`t11-request-info.json` (12 match, 2 known-diff: `documentationSource` cdn/cache, as for
+get-component-info). Write scenarios: `scripts/write-scenarios/t11.json`; window:
+`scripts/write-scenarios/window/t11.json`.
+
+| Tool | Read cases | Live writes | Verdict |
+|---|---|---|---|
+| execute-dataservice-batch | 5 match | `t11.json`: own Contact deleted, re-inserted under the same id, updated, read back — match | done |
+| execute-sql-script | 8 match (incl. the stand's CustomQuery refusal) | window only: the stand refuses `CustomQuery.ExecuteReader` by security settings | done; table/CSV/JSON/gate checked against clio 8.1.0.134 on a fake Creatio (identical text, golden `testdata/sql-console-table.txt`) |
+| run-process | 16 match (all refusals before launch, on `LeadManagement`) | window only: no harmless process on the shared stand; own empty process in the window file | done; launch paths mocked (completed, queued, refused, failed run with the SysProcessLog line, deadline: not-started / still-running) |
+| create-data-binding-db, upsert-data-binding-row-db, remove-data-binding-row-db | 9 match | `t11.json`: own app package (create-app through clio), own ContactType rows created, updated, inserted, removed, binding deleted with the last row — known-diff only (row order of GetBoundSchemaData follows random ids; the created-row line carries the id) | done |
+| create-data-binding, add-data-binding-row, remove-data-binding-row | 10 match (validation) | workspace files only: every file of a create/add/replace/remove sequence equals clio's (golden `testdata/databinding-clio`), plus a live remote display-value lookup on Contact compared file by file | done |
+| get-request-info | 12 match, 2 known-diff | read-only | done |
+
+`create-data-binding-db` now exists, so T8's `sync-schemas` seed-data no longer waits on it.
+
+Ledger: runs `tmpay3`, `tmpbb6`, `tmpbgc`, `tmpcw4` created 26 objects and removed all 26.
+
+Gaps against clio:
+- run-process follows clio master (ENG-102333): 45 s response deadline
+  (`CLIO_MCP_RESPONSE_DEADLINE_SECONDS`), the launch gate (`not-started` / `still-running`) and the
+  failed-run log read. clio 8.1.0.134 still answers at 150 s without the gate. Other long tools here
+  keep the 150 s default.
+- run-process `parameters`: Go decodes the call into a map, so values are sent (and validated) in
+  ordinal key order, not in the caller's order; a non-string value of a string parameter is sent as Go's
+  JSON text.
+- execute-sql-script: numbers and dates in table/CSV cells use the invariant culture; clio uses the
+  process culture (on this Mac `-1234,5` and `31/01/2026`). The bundled-package convergence refusal
+  (a stand cliogate older than the one clio ships) is not ported: this server ships no cliogate.
+- DataServiceResponse texts follow 8.1.0.134's object-permission guidance; master names
+  `set-object-rights` there. Transport failures (non-2xx) are worded by this server's client.
+- JSON parse errors of `rows`/`values`/`localizations` reproduce System.Text.Json's text for the common
+  cases (bare word, invalid first character); other malformed input gets a generic sentence.
+- Not ported: the five master-only `*-to-file` tools (`get-component-info-to-file`,
+  `execute-esq-to-file`, `list-entity-client-schemas-to-file`, `odata-read-to-file`,
+  `get-request-info-to-file`); clio 8.1.0.134 and `docs/clio-inventory.json` do not have them.
+
+Shared changes: none (only calls into existing helpers of other areas: T8's binding type map and
+DataServiceResponse port, T9's component-registry transport).

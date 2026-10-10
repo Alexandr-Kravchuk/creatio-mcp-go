@@ -210,7 +210,7 @@ from five sibling worktrees was preserved and integrated. This checkpoint adds
 | T8 schemas | 8, then 6 in the second round (all 14) | 0; successful writes await the window run | [T7/T8 status](status/t7-t8-t10-status.md) |
 | T9 pages | 2, then 7 in the second round (all T9 tools, plus `merge-creatio-artifact` classification and `get-component-info`) | 0; validation and the semantic merge partial, related-page add-on live run window-only | [T9/T11/T12 status](status/t9-t11-t12-status.md) |
 | T10 business rules | 2, then 4 in the second round (all 6 done; live success parity is window-only) | 0 | [T10 status](status/t10-status.md) |
-| T11 data | 3 | 9 | [T9/T11/T12 status](status/t9-t11-t12-status.md) |
+| T11 data | 3, then 9 in the third round (all 12, plus `get-request-info` from the T6 row) | 0; `run-process` launches and `execute-sql-script` on rows are window-only, the master-only `*-to-file` tools are not ported | [T9/T11/T12 status](status/t9-t11-t12-status.md) |
 | T12 settings/access | 1, then 12 in the third round (all 13) | 0; `set-fsm-mode`, `regenerate-identity-signing-key` and `manage-access operation-position` live runs are window-only | [T9/T11/T12 status](status/t9-t11-t12-status.md) |
 | T13 processes | 1 | 10 | [T13/T14/T15 status](status/t13-t14-t15-status.md) |
 | T14 themes/email | 8, then 3 in the third round (all 11) | 0; `set-logo` / `set-background-image` live writes await the window run | [T13/T14/T15 status](status/t13-t14-t15-status.md) |
