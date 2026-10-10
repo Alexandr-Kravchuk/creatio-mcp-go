@@ -203,7 +203,7 @@ type pkgWriteFileEdit struct {
 // pkgWriteXMLElement is one element of a parsed NLog file: its local name, attributes, the byte offset of its
 // '<', and its child elements.
 type pkgWriteXMLElement struct {
-	local    string
+	tag      string
 	attrs    []xml.Attr
 	offset   int64
 	children []*pkgWriteXMLElement
@@ -211,7 +211,7 @@ type pkgWriteXMLElement struct {
 
 func (e *pkgWriteXMLElement) attr(name string) (string, bool) {
 	for _, attribute := range e.attrs {
-		if attribute.Name.Space == "" && attribute.Name.Local == name {
+		if attribute.Name.Space == "" && xmlLocalName(attribute.Name) == name {
 			return attribute.Value, true
 		}
 	}
@@ -220,17 +220,17 @@ func (e *pkgWriteXMLElement) attr(name string) (string, bool) {
 
 func (e *pkgWriteXMLElement) nsAttr(space, name string) (string, bool) {
 	for _, attribute := range e.attrs {
-		if attribute.Name.Space == space && attribute.Name.Local == name {
+		if attribute.Name.Space == space && xmlLocalName(attribute.Name) == name {
 			return attribute.Value, true
 		}
 	}
 	return "", false
 }
 
-func (e *pkgWriteXMLElement) elements(local string) []*pkgWriteXMLElement {
+func (e *pkgWriteXMLElement) elements(tag string) []*pkgWriteXMLElement {
 	var found []*pkgWriteXMLElement
 	for _, child := range e.children {
-		if child.local == local {
+		if child.tag == tag {
 			found = append(found, child)
 		}
 	}
@@ -253,7 +253,7 @@ func pkgWriteParseNLog(path, content string) (*pkgWriteXMLElement, error) {
 		}
 		switch typed := token.(type) {
 		case xml.StartElement:
-			element := &pkgWriteXMLElement{local: typed.Name.Local, attrs: typed.Attr, offset: offset}
+			element := &pkgWriteXMLElement{tag: xmlLocalName(typed.Name), attrs: typed.Attr, offset: offset}
 			if len(stack) > 0 {
 				parent := stack[len(stack)-1]
 				parent.children = append(parent.children, element)
@@ -265,7 +265,7 @@ func pkgWriteParseNLog(path, content string) (*pkgWriteXMLElement, error) {
 			stack = stack[:len(stack)-1]
 		}
 	}
-	if root == nil || root.local != "nlog" {
+	if root == nil || root.tag != "nlog" {
 		return nil, fmt.Errorf("'%s' does not contain an nlog root element.", path)
 	}
 	return root, nil
@@ -377,7 +377,7 @@ func pkgWriteTargetsEdit(path string, text pkgWriteText, targetName, logPath str
 	prefix := ""
 	for _, attribute := range root.attrs {
 		if attribute.Name.Space == "xmlns" && attribute.Value == pkgWriteXsiNamespace {
-			prefix = attribute.Name.Local
+			prefix = xmlLocalName(attribute.Name)
 			break
 		}
 	}
