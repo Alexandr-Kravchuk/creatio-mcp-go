@@ -1,0 +1,362 @@
+[
+  {
+    "label": "execute-dataservice-batch on own Contact rows",
+    "why": "A record-id must be a UUID and the harness has no UUID placeholder, so the row is first made through clio's odata-create on both sides; each server then deletes it, re-inserts it under the same id with a new name and updates it, all through its own execute-dataservice-batch. Only rows named UsrParity{run}{side}... are touched.",
+    "steps": [
+      {
+        "kind": "write",
+        "label": "setup-contact",
+        "tool": "odata-create",
+        "clio-run": true,
+        "server": "clio",
+        "creates": "UsrParity{run}{side}Batch",
+        "args": {
+          "entity": "Contact",
+          "rows": [
+            {
+              "Name": "UsrParity{run}{side}Batch"
+            }
+          ]
+        },
+        "capture": {
+          "id": "$.results[0].id"
+        }
+      },
+      {
+        "kind": "cleanup",
+        "for": "UsrParity{run}{side}Batch",
+        "server": "clio",
+        "calls": [
+          {
+            "tool": "execute-esq",
+            "clio-run": true,
+            "args": {
+              "query": {
+                "rootSchemaName": "Contact",
+                "operationType": 0,
+                "rowCount": 1,
+                "columns": {
+                  "items": {
+                    "Id": {
+                      "expression": {
+                        "expressionType": 0,
+                        "columnPath": "Id"
+                      }
+                    },
+                    "Name": {
+                      "expression": {
+                        "expressionType": 0,
+                        "columnPath": "Name"
+                      }
+                    }
+                  }
+                },
+                "filters": {
+                  "filterType": 6,
+                  "isEnabled": true,
+                  "logicalOperation": 0,
+                  "items": {
+                    "own": {
+                      "filterType": 1,
+                      "comparisonType": 3,
+                      "isEnabled": true,
+                      "leftExpression": {
+                        "expressionType": 0,
+                        "columnPath": "Name"
+                      },
+                      "rightExpression": {
+                        "expressionType": 2,
+                        "parameter": {
+                          "dataValueType": 1,
+                          "value": "UsrParity{run}{side}Batch"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "capture": {
+              "cleanupId": "$.rows[0].id"
+            }
+          },
+          {
+            "tool": "execute-dataservice-batch",
+            "clio-run": true,
+            "destructive": true,
+            "args": {
+              "operations": [
+                {
+                  "operation": "delete",
+                  "schema-name": "Contact",
+                  "record-id": "{cleanupId}"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "kind": "write",
+        "label": "batch-delete",
+        "tool": "execute-dataservice-batch",
+        "clio-run": true,
+        "destructive": true,
+        "target": "UsrParity{run}{side}Batch",
+        "args": {
+          "operations": [
+            {
+              "operation": "delete",
+              "schema-name": "Contact",
+              "record-id": "{id}"
+            }
+          ]
+        }
+      },
+      {
+        "kind": "read-back",
+        "label": "read-deleted",
+        "tool": "execute-esq",
+        "clio-run": true,
+        "args": {
+          "query": {
+            "rootSchemaName": "Contact",
+            "operationType": 0,
+            "rowCount": 1,
+            "columns": {
+              "items": {
+                "Id": {
+                  "expression": {
+                    "expressionType": 0,
+                    "columnPath": "Id"
+                  }
+                },
+                "Name": {
+                  "expression": {
+                    "expressionType": 0,
+                    "columnPath": "Name"
+                  }
+                }
+              }
+            },
+            "filters": {
+              "filterType": 6,
+              "isEnabled": true,
+              "logicalOperation": 0,
+              "items": {
+                "own": {
+                  "filterType": 1,
+                  "comparisonType": 3,
+                  "isEnabled": true,
+                  "leftExpression": {
+                    "expressionType": 0,
+                    "columnPath": "Name"
+                  },
+                  "rightExpression": {
+                    "expressionType": 2,
+                    "parameter": {
+                      "dataValueType": 1,
+                      "value": "UsrParity{run}{side}Batch"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "kind": "write",
+        "label": "batch-insert",
+        "tool": "execute-dataservice-batch",
+        "clio-run": true,
+        "creates": "UsrParity{run}{side}BatchRe",
+        "args": {
+          "operations": [
+            {
+              "operation": "insert",
+              "schema-name": "Contact",
+              "record-id": "{id}",
+              "values": {
+                "Name": {
+                  "data-value-type": 1,
+                  "value": "UsrParity{run}{side}BatchRe"
+                },
+                "Notes": {
+                  "data-value-type": 1,
+                  "value": "Parity inserted"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "kind": "cleanup",
+        "for": "UsrParity{run}{side}BatchRe",
+        "server": "own",
+        "calls": [
+          {
+            "tool": "execute-esq",
+            "clio-run": true,
+            "args": {
+              "query": {
+                "rootSchemaName": "Contact",
+                "operationType": 0,
+                "rowCount": 1,
+                "columns": {
+                  "items": {
+                    "Id": {
+                      "expression": {
+                        "expressionType": 0,
+                        "columnPath": "Id"
+                      }
+                    },
+                    "Name": {
+                      "expression": {
+                        "expressionType": 0,
+                        "columnPath": "Name"
+                      }
+                    }
+                  }
+                },
+                "filters": {
+                  "filterType": 6,
+                  "isEnabled": true,
+                  "logicalOperation": 0,
+                  "items": {
+                    "own": {
+                      "filterType": 1,
+                      "comparisonType": 3,
+                      "isEnabled": true,
+                      "leftExpression": {
+                        "expressionType": 0,
+                        "columnPath": "Name"
+                      },
+                      "rightExpression": {
+                        "expressionType": 2,
+                        "parameter": {
+                          "dataValueType": 1,
+                          "value": "UsrParity{run}{side}BatchRe"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "capture": {
+              "cleanupId": "$.rows[0].id"
+            }
+          },
+          {
+            "tool": "execute-dataservice-batch",
+            "clio-run": true,
+            "destructive": true,
+            "args": {
+              "operations": [
+                {
+                  "operation": "delete",
+                  "schema-name": "Contact",
+                  "record-id": "{cleanupId}"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "kind": "write",
+        "label": "batch-update",
+        "tool": "execute-dataservice-batch",
+        "clio-run": true,
+        "target": "UsrParity{run}{side}BatchRe",
+        "args": {
+          "operations": [
+            {
+              "operation": "update",
+              "schema-name": "Contact",
+              "record-id": "{id}",
+              "values": {
+                "Notes": {
+                  "data-value-type": 1,
+                  "value": "Parity updated"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "kind": "read-back",
+        "label": "read-updated",
+        "tool": "execute-esq",
+        "clio-run": true,
+        "args": {
+          "query": {
+            "rootSchemaName": "Contact",
+            "operationType": 0,
+            "rowCount": 1,
+            "columns": {
+              "items": {
+                "Id": {
+                  "expression": {
+                    "expressionType": 0,
+                    "columnPath": "Id"
+                  }
+                },
+                "Name": {
+                  "expression": {
+                    "expressionType": 0,
+                    "columnPath": "Name"
+                  }
+                },
+                "Notes": {
+                  "expression": {
+                    "expressionType": 0,
+                    "columnPath": "Notes"
+                  }
+                }
+              }
+            },
+            "filters": {
+              "filterType": 6,
+              "isEnabled": true,
+              "logicalOperation": 0,
+              "items": {
+                "own": {
+                  "filterType": 1,
+                  "comparisonType": 3,
+                  "isEnabled": true,
+                  "leftExpression": {
+                    "expressionType": 0,
+                    "columnPath": "Name"
+                  },
+                  "rightExpression": {
+                    "expressionType": 2,
+                    "parameter": {
+                      "dataValueType": 1,
+                      "value": "UsrParity{run}{side}BatchRe"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "kind": "expect",
+        "step": "read-updated",
+        "path": "$.rows[0].notes",
+        "equals": "Parity updated"
+      },
+      {
+        "kind": "expect",
+        "step": "batch-insert",
+        "path": "$.completedcount",
+        "equals": 1
+      }
+    ]
+  }
+]
