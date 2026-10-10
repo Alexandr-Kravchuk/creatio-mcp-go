@@ -38,10 +38,7 @@ T11 unimplemented: `execute-dataservice-batch`, `execute-sql-script`, `run-proce
 `create-data-binding`, `add-data-binding-row`, `remove-data-binding-row`,
 `create-data-binding-db`, `upsert-data-binding-row-db`, `remove-data-binding-row-db`.
 
-T12 unimplemented: `create-sys-setting`, `update-sys-setting`,
-`download-sys-setting-file`, `set-fsm-mode`, `manage-user`, `manage-role`,
-`manage-license`, `manage-access`, `create-server-to-server-oauth-app`,
-`get-identity-assertion`, `get-identity-public-jwk`, `regenerate-identity-signing-key`.
+T12: see "T12 settings, users and access, third round" below (all 13 served).
 The W6 narrative additionally mentions `create-oauth-technical-user`, which is outside
 the captured T12 inventory and is not added here.
 
@@ -133,3 +130,72 @@ Checks after rebase: `gofmt -l` empty, `go vet ./...`, `go test -race ./...`, Wi
 build, 23 Python script tests, contract comparison (256 matches, zero unexplained),
 and the public-safety script all pass. The semantic merge, full page content validation,
 and best-effort Designer Presence notification remain the explicit gaps above.
+
+## T12 settings, users and access, third round (2026-10-10)
+
+All twelve remaining T12 tools are served (with `set-record-rights`, all 13). The paused
+`codex-t12` commit was read and rewritten rather than cherry-picked: it resolved the Lookup
+reference for any type, sent a placeholder instead of the platform's fenced refusal text, skipped
+the file-security policy and had no partial-create path. Code: `internal/creatio/adminwrite_*.go`,
+`cmd/creatio-mcp-go/tool_adminwrite_*.go`. Read cases: `scripts/parity-cases/t12.json`, 73 cases,
+73 match. Live writes: `example-sys-setting.json`, `t12-admin.json`, `t12-oauth.json` (only
+objects named `UsrParity{run}{side}…`); window-only: `scripts/write-scenarios/window/t12.json`.
+
+| Tool | Read cases | Live writes | Verdict |
+|---|---|---|---|
+| create-sys-setting | 8 match (validation, Lookup schema lookup, inline Binary under the stand's file policy, unknown environment) | `example-sys-setting.json`: ShortText with value, Integer with value, Binary without — match | done |
+| update-sys-setting | 8 match (argument rules, file on missing/text setting, missing file, inline Binary, invalid code) | same file: text update, Integer ` 42 ` then a refused `forty-two` (identical refusal), Binary upload from `value-file-path` — match | done |
+| download-sys-setting-file | 9 match | same file: downloads the uploaded bytes (68) on both sides — match | done |
+| manage-user | 11 match | `t12-admin.json`: own contact, create (password from `CLIO_ADMIN_PASSWORD_T12`), deactivate, reactivate, lock-status, unlock, password, delete — match | done |
+| manage-role | 10 match | `t12-admin.json`: functional role and division with harness ids, rename, ensure-manager, add/remove functional, add/remove member, delete managers group, division and roles — match; association rows Creatio creates differ by Id (known-diff, compared after capture) | done |
+| manage-license | 4 match | role-list read only: the stand lists no license packages, so no assignment ran | done, writes mock-tested |
+| manage-access | 10 match | IP rule create/update/list/delete, delegation and revoke, grant/deny/revoke of the stock `CanExportGrid` operation for an own role — match; grant/deny answers known-diff (row Id; positions shift because both sides' grants exist at once) | done; `operation-position` window-only |
+| create-server-to-server-oauth-app | 3 match | `t12-oauth.json`: both servers refuse identically ("did not return client credentials"); the stand has no Identity Service URL, no `OAuthClientApp` row is created | done, success path mock-tested |
+| get-identity-assertion | 5 match (incl. JSON format, blank and unknown environment) | read-only on this stand (AudienceNotConfigured) | done |
+| get-identity-public-jwk | 2 match | — (SigningKeyMissing on this stand) | done |
+| regenerate-identity-signing-key | — | window-only | done, mock-tested |
+| set-fsm-mode | 3 match (invalid mode, unknown environment, wrong type) | window-only | done, mock-tested |
+
+Stand effects of the live runs: `manage-role update/delete`, `add-/remove-member`,
+`add-functional` and `delegate/revoke-delegation` call
+`AdministrationService.ActualizeAdminUnitInRole`, which recomputes role membership for the whole
+stand; clio's flow does it unconditionally, so it ran for both sides. `remove-functional` goes through
+cliogate's `RemoveFunctionalRoleAssociation`. Creatio adds "<Division>. Managers group" (type 2)
+under every division; the scenario finds it with `ensure-manager` and deletes it before the
+division.
+
+Window-only (`window/t12.json`): `set-fsm-mode` (switches file system mode of the whole stand,
+exports or imports every package, IIS recycles the pool), `regenerate-identity-signing-key`
+(invalidates every assertion signed with the old key) and `manage-access operation-position`
+(clears the stand's rights cache through cliogate before and after the change).
+
+Ledger: the two `T12B` settings an earlier run left were found on the stand with their
+`SysSettingsValue` rows. Their recorded cleanup (DataService delete of `SysSettings`) is refused for
+rights, so they were deleted through `VwSysSetting`, which also removed the value rows (checked by
+ESQ), and two `removed` records were appended to the ledger by hand. The first `t12-admin.json` run
+left two divisions (their managers groups blocked the delete; the scenario now deletes the group
+first); they were deleted with `manage-role` and two `removed` records appended by hand. After the
+final runs the ledger has no open entry and an ESQ sweep finds no `UsrParity…` row in
+`SysSettings`, `SysAdminUnit`, `Contact`, `OAuthClientApp`, `SysAdminUnitIPRange` or
+`SysAdminOperationGrantee`.
+
+Shared changes (separate commits): `scripts/compare-mcp-writes.py` gives every side fresh
+`{guid1}`..`{guid3}` values (manage-role/manage-user take the new record's id from the caller);
+`scripts/test_compare_mcp_writes.py` tests them and no longer expects the sys-setting example to be
+skipped; `docs/parity.md` describes both.
+
+Gaps vs clio:
+- Bundled-package convergence (refusing a cliogate older than the one a clio release ships) is not
+  ported; the requirement gates (Creatio 10.1.585.0 for `manage-user create/password` and
+  `operation-position`, cliogate 2.0.0.50/2.0.0.52, cliogate presence for downloads) are.
+- `set-fsm-mode`: IIS site discovery is not ported (only a registered `EnvironmentPath`); a local
+  config edit keeps the file's formatting where clio rewrites `OuterXml`; the .NET Core restart's
+  log lines are approximated; no live run.
+- `DateTime.TryParse` and `decimal.TryParse` cover the forms an agent sends, not every .NET culture
+  form; the Lookup display-value update path is mock-tested only.
+- Identity tools also accept `environment-name` (clio only `environmentName`), like get-fsm-mode.
+  `download-sys-setting-file` requires `environment-name` as clio does, also when this server has a
+  default environment.
+- No `correlation-id` in any envelope (this server writes no log the id could name). The
+  sys-setting Unknown/non-JSON recovery texts are clio 8.1.0.134's (master adds a `--debug`
+  sentence), as get-sys-setting already does.

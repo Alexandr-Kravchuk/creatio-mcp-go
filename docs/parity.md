@@ -103,7 +103,10 @@ of this run is still on the stand.
 
 A file is a list of scenarios: `{"label", "why"?, "steps": [...]}`. Placeholders in any string:
 `{side}` is `clio` or `go`, `{run}` is an alphanumeric id of the run (Creatio codes and schema names reject
-`-`), and a name from `capture` (for example `{id}`) is the value captured on that side.
+`-`), `{guid1}`, `{guid2}` and `{guid3}` are fresh ids per side and run (for tools whose caller chooses the
+new record's id, such as `manage-role create`), and a name from `capture` (for example `{id}`) is the value
+captured on that side. Every placeholder known when an object is created is substituted into the cleanup calls
+the ledger records for it; the `{guidN}` values are compared as their template.
 
 | Step `kind` | Fields | What happens |
 |---|---|---|
@@ -131,7 +134,11 @@ to it: they contain its name, or a value captured by a call whose arguments cont
 refused before it is sent.
 
 `scripts/write-scenarios/example-sys-setting.json` is the reference: create a system setting, compare
-`get-sys-setting`, check two fields, remove the row through clio's `odata-read` + `odata-delete`.
+`get-sys-setting`, check fields, update it, and remove it through clio: `execute-esq` finds the row's Id and
+`execute-dataservice-batch` deletes the `VwSysSetting` row. On the write stand OData DELETE answers HTTP 405 and
+a DataService delete of `SysSettings` or `SysSettingsValue` is refused for lack of rights; the `VwSysSetting`
+delete (the system settings section's own path) removes the setting and its `SysSettingsValue` rows (checked
+2026-10-10).
 
 Self-tests (no network; two fake stdio servers share one fake stand):
 
