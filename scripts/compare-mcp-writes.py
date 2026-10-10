@@ -17,7 +17,7 @@ Safety:
 Printed and persisted: verdicts, timings and the JSON paths that differ. Never values, URLs,
 environment names, object names or credentials, so the evidence file is safe to share.
 """
-import argparse, importlib.util, json, os, pathlib, re, shlex, sys, time
+import argparse, importlib.util, json, os, pathlib, re, shlex, sys, time, uuid
 
 REPO = pathlib.Path(__file__).resolve().parent.parent
 SIDES = ("clio", "go")
@@ -278,6 +278,12 @@ class Harness:
             return {"scenario": label, "verdict": "skipped", "steps": []}
         state = {side: {"variables": {"run": self.run_id, "side": side}, "created": set(), "attempted": [],
                         "provenance": {}, "replacements": {}, "answers": {}} for side in SIDES}
+        for side in SIDES:
+            # {guid1}..{guid3}: fresh ids per side, for tools whose caller chooses the new record's id.
+            for index in range(1, 4):
+                value = str(uuid.uuid4())
+                state[side]["variables"][f"guid{index}"] = value
+                state[side]["replacements"][value] = "{guid" + str(index) + "}"
         steps, stopped = [], False
         try:
             for index, step in enumerate(scenario["steps"]):
