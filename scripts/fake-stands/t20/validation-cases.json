@@ -1,0 +1,1417 @@
+[
+ {
+  "label": "upd rows-file no data",
+  "tool": "odata-update",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "id": "11111111-1111-1111-1111-111111111111",
+   "rows-file": "/nonexistent/x.json",
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "upd rows-file confirm",
+  "tool": "odata-update",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "id": "11111111-1111-1111-1111-111111111111",
+   "rows-file": "/nonexistent/x.json",
+   "confirm": true,
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "upd no id",
+  "tool": "odata-update",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "data": {
+    "Name": "x"
+   },
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "upd no data",
+  "tool": "odata-update",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "id": "11111111-1111-1111-1111-111111111111",
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "upd both",
+  "tool": "odata-update",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "id": "11111111-1111-1111-1111-111111111111",
+   "data": {
+    "Name": "x"
+   },
+   "rows-file": "/x.json",
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "upd rows_file",
+  "tool": "odata-update",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "id": "11111111-1111-1111-1111-111111111111",
+   "data": {
+    "Name": "x"
+   },
+   "rows_file": "/x.json",
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "upd bogus",
+  "tool": "odata-update",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "id": "11111111-1111-1111-1111-111111111111",
+   "data": {
+    "Name": "x"
+   },
+   "bogus": 1,
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "upd values alias",
+  "tool": "odata-update",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "id": "11111111-1111-1111-1111-111111111111",
+   "values": {
+    "Name": "x"
+   },
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "upd values alias confirm",
+  "tool": "odata-update",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "id": "11111111-1111-1111-1111-111111111111",
+   "values": {
+    "Name": "x"
+   },
+   "confirm": true,
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "upd values+data",
+  "tool": "odata-update",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "id": "11111111-1111-1111-1111-111111111111",
+   "values": {
+    "Name": "x"
+   },
+   "data": {
+    "a": 1
+   },
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "upd confirm unknown env",
+  "tool": "odata-update",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "id": "11111111-1111-1111-1111-111111111111",
+   "data": {
+    "Name": "x"
+   },
+   "confirm": true,
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "create payload alias",
+  "tool": "odata-create",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "payload": {
+    "Name": "x"
+   },
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "create rows_file",
+  "tool": "odata-create",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "rows": [
+    {
+     "Name": "x"
+    }
+   ],
+   "rows_file": "/x",
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "create no rows",
+  "tool": "odata-create",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "del ids",
+  "tool": "odata-delete",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "ids": [
+    "11111111-1111-1111-1111-111111111111"
+   ],
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "del ids confirm",
+  "tool": "odata-delete",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "ids": [
+    "11111111-1111-1111-1111-111111111111",
+    "22222222-2222-2222-2222-222222222222"
+   ],
+   "confirm": true,
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "del none",
+  "tool": "odata-delete",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "del both",
+  "tool": "odata-delete",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "id": "11111111-1111-1111-1111-111111111111",
+   "ids": [
+    "11111111-1111-1111-1111-111111111111"
+   ],
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "del id ids empty",
+  "tool": "odata-delete",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "id": "11111111-1111-1111-1111-111111111111",
+   "ids": [],
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "del bad entity none",
+  "tool": "odata-delete",
+  "clio-run": true,
+  "args": {
+   "entity": "Co ntact",
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "del bad id in ids",
+  "tool": "odata-delete",
+  "clio-run": true,
+  "args": {
+   "entity": "Account",
+   "ids": [
+    "11111111-1111-1111-1111-111111111111",
+    "zz"
+   ],
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "del dry-run",
+  "tool": "odata-delete",
+  "clio-run": true,
+  "args": {
+   "entity": "Account",
+   "id": "11111111-1111-1111-1111-111111111111",
+   "dry-run": true,
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "del cascade contact",
+  "tool": "odata-delete",
+  "clio-run": true,
+  "args": {
+   "entity": "contact",
+   "id": "11111111-1111-1111-1111-111111111111",
+   "cascade": true,
+   "confirm": true,
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "del cascade contact dry",
+  "tool": "odata-delete",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "id": "11111111-1111-1111-1111-111111111111",
+   "cascade": true,
+   "dry-run": true,
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "del cascade noconfirm",
+  "tool": "odata-delete",
+  "clio-run": true,
+  "args": {
+   "entity": "Account",
+   "id": "11111111-1111-1111-1111-111111111111",
+   "cascade": true,
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "del cascade 11 ids",
+  "tool": "odata-delete",
+  "clio-run": true,
+  "args": {
+   "entity": "Account",
+   "ids": [
+    "11111111-1111-1111-1111-000000000001",
+    "11111111-1111-1111-1111-000000000002",
+    "11111111-1111-1111-1111-000000000003",
+    "11111111-1111-1111-1111-000000000004",
+    "11111111-1111-1111-1111-000000000005",
+    "11111111-1111-1111-1111-000000000006",
+    "11111111-1111-1111-1111-000000000007",
+    "11111111-1111-1111-1111-000000000008",
+    "11111111-1111-1111-1111-000000000009",
+    "11111111-1111-1111-1111-000000000010",
+    "11111111-1111-1111-1111-000000000011"
+   ],
+   "cascade": true,
+   "confirm": true,
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "del cascade unknown env",
+  "tool": "odata-delete",
+  "clio-run": true,
+  "args": {
+   "entity": "Account",
+   "id": "11111111-1111-1111-1111-111111111111",
+   "cascade": true,
+   "confirm": true,
+   "cascade-plan-hash": "abc",
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "del bogus",
+  "tool": "odata-delete",
+  "clio-run": true,
+  "args": {
+   "entity": "Account",
+   "id": "11111111-1111-1111-1111-111111111111",
+   "bogus": true,
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "del ids string",
+  "tool": "odata-delete",
+  "clio-run": true,
+  "args": {
+   "entity": "Account",
+   "ids": "11111111-1111-1111-1111-111111111111",
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "del dry-run string",
+  "tool": "odata-delete",
+  "clio-run": true,
+  "args": {
+   "entity": "Account",
+   "id": "11111111-1111-1111-1111-111111111111",
+   "dry-run": "true",
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "upd confirm unknown env",
+  "tool": "odata-update",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "id": "11111111-1111-1111-1111-111111111111",
+   "data": {
+    "Name": "x"
+   },
+   "confirm": true,
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "upd no env",
+  "tool": "odata-update",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "id": "11111111-1111-1111-1111-111111111111",
+   "data": {
+    "Name": "x"
+   }
+  }
+ },
+ {
+  "label": "create no env",
+  "tool": "odata-create",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "rows": [
+    {
+     "Name": "x"
+    }
+   ]
+  }
+ },
+ {
+  "label": "del no env",
+  "tool": "odata-delete",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "id": "11111111-1111-1111-1111-111111111111"
+  }
+ },
+ {
+  "label": "upd Values caps",
+  "tool": "odata-update",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "id": "11111111-1111-1111-1111-111111111111",
+   "Values": {
+    "Name": "x"
+   },
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "upd Entity caps",
+  "tool": "odata-update",
+  "clio-run": true,
+  "args": {
+   "Entity": "Contact",
+   "id": "11111111-1111-1111-1111-111111111111",
+   "data": {
+    "Name": "x"
+   },
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "upd data string",
+  "tool": "odata-update",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "id": "11111111-1111-1111-1111-111111111111",
+   "data": "x",
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "upd data null",
+  "tool": "odata-update",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "id": "11111111-1111-1111-1111-111111111111",
+   "data": null,
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "upd rows-file number",
+  "tool": "odata-update",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "id": "11111111-1111-1111-1111-111111111111",
+   "rows-file": 5,
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "upd confirm string",
+  "tool": "odata-update",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "id": "11111111-1111-1111-1111-111111111111",
+   "data": {
+    "a": 1
+   },
+   "confirm": "true",
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "upd values+payload",
+  "tool": "odata-update",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "id": "11111111-1111-1111-1111-111111111111",
+   "values": {
+    "Name": "x"
+   },
+   "payload": {
+    "a": 1
+   },
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "upd values+rows-file",
+  "tool": "odata-update",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "id": "11111111-1111-1111-1111-111111111111",
+   "values": {
+    "Name": "x"
+   },
+   "rows-file": "/x",
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "upd values + bogus",
+  "tool": "odata-update",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "id": "11111111-1111-1111-1111-111111111111",
+   "values": {
+    "Name": "x"
+   },
+   "bogus": 1,
+   "rowsFile": "/q",
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "upd values bad id",
+  "tool": "odata-update",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "id": "zz",
+   "values": {
+    "Name": "x"
+   },
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "upd values string",
+  "tool": "odata-update",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "id": "11111111-1111-1111-1111-111111111111",
+   "values": "q",
+   "confirm": true,
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "upd environmentName",
+  "tool": "odata-update",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "id": "11111111-1111-1111-1111-111111111111",
+   "data": {
+    "a": 1
+   },
+   "environmentName": "x",
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "create data alias object",
+  "tool": "odata-create",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "data": {
+    "Name": "x"
+   },
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "create values array",
+  "tool": "odata-create",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "values": [
+    {
+     "Name": "x"
+    }
+   ],
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "create body string",
+  "tool": "odata-create",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "body": "x",
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "create payload+rows",
+  "tool": "odata-create",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "payload": {
+    "Name": "x"
+   },
+   "rows": [],
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "create bogus",
+  "tool": "odata-create",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "rows": [
+    {
+     "a": 1
+    }
+   ],
+   "bogus": 1,
+   "stop_on_error": true,
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "create no entity",
+  "tool": "odata-create",
+  "clio-run": true,
+  "args": {
+   "rows": [
+    {
+     "a": 1
+    }
+   ],
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "create bad entity alias",
+  "tool": "odata-create",
+  "clio-run": true,
+  "args": {
+   "entity": "Con tact",
+   "payload": {
+    "a": 1
+   },
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "create ok unknown env",
+  "tool": "odata-create",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "rows": [
+    {
+     "a": 1
+    }
+   ],
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "del unknown env",
+  "tool": "odata-delete",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "id": "11111111-1111-1111-1111-111111111111",
+   "confirm": true,
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "del ids number",
+  "tool": "odata-delete",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "ids": [
+    1
+   ],
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "del ids null el",
+  "tool": "odata-delete",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "ids": [
+    null
+   ],
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "del ids dup",
+  "tool": "odata-delete",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "ids": [
+    " 11111111-1111-1111-1111-111111111111",
+    "11111111-1111-1111-1111-111111111111"
+   ],
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "del 51 ids",
+  "tool": "odata-delete",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "ids": [
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "x"
+   ],
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "del hash number",
+  "tool": "odata-delete",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "id": "11111111-1111-1111-1111-111111111111",
+   "cascade-plan-hash": 5,
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "del cascade string",
+  "tool": "odata-delete",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "id": "11111111-1111-1111-1111-111111111111",
+   "cascade": "yes",
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "del id number",
+  "tool": "odata-delete",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "id": 5,
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "del dry noconfirm unknown env",
+  "tool": "odata-delete",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "ids": [
+    "11111111-1111-1111-1111-111111111111"
+   ],
+   "dry-run": true,
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "del cascade employee confirm",
+  "tool": "odata-delete",
+  "clio-run": true,
+  "args": {
+   "entity": "Employee",
+   "ids": [
+    "11111111-1111-1111-1111-111111111111"
+   ],
+   "cascade": true,
+   "confirm": true,
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "del ids blank el",
+  "tool": "odata-delete",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "ids": [
+    ""
+   ],
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "del ids blank entity",
+  "tool": "odata-delete",
+  "clio-run": true,
+  "args": {
+   "entity": "",
+   "ids": [
+    "x"
+   ],
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "upd confirm null",
+  "tool": "odata-update",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "id": "11111111-1111-1111-1111-111111111111",
+   "data": {
+    "a": 1
+   },
+   "confirm": null,
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "upd data null + rows-file",
+  "tool": "odata-update",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "id": "11111111-1111-1111-1111-111111111111",
+   "data": null,
+   "rows-file": "/x",
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "upd values null",
+  "tool": "odata-update",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "id": "11111111-1111-1111-1111-111111111111",
+   "values": null,
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "upd entity null",
+  "tool": "odata-update",
+  "clio-run": true,
+  "args": {
+   "entity": null,
+   "id": "11111111-1111-1111-1111-111111111111",
+   "data": {
+    "a": 1
+   },
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "upd env null",
+  "tool": "odata-update",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "id": "11111111-1111-1111-1111-111111111111",
+   "data": {
+    "a": 1
+   },
+   "environment-name": null
+  }
+ },
+ {
+  "label": "upd data empty obj",
+  "tool": "odata-update",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "id": "11111111-1111-1111-1111-111111111111",
+   "data": {},
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "create rows null + rows-file",
+  "tool": "odata-create",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "rows": null,
+   "rows-file": "/x",
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "create stop string",
+  "tool": "odata-create",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "rows": [
+    {
+     "a": 1
+    }
+   ],
+   "stop-on-error": "x",
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "create payload null",
+  "tool": "odata-create",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "payload": null,
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "create body string",
+  "tool": "odata-create",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "body": "x",
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "del ids null",
+  "tool": "odata-delete",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "ids": null,
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "del ids empty",
+  "tool": "odata-delete",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "ids": [],
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "del confirm null",
+  "tool": "odata-delete",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "id": "11111111-1111-1111-1111-111111111111",
+   "confirm": null,
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "del Ids caps",
+  "tool": "odata-delete",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "Ids": [
+    "11111111-1111-1111-1111-111111111111"
+   ],
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "del id blank ids",
+  "tool": "odata-delete",
+  "clio-run": true,
+  "args": {
+   "entity": "Contact",
+   "id": "  ",
+   "ids": [
+    "11111111-1111-1111-1111-111111111111"
+   ],
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "del bad entity ids",
+  "tool": "odata-delete",
+  "clio-run": true,
+  "args": {
+   "entity": "Co ntact",
+   "ids": [
+    "11111111-1111-1111-1111-111111111111"
+   ],
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "wait-timeout 301",
+  "tool": "run-process",
+  "clio-run": true,
+  "args": {
+   "process-name": "UsrP",
+   "wait-timeout": 301,
+   "environment-name": "dummy"
+  }
+ },
+ {
+  "label": "wait-timeout -1",
+  "tool": "run-process",
+  "clio-run": true,
+  "args": {
+   "process-name": "UsrP",
+   "wait-timeout": -1,
+   "environment-name": "dummy"
+  }
+ },
+ {
+  "label": "wait-timeout 1.5",
+  "tool": "run-process",
+  "clio-run": true,
+  "args": {
+   "process-name": "UsrP",
+   "wait-timeout": 1.5,
+   "environment-name": "dummy"
+  }
+ },
+ {
+  "label": "wait-timeout string",
+  "tool": "run-process",
+  "clio-run": true,
+  "args": {
+   "process-name": "UsrP",
+   "wait-timeout": "5",
+   "environment-name": "dummy"
+  }
+ },
+ {
+  "label": "wait-timeout null",
+  "tool": "run-process",
+  "clio-run": true,
+  "args": {
+   "process-name": "UsrP",
+   "wait-timeout": null,
+   "cleanup": true,
+   "environment-name": "dummy"
+  }
+ },
+ {
+  "label": "six watch",
+  "tool": "run-process",
+  "clio-run": true,
+  "args": {
+   "process-name": "UsrP",
+   "watch": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F"
+   ],
+   "environment-name": "dummy"
+  }
+ },
+ {
+  "label": "watch dup five",
+  "tool": "run-process",
+  "clio-run": true,
+  "args": {
+   "process-name": "UsrP",
+   "watch": [
+    "A",
+    "a",
+    "C",
+    "D",
+    "E",
+    "F"
+   ],
+   "wait-timeout": 400,
+   "environment-name": "dummy"
+  }
+ },
+ {
+  "label": "watch bad name",
+  "tool": "run-process",
+  "clio-run": true,
+  "args": {
+   "process-name": "UsrP",
+   "watch": [
+    "Activity",
+    "Act ivity"
+   ],
+   "environment-name": "dummy"
+  }
+ },
+ {
+  "label": "watch null el",
+  "tool": "run-process",
+  "clio-run": true,
+  "args": {
+   "process-name": "UsrP",
+   "watch": [
+    null
+   ],
+   "environment-name": "dummy"
+  }
+ },
+ {
+  "label": "watch empty str",
+  "tool": "run-process",
+  "clio-run": true,
+  "args": {
+   "process-name": "UsrP",
+   "watch": [
+    ""
+   ],
+   "environment-name": "dummy"
+  }
+ },
+ {
+  "label": "watch blank",
+  "tool": "run-process",
+  "clio-run": true,
+  "args": {
+   "process-name": "UsrP",
+   "watch": [
+    " "
+   ],
+   "environment-name": "dummy"
+  }
+ },
+ {
+  "label": "watch number el",
+  "tool": "run-process",
+  "clio-run": true,
+  "args": {
+   "process-name": "UsrP",
+   "watch": [
+    1
+   ],
+   "environment-name": "dummy"
+  }
+ },
+ {
+  "label": "watch string",
+  "tool": "run-process",
+  "clio-run": true,
+  "args": {
+   "process-name": "UsrP",
+   "watch": "Activity",
+   "environment-name": "dummy"
+  }
+ },
+ {
+  "label": "cleanup no watch",
+  "tool": "run-process",
+  "clio-run": true,
+  "args": {
+   "process-name": "UsrP",
+   "cleanup": true,
+   "environment-name": "dummy"
+  }
+ },
+ {
+  "label": "cleanup empty watch",
+  "tool": "run-process",
+  "clio-run": true,
+  "args": {
+   "process-name": "UsrP",
+   "cleanup": true,
+   "watch": [],
+   "environment-name": "dummy"
+  }
+ },
+ {
+  "label": "cleanup string",
+  "tool": "run-process",
+  "clio-run": true,
+  "args": {
+   "process-name": "UsrP",
+   "cleanup": "yes",
+   "environment-name": "dummy"
+  }
+ },
+ {
+  "label": "wait string",
+  "tool": "run-process",
+  "clio-run": true,
+  "args": {
+   "process-name": "UsrP",
+   "wait": "yes",
+   "environment-name": "dummy"
+  }
+ },
+ {
+  "label": "wait null",
+  "tool": "run-process",
+  "clio-run": true,
+  "args": {
+   "process-name": "UsrP",
+   "wait": null,
+   "cleanup": true,
+   "environment-name": "dummy"
+  }
+ },
+ {
+  "label": "unknown key",
+  "tool": "run-process",
+  "clio-run": true,
+  "args": {
+   "process-name": "UsrP",
+   "bogus": 1,
+   "environment-name": "dummy"
+  }
+ },
+ {
+  "label": "blank name with bad wait-timeout",
+  "tool": "run-process",
+  "clio-run": true,
+  "args": {
+   "process-name": " ",
+   "wait-timeout": 999,
+   "environment-name": "dummy"
+  }
+ },
+ {
+  "label": "bad wait-timeout unknown env",
+  "tool": "run-process",
+  "clio-run": true,
+  "args": {
+   "process-name": "UsrP",
+   "wait-timeout": 999,
+   "environment-name": "nosuchenv"
+  }
+ },
+ {
+  "label": "validate known-containers ok",
+  "tool": "validate-page",
+  "clio-run": true,
+  "args": {
+   "body": "define(\"UsrPage\", /**SCHEMA_DEPS*/[]/**SCHEMA_DEPS*/, function/**SCHEMA_ARGS*/()/**SCHEMA_ARGS*/ { return { viewConfigDiff: /**SCHEMA_VIEW_CONFIG_DIFF*/[{\"operation\":\"insert\",\"name\":\"Btn\",\"values\":{\"type\":\"crt.Button\"},\"parentName\":\"MyContainer\",\"propertyName\":\"items\",\"index\":0}]/**SCHEMA_VIEW_CONFIG_DIFF*/, viewModelConfigDiff: /**SCHEMA_VIEW_MODEL_CONFIG_DIFF*/[]/**SCHEMA_VIEW_MODEL_CONFIG_DIFF*/, modelConfigDiff: /**SCHEMA_MODEL_CONFIG_DIFF*/[]/**SCHEMA_MODEL_CONFIG_DIFF*/, handlers: /**SCHEMA_HANDLERS*/[]/**SCHEMA_HANDLERS*/, converters: /**SCHEMA_CONVERTERS*/{}/**SCHEMA_CONVERTERS*/, validators: /**SCHEMA_VALIDATORS*/{}/**SCHEMA_VALIDATORS*/ }; });",
+   "known-containers": [
+    "MyContainer"
+   ]
+  }
+ },
+ {
+  "label": "validate no known-containers",
+  "tool": "validate-page",
+  "clio-run": true,
+  "args": {
+   "body": "define(\"UsrPage\", /**SCHEMA_DEPS*/[]/**SCHEMA_DEPS*/, function/**SCHEMA_ARGS*/()/**SCHEMA_ARGS*/ { return { viewConfigDiff: /**SCHEMA_VIEW_CONFIG_DIFF*/[{\"operation\":\"insert\",\"name\":\"Btn\",\"values\":{\"type\":\"crt.Button\"},\"parentName\":\"MyContainer\",\"propertyName\":\"items\",\"index\":0}]/**SCHEMA_VIEW_CONFIG_DIFF*/, viewModelConfigDiff: /**SCHEMA_VIEW_MODEL_CONFIG_DIFF*/[]/**SCHEMA_VIEW_MODEL_CONFIG_DIFF*/, modelConfigDiff: /**SCHEMA_MODEL_CONFIG_DIFF*/[]/**SCHEMA_MODEL_CONFIG_DIFF*/, handlers: /**SCHEMA_HANDLERS*/[]/**SCHEMA_HANDLERS*/, converters: /**SCHEMA_CONVERTERS*/{}/**SCHEMA_CONVERTERS*/, validators: /**SCHEMA_VALIDATORS*/{}/**SCHEMA_VALIDATORS*/ }; });"
+  }
+ },
+ {
+  "label": "validate known-containers string",
+  "tool": "validate-page",
+  "clio-run": true,
+  "args": {
+   "body": "x",
+   "known-containers": "MyContainer"
+  }
+ },
+ {
+  "label": "compile blank process-name",
+  "tool": "compile-creatio",
+  "clio-run": true,
+  "args": {
+   "process-name": "  ",
+   "environment-name": "dummy"
+  }
+ },
+ {
+  "label": "compile both",
+  "tool": "compile-creatio",
+  "clio-run": true,
+  "args": {
+   "process-name": "UsrP",
+   "package-name": "UsrPkg",
+   "environment-name": "dummy"
+  }
+ },
+ {
+  "label": "compile process_name",
+  "tool": "compile-creatio",
+  "clio-run": true,
+  "args": {
+   "process_name": "UsrP",
+   "environment-name": "dummy"
+  }
+ },
+ {
+  "label": "compile process + process-name",
+  "tool": "compile-creatio",
+  "clio-run": true,
+  "args": {
+   "process": "UsrP",
+   "process-name": "UsrP",
+   "environment-name": "dummy"
+  }
+ },
+ {
+  "label": "section caption-culture no caption",
+  "tool": "update-app-section",
+  "clio-run": true,
+  "args": {
+   "application-code": "UsrApp",
+   "section-code": "UsrSec",
+   "caption-culture": "es-ES",
+   "environment-name": "dummy"
+  }
+ },
+ {
+  "label": "section caption-culture number",
+  "tool": "update-app-section",
+  "clio-run": true,
+  "args": {
+   "application-code": "UsrApp",
+   "section-code": "UsrSec",
+   "caption": "X",
+   "caption-culture": 5,
+   "environment-name": "dummy"
+  }
+ },
+ {
+  "label": "get-page include-operations string",
+  "tool": "get-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "UsrPage",
+   "include-operations": "yes",
+   "environment-name": "dummy"
+  }
+ },
+ {
+  "label": "update-page include-operations string",
+  "tool": "update-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "UsrPage",
+   "body": "x",
+   "include-operations": "yes",
+   "environment-name": "dummy"
+  }
+ }
+]

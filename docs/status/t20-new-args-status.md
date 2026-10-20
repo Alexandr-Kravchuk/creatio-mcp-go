@@ -16,7 +16,9 @@ against the canned Creatio in `scripts/fake-stands/t20` (rules, cases and usage 
 | get-page / update-page | `include-operations` | binding refusal fixed on update-page | 2 calls equal; the reply shape needs a stand |
 | validate-page | `known-containers` | binding refusals fixed; the check is not run | the parent-container check stays outside this server's validate-page subset, which says so in every answer |
 
-Last fake-stand run: `compare-mcp.py` 48 match, 0 mismatch; requests per route and rule identical on both sides.
+Last runs, both with `scripts/compare-mcp.py`: the fake stand (`cases.json`, fresh port and log) 48 match, 0
+mismatch, requests per route and rule identical on both sides; the refusal paths (`validation-cases.json`,
+unreachable `dummy` environment) 109 of 114 match - the other five are the known differences below.
 
 ## Known differences
 
@@ -25,8 +27,11 @@ Last fake-stand run: `compare-mcp.py` 48 match, 0 mismatch; requests per route a
 - Several payload or identity synonyms in one call are named in sorted order (Go maps keep no request order).
 - describe-business-process: members of the graph's typed blocks follow clio's model order and declarations
   (`processdescribe_model.go`); a server member clio's model does not know in a block without an overflow
-  bag is dropped as clio drops it. The 18,000-byte summary edge and the Unicode tables of the MCP result
-  encoder (unassigned code points) are not measured on a stand.
+  bag is dropped as clio drops it. Measured for element, flow, parameter, signal and filter; the other blocks
+  (email, openEditPage, approval, subProcess, preconfiguredPage, formula, scriptTask, fileProcessing, ...)
+  follow the 142 declarations by construction, unmeasured. The 18,000-byte summary edge and the Unicode
+  tables of the MCP result encoder (unassigned code points) are not measured on a stand.
+- validate-page: the known-containers check is not run (this server's validate-page is a declared subset).
 - Transport failures read in Go's words, not .NET's.
 
 ## Left

@@ -14,6 +14,11 @@ From the repository root (use a port nobody else uses; a stray caller's requests
   python3 scripts/compare-mcp.py --clio-dll <clio.dll> --go-bin <creatio-mcp-go> --clio-env fake \
       --clio-settings <dir>/appsettings.json --cases scripts/fake-stands/t20/cases.json
   python3 scripts/fake-stands/t20/fake_creatio.py count <dir>/requests.jsonl   # requests per route and rule, per side
+
+validation-cases.json needs no fake: the refusal paths, run with --clio-env dummy and a settings file that
+registers 'dummy' at an unreachable address (http://127.0.0.1:9). Expected: every case matches except the
+order of two payload synonyms in one refusal, validate-page's subset warning (two cases) and transport-error
+wording (two cases) - see docs/status/t20-new-args-status.md.
 """
 import json
 import pathlib
