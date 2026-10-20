@@ -29,7 +29,7 @@ func init() {
 	// deadline with a launch gate, the platform verdict mapped by RunProcessCommand.
 	registerTool(map[string]any{"name": "run-process"}, func(ctx context.Context, envs *environments, args map[string]any) (*mcp.CallToolResult, error) {
 		const tool = "run-process"
-		valid := []string{"environment-name", "process-name", "parameters", "result-parameters", "timeout", "uri", "login", "password"}
+		valid := []string{"environment-name", "process-name", "parameters", "result-parameters", "timeout", "wait", "wait-timeout", "watch", "cleanup", "uri", "login", "password"}
 		if message := unknownArgumentError(args, valid...); message != "" {
 			return structuredToolResult(creatio.DataWriteProcessResult{Warnings: []string{}, Error: message}), nil
 		}
@@ -70,17 +70,63 @@ func init() {
 				request.ResultParameters = append(request.ResultParameters, text)
 			}
 		}
-		if value, ok := args["timeout"]; ok && value != nil {
+		integer := func(name string, fallback int) (int, error) {
+			value, ok := args[name]
+			if !ok || value == nil {
+				return fallback, nil
+			}
 			number, isNumber := value.(float64)
 			if text, isText := value.(string); isText {
 				parsed, parseErr := strconv.ParseFloat(strings.TrimSpace(text), 64)
 				number, isNumber = parsed, parseErr == nil
 			}
 			if !isNumber || number != math.Trunc(number) || number > math.MaxInt32 || number < math.MinInt32 {
-				return nil, dataWriteKindBindingError(tool, "timeout", "a number")
+				return 0, dataWriteKindBindingError(tool, name, "a number")
 			}
-			request.TimeoutSeconds = int(number)
+			return int(number), nil
 		}
+		flag := func(name string, fallback bool) (bool, error) {
+			value, ok := args[name]
+			if !ok || value == nil {
+				return fallback, nil
+			}
+			typed, isBool := value.(bool)
+			if !isBool {
+				return false, dataWriteKindBindingError(tool, name, "a boolean")
+			}
+			return typed, nil
+		}
+		if request.TimeoutSeconds, err = integer("timeout", 0); err != nil {
+			return nil, err
+		}
+		// clio 8.1.0.142 (ENG-103024): wait defaults to true and wait-timeout to 20 s.
+		if request.Wait, err = flag("wait", true); err != nil {
+			return nil, err
+		}
+		if request.WaitTimeoutSeconds, err = integer("wait-timeout", creatio.DataWriteDefaultWaitSeconds); err != nil {
+			return nil, err
+		}
+		if value, ok := args["watch"]; ok && value != nil {
+			items, isArray := value.([]any)
+			if !isArray {
+				return nil, dataWriteKindBindingError(tool, "watch", "an array")
+			}
+			request.Watch = []string{}
+			for _, item := range items {
+				text, isString := item.(string)
+				if !isString && item != nil {
+					return nil, dataWriteNestedBindingError(tool, "watch")
+				}
+				request.Watch = append(request.Watch, text)
+			}
+		}
+		if request.Cleanup, err = flag("cleanup", false); err != nil {
+			return nil, err
+		}
+		// The work runs detached from this request, so the caller's own context is what says it stopped waiting:
+		// once it is done, no cancel or delete starts.
+		request.CallerGone = func() bool { return ctx.Err() != nil }
+		request.Version = creatio.NewDataWriteVersionRead()
 		deadline := dataWriteRunProcessDeadline()
 		request.Deadline = time.Now().Add(deadline)
 		result, finished, err := runLongOperation(ctx, tool, deadline, func(workCtx context.Context, _ func(string)) creatio.DataWriteProcessResult {
@@ -104,8 +150,11 @@ func init() {
 					Error: creatio.DataWriteNotLaunchedError(name)}), nil
 			}
 			sent, _ := request.Gate.SentAt()
-			return structuredToolResult(creatio.DataWriteProcessResult{Status: creatio.DataWriteStillRunningStatus,
-				Warnings: []string{creatio.DataWriteStillRunningNote(name, sent)}}), nil
+			stillRunning := creatio.DataWriteProcessResult{Status: creatio.DataWriteStillRunningStatus,
+				Warnings: []string{creatio.DataWriteStillRunningNote(name, sent)}}
+			// The launched code is known whatever the version read did; its standing only when that read has answered.
+			creatio.DataWriteAddVersion(&stillRunning, name, request.Version.CompletedFacts())
+			return structuredToolResult(stillRunning), nil
 		}
 		return structuredToolResult(result), nil
 	}, withAnnotations(toolAnnotations{ReadOnly: false, Destructive: true, Idempotent: false, OpenWorld: false}))

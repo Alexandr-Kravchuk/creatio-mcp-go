@@ -103,27 +103,16 @@ func TestDescribeBusinessProcessResolvesCaptionAndOverlaysVersionFacts(t *testin
 	if result.ExitCode != 0 || len(result.Messages) != 1 || result.Messages[0].MessageType != "Info" {
 		t.Fatalf("result = %#v", result)
 	}
-	want := "{\n" +
-		"  \"name\": \"UsrApprove_v2\",\n" +
-		"  \"caption\": \"Approve \\u003Corder\\u003E\",\n" +
-		"  \"schemaUId\": \"" + describeV2UID + "\",\n" +
-		"  \"version\": 1,\n" +
-		"  \"isActiveVersion\": true,\n" +
-		"  \"activeVersionSchemaUId\": \"" + describeV2UID + "\",\n" +
-		"  \"activeVersionName\": \"UsrApprove_v2\",\n" +
-		"  \"versionRootSchemaUId\": \"" + describeRootUID + "\",\n" +
-		"  \"activeVersionSource\": \"process-library-view\",\n" +
-		"  \"versions\": [\n" +
-		"    {\n      \"schemaUId\": \"" + describeRootUID + "\",\n      \"name\": \"UsrApprove\",\n      \"caption\": \"Approve order\",\n" +
-		"      \"version\": 0,\n      \"isActiveVersion\": false,\n      \"isRoot\": true,\n      \"packageUId\": \"" + describePackage + "\",\n" +
-		"      \"packageName\": \"UsrPkg\",\n      \"enabled\": true\n    },\n" +
-		"    {\n      \"schemaUId\": \"" + describeV2UID + "\",\n      \"name\": \"UsrApprove_v2\",\n      \"caption\": \"Approve order\",\n" +
-		"      \"version\": 1,\n      \"isActiveVersion\": true,\n      \"isRoot\": false,\n      \"packageUId\": \"" + describePackage + "\",\n" +
-		"      \"packageName\": \"UsrPkg\",\n      \"enabled\": true\n    }\n  ],\n" +
-		"  \"elements\": [\n    {\n      \"name\": \"Start1\",\n      \"type\": \"ProcessSchemaStartEvent\"\n    }\n  ],\n" +
-		"  \"flows\": [],\n" +
-		"  \"extra\": \"kept\"\n" +
-		"}"
+	// clio 8.1.0.142: compact, with its MCP result encoder (HTML characters kept), and a default that fits the
+	// reply limit labelled as the full mode.
+	want := `{"mode":"full","name":"UsrApprove_v2","caption":"Approve <order>","schemaUId":"` + describeV2UID + `","version":1,` +
+		`"isActiveVersion":true,"activeVersionSchemaUId":"` + describeV2UID + `","activeVersionName":"UsrApprove_v2",` +
+		`"versionRootSchemaUId":"` + describeRootUID + `","activeVersionSource":"process-library-view","versions":[` +
+		`{"schemaUId":"` + describeRootUID + `","name":"UsrApprove","caption":"Approve order","version":0,"isActiveVersion":false,` +
+		`"isRoot":true,"packageUId":"` + describePackage + `","packageName":"UsrPkg","enabled":true},` +
+		`{"schemaUId":"` + describeV2UID + `","name":"UsrApprove_v2","caption":"Approve order","version":1,"isActiveVersion":true,` +
+		`"isRoot":false,"packageUId":"` + describePackage + `","packageName":"UsrPkg","enabled":true}],` +
+		`"elements":[{"name":"Start1","type":"ProcessSchemaStartEvent"}],"flows":[],"extra":"kept"}`
 	if result.Messages[0].Value != want {
 		t.Fatalf("graph =\n%s\nwant\n%s", result.Messages[0].Value, want)
 	}

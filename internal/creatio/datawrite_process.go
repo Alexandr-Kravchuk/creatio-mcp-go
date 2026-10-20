@@ -1,10 +1,14 @@
 package creatio
 
-// run-process: clio master's RunProcessTool and RunProcessCommand (after ENG-102333). The process code and
-// parameter codes are checked against the process signature, the values are coerced by parameter type, and
-// ProcessEngineService.RunProcess is posted once. The MCP tool answers by the response deadline (45 s): a
-// launch gate makes that answer exact - "not-started" when the request was never sent, "still-running" when
-// it was. A failed run's own error is read back from SysProcessLog within what is left of the deadline.
+// run-process: clio 8.1.0.142's RunProcessTool and RunProcessCommand. The process code and parameter codes
+// are checked against the process signature, the values are coerced by parameter type, and
+// ProcessEngineService.RunSpecifiedProcessVersion is posted once, so the version whose code is given runs
+// (ENG-101880). The MCP tool answers by the response deadline (45 s): a launch gate makes that answer exact -
+// "not-started" when the request was never sent, "still-running" when it was. A failed run's own error is
+// read back from SysProcessLog within what is left of the deadline, and the answer names the version that
+// ran with its standing in the process library. A run answered `running` is polled (wait), the watched
+// entities are diffed before and after it (watch) and what it provably created is deleted (cleanup):
+// datawrite_process_verify.go.
 
 import (
 	"context"
@@ -19,7 +23,7 @@ import (
 )
 
 const (
-	dataWriteRunProcessRoute     = "ServiceModel/ProcessEngineService.svc/RunProcess"
+	dataWriteRunProcessRoute     = "ServiceModel/ProcessEngineService.svc/RunSpecifiedProcessVersion"
 	DataWriteNotStartedStatus    = "not-started"
 	DataWriteStillRunningStatus  = "still-running"
 	dataWriteQueuedStatus        = "queued-background"
@@ -35,13 +39,20 @@ var (
 	dataWriteErrorCodeShape  = regexp.MustCompile(`\A[A-Za-z_][A-Za-z0-9_.]{0,127}\z`)
 )
 
-// DataWriteProcessResult is clio's RunProcessResponse; null members are omitted as clio's MCP serializer does.
+// DataWriteProcessResult is clio's RunProcessResponse; null members are omitted as clio's MCP serializer does
+// (a nil list is null, an empty one is written as []).
 type DataWriteProcessResult struct {
-	Status                string          `json:"status,omitempty"`
-	ProcessID             string          `json:"processId,omitempty"`
-	ResultParameterValues json.RawMessage `json:"resultParameterValues,omitempty"`
-	Warnings              []string        `json:"warnings"`
-	Error                 string          `json:"error,omitempty"`
+	Status                string           `json:"status,omitempty"`
+	ProcessID             string           `json:"processId,omitempty"`
+	VersionName           string           `json:"versionName,omitempty"`
+	IsActiveVersion       *bool            `json:"isActiveVersion,omitempty"`
+	ActiveVersionName     string           `json:"activeVersionName,omitempty"`
+	ResultParameterValues json.RawMessage  `json:"resultParameterValues,omitempty"`
+	WaitingOn             []WaitingElement `json:"waitingOn,omitzero"`
+	Created               []CreatedRecord  `json:"created,omitzero"`
+	Cleanup               *CleanupReport   `json:"cleanup,omitempty"`
+	Warnings              []string         `json:"warnings"`
+	Error                 string           `json:"error,omitempty"`
 }
 
 func dataWriteProcessFailure(message string) DataWriteProcessResult {
@@ -60,10 +71,56 @@ type DataWriteProcessRequest struct {
 	Parameters       []DataWriteProcessParameter
 	ResultParameters []string
 	TimeoutSeconds   int
+	// Wait polls a run the platform answers `running` until it ends or WaitTimeoutSeconds pass.
+	Wait               bool
+	WaitTimeoutSeconds int
+	// Watch lists the entities diffed before and after the run (nil: none); a null element is "".
+	Watch []string
+	// Cleanup deletes what the run provably created in the watched entities.
+	Cleanup bool
 	// Deadline is when the MCP answer falls; the failed-run log read only gets what is left of it.
 	Deadline time.Time
 	Gate     *DataWriteLaunchGate
+	// CallerGone reports that the caller stopped waiting: no cancel or delete starts after that. nil: never.
+	CallerGone func() bool
+	// Version is set when the launch is sent: the version read running alongside it, so the tool's
+	// still-running answer can name the version too.
+	Version *DataWriteVersionRead
 }
+
+// DataWriteVersionRead is the version-facts read started beside the launch (clio's VersionFacts task).
+type DataWriteVersionRead struct {
+	done  chan struct{}
+	facts processDescribeFacts
+}
+
+// NewDataWriteVersionRead makes the holder the launch fills.
+func NewDataWriteVersionRead() *DataWriteVersionRead {
+	return &DataWriteVersionRead{done: make(chan struct{})}
+}
+
+// CompletedFacts is the facts when the read has answered, nil otherwise (for DataWriteAddVersion).
+func (v *DataWriteVersionRead) CompletedFacts() *processDescribeFacts {
+	if facts, ok := v.Completed(); ok {
+		return &facts
+	}
+	return nil
+}
+
+// Completed returns the facts when the read has answered.
+func (v *DataWriteVersionRead) Completed() (processDescribeFacts, bool) {
+	if v == nil {
+		return processDescribeFacts{}, false
+	}
+	select {
+	case <-v.done:
+		return v.facts, true
+	default:
+		return processDescribeFacts{}, false
+	}
+}
+
+func (r DataWriteProcessRequest) callerGone() bool { return r.CallerGone != nil && r.CallerGone() }
 
 // DataWriteLaunchGate is RunProcessLaunchGate: decides once between sending the launch request and answering
 // that nothing was launched.
@@ -114,6 +171,9 @@ func (c *Client) RunProcess(ctx context.Context, request DataWriteProcessRequest
 	if strings.TrimSpace(request.ProcessName) == "" {
 		return dataWriteProcessFailure("process-name is required")
 	}
+	if message := DataWriteValidateVerification(request); message != "" {
+		return dataWriteProcessFailure(message)
+	}
 	signature := c.GetProcessSignature(ctx, request.ProcessName, "en-US")
 	if !signature.Success {
 		return dataWriteProcessFailure(signature.Error)
@@ -160,10 +220,35 @@ func (c *Client) RunProcess(ctx context.Context, request DataWriteProcessRequest
 		results = names
 	}
 	body := toJNode(orderedFields{{"schemaName", signature.ProcessCode}, {"parameterValues", values}, {"resultParameterNames", results}}).stjJSON()
+	var baseline *watchBaseline
+	if len(request.Watch) > 0 {
+		// Bounded so the baseline cannot spend the response time the launch itself needs.
+		watcher := &createdRecordWatcher{c: c, ctx: context.WithoutCancel(ctx)}
+		baseline = watcher.capture(request.Watch, dataWriteRequestBudget(request.Deadline), time.Now().Add(dataWriteCaptureBudget))
+	}
+	response := c.dataWriteLaunch(ctx, &request, signature, body)
+	c.dataWriteVerify(ctx, request, &response, baseline)
+	return response
+}
+
+// dataWriteLaunch is RunProcessCommand.Launch.
+func (c *Client) dataWriteLaunch(ctx context.Context, request *DataWriteProcessRequest, signature ProcessSignatureResponse, body []byte) DataWriteProcessResult {
 	if request.Gate != nil && !request.Gate.TryMarkSent(time.Now()) {
 		return DataWriteProcessResult{Status: DataWriteNotStartedStatus, Warnings: []string{},
 			Error: fmt.Sprintf("'%s' was not launched: the MCP call was answered or cancelled before the launch request was sent.", signature.ProcessCode)}
 	}
+	// Read alongside the launch, never ahead of it: before the gate it would spend the response deadline that
+	// decides whether anything is launched at all.
+	version := &DataWriteVersionRead{done: make(chan struct{})}
+	if request.Version != nil {
+		version = request.Version
+	}
+	go func() {
+		readCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), dataWriteVersionReadBudget)
+		defer cancel()
+		version.facts = c.processDescribeFactsForSchema(readCtx, signature.ProcessID)
+		close(version.done)
+	}()
 	timeout := 24 * time.Hour * 365
 	if request.TimeoutSeconds > 0 {
 		timeout = time.Duration(math.Min(float64(request.TimeoutSeconds), float64(math.MaxInt32)/1000)) * time.Second
@@ -173,15 +258,124 @@ func (c *Client) RunProcess(ctx context.Context, request DataWriteProcessRequest
 		return dataWriteProcessFailure(err.Error())
 	}
 	if strings.TrimSpace(string(payload)) == "" {
-		return dataWriteProcessFailure("RunProcess returned an empty response")
+		// The request was sent, so the answer still names the version it carried.
+		response := dataWriteProcessFailure("The launch returned an empty response")
+		response.VersionName = signature.ProcessCode
+		return response
 	}
 	native, err := dataWriteParseRunResponse(payload)
 	if err != nil {
-		return dataWriteProcessFailure("RunProcess returned a response clio could not read: " + err.Error())
+		response := dataWriteProcessFailure("The launch returned a response clio could not read: " + err.Error())
+		response.VersionName = signature.ProcessCode
+		return response
 	}
 	response := dataWriteBuildRunResponse(native, signature.ProcessCode)
 	c.dataWriteAddLoggedError(ctx, native, &response, request.Deadline)
+	DataWriteAddVersion(&response, signature.ProcessCode, dataWriteAwaitVersion(version, request.Deadline))
 	return response
+}
+
+const (
+	dataWriteVersionReadBudget = 10 * time.Second
+	dataWriteVersionReadWait   = 11 * time.Second
+)
+
+// dataWriteAwaitVersion is AwaitVersionFacts: the read within what is left of the response deadline; nil when
+// it has not answered by then.
+func dataWriteAwaitVersion(version *DataWriteVersionRead, deadline time.Time) *processDescribeFacts {
+	if facts, ok := version.Completed(); ok {
+		return &facts
+	}
+	wait := 24 * time.Hour
+	if !deadline.IsZero() {
+		left := time.Until(deadline) - dataWriteLogReadMargin
+		if left < dataWriteMinimumLogRead {
+			return nil
+		}
+		wait = left
+	}
+	select {
+	case <-version.done:
+		return &version.facts
+	case <-time.After(min(wait, dataWriteVersionReadWait)):
+		return nil
+	}
+}
+
+var dataWriteSchemaCode = regexp.MustCompile(`\A[A-Za-z_][A-Za-z0-9_]{0,127}\z`)
+
+func dataWriteDescribeSchemaName(name string) string {
+	if dataWriteSchemaCode.MatchString(name) {
+		return "'" + name + "'"
+	}
+	if fenced := DataWriteUntrusted(name); fenced != nil {
+		return *fenced
+	}
+	return ""
+}
+
+func dataWriteRanOrLaunched(verdictPending bool) string {
+	if verdictPending {
+		return "was launched"
+	}
+	return "ran as asked"
+}
+
+// DataWriteAddVersion is RunProcessCommand.AddVersion: names the version the call launched and whether the
+// process library reports it as the active one. facts nil: the read did not answer in time.
+func DataWriteAddVersion(response *DataWriteProcessResult, processCode string, facts *processDescribeFacts) {
+	response.VersionName = processCode
+	var standing *bool
+	activeName := ""
+	warning := ""
+	if facts != nil {
+		standing = facts.IsActiveVersion
+		activeName = facts.ActiveVersionName
+		warning = facts.Warning
+		// "Active" counts only when the library names the family's one active member.
+		if standing != nil && *standing && strings.TrimSpace(activeName) == "" {
+			standing = nil
+		}
+	}
+	response.IsActiveVersion = standing
+	response.ActiveVersionName = activeName
+	if response.Status == DataWriteNotStartedStatus {
+		return
+	}
+	verdictPending := response.Status == DataWriteStillRunningStatus
+	queued := response.Status == dataWriteQueuedStatus
+	readWarning := ""
+	if fenced := DataWriteUntrusted(warning); fenced != nil {
+		readWarning = " The version read reported: " + *fenced + "."
+	}
+	note := ""
+	switch {
+	case standing != nil && *standing:
+	case standing != nil && queued:
+		note = fmt.Sprintf("'%s' is NOT the active version of its process, and the platform queued this run: its background "+
+			"queue starts the ACTIVE version, so this launch may not have run the version you named. To run this version, "+
+			"launch it again with result-parameters, which makes the run synchronous.", processCode)
+	case standing != nil:
+		active := "the active version"
+		if strings.TrimSpace(activeName) != "" {
+			active = dataWriteDescribeSchemaName(activeName)
+		}
+		note = fmt.Sprintf("'%s' %s, but it is NOT the active version of its process: the platform's own triggers, schedules "+
+			"and sub-process calls start %s. Such a run verifies a version without activating it; activating it is a separate "+
+			"step (set-active-business-process-version), taken only when the user asks for it.", processCode, dataWriteRanOrLaunched(verdictPending), active)
+	case queued:
+		note = fmt.Sprintf("The platform queued this run, and whether '%s' is the active version of its process could not be "+
+			"established: its background queue starts the ACTIVE version, so if this one is not active, the launch ran another "+
+			"version. Check with describe-business-process; to run this version for certain, launch it with result-parameters, "+
+			"which makes the run synchronous.", processCode) + readWarning
+	default:
+		note = fmt.Sprintf("'%s' %s, but whether it is the active version of its process could not be established, so this "+
+			"answer cannot say whether the platform's own triggers run the same version; describe-business-process reports "+
+			"isActiveVersion and activeVersionName.", processCode, dataWriteRanOrLaunched(verdictPending)) + readWarning
+	}
+	if note != "" {
+		response.Warnings = append(response.Warnings, note)
+	}
 }
 
 type dataWriteRunResponse struct {
@@ -280,11 +474,10 @@ func dataWriteDescribeRunFailure(errorCode, message, processCode string) string 
 	}
 	text := fmt.Sprintf("The process run failed: %s.", detail) + dataWriteDescribeErrorCode(errorCode)
 	if dataWriteIsMissingCompiledMethod(errorCode) {
-		text += fmt.Sprintf(" This is most often a script task saved since the active version of the process run as '%s' was last compiled - "+
-			"run-process runs the active version whatever code it is given - so the compiled code does not have it yet: the run stops when it "+
-			"reaches that element, and the elements before it may already have run. If a process-name compile of it succeeded only minutes ago, "+
-			"the runtime may still be reloading: run again in about two minutes before compiling again. Otherwise ask the user, then run "+
-			"compile-creatio with process-name set to the active version (describe-business-process names it).", processCode)
+		text += fmt.Sprintf(" This is most often a script task saved since '%s' was last compiled, so the compiled code does not have it "+
+			"yet: the run stops when it reaches that element, and the elements before it may already have run. If a process-name compile of "+
+			"it succeeded only minutes ago, the runtime may still be reloading: run again in about two minutes before compiling again. "+
+			"Otherwise ask the user, then run compile-creatio with process-name set to '%s'.", processCode, processCode)
 	}
 	return text
 }

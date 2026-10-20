@@ -1,0 +1,497 @@
+[
+ {
+  "label": "dry A",
+  "tool": "odata-delete",
+  "clio-run": true,
+  "args": {
+   "entity": "Account",
+   "id": "aaaaaaaa-0000-0000-0000-000000000001",
+   "dry-run": true
+  }
+ },
+ {
+  "label": "dry cascade A",
+  "tool": "odata-delete",
+  "clio-run": true,
+  "args": {
+   "entity": "Account",
+   "id": "aaaaaaaa-0000-0000-0000-000000000001",
+   "dry-run": true,
+   "cascade": true
+  }
+ },
+ {
+  "label": "dry cascade B",
+  "tool": "odata-delete",
+  "clio-run": true,
+  "args": {
+   "entity": "Account",
+   "id": "aaaaaaaa-0000-0000-0000-000000000002",
+   "dry-run": true,
+   "cascade": true
+  }
+ },
+ {
+  "label": "dry cascade ids B,A",
+  "tool": "odata-delete",
+  "clio-run": true,
+  "args": {
+   "entity": "Account",
+   "ids": [
+    "aaaaaaaa-0000-0000-0000-000000000002",
+    "aaaaaaaa-0000-0000-0000-000000000001"
+   ],
+   "dry-run": true,
+   "cascade": true
+  }
+ },
+ {
+  "label": "cascade B no hash",
+  "tool": "odata-delete",
+  "clio-run": true,
+  "args": {
+   "entity": "Account",
+   "id": "aaaaaaaa-0000-0000-0000-000000000002",
+   "cascade": true,
+   "confirm": true
+  }
+ },
+ {
+  "label": "cascade B wrong hash",
+  "tool": "odata-delete",
+  "clio-run": true,
+  "args": {
+   "entity": "Account",
+   "id": "aaaaaaaa-0000-0000-0000-000000000002",
+   "cascade": true,
+   "confirm": true,
+   "cascade-plan-hash": "0000000000000000"
+  }
+ },
+ {
+  "label": "cascade A wrong hash",
+  "tool": "odata-delete",
+  "clio-run": true,
+  "args": {
+   "entity": "Account",
+   "ids": [
+    "aaaaaaaa-0000-0000-0000-000000000001"
+   ],
+   "cascade": true,
+   "confirm": true,
+   "cascade-plan-hash": "0000000000000000"
+  }
+ },
+ {
+  "label": "delete C refused",
+  "tool": "odata-delete",
+  "clio-run": true,
+  "args": {
+   "entity": "Account",
+   "id": "aaaaaaaa-0000-0000-0000-000000000003",
+   "confirm": true
+  }
+ },
+ {
+  "label": "delete ids C,D,B",
+  "tool": "odata-delete",
+  "clio-run": true,
+  "args": {
+   "entity": "Account",
+   "ids": [
+    "aaaaaaaa-0000-0000-0000-000000000003",
+    "aaaaaaaa-0000-0000-0000-000000000004",
+    "aaaaaaaa-0000-0000-0000-000000000002"
+   ],
+   "confirm": true
+  }
+ },
+ {
+  "label": "delete activity bound",
+  "tool": "odata-delete",
+  "clio-run": true,
+  "args": {
+   "entity": "Activity",
+   "id": "ffffffff-0000-0000-0000-000000000001",
+   "confirm": true
+  }
+ },
+ {
+  "label": "dry activity",
+  "tool": "odata-delete",
+  "clio-run": true,
+  "args": {
+   "entity": "Activity",
+   "id": "ffffffff-0000-0000-0000-000000000001",
+   "dry-run": true
+  }
+ },
+ {
+  "label": "cascade lookup",
+  "tool": "odata-delete",
+  "clio-run": true,
+  "args": {
+   "entity": "UsrStatus",
+   "id": "ffffffff-0000-0000-0000-000000000009",
+   "dry-run": true,
+   "cascade": true
+  }
+ },
+ {
+  "label": "cascade unknown schema",
+  "tool": "odata-delete",
+  "clio-run": true,
+  "args": {
+   "entity": "UsrMissing",
+   "id": "ffffffff-0000-0000-0000-000000000009",
+   "dry-run": true,
+   "cascade": true
+  }
+ },
+ {
+  "label": "cascade B right hash",
+  "tool": "odata-delete",
+  "clio-run": true,
+  "args": {
+   "entity": "Account",
+   "id": "aaaaaaaa-0000-0000-0000-000000000002",
+   "cascade": true,
+   "confirm": true,
+   "cascade-plan-hash": "BCC9C9F14A8552A6"
+  }
+ },
+ {
+  "label": "cascade ids B,A right hash",
+  "tool": "odata-delete",
+  "clio-run": true,
+  "args": {
+   "entity": "Account",
+   "ids": [
+    "aaaaaaaa-0000-0000-0000-000000000002",
+    "aaaaaaaa-0000-0000-0000-000000000001"
+   ],
+   "cascade": true,
+   "confirm": true,
+   "cascade-plan-hash": "90c8371a1f30aef1"
+  }
+ },
+ {
+  "label": "completed active",
+  "tool": "run-process",
+  "clio-run": true,
+  "args": {
+   "process-name": "UsrRunTest"
+  }
+ },
+ {
+  "label": "completed with watch",
+  "tool": "run-process",
+  "clio-run": true,
+  "args": {
+   "process-name": "UsrRunTest",
+   "watch": [
+    "activity",
+    "UsrNote",
+    "UsrMissing"
+   ]
+  }
+ },
+ {
+  "label": "parked no wait",
+  "tool": "run-process",
+  "clio-run": true,
+  "args": {
+   "process-name": "UsrParked",
+   "wait": false
+  }
+ },
+ {
+  "label": "parked wait 0",
+  "tool": "run-process",
+  "clio-run": true,
+  "args": {
+   "process-name": "UsrParked",
+   "wait-timeout": 0,
+   "result-parameters": [
+    "Out"
+   ]
+  }
+ },
+ {
+  "label": "parked cleanup",
+  "tool": "run-process",
+  "clio-run": true,
+  "args": {
+   "process-name": "UsrParked",
+   "wait-timeout": 0,
+   "watch": [
+    "Activity",
+    "UsrNote"
+   ],
+   "cleanup": true
+  }
+ },
+ {
+  "label": "completed cleanup",
+  "tool": "run-process",
+  "clio-run": true,
+  "args": {
+   "process-name": "UsrRunTest",
+   "watch": [
+    "Activity"
+   ],
+   "cleanup": true
+  }
+ },
+ {
+  "label": "parked wait 2",
+  "tool": "run-process",
+  "clio-run": true,
+  "args": {
+   "process-name": "UsrParked",
+   "wait-timeout": 2
+  }
+ },
+ {
+  "label": "fails while waited",
+  "tool": "run-process",
+  "clio-run": true,
+  "args": {
+   "process-name": "UsrFail"
+  }
+ },
+ {
+  "label": "queued with watch",
+  "tool": "run-process",
+  "clio-run": true,
+  "args": {
+   "process-name": "UsrQueued",
+   "watch": [
+    "Activity"
+   ],
+   "cleanup": true
+  }
+ },
+ {
+  "label": "refused",
+  "tool": "run-process",
+  "clio-run": true,
+  "args": {
+   "process-name": "UsrRefused",
+   "watch": [
+    "Activity"
+   ]
+  }
+ },
+ {
+  "label": "parked cleanup no wait",
+  "tool": "run-process",
+  "clio-run": true,
+  "args": {
+   "process-name": "UsrParked",
+   "wait": false,
+   "watch": [
+    "Activity"
+   ],
+   "cleanup": true
+  }
+ },
+ {
+  "label": "default fits",
+  "tool": "describe-business-process",
+  "clio-run": true,
+  "args": {
+   "process-name": "UsrDesc"
+  }
+ },
+ {
+  "label": "full",
+  "tool": "describe-business-process",
+  "clio-run": true,
+  "args": {
+   "process-name": "UsrDesc",
+   "mode": "FULL"
+  }
+ },
+ {
+  "label": "summary",
+  "tool": "describe-business-process",
+  "clio-run": true,
+  "args": {
+   "process-name": "UsrDesc",
+   "mode": " summary "
+  }
+ },
+ {
+  "label": "versions",
+  "tool": "describe-business-process",
+  "clio-run": true,
+  "args": {
+   "process-name": "UsrDesc",
+   "mode": "versions"
+  }
+ },
+ {
+  "label": "element",
+  "tool": "describe-business-process",
+  "clio-run": true,
+  "args": {
+   "process-name": "UsrDesc",
+   "element": "ReadData1"
+  }
+ },
+ {
+  "label": "element ci + mode",
+  "tool": "describe-business-process",
+  "clio-run": true,
+  "args": {
+   "process-name": "UsrDesc",
+   "element": " gate1 ",
+   "mode": "element"
+  }
+ },
+ {
+  "label": "element missing",
+  "tool": "describe-business-process",
+  "clio-run": true,
+  "args": {
+   "process-name": "UsrDesc",
+   "element": "Nope"
+  }
+ },
+ {
+  "label": "bad mode",
+  "tool": "describe-business-process",
+  "clio-run": true,
+  "args": {
+   "process-name": "UsrDesc",
+   "mode": "brief"
+  }
+ },
+ {
+  "label": "element mode no element",
+  "tool": "describe-business-process",
+  "clio-run": true,
+  "args": {
+   "process-name": "UsrDesc",
+   "mode": "element"
+  }
+ },
+ {
+  "label": "element with summary",
+  "tool": "describe-business-process",
+  "clio-run": true,
+  "args": {
+   "process-name": "UsrDesc",
+   "mode": "summary",
+   "element": "Start1"
+  }
+ },
+ {
+  "label": "huge default",
+  "tool": "describe-business-process",
+  "clio-run": true,
+  "args": {
+   "process-name": "UsrHuge"
+  }
+ },
+ {
+  "label": "huge element",
+  "tool": "describe-business-process",
+  "clio-run": true,
+  "args": {
+   "process-name": "UsrHuge",
+   "element": "Element042"
+  }
+ },
+ {
+  "label": "huge element missing",
+  "tool": "describe-business-process",
+  "clio-run": true,
+  "args": {
+   "process-name": "UsrHuge",
+   "element": "X"
+  }
+ },
+ {
+  "label": "alias processName",
+  "tool": "describe-business-process",
+  "clio-run": true,
+  "args": {
+   "processName": "UsrDesc",
+   "mode": "versions"
+  }
+ },
+ {
+  "label": "alias name by shape",
+  "tool": "describe-business-process",
+  "clio-run": true,
+  "args": {
+   "name": "UsrDesc",
+   "mode": "versions"
+  }
+ },
+ {
+  "label": "alias uid by shape",
+  "tool": "describe-business-process",
+  "clio-run": true,
+  "args": {
+   "process": "aaaaaaaa-1111-0000-0000-000000000007",
+   "mode": "versions"
+  }
+ },
+ {
+  "label": "alias ambiguous",
+  "tool": "describe-business-process",
+  "clio-run": true,
+  "args": {
+   "code": "UsrDesc",
+   "process-name": "UsrDesc"
+  }
+ },
+ {
+  "label": "alias two",
+  "tool": "describe-business-process",
+  "clio-run": true,
+  "args": {
+   "code": "UsrDesc",
+   "schemaName": "UsrDesc"
+  }
+ },
+ {
+  "label": "alias not text",
+  "tool": "describe-business-process",
+  "clio-run": true,
+  "args": {
+   "code": 5,
+   "process-name": "UsrDesc"
+  }
+ },
+ {
+  "label": "alias + unknown",
+  "tool": "describe-business-process",
+  "clio-run": true,
+  "args": {
+   "processName": "UsrDesc",
+   "bogus": 1
+  }
+ },
+ {
+  "label": "alias + bad mode",
+  "tool": "describe-business-process",
+  "clio-run": true,
+  "args": {
+   "processName": "UsrDesc",
+   "mode": "brief"
+  }
+ },
+ {
+  "label": "unknown",
+  "tool": "describe-business-process",
+  "clio-run": true,
+  "args": {
+   "process-name": "UsrDesc",
+   "bogus": 1
+  }
+ }
+]

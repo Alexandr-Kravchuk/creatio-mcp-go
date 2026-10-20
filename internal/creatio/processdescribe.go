@@ -18,6 +18,10 @@ type ProcessDescribeRequest struct {
 	ProcessUID     string
 	ProcessCaption string
 	Culture        *string
+	// Mode is summary, full, versions or element ("" picks full or summary by the reply's size); Element names
+	// the one element to return in full (clio 8.1.0.142, ENG-103023).
+	Mode    string
+	Element string
 }
 
 const (
@@ -37,11 +41,13 @@ type processDescribeLibRow struct {
 	Version         *int
 	PackageUID      string
 	Enabled         bool
+	ModifiedOn      string // as DataService returned it; "" when absent
 }
 
 // DescribeBusinessProcess is clio's describe-business-process: the CrtProcessBuilder package gate, the
 // one-identity rule, the server-side ProcessDesignService.DescribeProcess read, then the process library's
-// version facts overlaid on the graph. Like clio the graph is returned as one indented JSON Info line.
+// version facts overlaid on the graph. Like clio 8.1.0.142 the reply is one compact JSON Info line in the
+// requested mode (processdescribe_modes.go).
 func (c *Client) DescribeBusinessProcess(ctx context.Context, request ProcessDescribeRequest) CommandResult {
 	installed, err := c.userTasksPackageInstalled(ctx, processBuilderPackageName)
 	if err != nil {
@@ -59,18 +65,26 @@ func (c *Client) DescribeBusinessProcess(ctx context.Context, request ProcessDes
 	if identities != 1 {
 		return NewCommandResult(1, "Error", "Error: provide exactly one of --process-name, --process-uid, or --process-caption.")
 	}
+	if refusal := processDescribeValidateMode(request.Mode, request.Element); refusal != "" {
+		return NewCommandResult(1, "Error", "Error: "+refusal)
+	}
 	culture := "en-US"
 	if request.Culture != nil {
 		culture = *request.Culture
 	}
-	text, err := c.describeProcessGraph(ctx, request, culture)
+	graph, err := c.describeProcessGraph(ctx, request, culture)
 	if err != nil {
 		return NewCommandResult(1, "Error", "Error: "+err.Error()+".")
 	}
-	return NewCommandResult(0, "Info", text)
+	processDescribeOmitDecodedFilters(graph)
+	reply, refusal := processDescribeBuildReply(graph, request.Mode, request.Element)
+	if refusal != "" {
+		return NewCommandResult(1, "Error", "Error: "+refusal)
+	}
+	return NewCommandResult(0, "Info", reply)
 }
 
-func (c *Client) describeProcessGraph(ctx context.Context, request ProcessDescribeRequest, culture string) (string, error) {
+func (c *Client) describeProcessGraph(ctx context.Context, request ProcessDescribeRequest, culture string) (*jnode, error) {
 	identity := newObject()
 	var resolved *processDescribeLibRow
 	switch {
@@ -81,7 +95,7 @@ func (c *Client) describeProcessGraph(ctx context.Context, request ProcessDescri
 	default:
 		row, err := c.processDescribeResolveCaption(ctx, request.ProcessCaption)
 		if err != nil {
-			return "", err
+			return nil, err
 		}
 		resolved = &row
 		identity.set("name", newString(row.Name))
@@ -93,24 +107,24 @@ func (c *Client) describeProcessGraph(ctx context.Context, request ProcessDescri
 	body.set("request", identity)
 	payload, err := c.callService(ctx, serviceCall{Route: processDescribeRoute, Body: body.newtonsoftJSON(), Timeout: 10 * time.Second, Limit: maxResponseBytes})
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	if strings.TrimSpace(string(payload)) == "" {
-		return "", errors.New("empty response from the server")
+		return nil, errors.New("empty response from the server")
 	}
 	envelope, err := parseJNode(payload)
 	if err != nil {
-		return "", fmt.Errorf("could not parse server response: %v", err)
+		return nil, fmt.Errorf("could not parse server response: %v", err)
 	}
 	result := processDescribeProperty(envelope, "DescribeProcessResult")
 	if !result.isObject() {
-		return "", errors.New("unexpected server response shape")
+		return nil, errors.New("unexpected server response shape")
 	}
 	if success := processDescribeProperty(result, "success"); success == nil || success.kind != jkBool || !success.flag {
 		if message := processDescribeProperty(result, "errorMessage"); message != nil && message.kind == jkString {
-			return "", errors.New(message.text)
+			return nil, errors.New(message.text)
 		}
-		return "", errors.New("describe-business-process failed on the server")
+		return nil, errors.New("describe-business-process failed on the server")
 	}
 	schemaUID := ""
 	if value := processDescribeProperty(result, "schemaUId"); value != nil && value.kind == jkString {
@@ -122,7 +136,7 @@ func (c *Client) describeProcessGraph(ctx context.Context, request ProcessDescri
 	} else {
 		facts = c.processDescribeFactsForSchema(ctx, schemaUID)
 	}
-	return string(processDescribeIndented(processDescribeOutput(result, facts))), nil
+	return processDescribeOutput(result, facts), nil
 }
 
 // processDescribeResolveCaption is clio's ResolveCaption: every VwProcessLib row with that caption, one over
@@ -160,6 +174,7 @@ func (c *Client) processDescribeLibRows(ctx context.Context, column, value strin
 	rows, err := c.selectRows(ctx, buildSelectQuery("VwProcessLib", map[string]string{
 		"UId": "UId", "Name": "Name", "Caption": "Caption", "VersionParentUId": "VersionParentUId",
 		"IsActiveVersion": "IsActiveVersion", "Version": "Version", "PackageUId": "PackageUId", "Enabled": "Enabled",
+		"ModifiedOn": "ModifiedOn",
 	}, map[string]any{column: comparisonFilter(column, value, dataValueType, 3)}, rowCount))
 	if err != nil {
 		return nil, err
@@ -179,6 +194,7 @@ func (c *Client) processDescribeLibRows(ctx context.Context, column, value strin
 			item.Version = &version
 		}
 		_ = json.Unmarshal(row["Enabled"], &item.Enabled)
+		item.ModifiedOn = rowString(row, "ModifiedOn")
 		result = append(result, item)
 	}
 	return result, nil
@@ -326,7 +342,7 @@ func processDescribeGaps(row processDescribeLibRow, flagged, published []process
 // server order (its extension data); the version members are always clio's own.
 var processDescribeDeclared = []string{"name", "caption", "schemaUId", "version", "isActiveVersion", "activeVersionSchemaUId",
 	"activeVersionName", "versionRootSchemaUId", "activeVersionSource", "versions", "versionsTruncatedAt", "versionReadWarning",
-	"elements", "flows", "parameters", "usings", "methods", "compiledMethods", "legacyMethodCount"}
+	"elements", "flows", "parameters", "usings", "methods", "compiledMethods", "legacyMethodCount", "tracing"}
 
 var processDescribeVersionKeys = map[string]bool{"version": true, "isactiveversion": true, "activeversionschemauid": true,
 	"activeversionname": true, "versionrootschemauid": true, "activeversionsource": true, "versions": true,
@@ -346,6 +362,10 @@ func processDescribeOutput(result *jnode, facts processDescribeFacts) *jnode {
 			continue
 		}
 		if value := processDescribeProperty(result, name); value != nil && value.kind != jkNull {
+			if member, typed := processDescribeRootTypes[name]; typed {
+				output.set(name, processDescribeProject(value, member.typ, member.list))
+				continue
+			}
 			output.set(name, processDescribeWithoutNulls(value))
 		}
 	}
@@ -399,6 +419,9 @@ func processDescribeVersionFields(facts processDescribeFacts) *jnode {
 				entry.set("packageName", newString(name))
 			}
 			entry.set("enabled", newBool(member.Enabled))
+			if modified := processDescribeModifiedOn(member.ModifiedOn); modified != "" {
+				entry.set("modifiedOn", newString(modified))
+			}
 			versions.items = append(versions.items, entry)
 		}
 		fields.set("versions", versions)

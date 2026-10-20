@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Alexandr-Kravchuk/creatio-mcp-go/internal/creatio"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -39,6 +40,18 @@ func init() {
 		}
 		if _, err = optionalStringArg(args, "validate-page", "version"); err != nil {
 			return nil, err
+		}
+		// clio 8.1.0.142's binder refusals for known-containers; the check itself is not run here (T20).
+		if value, ok := args["known-containers"]; ok && value != nil {
+			items, isArray := value.([]any)
+			if !isArray {
+				return nil, fmt.Errorf("invalid-parameter-type: argument 'known-containers' for MCP tool 'validate-page' must be an array. Received an incompatible JSON value.")
+			}
+			for _, item := range items {
+				if _, isText := item.(string); !isText && item != nil {
+					return nil, fmt.Errorf("invalid-parameter-type: argument 'known-containers' for MCP tool 'validate-page' contains a value that does not match the documented shape. Received an incompatible JSON value.")
+				}
+			}
 		}
 		return structuredToolResult(creatio.ValidatePage(input)), nil
 	})

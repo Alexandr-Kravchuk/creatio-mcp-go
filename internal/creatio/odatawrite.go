@@ -24,13 +24,23 @@ import (
 	"github.com/Alexandr-Kravchuk/creatio-mcp-go/internal/redact"
 )
 
-// ODataWriteResponse is clio's ODataWriteResponse (odata-update, odata-delete).
+// ODataWriteResponse is clio's ODataWriteResponse (odata-update, odata-delete), members in clio's order. A
+// nil list is clio's null (omitted); an empty one is written as [].
 type ODataWriteResponse struct {
-	Success       bool                 `json:"success"`
-	Error         *string              `json:"error,omitempty"`
-	ID            *string              `json:"id,omitempty"`
-	CorrelationID string               `json:"correlation-id,omitempty"`
-	Diagnostic    *DataWriteDiagnostic `json:"diagnostic,omitempty"`
+	Success            bool                    `json:"success"`
+	Error              *string                 `json:"error,omitempty"`
+	ID                 *string                 `json:"id,omitempty"`
+	CorrelationID      string                  `json:"correlation-id,omitempty"`
+	Diagnostic         *DataWriteDiagnostic    `json:"diagnostic,omitempty"`
+	Explanation        *string                 `json:"explanation,omitempty"`
+	Referencing        []ReferencingRows       `json:"referencing,omitzero"`
+	CascadeDeleted     []RecordKey             `json:"cascade-deleted,omitzero"`
+	Results            []ODataDeleteItemResult `json:"results,omitzero"`
+	Plan               []ODataDeletePlanItem   `json:"plan,omitzero"`
+	CascadeUnconfirmed []RecordKey             `json:"cascade-unconfirmed,omitzero"`
+	CascadePlanHash    *string                 `json:"cascade-plan-hash,omitempty"`
+	Note               *string                 `json:"note,omitempty"`
+	Warnings           []string                `json:"warnings,omitzero"`
 }
 
 // ODataCreateBatchResponse is clio's ODataCreateBatchResponse (odata-create).
@@ -42,6 +52,7 @@ type ODataCreateBatchResponse struct {
 	Results       []ODataRowResult     `json:"results"`
 	Error         *string              `json:"error,omitempty"`
 	CorrelationID string               `json:"correlation-id,omitempty"`
+	Warnings      []string             `json:"warnings,omitzero"`
 }
 
 // ODataRowResult is clio's per-row outcome. RecordCreated nil is the "unknown" state; clio's MCP serializer
@@ -62,22 +73,26 @@ func dataWriteText(text string) *string { return &text }
 func dataWriteBool(value bool) *bool { return &value }
 
 // ODataCreateRequest is odata-create's arguments as the tool layer read them. Rows is nil when absent
-// or null. ArgumentError is the refusal of unbound keys (clio's BuildLegacyAliasError), "" when none.
+// or null. Extra holds the keys the argument record does not bind (clio's overflow bag): a payload synonym
+// among them is read as rows, any other is refused with clio's BuildLegacyAliasError text. ArgumentError,
+// when set, replaces that refusal.
 type ODataCreateRequest struct {
 	Entity        string
 	Rows          json.RawMessage
 	RowsFile      string
 	StopOnError   bool
+	Extra         map[string]json.RawMessage
 	ArgumentError string
 }
 
-// ODataKeyedRequest is odata-update's and odata-delete's arguments.
+// ODataKeyedRequest is odata-update's arguments (Extra as for odata-create).
 type ODataKeyedRequest struct {
 	Entity        string
 	ID            string
 	Data          json.RawMessage
 	RowsFile      string
 	Confirm       bool
+	Extra         map[string]json.RawMessage
 	ArgumentError string
 }
 
@@ -98,7 +113,22 @@ const (
 // those pass.
 func ODataCreate(ctx context.Context, client *Client, resolveFailure error, request ODataCreateRequest) ODataCreateBatchResponse {
 	correlationID := dataWriteCorrelationID()
-	result := odataCreateCore(ctx, client, resolveFailure, request)
+	// A synonym of rows is folded into rows before anything else looks at the arguments; an ambiguous
+	// combination is refused ahead of any file read or request.
+	alias := odataResolvePayload(request.Extra, "rows", ODataCreateRowsAliases, request.Rows != nil, !dataWriteBlank(request.RowsFile))
+	if alias.warning != "" {
+		request.Rows = odataWrapSingleObject(alias.value)
+	}
+	if request.ArgumentError == "" {
+		request.ArgumentError = odataUnboundError(alias.remaining, odataCreateArgumentAliases, odataCreateValidArguments)
+	}
+	var result ODataCreateBatchResponse
+	if alias.err != "" {
+		result = odataCreateRequestError(alias.err)
+	} else {
+		result = odataCreateCore(ctx, client, resolveFailure, request)
+	}
+	result.Warnings = alias.warningFor(result.Error != nil)
 	result.CorrelationID = correlationID
 	if result.Error != nil {
 		result.Diagnostic = NewDataWriteDiagnostic("insert", request.Entity, nil, false, false, false, result.Error)
@@ -305,18 +335,25 @@ func dataWriteKindName(raw json.RawMessage) string {
 // ODataUpdate is clio's ODataUpdateTool.Update.
 func ODataUpdate(ctx context.Context, client *Client, resolveFailure error, request ODataKeyedRequest) ODataWriteResponse {
 	correlationID := dataWriteCorrelationID()
-	result, attempted, received := odataUpdateCore(ctx, client, resolveFailure, request)
+	// A synonym of data is folded into data before the arguments are examined; an ambiguous combination is
+	// refused ahead of the confirmation gate, any file read and any PATCH.
+	alias := odataResolvePayload(request.Extra, "data", ODataUpdateDataAliases, request.Data != nil, !dataWriteBlank(request.RowsFile))
+	if alias.warning != "" {
+		request.Data = alias.value
+	}
+	if request.ArgumentError == "" {
+		request.ArgumentError = odataUnboundError(alias.remaining, odataUpdateArgumentAliases, odataUpdateValidArguments)
+	}
+	var result ODataWriteResponse
+	attempted, received := false, false
+	if alias.err != "" {
+		result = odataWriteFailure(alias.err)
+	} else {
+		result, attempted, received = odataUpdateCore(ctx, client, resolveFailure, request)
+	}
+	result.Warnings = alias.warningFor(!result.Success && !attempted)
 	result.CorrelationID = correlationID
 	result.Diagnostic = NewDataWriteDiagnostic("update", request.Entity, nil, attempted, received, result.Success, result.Error)
-	return result
-}
-
-// ODataDelete is clio's ODataDeleteTool.Delete.
-func ODataDelete(ctx context.Context, client *Client, resolveFailure error, request ODataKeyedRequest) ODataWriteResponse {
-	correlationID := dataWriteCorrelationID()
-	result, attempted, received := odataDeleteCore(ctx, client, resolveFailure, request)
-	result.CorrelationID = correlationID
-	result.Diagnostic = NewDataWriteDiagnostic("delete", request.Entity, nil, attempted, received, result.Success, result.Error)
 	return result
 }
 
@@ -417,27 +454,6 @@ func odataUpdateResolveData(request ODataKeyedRequest, notConfirmed *ODataWriteR
 		return fail(odataDataRequiredMessage)
 	}
 	return data, nil
-}
-
-func odataDeleteCore(ctx context.Context, client *Client, resolveFailure error, request ODataKeyedRequest) (ODataWriteResponse, bool, bool) {
-	if invalid := odataValidateTarget(request.Entity, request.ID, "delete"); invalid != nil {
-		return *invalid, false, false
-	}
-	if notConfirmed := odataRequireConfirmation(request.Confirm, request.Entity, request.ID, "delete", "deletion"); notConfirmed != nil {
-		return *notConfirmed, false, false
-	}
-	if resolveFailure != nil {
-		return odataWriteFailure(redact.Text(resolveFailure.Error())), false, false
-	}
-	id := dataWriteTrim(request.ID)
-	response, err := client.dataWriteSendOnce(ctx, http.MethodDelete, dataWriteKeyPath(request.Entity, id), []byte{}, odataWriteTimeout)
-	if err != nil {
-		return odataWriteFailure(redact.Text(err.Error())), true, false
-	}
-	if message := odataValidateWriteResponse(response); message != "" {
-		return odataWriteFailure(message), true, true
-	}
-	return ODataWriteResponse{Success: true, ID: &id}, true, true
 }
 
 // odataValidateWriteResponse is ODataKeyedWrite.ValidateWriteResponse: an empty body is Creatio's 204,

@@ -25,6 +25,9 @@ func TestODataWritesThroughBothExecutors(t *testing.T) {
 			w.WriteHeader(204)
 		case "/0/odata/$metadata":
 			w.Write([]byte(`<Schema><EntityType Name="UsrParityMock"><Property Name="Id" Type="Edm.Guid"/><Property Name="Name" Type="Edm.String"/></EntityType></Schema>`))
+		case "/0/DataService/json/SyncReply/SelectQuery":
+			// odata-delete looks the record up before its DELETE.
+			w.Write([]byte(`{"success":true,"rows":[{"Id":"00000000-0000-0000-0000-000000000001"}]}`))
 		default:
 			t.Errorf("unexpected route %s", r.URL.Path)
 		}
