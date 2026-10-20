@@ -7,20 +7,32 @@
         "kind": "write",
         "label": "create-app",
         "tool": "create-app",
+        "server": "clio",
         "clio-run": true,
         "creates": "UsrParity{run}{side}App",
-        "go-tool-missing": "create-app is not implemented in this server yet (T7). No primitive both servers share at clio 8.1.0.134 creates a package: create-package is newer than 8.1.0.134, and odata-create on SysPackage is refused for OData. Remove this key when create-app is ported.",
-        "why": "The schema needs a package of its own.",
+        "retry-while": "temporarily unavailable",
+        "retry-seconds": 300,
         "args": {
-          "name": "UsrParity{run}{side}App",
-          "code": "UsrParity{run}{side}App",
+          "name": "Parity {run} {side} App",
+          "code": "Parity{run}{side}App",
           "template-code": "AppFreedomUI",
           "with-mobile-pages": false,
           "description": "Created by scripts/compare-mcp-writes.py; safe to delete"
         },
         "capture": {
-          "pkg": "$.package-name"
-        }
+          "pkg": "$.packagename"
+        },
+        "known-differences": [
+          "$.applicationname",
+          "$.entities[0].caption",
+          "$.entities[0].uid",
+          "$.pages[0].uid",
+          "$.pages[1].uid",
+          "$.pages[2].uid",
+          "$.dataforge.warnings[0]",
+          "$.dataforge.warnings[1]"
+        ],
+        "why": "The schema needs a package of its own. Setup through clio on both sides, as in t9-client-unit.json; ids and the display name differ per side."
       },
       {
         "kind": "cleanup",
@@ -97,20 +109,32 @@
         "kind": "write",
         "label": "create-app",
         "tool": "create-app",
+        "server": "clio",
         "clio-run": true,
         "creates": "UsrParity{run}{side}App",
-        "go-tool-missing": "create-app is not implemented in this server yet (T7). No primitive both servers share at clio 8.1.0.134 creates a package: create-package is newer than 8.1.0.134, and odata-create on SysPackage is refused for OData. Remove this key when create-app is ported.",
-        "why": "The SQL script needs a package of its own.",
+        "retry-while": "temporarily unavailable",
+        "retry-seconds": 300,
         "args": {
-          "name": "UsrParity{run}{side}App",
-          "code": "UsrParity{run}{side}App",
+          "name": "Parity {run} {side} App",
+          "code": "Parity{run}{side}App",
           "template-code": "AppFreedomUI",
           "with-mobile-pages": false,
           "description": "Created by scripts/compare-mcp-writes.py; safe to delete"
         },
         "capture": {
-          "pkg": "$.package-name"
-        }
+          "pkg": "$.packagename"
+        },
+        "known-differences": [
+          "$.applicationname",
+          "$.entities[0].caption",
+          "$.entities[0].uid",
+          "$.pages[0].uid",
+          "$.pages[1].uid",
+          "$.pages[2].uid",
+          "$.dataforge.warnings[0]",
+          "$.dataforge.warnings[1]"
+        ],
+        "why": "The SQL script needs a package of its own. Setup through clio on both sides, as in t9-client-unit.json; ids and the display name differ per side."
       },
       {
         "kind": "cleanup",
