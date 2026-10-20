@@ -228,3 +228,30 @@ func TestSchemaDeleteRequiresAffectedRowAndCarriesPlatformType(t *testing.T) {
 		})
 	}
 }
+
+// The live write run on 8.1.0.142 (T23): GetWorkspaceItems answered more than the 4 MiB default response
+// limit on the write stand, and delete-schema refused while clio deleted the schema.
+func TestSchemaDeleteReadsWorkspaceItemsLargerThanDefaultLimit(t *testing.T) {
+	filler := strings.Repeat(`{"name":"UsrOther","uId":"other","packageName":"Custom","type":1},`, (maxResponseBytes/64)+1000)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case strings.HasSuffix(r.URL.Path, "/Login"):
+			io.WriteString(w, `{"Code":0}`)
+		case strings.HasSuffix(r.URL.Path, "/GetWorkspaceItems"):
+			io.WriteString(w, `{"items":[`+filler+`{"name":"UsrParityProbe","uId":"schema","packageName":"Custom","type":42}]}`)
+		case strings.HasSuffix(r.URL.Path, "/Delete"):
+			io.WriteString(w, `{"success":true,"rowsAffected":1}`)
+		default:
+			t.Errorf("unexpected route %s", r.URL.Path)
+		}
+	}))
+	defer server.Close()
+	if len(filler) <= maxResponseBytes {
+		t.Fatalf("filler %d bytes does not exceed the default limit", len(filler))
+	}
+	client, _ := NewClient(Config{BaseURL: server.URL, Login: "example", Password: "replace-me"})
+	result := client.DeleteSchema(context.Background(), "UsrParityProbe", "", true)
+	if result.ExitCode != 0 {
+		t.Fatalf("%#v", result)
+	}
+}

@@ -37,7 +37,10 @@ func (c *Client) DeleteSchema(ctx context.Context, name, workspace string, remot
 			return CommandFailure("The current workspace does not contain any packages.")
 		}
 	}
-	raw, err := c.callService(ctx, serviceCall{Route: "ServiceModel/WorkspaceExplorerService.svc/GetWorkspaceItems", Body: []byte{}})
+	// Every schema of the configuration: more than 4 MB on a product stand with several apps; clio reads it
+	// unbounded, so the default response limit refused delete-schema there.
+	raw, err := c.callService(ctx, serviceCall{Route: "ServiceModel/WorkspaceExplorerService.svc/GetWorkspaceItems", Body: []byte{},
+		Limit: appWriteWorkspaceItemsLimit})
 	if err != nil {
 		return CommandFailure(err.Error())
 	}
