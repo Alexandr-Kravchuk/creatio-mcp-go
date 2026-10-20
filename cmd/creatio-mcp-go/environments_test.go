@@ -189,7 +189,7 @@ func TestSettingsAreReloadedWhenTheFileChanges(t *testing.T) {
 	if err != nil {
 		t.Fatalf("gamma after the file changed: %v", err)
 	}
-	if rows, err := client.ODataRead(context.Background(), creatio.ODataReadRequest{Entity: "Contact"}); err != nil || rows.Rows[0]["Name"] != "forms" {
+	if rows, err := odataProbe(client); err != nil || rows.Rows[0]["Name"] != "forms" {
 		t.Fatalf("gamma rows = %#v, err = %v", rows, err)
 	}
 	_, err = setup.envs.client("alpha-forms", creatio.ConnectionOverrides{})
@@ -277,7 +277,7 @@ func TestDefaultTargetIsCreatioVariablesThenTheActiveEnvironment(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if rows, err := client.ODataRead(context.Background(), creatio.ODataReadRequest{Entity: "Contact"}); err != nil || rows.Rows[0]["Name"] != "oauth" {
+	if rows, err := odataProbe(client); err != nil || rows.Rows[0]["Name"] != "oauth" {
 		t.Fatalf("active environment rows = %#v, err = %v", rows, err)
 	}
 	t.Setenv("CREATIO_URL", setup.forms.server.URL)
@@ -288,7 +288,7 @@ func TestDefaultTargetIsCreatioVariablesThenTheActiveEnvironment(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if rows, err := client.ODataRead(context.Background(), creatio.ODataReadRequest{Entity: "Contact"}); err != nil || rows.Rows[0]["Name"] != "forms" {
+	if rows, err := odataProbe(client); err != nil || rows.Rows[0]["Name"] != "forms" {
 		t.Fatalf("CREATIO_* rows = %#v, err = %v", rows, err)
 	}
 	// A named environment still wins over the CREATIO_* default.
@@ -296,7 +296,7 @@ func TestDefaultTargetIsCreatioVariablesThenTheActiveEnvironment(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if rows, err := client.ODataRead(context.Background(), creatio.ODataReadRequest{Entity: "Contact"}); err != nil || rows.Rows[0]["Name"] != "oauth" {
+	if rows, err := odataProbe(client); err != nil || rows.Rows[0]["Name"] != "oauth" {
 		t.Fatalf("named rows = %#v, err = %v", rows, err)
 	}
 }
@@ -308,17 +308,17 @@ func TestDirectConnectionArgumentsBuildAOneOffClient(t *testing.T) {
 	if err != nil || refusal != nil {
 		t.Fatalf("refusal = %v, err = %v", refusal, err)
 	}
-	if rows, err := client.ODataRead(context.Background(), creatio.ODataReadRequest{Entity: "Contact"}); err != nil || rows.Rows[0]["Name"] != "forms" {
+	if rows, err := odataProbe(client); err != nil || rows.Rows[0]["Name"] != "forms" {
 		t.Fatalf("direct rows = %#v, err = %v", rows, err)
 	}
 	// A tool whose clio counterpart has no uri argument ignores it and serves the default target.
 	client, _, _ = setup.envs.resolve("get-app-info", args, scopeName)
-	if rows, err := client.ODataRead(context.Background(), creatio.ODataReadRequest{Entity: "Contact"}); err != nil || rows.Rows[0]["Name"] != "oauth" {
+	if rows, err := odataProbe(client); err != nil || rows.Rows[0]["Name"] != "oauth" {
 		t.Fatalf("name-only rows = %#v, err = %v", rows, err)
 	}
 	// uri next to a registered name repoints it, as clio's EnvironmentSettings.Fill does.
 	client, _, _ = setup.envs.resolve("get-page", map[string]any{"environment-name": "alpha-forms", "uri": setup.oauth.server.URL}, scopeDirect)
-	if _, err := client.ODataRead(context.Background(), creatio.ODataReadRequest{Entity: "Contact"}); err == nil {
+	if _, err := odataProbe(client); err == nil {
 		t.Fatal("forms credentials were accepted by the OAuth-only fake")
 	}
 }
@@ -335,4 +335,15 @@ func TestSafeEnvironmentIsRefusedLikeClio(t *testing.T) {
 	if text := resolverErrorText(err); text != "[SafeEnvironmentConfirmationRequiredException] "+want {
 		t.Fatalf("command text = %s", text)
 	}
+}
+
+// odataProbe reads Contact through the shared OData read path: the rows, or the failure as an error.
+func odataProbe(client *creatio.Client) (struct{ Rows []map[string]any }, error) {
+	var result struct{ Rows []map[string]any }
+	response := client.ODataRead142(context.Background(), creatio.ODataReadArgs{Entity: "Contact"}, nil, nil)
+	if !response.Success {
+		return result, fmt.Errorf("%s", *response.Error)
+	}
+	err := json.Unmarshal(response.Value, &result.Rows)
+	return result, err
 }

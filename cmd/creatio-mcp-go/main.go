@@ -383,26 +383,16 @@ func invokeHiddenTool(ctx context.Context, envs *environments, hostTools hiddenT
 		}
 		return structuredToolResult(hostTools.findEmptyIISPort(ctx)), nil
 	case "execute-esq":
-		var input struct {
-			Query     json.RawMessage `json:"query"`
-			TimeoutMS *int            `json:"timeout,omitempty"`
-		}
-		if err := decodeStrictArgs(withoutEnvironmentArgs(args, scopeName), &input); err != nil {
-			return nil, fmt.Errorf("decode execute-esq arguments: %w", err)
-		}
-		if len(input.Query) == 0 {
-			return nil, errors.New("query is required")
-		}
-		client, failure, err := envs.resolve(name, args, scopeName)
+		// clio 8.1.0.142's ExecuteEsqTool.Run, shared with execute-esq-to-file (tool_esq142.go).
+		bound, err := clioBind(name, args, esqMembers)
 		if err != nil {
 			return nil, err
 		}
-		if failure != nil {
-			return structuredToolResult(creatio.ESQFailure(redacted(failure))), nil
+		response, err := esqRun(ctx, envs, name, bound, creatio.ESQMaxResponseBytes, true)
+		if err != nil {
+			return nil, err
 		}
-		return structuredToolResult(client.ExecuteESQ(ctx, creatio.ExecuteESQRequest{
-			Query: input.Query, TimeoutMS: input.TimeoutMS,
-		})), nil
+		return toFileResult(response), nil
 	case "get-entity-schema-properties":
 		var input struct {
 			SchemaName   string `json:"schema-name"`

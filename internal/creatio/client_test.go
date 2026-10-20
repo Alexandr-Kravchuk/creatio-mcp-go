@@ -110,7 +110,7 @@ func TestODataReadUsesLegacyRouteCSRFAndBoundedQuery(t *testing.T) {
 			if got := query.Get("$top"); got != "1" {
 				t.Fatalf("$top = %q", got)
 			}
-			_, _ = io.WriteString(w, `{"@odata.count":1,"value":[{"Id":"id-1","Name":"Ada"}]}`)
+			_, _ = io.WriteString(w, `{"@odata.context":"x/$metadata#Contact(Id,Name)","@odata.count":1,"value":[{"Id":"id-1","Name":"Ada"}]}`)
 		default:
 			t.Fatalf("unexpected route %s", r.URL.Path)
 		}
@@ -122,23 +122,17 @@ func TestODataReadUsesLegacyRouteCSRFAndBoundedQuery(t *testing.T) {
 		t.Fatal(err)
 	}
 	top := 1
-	result, err := client.ODataRead(context.Background(), ODataReadRequest{
-		Entity: "Contact", Select: []string{"Id", "Name"}, OrderBy: "Name desc", Top: &top, Count: true,
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if result.Count == nil || *result.Count != 1 || len(result.Rows) != 1 || result.Rows[0]["Name"] != "Ada" {
+	result := client.ODataRead142(context.Background(), ODataReadArgs{
+		Entity: "Contact", OrderBy: "Name desc", Top: &top, Count: true,
+	}, []string{"Id", "Name"}, nil)
+	if !result.Success || *result.Count != 1 || *result.TotalCount != 1 || string(result.Value) != `[{"Id":"id-1","Name":"Ada"}]` {
 		t.Fatalf("result = %#v", result)
 	}
 }
 
 func TestODataReadRejectsUnsafeQueryBeforeAuthenticating(t *testing.T) {
-	client, err := NewClient(Config{BaseURL: "https://example.invalid", Login: "example-user", Password: "replace-me"})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if _, err := client.ODataRead(context.Background(), ODataReadRequest{Entity: "Contact?$top=10000"}); err == nil {
+	// The entity is refused by the local checks, before any client or request exists.
+	if failure, _, _ := ODataReadPrepare(ODataReadArgs{Entity: "Contact?$top=10000"}, false); failure == nil || *failure.ErrorCode != "argument" {
 		t.Fatal("unsafe entity was accepted")
 	}
 }
@@ -152,7 +146,7 @@ func TestODataReadOAuthUsesBearerAndNetCoreRoute(t *testing.T) {
 			if got := r.Header.Get("Authorization"); got != "Bearer token" {
 				t.Fatalf("Authorization = %q", got)
 			}
-			_, _ = io.WriteString(w, `{"value":[]}`)
+			_, _ = io.WriteString(w, `{"@odata.context":"x/$metadata#Account","value":[]}`)
 		default:
 			t.Fatalf("unexpected route %s", r.URL.Path)
 		}
@@ -165,8 +159,8 @@ func TestODataReadOAuthUsesBearerAndNetCoreRoute(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if result, err := client.ODataRead(context.Background(), ODataReadRequest{Entity: "Account"}); err != nil || len(result.Rows) != 0 {
-		t.Fatalf("result = %#v, err = %v", result, err)
+	if result := client.ODataRead142(context.Background(), ODataReadArgs{Entity: "Account"}, nil, nil); !result.Success || string(result.Value) != "[]" {
+		t.Fatalf("result = %#v", result)
 	}
 }
 

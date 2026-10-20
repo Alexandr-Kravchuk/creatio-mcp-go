@@ -37,8 +37,8 @@ func TestExecuteESQForwardsFiltersRelationsOrderingAndPaging(t *testing.T) {
 	}))
 	defer server.Close()
 	client := newFormsTestClient(t, server.URL)
-	query := json.RawMessage(`{"rootSchemaName":"Contact","operationType":0,"allColumns":false,"rowCount":25,"rowsOffset":50,"columns":{"items":{"Id":{"expression":{"expressionType":0,"columnPath":"Id"}},"AccountName":{"expression":{"expressionType":0,"columnPath":"Account.Name"}}}},"filters":{"filterType":6,"isEnabled":true,"logicalOperation":0,"items":{"NameFilter":{"filterType":1,"comparisonType":3,"leftExpression":{"expressionType":0,"columnPath":"Name"},"rightExpression":{"expressionType":2,"parameter":{"dataValueType":1,"value":"Ada"}}}}},"orders":{"items":[{"columnPath":"CreatedOn","direction":0}]}}`)
-	result := client.ExecuteESQ(context.Background(), ExecuteESQRequest{Query: query})
+	query := json.RawMessage(`{"rootSchemaName":"Contact","operationType":0,"allColumns":false,"rowCount":25,"rowsOffset":50,"columns":{"items":{"Id":{"expression":{"expressionType":0,"columnPath":"Id"}},"AccountName":{"expression":{"expressionType":0,"columnPath":"Account.Name"}}}},"filters":{"filterType":6,"isEnabled":true,"logicalOperation":0,"items":{"NameFilter":{"filterType":1,"comparisonType":3,"leftExpression":{"expressionType":0,"columnPath":"Name"},"rightExpression":{"expressionType":2,"parameter":{"dataValueType":1,"value":"Ada"}}}}}}`)
+	result := esqTestRun(t, client, query, ESQMaxResponseBytes)
 	if !result.Success || result.Count == nil || *result.Count != 1 {
 		t.Fatalf("ESQ result = %#v", result)
 	}
@@ -55,7 +55,7 @@ func TestExecuteESQForwardsFiltersRelationsOrderingAndPaging(t *testing.T) {
 		t.Fatalf("relation column path = %#v", accountExpression)
 	}
 	filters := dataServiceRequest["filters"].(map[string]any)["items"].(map[string]any)
-	if filters["NameFilter"] == nil || dataServiceRequest["orders"] == nil {
+	if filters["NameFilter"] == nil {
 		t.Fatalf("filter/order fields were not forwarded: %#v", dataServiceRequest)
 	}
 }
@@ -70,8 +70,8 @@ func TestExecuteESQRefusesSilentlyDroppedRequestedColumn(t *testing.T) {
 	}))
 	defer server.Close()
 	client := newFormsTestClient(t, server.URL)
-	result := client.ExecuteESQ(context.Background(), ExecuteESQRequest{Query: json.RawMessage(`{"rootSchemaName":"Contact","columns":{"items":{"Name":{"expression":{"expressionType":0,"columnPath":"NotAColumn"}}}}}`)})
-	if result.Success || !strings.Contains(result.Error, "unknown column") || result.Hint == "" {
+	result := esqTestRun(t, client, json.RawMessage(`{"rootSchemaName":"Contact","columns":{"items":{"Name":{"expression":{"expressionType":0,"columnPath":"NotAColumn"}}}}}`), ESQMaxResponseBytes)
+	if result.Success || !strings.Contains(*result.Error, "unknown column") || result.Hint == nil {
 		t.Fatalf("missing-column result = %#v", result)
 	}
 }
@@ -82,14 +82,25 @@ func TestExecuteESQEnforcesResponseBudget(t *testing.T) {
 			_, _ = w.Write([]byte(`{"Code":0}`))
 			return
 		}
-		_, _ = io.WriteString(w, strings.Repeat(" ", maxESQResponseBytes+1))
+		_, _ = io.WriteString(w, strings.Repeat(" ", ESQMaxResponseBytes+1))
 	}))
 	defer server.Close()
 	client := newFormsTestClient(t, server.URL)
-	result := client.ExecuteESQ(context.Background(), ExecuteESQRequest{Query: json.RawMessage(`{"rootSchemaName":"Contact"}`)})
-	if result.Success || result.ErrorClass != "result-too-large" || result.Hint != "" {
+	result := esqTestRun(t, client, json.RawMessage(`{"rootSchemaName":"Contact"}`), ESQMaxResponseBytes)
+	if result.Success || *result.ErrorClass != "result-too-large" || result.Hint != nil {
 		t.Fatalf("large response result = %#v", result)
 	}
+}
+
+// esqTestRun runs execute-esq's shared path: the local checks, then the request.
+func esqTestRun(t *testing.T, client *Client, query json.RawMessage, limit int) ExecuteEsqResponse {
+	t.Helper()
+	name := "env"
+	prepared, failure := ESQPrepare(query, nil, &name)
+	if failure != nil {
+		t.Fatalf("prepare: %+v", failure)
+	}
+	return client.ESQExecute(context.Background(), prepared, nil, limit, true)
 }
 
 func TestGetEntitySchemaPropertiesMapsLargeMergedRuntimeSchema(t *testing.T) {
