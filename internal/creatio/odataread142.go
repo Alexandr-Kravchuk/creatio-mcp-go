@@ -952,10 +952,14 @@ func odataSummarizeRows(rows *jnode, body []byte) (int, *odataColumnSizes) {
 // arrived (JsonElement.GetRawText).
 func odataRawRows(body []byte) []map[string]json.RawMessage {
 	var envelope struct {
-		Value []map[string]json.RawMessage `json:"value"`
+		Value []json.RawMessage `json:"value"`
 	}
 	if json.Unmarshal(body, &envelope) == nil && envelope.Value != nil {
-		return envelope.Value
+		rows := make([]map[string]json.RawMessage, len(envelope.Value))
+		for index, raw := range envelope.Value {
+			_ = json.Unmarshal(raw, &rows[index]) // a row that is not an object stays nil and is skipped
+		}
+		return rows
 	}
 	var single map[string]json.RawMessage
 	if json.Unmarshal(body, &single) == nil {
