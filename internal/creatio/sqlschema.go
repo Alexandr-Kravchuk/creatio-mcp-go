@@ -22,9 +22,24 @@ type SQLSchemaResult struct {
 // GetSQLSchema resolves one SQL script by name and fetches its designer body.
 // SQL script names must be unique across packages and database engines, matching Clio's refusal.
 func (c *Client) GetSQLSchema(ctx context.Context, schemaName string) SQLSchemaResult {
+	return c.GetSQLSchemaTo(ctx, schemaName, "")
+}
+
+// GetSQLSchemaTo is GetSQLSchema with clio 8.1.0.142's output-file: the path is confined before any request
+// (the workspace or the OS temp directory, no existing target), the body is written there atomically and
+// left out of the response.
+func (c *Client) GetSQLSchemaTo(ctx context.Context, schemaName, outputFile string) SQLSchemaResult {
 	schemaName = strings.TrimSpace(schemaName)
 	if schemaName == "" {
 		return SQLSchemaResult{Error: "schema-name is required"}
+	}
+	outputPath := ""
+	if strings.TrimSpace(outputFile) != "" {
+		resolved, refusal := schemaGetResolveOutput(outputFile)
+		if refusal != "" {
+			return SQLSchemaResult{Error: refusal}
+		}
+		outputPath = resolved
 	}
 	query := map[string]any{
 		"rootSchemaName": "VwSysSqlScriptInPackage", "operationType": 0, "rowCount": 2,
@@ -83,23 +98,77 @@ func (c *Client) GetSQLSchema(ctx context.Context, schemaName string) SQLSchemaR
 	if err := json.Unmarshal(response.Schema, &schema); err != nil {
 		return SQLSchemaResult{Error: fmt.Sprintf("SQL schema designer returned an invalid schema: %v", err)}
 	}
-	return SQLSchemaResult{
+	result := SQLSchemaResult{
 		Success: true, SchemaName: firstNonEmpty(schema.Name, schemaName), SchemaUID: schemaUID,
-		PackageName: schema.Package.Name, Caption: schemaCaption(schema.Caption),
-		Body: schema.Body, BodyLength: utf16Length(schema.Body),
+		PackageName: schema.Package.Name, Caption: schemaCaption(schema.Caption, c.profileCultureFunc(ctx)),
+		BodyLength: utf16Length(schema.Body),
 	}
+	if outputPath != "" {
+		if err := schemaGetWriteAtomic(outputPath, []byte(schema.Body)); err != nil {
+			return SQLSchemaResult{Error: err.Error()}
+		}
+		return result
+	}
+	result.Body = schema.Body
+	return result
 }
 
-func schemaCaption(caption json.RawMessage) string {
-	var values []struct {
-		Value string `json:"value"`
+// schemaCaption is clio 8.1.0.142's SchemaDesignerHelper.ExtractCaption: of several non-blank localized
+// values the one in the preferred culture (the user's profile culture, asked only when needed), then en-US,
+// then the first.
+func schemaCaption(caption json.RawMessage, preferredCulture func() string) string {
+	var entries []json.RawMessage
+	if json.Unmarshal(caption, &entries) != nil {
+		var scalar string
+		_ = json.Unmarshal(caption, &scalar)
+		return scalar
 	}
-	if json.Unmarshal(caption, &values) == nil && len(values) > 0 {
-		return values[0].Value
+	type localized struct{ culture, value string }
+	var values []localized
+	for _, raw := range entries {
+		var entry map[string]json.RawMessage
+		if json.Unmarshal(raw, &entry) != nil || entry == nil {
+			continue
+		}
+		value := rowText(entry, "value")
+		if strings.TrimSpace(value) == "" {
+			continue
+		}
+		values = append(values, localized{rowText(entry, "cultureName"), value})
 	}
-	var scalar string
-	_ = json.Unmarshal(caption, &scalar)
-	return scalar
+	switch len(values) {
+	case 0:
+		return ""
+	case 1:
+		return values[0].value
+	}
+	find := func(culture string) (string, bool) {
+		if strings.TrimSpace(culture) == "" {
+			return "", false
+		}
+		for _, entry := range values {
+			if strings.EqualFold(entry.culture, strings.TrimSpace(culture)) {
+				return entry.value, true
+			}
+		}
+		return "", false
+	}
+	preferred := ""
+	if preferredCulture != nil {
+		preferred = preferredCulture()
+	}
+	if value, ok := find(preferred); ok {
+		return value
+	}
+	if value, ok := find(schemaWriteDefaultCulture); ok {
+		return value
+	}
+	return values[0].value
+}
+
+// profileCultureFunc defers the profile-culture request until a caption really has several cultures.
+func (c *Client) profileCultureFunc(ctx context.Context) func() string {
+	return func() string { return c.schemaWriteProfileCulture(ctx) }
 }
 
 func firstNonEmpty(values ...string) string {

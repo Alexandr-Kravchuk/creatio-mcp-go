@@ -9,7 +9,7 @@ const knowledgeServerInstructions = "clio is the CLI + MCP server for the Creati
 	"## ALWAYS read these FIRST (mandatory on every operation; skipping either is a defect, not a shortcut)\r\n" +
 	"- get-guidance name=core-rules - the non-negotiable invariants (compile/restart, long-running await, profile culture, destructive confirmation, verification in browser preference, correlation-id); apply them to every action.\r\n" +
 	"- get-guidance name=routing - the routing map from the task (pages, entities, data, applications) to the exact guide(s) to read before acting.\r\n" +
-	"An unknown name returns availableGuides.\r\n" +
+	"name=list returns the guide catalog.\r\n" +
 	"\r\n" +
 	"## Product telemetry (for AI-assisted Creatio work you do here; skip only for non-agent use - plain scripts or CI)\r\n" +
 	"Note the scope: an agent doing Creatio work through this server is IN scope even when no skill file is loaded. \"No skill loaded\" is not \"ad-hoc use\".\r\n" +

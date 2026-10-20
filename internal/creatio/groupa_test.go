@@ -51,7 +51,7 @@ func groupAFilterItems(body map[string]any) map[string]any {
 	return body["filters"].(map[string]any)["items"].(map[string]any)
 }
 
-func TestFindAppBatchesSectionsInOneOrQueryAndSorts(t *testing.T) {
+func TestFindAppBatchesSectionsInOneInFilterAndSorts(t *testing.T) {
 	client, seen := newGroupAServer(t, map[string]groupARoute{
 		"SelectQuery:SysInstalledApp": groupAFixed(`{"success":true,"rows":[
 			{"Id":"a2","Code":"Zeta","Name":"zeta app","Version":"","Description":null},
@@ -72,8 +72,15 @@ func TestFindAppBatchesSectionsInOneOrQueryAndSorts(t *testing.T) {
 		t.Fatalf("blank version must be absent and sections []: %#v", zeta)
 	}
 	sectionQuery := seen["SelectQuery:ApplicationSection"][0]
-	if sectionQuery["filters"].(map[string]any)["logicalOperation"] != float64(1) || len(groupAFilterItems(sectionQuery)) != 2 {
-		t.Fatalf("sections must be loaded by one OR-grouped query: %#v", sectionQuery["filters"])
+	// clio 8.1.0.142: one IN filter; the virtual ApplicationSection schema reads only the first ApplicationId
+	// filter of an OR group and would answer the sections of one application only.
+	items := groupAFilterItems(sectionQuery)
+	in, _ := items["filter0"].(map[string]any)
+	values, _ := in["rightExpressions"].([]any)
+	if sectionQuery["filters"].(map[string]any)["logicalOperation"] != float64(0) || len(items) != 1 ||
+		in["filterType"] != float64(4) || len(values) != 2 ||
+		in["leftExpression"].(map[string]any)["columnPath"] != "ApplicationId" {
+		t.Fatalf("sections must be loaded by one IN filter: %#v", sectionQuery["filters"])
 	}
 	filtered := client.FindApp(context.Background(), FindAppRequest{SearchPattern: "DEALS"})
 	if len(filtered.Applications) != 1 || filtered.Applications[0].Code != "CrtSales" {
@@ -81,14 +88,15 @@ func TestFindAppBatchesSectionsInOneOrQueryAndSorts(t *testing.T) {
 	}
 }
 
-func TestFindAppKeepsAppsWhenSectionsFailAndReportsAppFailure(t *testing.T) {
+func TestFindAppFailsWhenSectionsFailAndReportsAppFailure(t *testing.T) {
 	client, _ := newGroupAServer(t, map[string]groupARoute{
 		"SelectQuery:SysInstalledApp":    groupAFixed(`{"success":true,"rows":[{"Id":"a1","Code":"App","Name":"App"}]}`),
 		"SelectQuery:ApplicationSection": groupAFixed(`{"success":false,"errorInfo":{"message":"boom"}}`),
 	})
 	result := client.FindApp(context.Background(), FindAppRequest{Code: "app"})
-	if !result.Success || len(result.Applications) != 1 || len(result.Applications[0].Sections) != 0 {
-		t.Fatalf("section failure must degrade to no sections: %#v", result)
+	// clio 8.1.0.142 (ENG-102120): no sections would be indistinguishable from applications that have none.
+	if result.Success || result.Applications != nil || result.Error != "Failed to load application sections: SelectQuery failed: boom" {
+		t.Fatalf("section failure must fail the call: %#v", result)
 	}
 	failing, _ := newGroupAServer(t, map[string]groupARoute{
 		"SelectQuery:SysInstalledApp": groupAFixed(`{"success":false,"errorInfo":{"message":"denied"}}`),

@@ -296,13 +296,36 @@ func pageValidateJSON(content string) error {
 	return err
 }
 
-// pageValidateCleanJSON removes trailing commas and returns strict JSON that decodes.
+// pageValidateCleanJSON removes comments and trailing commas (System.Text.Json's JsonCommentHandling.Skip and
+// AllowTrailingCommas, which clio 8.1.0.142 parses the sections with) and returns strict JSON that decodes.
+// An unterminated block comment is left in place, so the decode fails as clio's parse does.
 func pageValidateCleanJSON(content string) (string, error) {
 	var cleaned strings.Builder
 	runes := []rune(content)
 	for index := 0; index < len(runes); index++ {
 		ch := runes[index]
 		switch {
+		case ch == '/' && index+1 < len(runes) && runes[index+1] == '/':
+			for index < len(runes) && runes[index] != '\n' && runes[index] != '\r' {
+				index++
+			}
+			index--
+			cleaned.WriteRune(' ')
+		case ch == '/' && index+1 < len(runes) && runes[index+1] == '*':
+			end := -1
+			for probe := index + 2; probe+1 < len(runes); probe++ {
+				if runes[probe] == '*' && runes[probe+1] == '/' {
+					end = probe
+					break
+				}
+			}
+			if end < 0 {
+				cleaned.WriteString(string(runes[index:]))
+				index = len(runes)
+				break
+			}
+			index = end + 1
+			cleaned.WriteRune(' ')
 		case ch == '"':
 			start := index
 			for index++; index < len(runes) && runes[index] != '"'; index++ {

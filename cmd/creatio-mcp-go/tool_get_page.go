@@ -18,7 +18,7 @@ func init() {
 		"inputSchema": map[string]any{"type": "object", "required": []string{"schema-name"}, "properties": map[string]any{
 			"schema-name":        map[string]string{"type": "string", "description": "Freedom UI page schema name, e.g. 'UsrMyApp_FormPage'"},
 			"output-directory":   map[string]string{"type": "string", "description": "Optional. Directory to anchor .clio-pages output under (typically your project root). Defaults to the auto-detected workspace root."},
-			"include-operations": map[string]string{"type": "boolean", "description": "false replaces page.ownBodySummary.viewConfigDiffOps with viewConfigDiffOpCounts (count per operation type); meta.json keeps the full list."},
+			"include-operations": map[string]string{"type": "boolean", "description": "true lists page.ownBodySummary.viewConfigDiffOps; default: viewConfigDiffOpCounts (count per operation type). meta.json keeps the full list."},
 		}},
 	}, func(ctx context.Context, envs *environments, args map[string]any) (*mcp.CallToolResult, error) {
 		schemaName, err := optionalStringArg(args, "get-page", "schema-name")
@@ -29,13 +29,9 @@ func init() {
 		if err != nil {
 			return nil, err
 		}
-		var includeOperations *bool
-		switch value := args["include-operations"].(type) {
-		case nil:
-		case bool:
-			includeOperations = &value
-		default:
-			return nil, fmt.Errorf("invalid-parameter-type: argument 'include-operations' for MCP tool 'get-page' must be a boolean. Received an incompatible JSON value.")
+		includeOperations, err := getPageIncludeOperations(args)
+		if err != nil {
+			return nil, err
 		}
 		// clio resolves the environment per call; a failure is reported inside the tool's own answer.
 		client, failure, bindErr := envs.resolve("get-page", args, scopeDirect)
@@ -53,4 +49,19 @@ func init() {
 		return structuredToolResult(client.WritePageFilesFor(result, schemaName, outputDirectory,
 			pageWriteArgText(args, "environment-name"), pageWriteArgText(args, "uri"))), nil
 	}, withAnnotations(localWriteAnnotations))
+}
+
+// getPageIncludeOperations reads get-page's include-operations. clio 8.1.0.142 (ENG-103023) makes the
+// operation list opt-in: an absent value answers with viewConfigDiffOpCounts, and meta.json keeps the
+// full list. update-page keeps nil (the full list) because clio passes its argument through unchanged there.
+func getPageIncludeOperations(args map[string]any) (*bool, error) {
+	includeOperations := false
+	switch value := args["include-operations"].(type) {
+	case nil:
+	case bool:
+		includeOperations = value
+	default:
+		return nil, fmt.Errorf("invalid-parameter-type: argument 'include-operations' for MCP tool 'get-page' must be a boolean. Received an incompatible JSON value.")
+	}
+	return &includeOperations, nil
 }

@@ -58,3 +58,21 @@ func TestGetPageRejectsNonBooleanIncludeOperations(t *testing.T) {
 		t.Fatalf("err = %v", err)
 	}
 }
+
+// clio 8.1.0.142 (ENG-103023): get-page lists viewConfigDiffOps only when include-operations is true.
+func TestGetPageIncludeOperationsDefaultsToCounts(t *testing.T) {
+	for _, tc := range []struct {
+		args map[string]any
+		want bool
+	}{
+		{map[string]any{}, false},
+		{map[string]any{"include-operations": nil}, false},
+		{map[string]any{"include-operations": false}, false},
+		{map[string]any{"include-operations": true}, true},
+	} {
+		got, err := getPageIncludeOperations(tc.args)
+		if err != nil || got == nil || *got != tc.want {
+			t.Fatalf("args %#v: got %v, err %v; want %v", tc.args, got, err, tc.want)
+		}
+	}
+}

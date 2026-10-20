@@ -42,7 +42,8 @@ func TestGetTargetPackageResolvesCurrentPackageSetting(t *testing.T) {
 			return http.StatusOK, `{"success":true,"values":{"CurrentPackageId":{"value":"a00051f4-cde3-4f3f-b08e-c5ad1a5c735a","displayValue":"Custom"}}}`
 		case "/0/DataService/json/SyncReply/SelectQuery":
 			items := body["filters"].(map[string]any)["items"].(map[string]any)
-			filtered = items["Id"] != nil
+			// clio 8.1.0.142: CurrentPackageId holds a package UId, not a row Id.
+			filtered = items["UId"] != nil && items["Id"] == nil
 			return http.StatusOK, `{"success":true,"rows":[{"Name":"Custom","UId":"a00051f4-cde3-4f3f-b08e-c5ad1a5c735a","InstallType":0}]}`
 		}
 		return http.StatusNotFound, ""
@@ -50,7 +51,26 @@ func TestGetTargetPackageResolvesCurrentPackageSetting(t *testing.T) {
 	defer server.Close()
 	result := newFormsTestClient(t, server.URL).GetTargetPackage(context.Background(), "")
 	if !result.Success || result.PackageName != "Custom" || !filtered {
-		t.Fatalf("result = %#v, filtered by Id = %v", result, filtered)
+		t.Fatalf("result = %#v, filtered by UId = %v", result, filtered)
+	}
+}
+
+func TestGetTargetPackageAsksForAPackageWhenTheSettingResolvesToNone(t *testing.T) {
+	server := groupCServer(t, func(path string, body map[string]any) (int, string) {
+		switch path {
+		case "/0/DataService/json/SyncReply/QuerySysSettings":
+			return http.StatusOK, `{"success":true,"values":{"CurrentPackageId":{"value":"a00051f4-cde3-4f3f-b08e-c5ad1a5c735a"}}}`
+		case "/0/DataService/json/SyncReply/SelectQuery":
+			return http.StatusOK, `{"success":true,"rows":[]}`
+		}
+		return http.StatusNotFound, ""
+	})
+	defer server.Close()
+	result := newFormsTestClient(t, server.URL).GetTargetPackage(context.Background(), "")
+	want := "The environment's CurrentPackageId system setting points at package 'a00051f4-cde3-4f3f-b08e-c5ad1a5c735a', " +
+		"which could not be resolved to a usable package. Ask the user which package should receive the change, then call again with that package named."
+	if result.Success || result.ResolutionFailed == nil || !*result.ResolutionFailed || result.Error != want {
+		t.Fatalf("result = %#v", result)
 	}
 }
 
