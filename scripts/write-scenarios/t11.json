@@ -1001,5 +1001,202 @@
         }
       }
     ]
+  },
+  {
+    "label": "clio 142 OData arguments: an update through a synonym of data, a dry-run delete by ids",
+    "why": "T20. The update sends its fields under 'values' (clio 8.1.0.142 reads it as data and reports a warning); the delete is a dry run by ids, which deletes nothing and needs no confirm, so it also runs on a stand whose IIS refuses OData DELETE. Only the contact this scenario creates is touched; cleanup goes through DataService.",
+    "steps": [
+      {
+        "kind": "write",
+        "label": "create",
+        "tool": "odata-create",
+        "clio-run": true,
+        "creates": "UsrParity{run}{side}T20Contact",
+        "args": {
+          "entity": "Contact",
+          "rows": [
+            {
+              "Name": "UsrParity{run}{side}T20Contact",
+              "Notes": "Parity initial"
+            }
+          ]
+        },
+        "capture": {
+          "id": "$.results[0].id"
+        }
+      },
+      {
+        "kind": "cleanup",
+        "for": "UsrParity{run}{side}T20Contact",
+        "server": "clio",
+        "calls": [
+          {
+            "tool": "execute-esq",
+            "clio-run": true,
+            "args": {
+              "query": {
+                "rootSchemaName": "Contact",
+                "operationType": 0,
+                "rowCount": 1,
+                "columns": {
+                  "items": {
+                    "Id": {
+                      "expression": {
+                        "expressionType": 0,
+                        "columnPath": "Id"
+                      }
+                    },
+                    "Name": {
+                      "expression": {
+                        "expressionType": 0,
+                        "columnPath": "Name"
+                      }
+                    },
+                    "Notes": {
+                      "expression": {
+                        "expressionType": 0,
+                        "columnPath": "Notes"
+                      }
+                    }
+                  }
+                },
+                "filters": {
+                  "filterType": 6,
+                  "isEnabled": true,
+                  "logicalOperation": 0,
+                  "items": {
+                    "own": {
+                      "filterType": 1,
+                      "comparisonType": 3,
+                      "isEnabled": true,
+                      "leftExpression": {
+                        "expressionType": 0,
+                        "columnPath": "Name"
+                      },
+                      "rightExpression": {
+                        "expressionType": 2,
+                        "parameter": {
+                          "dataValueType": 1,
+                          "value": "UsrParity{run}{side}T20Contact"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "capture": {
+              "cleanupId": "$.rows[0].id"
+            }
+          },
+          {
+            "tool": "execute-dataservice-batch",
+            "clio-run": true,
+            "args": {
+              "operations": [
+                {
+                  "operation": "delete",
+                  "schema-name": "Contact",
+                  "record-id": "{cleanupId}"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "kind": "write",
+        "label": "update-through-values",
+        "tool": "odata-update",
+        "clio-run": true,
+        "target": "UsrParity{run}{side}T20Contact",
+        "args": {
+          "entity": "Contact",
+          "id": "{id}",
+          "values": {
+            "Notes": "Parity T20"
+          },
+          "confirm": true
+        }
+      },
+      {
+        "kind": "read-back",
+        "label": "read-updated",
+        "tool": "execute-esq",
+        "clio-run": true,
+        "args": {
+          "query": {
+            "rootSchemaName": "Contact",
+            "operationType": 0,
+            "rowCount": 1,
+            "columns": {
+              "items": {
+                "Id": {
+                  "expression": {
+                    "expressionType": 0,
+                    "columnPath": "Id"
+                  }
+                },
+                "Name": {
+                  "expression": {
+                    "expressionType": 0,
+                    "columnPath": "Name"
+                  }
+                },
+                "Notes": {
+                  "expression": {
+                    "expressionType": 0,
+                    "columnPath": "Notes"
+                  }
+                }
+              }
+            },
+            "filters": {
+              "filterType": 6,
+              "isEnabled": true,
+              "logicalOperation": 0,
+              "items": {
+                "own": {
+                  "filterType": 1,
+                  "comparisonType": 3,
+                  "isEnabled": true,
+                  "leftExpression": {
+                    "expressionType": 0,
+                    "columnPath": "Name"
+                  },
+                  "rightExpression": {
+                    "expressionType": 2,
+                    "parameter": {
+                      "dataValueType": 1,
+                      "value": "UsrParity{run}{side}T20Contact"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "kind": "expect",
+        "step": "read-updated",
+        "path": "$.rows[0].notes",
+        "equals": "Parity T20"
+      },
+      {
+        "kind": "write",
+        "label": "dry-run-delete-ids",
+        "tool": "odata-delete",
+        "clio-run": true,
+        "target": "UsrParity{run}{side}T20Contact",
+        "args": {
+          "entity": "Contact",
+          "ids": [
+            "{id}"
+          ],
+          "dry-run": true
+        }
+      }
+    ]
   }
 ]

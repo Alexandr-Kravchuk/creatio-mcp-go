@@ -70,6 +70,9 @@ func TestODataUpdateMetadataGuardAndDeleteConfirmation(t *testing.T) {
 			io.WriteString(w, `{"Code":0}`)
 		case strings.HasSuffix(r.URL.Path, "/$metadata"):
 			io.WriteString(w, `<Schema><EntityType Name="UsrParityMock"><Property Name="Id" Type="Edm.Guid"/><Property Name="Name" Type="Edm.String"/></EntityType></Schema>`)
+		case strings.HasSuffix(r.URL.Path, "/SelectQuery"):
+			// odata-delete looks the record up before its DELETE.
+			io.WriteString(w, `{"success":true,"rows":[{"Id":"00000000-0000-0000-0000-000000000001"}]}`)
 		default:
 			writes++
 			if r.Method != "PATCH" && r.Method != "DELETE" {
@@ -90,13 +93,13 @@ func TestODataUpdateMetadataGuardAndDeleteConfirmation(t *testing.T) {
 	if !result.Success || writes != 1 {
 		t.Fatalf("result=%#v writes=%d", result, writes)
 	}
-	request.Confirm = false
-	refusal = ODataDelete(context.Background(), client, nil, request)
+	deletion := ODataDeleteRequest{Entity: request.Entity, ID: request.ID}
+	refusal = ODataDelete(context.Background(), client, nil, deletion)
 	if refusal.Success || writes != 1 {
 		t.Fatalf("refusal=%#v error=%s writes=%d", refusal, *refusal.Error, writes)
 	}
-	request.Confirm = true
-	result = ODataDelete(context.Background(), client, nil, request)
+	deletion.Confirm = true
+	result = ODataDelete(context.Background(), client, nil, deletion)
 	if !result.Success || writes != 2 {
 		t.Fatalf("result=%#v writes=%d", result, writes)
 	}
