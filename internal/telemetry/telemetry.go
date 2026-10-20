@@ -375,7 +375,9 @@ func (s *Service) readSession(sessionID, workflow string) *sessionState {
 	return &state
 }
 
-func isSessionStart(event string) bool { return event == "workflow_started" || event == "session_started" }
+func isSessionStart(event string) bool {
+	return event == "workflow_started" || event == "session_started"
+}
 
 func isTerminal(event string) bool {
 	switch event {
