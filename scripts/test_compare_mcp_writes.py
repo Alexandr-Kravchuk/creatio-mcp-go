@@ -251,5 +251,21 @@ class NeutralizeTest(unittest.TestCase):
         self.assertNotEqual(module.neutralize("published in 2.8s, then failed", {}),
                             module.neutralize("published in 2.8s, then saved", {}))
 
+    def test_expect_matches_a_caption_with_the_run_id(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("compare_mcp_writes_expect", HARNESS)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        harness = module.Harness({}, ENVIRONMENT, "t1")
+        state = {side: {"variables": {"run": "t1", "side": side}, "replacements": {f"UsrParityt1{side}X": "UsrParity{run}{side}X"},
+                        "answers": {"read": {"caption": "Parity t1 updated", "name": f"UsrParityt1{side}X"}}}
+                 for side in ("clio", "go")}
+        for path, equals, verdict in [("$.caption", "Parity {run} updated", "match"),
+                                      ("$.name", "UsrParity{run}{side}X", "match"),
+                                      ("$.caption", "Parity {run} other", "mismatch")]:
+            result = harness.expect({"step": "read", "path": path, "equals": equals}, "e", state)
+            self.assertEqual(result["verdict"], verdict, (path, equals, result))
+
+
 if __name__ == "__main__":
     unittest.main()

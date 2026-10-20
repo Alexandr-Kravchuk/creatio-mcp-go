@@ -384,7 +384,9 @@ class Harness:
             found, value = resolve_path(neutralize(answer, state[side]["replacements"]), step["path"])
             if not found:
                 problems.append(f"{step['path']}: missing in {side}")
-            elif value != step["equals"]:
+            # `equals` is a template: a name the run created reads back neutralized ("UsrParity{run}{side}X"),
+            # free text such as a caption reads back concrete ("Parity t1 updated" for "Parity {run} updated").
+            elif value != step["equals"] and value != substitute(step["equals"], state[side]["variables"]):
                 problems.append(f"{step['path']}: expectation failed in {side}")
         return {"step": label, "kind": "expect", "verdict": "mismatch" if problems else "match",
                 "differences": problems}
