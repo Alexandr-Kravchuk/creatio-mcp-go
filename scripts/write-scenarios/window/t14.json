@@ -19,8 +19,6 @@
           "with-mobile-pages": false
         },
         "known-differences": [
-          "$.warnings",
-          "$.nextstep",
           "$.dataforge.health.correlationid",
           "$.entities[0].uid",
           "$.entities[1].uid",
@@ -107,8 +105,6 @@
           "with-mobile-pages": false
         },
         "known-differences": [
-          "$.warnings",
-          "$.nextstep",
           "$.dataforge.health.correlationid",
           "$.entities[0].uid",
           "$.entities[1].uid",

@@ -16,13 +16,36 @@
           "with-mobile-pages": false,
           "description": "Created by scripts/compare-mcp-writes.py; safe to delete"
         },
-        "capture": {"pkg": "$.package-name"}
+        "capture": {
+          "pkg": "$.package-name",
+          "pkguid": "$.packageuid",
+          "appuid": "$.applicationid"
+        },
+        "retry-while": "rebuilding the OData library",
+        "retry-attempts": 6,
+        "retry-delay-seconds": 30,
+        "known-differences": [
+          "$.entities[0].uid",
+          "$.pages[0].uid",
+          "$.pages[1].uid",
+          "$.pages[2].uid"
+        ],
+        "why": "Page and entity GUIDs are created per side; an OData rebuild started by the previous application write is retried."
       },
       {
         "kind": "cleanup",
         "for": "UsrParity{run}{side}Cmp",
         "server": "own",
-        "calls": [{"tool": "delete-app", "clio-run": true, "settle-seconds": 60, "args": {"app-name": "UsrParity{run}{side}Cmp"}}]
+        "calls": [
+          {
+            "tool": "delete-app",
+            "clio-run": true,
+            "settle-seconds": 60,
+            "args": {
+              "app-name": "UsrParity{run}{side}Cmp"
+            }
+          }
+        ]
       },
       {
         "kind": "write",
@@ -30,11 +53,21 @@
         "tool": "compile-creatio",
         "clio-run": true,
         "settle-seconds": 600,
-        "args": {"package-name": "{pkg}"},
-        "known-differences": ["$.executionlogmessages", "$.correlationid"],
+        "args": {
+          "package-name": "{pkg}"
+        },
+        "known-differences": [
+          "$.executionlogmessages",
+          "$.correlationid"
+        ],
         "why": "A package compile may answer in-progress (exit 0) after the response deadline (45 s on master, 150 s on 8.1.0.134); compile-status below carries the verdict. The harness calls clio first, then this server: the 600 s settle before each side lets the first side's compile finish, because the platform serializes compiles."
       },
-      {"kind": "expect", "step": "compile-creatio package-name", "path": "$.exitCode", "equals": 0},
+      {
+        "kind": "expect",
+        "step": "compile-creatio package-name",
+        "path": "$.exitCode",
+        "equals": 0
+      },
       {
         "kind": "read-back",
         "label": "compile-status",
@@ -43,10 +76,20 @@
         "retry-attempts": 60,
         "retry-delay-seconds": 20,
         "args": {},
-        "known-differences": ["$.operationid", "$.startedutc", "$.finishedutc", "$.messagetail"],
+        "known-differences": [
+          "$.operationid",
+          "$.startedutc",
+          "$.finishedutc",
+          "$.messagetail"
+        ],
         "why": "Each server reports its own operation; ids, times and the history lines differ."
       },
-      {"kind": "expect", "step": "compile-status", "path": "$.status", "equals": "succeeded"}
+      {
+        "kind": "expect",
+        "step": "compile-status",
+        "path": "$.status",
+        "equals": "succeeded"
+      }
     ]
   },
   {
@@ -59,9 +102,17 @@
         "tool": "compile-creatio",
         "clio-run": true,
         "args": {},
-        "known-differences": ["$.executionlogmessages", "$.correlationid"]
+        "known-differences": [
+          "$.executionlogmessages",
+          "$.correlationid"
+        ]
       },
-      {"kind": "expect", "step": "compile-creatio full", "path": "$.exitCode", "equals": 0},
+      {
+        "kind": "expect",
+        "step": "compile-creatio full",
+        "path": "$.exitCode",
+        "equals": 0
+      },
       {
         "kind": "read-back",
         "label": "compile-status",
@@ -70,9 +121,19 @@
         "retry-attempts": 90,
         "retry-delay-seconds": 20,
         "args": {},
-        "known-differences": ["$.operationid", "$.startedutc", "$.finishedutc", "$.messagetail"]
+        "known-differences": [
+          "$.operationid",
+          "$.startedutc",
+          "$.finishedutc",
+          "$.messagetail"
+        ]
       },
-      {"kind": "expect", "step": "compile-status", "path": "$.status", "equals": "succeeded"}
+      {
+        "kind": "expect",
+        "step": "compile-status",
+        "path": "$.status",
+        "equals": "succeeded"
+      }
     ]
   },
   {
@@ -86,10 +147,20 @@
         "clio-run": true,
         "clio-environment-key": "environmentName",
         "settle-seconds": 900,
-        "args": {"waitTimeoutSeconds": 900},
-        "known-differences": ["$.executionlogmessages", "$.correlationid"]
+        "args": {
+          "waitTimeoutSeconds": 900
+        },
+        "known-differences": [
+          "$.executionlogmessages",
+          "$.correlationid"
+        ]
       },
-      {"kind": "expect", "step": "restart-by-environment-name", "path": "$.exitCode", "equals": 0},
+      {
+        "kind": "expect",
+        "step": "restart-by-environment-name",
+        "path": "$.exitCode",
+        "equals": 0
+      },
       {
         "kind": "read-back",
         "label": "restart-status",
@@ -98,9 +169,18 @@
         "retry-attempts": 60,
         "retry-delay-seconds": 15,
         "args": {},
-        "known-differences": ["$.operationid", "$.startedutc", "$.finishedutc"]
+        "known-differences": [
+          "$.operationid",
+          "$.startedutc",
+          "$.finishedutc"
+        ]
       },
-      {"kind": "expect", "step": "restart-status", "path": "$.status", "equals": "ready"}
+      {
+        "kind": "expect",
+        "step": "restart-status",
+        "path": "$.status",
+        "equals": "ready"
+      }
     ]
   },
   {
@@ -114,10 +194,19 @@
         "clio-run": true,
         "clio-environment-key": "environmentName",
         "settle-seconds": 120,
-        "args": {"waitReady": false},
-        "known-differences": ["$.correlationid"]
+        "args": {
+          "waitReady": false
+        },
+        "known-differences": [
+          "$.correlationid"
+        ]
       },
-      {"kind": "expect", "step": "restart-by-environment-name waitReady false", "path": "$.exitCode", "equals": 0}
+      {
+        "kind": "expect",
+        "step": "restart-by-environment-name waitReady false",
+        "path": "$.exitCode",
+        "equals": 0
+      }
     ]
   },
   {
@@ -131,7 +220,9 @@
         "clio-run": true,
         "clio-environment-key": "environmentName",
         "args": {},
-        "known-differences": ["$.correlationid"]
+        "known-differences": [
+          "$.correlationid"
+        ]
       },
       {
         "kind": "write",
@@ -140,7 +231,9 @@
         "clio-run": true,
         "clio-environment-key": "environmentName",
         "args": {},
-        "known-differences": ["$.correlationid"]
+        "known-differences": [
+          "$.correlationid"
+        ]
       }
     ]
   },
@@ -155,10 +248,25 @@
         "clio-run": true,
         "settle-seconds": 180,
         "args": {},
-        "known-differences": ["$.executionlogmessages", "$.correlationid"]
+        "known-differences": [
+          "$.executionlogmessages",
+          "$.correlationid"
+        ]
       },
-      {"kind": "expect", "step": "install-gate", "path": "$.exitCode", "equals": 0},
-      {"kind": "read-back", "label": "list-packages cliogate", "tool": "list-packages", "args": {"filter": "cliogate"}}
+      {
+        "kind": "expect",
+        "step": "install-gate",
+        "path": "$.exitCode",
+        "equals": 0
+      },
+      {
+        "kind": "read-back",
+        "label": "list-packages cliogate",
+        "tool": "list-packages",
+        "args": {
+          "filter": "cliogate"
+        }
+      }
     ]
   },
   {
@@ -172,17 +280,40 @@
         "clio-run": true,
         "settle-seconds": 60,
         "args": {},
-        "known-differences": ["$.executionlogmessages", "$.correlationid"]
+        "known-differences": [
+          "$.executionlogmessages",
+          "$.correlationid"
+        ]
       },
-      {"kind": "read-back", "label": "list-packages CrtDashboardsMigratorApp", "tool": "list-packages", "args": {"filter": "CrtDashboardsMigratorApp"}}
+      {
+        "kind": "read-back",
+        "label": "list-packages CrtDashboardsMigratorApp",
+        "tool": "list-packages",
+        "args": {
+          "filter": "CrtDashboardsMigratorApp"
+        }
+      }
     ]
   },
   {
     "label": "dataforge-update and dataforge-initialize",
     "why": "T15, window-only: both schedule Data Forge index work for the whole stand (Creatio 10.0.0+). The answers carry no per-side value.",
     "steps": [
-      {"kind": "write", "label": "dataforge-update", "tool": "dataforge-update", "clio-run": true, "args": {}},
-      {"kind": "write", "label": "dataforge-initialize", "tool": "dataforge-initialize", "clio-run": true, "settle-seconds": 60, "args": {}}
+      {
+        "kind": "write",
+        "label": "dataforge-update",
+        "tool": "dataforge-update",
+        "clio-run": true,
+        "args": {}
+      },
+      {
+        "kind": "write",
+        "label": "dataforge-initialize",
+        "tool": "dataforge-initialize",
+        "clio-run": true,
+        "settle-seconds": 60,
+        "args": {}
+      }
     ]
   }
 ]
