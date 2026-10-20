@@ -24,7 +24,12 @@ Not in this release:
   purpose (decision D3 in [docs/migration-plan.md](docs/migration-plan.md));
 - the Git transport of `install-knowledge` / `update-knowledge`: a `git`-type knowledge source is installed
   and updated with clio;
-- the clio 8.1.0.142 tools still being ported.
+- `page-smoke` (it needs a headless Chromium driven over the DevTools protocol) and
+  `get-mobile-page-conversion-guide` (it needs clio's web-to-mobile analysis engine): use clio for them.
+
+Coming from v0.1.x: `odata-read` now takes clio 8.1.0.142's arguments and answers in its shape (the old
+`{rows, count}` answer and the `orderBy` key are gone), and `execute-esq` answers as clio 8.1.0.142 does;
+see "Breaking changes" in the [release notes](docs/release-notes-v0.2.0.md#breaking-changes).
 
 Exact counts, what was compared with clio and how:
 [docs/status/clio-comparison-2026-10-20.md](docs/status/clio-comparison-2026-10-20.md). Known differences

@@ -1,31 +1,34 @@
 # creatio-mcp-go vs clio: comparison (2026-10-20)
 
-## Current state after the first wave (2026-10-20, `fdc3aa4`)
+## Current state after the second wave (2026-10-20, `caa2eb0`)
 
-The first wave of the 8.1.0.142 work (streams A–D) is merged: contracts and prompts moved to the
-8.1.0.142 baseline (`0bb560b`, `674b18d`), T19 rights and connections
+Both waves of the 8.1.0.142 work are merged. First wave (streams A-D, up to `fdc3aa4`): contracts and
+prompts moved to the 8.1.0.142 baseline (`0bb560b`, `674b18d`), T19 rights and connections
 ([status](t19-rights-connections-status.md)), T20 new arguments ([status](t20-new-args-status.md)) and the
-T6 write side ([status](t6-write-status.md)). Measured at `fdc3aa4` without a Creatio stand:
+T6 write side ([status](t6-write-status.md)). Second wave (streams a and b, T21): see below. Measured at
+`caa2eb0` without a Creatio stand:
 
 | | clio 8.1.0.142 | creatio-mcp-go |
 |---|---:|---:|
-| Tools in the get-tool-contract index (+ `get-tool-contract`) | 235 + 1 | 191 + 1 |
+| Tools in the get-tool-contract index (+ `get-tool-contract`) | 235 + 1 | 200 + 1 |
 | Resident in tools/list | 19 | 19 |
 | MCP prompts | 74 | 74 |
-| Not served | — | 44: 33 T16 (decision D3) + 11 second wave |
+| Not served | — | 35: 33 T16 (decision D3) + `page-smoke` and `get-mobile-page-conversion-guide` (T21a, not ported) |
 
 How the server side was counted: `get-tool-contract` with `detail=index-entries` and tools/list of the
-built binary; clio's side from `docs/clio-inventory.json`.
+built binary (`scripts/clio-inventory.py --go-bin`, recorded in the `tasks` map of
+`docs/clio-inventory.json`); clio's side from `docs/clio-inventory.json`.
 
 Contract comparison, `python3 scripts/compare-contracts.py --clio-dll <clio 8.1.0.142 clio.dll> --go-bin
-<binary built at fdc3aa4>` (the evidence file `evidence/contracts-latest.json` is not committed):
-`{"match": 980, "known:not-ported": 88, "known:fit-multi-name": 1}`, 0 unexplained. The 88 are the 44
+<binary built at caa2eb0>` (the evidence file `evidence/contracts-latest.json` is not committed):
+`{"match": 1025, "known:not-ported": 70, "known:fit-multi-name": 1}`, 0 unexplained. The 70 are the 35
 not-served tools, each counted on two surfaces; the one `fit-multi-name` is the two-tool batch
-`get-page,update-page` that clio shortens to 18 KB.
+`get-page,update-page` that clio shortens to 18 KB. After the first wave (`fdc3aa4`) it was 980 match,
+88 not-ported (44 tools), 1 fit-multi-name, 0 unexplained.
 
-Of the next steps at the end of this report, 1–4 are done for the first wave: both scripts read the new
-`get-tool-contract` shape, the inventory and contracts are on 8.1.0.142, the four tools that refused the
-new arguments accept them (T20), and the 17 new tools are assigned (6 done in T19, 11 in the second wave).
+Of the next steps at the end of this report, 1-4 are done: both scripts read the new `get-tool-contract`
+shape, the inventory and contracts are on 8.1.0.142, the four tools that refused the new arguments accept
+them (T20), and the 17 new tools are handled (6 ported in T19, 9 ported in T21, 2 not ported in T21a).
 Step 5 is decided: the 15 T6 tools are ported, T16 stays deferred. Step 6 (the window run and the parity run
 on two stands) is still open; no stand was called for any of the 8.1.0.142 work.
 
@@ -36,11 +39,41 @@ check is among those not run).
 
 ### Second wave (streams a and b)
 
-> **Placeholder — filled in by the orchestrator after the second wave is merged.** Tools being ported in
-> parallel now: `localize-page`, `page-smoke`, `trigger-smoke`, `place-section-in-workplace`,
-> `create-package`, `get-mobile-page-conversion-guide`, `execute-esq-to-file`, `odata-read-to-file`,
-> `get-component-info-to-file`, `get-request-info-to-file`, `list-entity-client-schemas-to-file`.
-> To fill: served count, contract-comparison result, links to `t21a-*` / `t21b-*` status files.
+T21a ([status](t21a-page-package-status.md)) ported `create-package`, `place-section-in-workplace`,
+`localize-page` and `trigger-smoke`. T21b ([status](t21b-to-file-status.md)) ported the five `-to-file`
+tools and moved inline `odata-read` and `execute-esq` onto the same code. Compared with clio 8.1.0.142's
+own MCP server, refusal paths against an unreachable environment and the rest against fake stands
+(`scripts/fake-stands/t21a`, `scripts/fake-stands/t21b`):
+
+| Tool | No stand / refusal paths | Fake stand |
+|---|---|---|
+| `create-package` | 11: 10 match, 1 both failed | 18: 8 match, 10 differ only in `package-uid` |
+| `place-section-in-workplace` | 21: 20 match, 1 both failed | 21: 13 match, 8 differ only in generated ids |
+| `localize-page` | 22: 21 match, 1 both failed | 23: 23 match |
+| `trigger-smoke` | 25: 25 match | 14: 14 match |
+| `execute-esq-to-file` | 17 match, 3 known | 12 match, 5 files byte-identical |
+| `odata-read-to-file` | 36 match, 4 known | 17 match, 6 files byte-identical |
+| `get-component-info-to-file` | — | 15: 15 match, 5 files byte-identical |
+| `get-request-info-to-file` | — | 9: 9 match, 3 files byte-identical |
+| `list-entity-client-schemas-to-file` | 7 match, 2 known | 3 match, 2 files byte-identical |
+| `odata-read` (inline) | — | 15 match |
+| `execute-esq` (inline) | — | 5 match, 1 known |
+
+**Breaking for v0.1.x callers:** `odata-read` now takes clio 8.1.0.142's arguments (`filters`, `expand`,
+`order-by`, ...) and answers in its shape (`success`, `count`, `value`, `next-link`, ...); the old
+`{rows, count}` answer is gone and the old `orderBy` key is refused with clio's rename hint. `execute-esq`
+answers as clio 8.1.0.142's `ExecuteEsqTool` (SQL and flat-call hints, `suggested-query`, `warnings`).
+
+Not ported, with the reason in the [t21a status](t21a-page-package-status.md#not-ported): `page-smoke`
+(needs a headless Chromium driven over the DevTools protocol, with browser discovery, download and consent)
+and `get-mobile-page-conversion-guide` (needs clio's ~15,800-line web-to-mobile analysis engine).
+
+Second-wave differences, per tool in the two status files: the answer text of the four T21a tools uses
+System.Text.Json's default spelling; `create-package` and `place-section-in-workplace` send
+`sysSettingsNameCollection` in a different case; `trigger-smoke` sorts the create body; the two
+documentation twins depend on a warm documentation cache for `documentationSource`; the five `-to-file`
+tools do not detect a symbolic link swapped into a parent directory during the write; inline `odata-read`
+reads at most 4 MiB.
 
 The sections below are the report as written earlier on 2026-10-20, before the first wave merged: they
 describe `cc1462a` against the 8.1.0.134 contracts and are kept as recorded.

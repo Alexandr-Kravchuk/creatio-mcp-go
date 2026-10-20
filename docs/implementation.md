@@ -31,8 +31,9 @@ tools/list and `get-tool-contract` answer with clio's own data, not hand-written
    fallbacks; the inventory has those tools, so their answers come from it. `knowledge_tool_catalog.go`
    reads the same index (235 tools) as the capability set a knowledge bundle is checked against.
 4. `scripts/compare-contracts.py` diffs both servers live; see [parity.md](parity.md). Last run against
-   8.1.0.142 at `fdc3aa4`: 980 match, 0 unexplained; known are the tools not served yet and one multi-name
-   batch clio shortens ([comparison report](status/clio-comparison-2026-10-20.md)).
+   8.1.0.142 at `caa2eb0`: 1025 match, 0 unexplained; known are the 35 tools not served (70 rows: each on two
+   surfaces) and one multi-name batch clio shortens
+   ([comparison report](status/clio-comparison-2026-10-20.md)).
 
 clio publishes its resident schemas wrapped in `args`, so every tool here also accepts `{"args": {...}}`
 (a wrapper next to other top-level keys is refused with clio's "ambiguous argument shape" text); the
@@ -49,9 +50,25 @@ name no environment, and clio's active environment is used after them. Each tool
 clio envelope; `list-environments` is ported from clio's `ShowWebAppListTool`. The first reads below
 predate T1; they take `environment-name` like every other tool.
 
-`odata-read` replaces the narrow `IApplicationClient` OData read path with direct HTTP: it supports entity, projection, ordering, pagination and count; filters and expands are still rejected (`internal/creatio/odata.go`), and the ordering argument is `orderBy`. This is a parity gap: clio 8.1.0.142 serves `odata-read` too, and the contract `get-tool-contract` answers with is clio's (`filters`, `expand`, `order-by`, …), so a call shaped by that contract is refused here as an unknown argument. The hand-written contract in `hiddenToolContracts` (`cmd/creatio-mcp-go/main.go`) is only the fallback used when the inventory lacks the tool. R1's `find-empty-iis-port` and `start-creatio` (`internal/hosttools`) use built-in `appcmd.exe`/`netstat.exe` and have no `creatio.client`, `Microsoft.Web.Administration`, WMI, PowerShell, or .NET helper dependency. `start-creatio` reads clio's `appsettings.json` and launches `dotnet Terrasoft.WebHost.dll` where appropriate; that is the Creatio application's runtime, not a .NET library linked into this MCP server. The Windows host tools have mocked coverage, which the Windows CI job runs (`go test ./...`, see [releasing.md](releasing.md)), but no live Windows run.
+`odata-read` and `odata-read-to-file` run one port of clio 8.1.0.142's `ODataReadTool`
+(`internal/creatio/odataread142.go`, `odataread_classify.go`, `odataread_explain.go`; T21b): clio's
+arguments (`filters`, `select`, `expand`, `order-by`, `top`, `skip`, `count` and its legacy aliases, which
+are refused with clio's rename hint, among them `orderBy`), its `$filter` builder, its response
+classification and its answer (`success`, `count`, `value`, `next-link`, `total-count`, `error-code`,
+`correlation-id`, …). The pre-142 client (`internal/creatio/odata.go`, which rejected filters and expands,
+took `orderBy` and answered `{rows, count}`) is removed. The hand-written `odata-read` contract in
+`hiddenToolContracts` (`cmd/creatio-mcp-go/main.go`) still describes that old client; it is only the
+fallback for a tool the inventory lacks, and the inventory has `odata-read`, so it is never served.
+Inline `odata-read` reads at most the client's 4 MiB response ceiling; clio's inline read has none
+([t21b status](status/t21b-to-file-status.md#known-differences)). R1's `find-empty-iis-port` and `start-creatio` (`internal/hosttools`) use built-in `appcmd.exe`/`netstat.exe` and have no `creatio.client`, `Microsoft.Web.Administration`, WMI, PowerShell, or .NET helper dependency. `start-creatio` reads clio's `appsettings.json` and launches `dotnet Terrasoft.WebHost.dll` where appropriate; that is the Creatio application's runtime, not a .NET library linked into this MCP server. The Windows host tools have mocked coverage, which the Windows CI job runs (`go test ./...`, see [releasing.md](releasing.md)), but no live Windows run.
 
-R2's `execute-esq` sends the caller's raw SelectQuery JSON unchanged to `DataService/.../SelectQuery`, so relation paths, filters, sorting, and paging are accepted without an ESQ builder. It enforces the same 200,000-byte response ceiling and detects aliases silently dropped by Creatio (`internal/creatio/esq.go`). `get-entity-schema-properties` reads the merged runtime schema through `RuntimeEntitySchemaRequest`; the 2,049-column test fixture exceeds 200 KB. It does not implement package-scoped designer reads (`internal/creatio/schema.go`). Both R2 tools have mocked coverage and are also covered by the live MCP comparison in [research.md](research.md#live-mcp-to-mcp-comparison-2026-09-28). The `--list-apps-json` mode exists solely for the comparison harness and returns clio's JSON field names.
+`execute-esq` and `execute-esq-to-file` run one port of clio 8.1.0.142's `ExecuteEsqTool`
+(`internal/creatio/esq142.go`, `esqhints.go`; T21b): the SelectQuery goes to
+`DataService/json/SyncReply/SelectQuery`, a call carrying SQL text or a flat query is answered with clio's
+hint (and a `suggested-query` where clio builds one), SelectQuery shape problems are refused as clio refuses
+them, unknown members are reported in `warnings`, and requested columns missing from the rows are reported as
+unknown columns. The inline ceiling is 200,000 bytes and its refusal points to `execute-esq-to-file`
+(64 MiB). The pre-142 `internal/creatio/esq.go` is removed (`a296050`). `get-entity-schema-properties` reads the merged runtime schema through `RuntimeEntitySchemaRequest`; the 2,049-column test fixture exceeds 200 KB. It does not implement package-scoped designer reads (`internal/creatio/schema.go`). Both R2 tools have mocked coverage; the live MCP comparison in [research.md](research.md#live-mcp-to-mcp-comparison-2026-09-28) covered `get-entity-schema-properties` and the pre-142 `execute-esq`. The `--list-apps-json` mode exists solely for the comparison harness and returns clio's JSON field names.
 
 The first representative reads: `list-packages` (SysPackage query plus case-insensitive filtering and local paging), `list-app-sections` (application lookup plus ApplicationSection query), `list-pages` (Freedom UI SysSchema query, including primary-package resolution, bounded empty-result cross-check, and total/truncated reporting), `get-sql-schema` (unique-name resolution plus the native SQL schema designer endpoint), and `list-package-files` / `get-package-file` (ClioGate package-file reads). `list-pages` also calls Creatio's `ApplicationPackagesService` when given an application code; package and section metadata are read through DataService. The package-file pair calls the existing `/rest/CreatioApiGateway/GetPackageFilesDirectoryContent` and `GetPackageFileContent` routes, so it has no linked .NET or `creatio.client` dependency, but requires ClioGate 2.0.0.47+ installed in the target Creatio environment. File reads retain the 10 MiB source limit and reject rooted/traversing paths (`internal/creatio/packagefiles.go`). `get-sql-schema` returns its body inline and intentionally does not implement Clio's optional local `output-file` write. Beyond mocked wire-level coverage, these tools are covered by the live MCP comparison in [research.md](research.md#live-mcp-to-mcp-comparison-2026-09-28), except a uniquely named SQL script for `get-sql-schema`, which that run did not find.
 

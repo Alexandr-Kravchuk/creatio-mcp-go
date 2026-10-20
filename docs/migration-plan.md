@@ -4,12 +4,13 @@ Goal: an agent (Claude Code, Codex, the CAADT skills) does every Creatio task it
 `clio mcp-server`, but through this server, with the same tool names, arguments and answers.
 
 Baseline clio **8.1.0.142** (`docs/clio-inventory.json`, generated 2026-10-20); this server measured at
-`fdc3aa4` (2026-10-20, after the first wave of 8.1.0.142 work: contracts, T19, T20, T6 write side):
+`caa2eb0` (2026-10-20, after both waves of 8.1.0.142 work: contracts, T19, T20, T6 write side, then T21a and
+T21b):
 
 | | clio 8.1.0.142 | this server |
 |---|---|---|
-| MCP tools | 236: 235 in the get-tool-contract index plus `get-tool-contract`, 19 resident; exact list in [clio-inventory.md](clio-inventory.md) | 191 of the 235 indexed tools plus `get-tool-contract`; all 19 resident tools in tools/list, with clio's contracts (T5). Not served: 33 T16 tools (D3) and 11 new 8.1.0.142 tools of the second wave |
-| Contract comparison | — | `scripts/compare-contracts.py` against 8.1.0.142: 980 match, 0 unexplained; known: the 44 not-served tools (each on two surfaces) and one multi-name batch clio shortens ([comparison report](status/clio-comparison-2026-10-20.md)) |
+| MCP tools | 236: 235 in the get-tool-contract index plus `get-tool-contract`, 19 resident; exact list in [clio-inventory.md](clio-inventory.md) | 200 of the 235 indexed tools plus `get-tool-contract`; all 19 resident tools in tools/list, with clio's contracts (T5). Not served: 33 T16 tools (D3), `page-smoke` and `get-mobile-page-conversion-guide` (T21a, not ported) |
+| Contract comparison | — | `scripts/compare-contracts.py` against 8.1.0.142: 1025 match, 0 unexplained; known: the 35 not-served tools (each on two surfaces, 70 rows) and one multi-name batch clio shortens ([comparison report](status/clio-comparison-2026-10-20.md)) |
 | MCP prompts and resources | 74 prompts, 195 resources, 5 resource templates (with its installed knowledge bundles) | 74 prompts (generated from 8.1.0.142), 5 resource templates, the knowledge catalog (T6) |
 | Environments per process | any, per call (`environment-name`) | any, per call, from clio's `appsettings.json` (T1); `CREATIO_*` as the default |
 | Live parity | — | last measured against clio 8.1.0.134 (2026-10-03): 706 calls on two stands served by one process, 0 mismatches (T4). No live stand run against 8.1.0.142 yet: the 142 work is compared without a stand, on fake stands and canned Creatio answers (T17) |
@@ -100,12 +101,13 @@ Done (T2): `scripts/compare-mcp-writes.py`, scenarios in `scripts/write-scenario
 **Done (T5, 2026-10-03, against clio 8.1.0.134; moved to 8.1.0.142 on 2026-10-20, `0bb560b`).** `scripts/clio-inventory.py` records clio's live
 tools/list, prompts, resources, resource templates, get-tool-contract index and every tool's contract in
 `docs/clio-inventory.json` (summary: [clio-inventory.md](clio-inventory.md), which also lists how a build of
-clio master `914dab286` differs). `go generate ./internal/cliocontract` embeds the tool part; tools/list and
+clio master `914dab286` differed while the baseline was 8.1.0.134; the 8.1.0.142 inventory was generated without
+`--compare-dll`). `go generate ./internal/cliocontract` embeds the tool part; tools/list and
 get-tool-contract answer from it, so every served tool carries clio's description, input schema,
 annotations, index entry and contract (how it works: [implementation.md](implementation.md#tool-contracts-t5)).
 `scripts/compare-contracts.py` compares both servers live: 0 unexplained differences; known were the
-not-ported tools (4 resident, 148 indexed on 2026-10-03; 0 resident, 44 indexed against 8.1.0.142 on
-2026-10-20) and the suggestions for an unknown name. The read parity run on
+not-ported tools (4 resident, 148 indexed on 2026-10-03; 0 resident, 44 indexed against 8.1.0.142 after the first
+wave on 2026-10-20, 35 after the second) and the suggestions for an unknown name. The read parity run on
 `s16123120` stays at 0 mismatches (353 cases with the T6 knowledge cases, incl. 4 that call Go with `{"args": {...}}`). Changes in passing:
 - tools/list now lists the 15 resident tools served here, in clio's order (before: 4, sorted by name), and
   every tool accepts clio's published `{"args": {...}}` shape besides the flat one;
@@ -152,7 +154,9 @@ Remaining, in clio only for now:
 - Installing or updating a `git`-type knowledge source (clio's Git CLI transport; the runtime does not read
   checkouts), clio's `mcp-server` startup bootstrap of the curated library and its hourly autoupdate.
 - `get-component-info`, `get-request-info` and `merge-creatio-artifact` are served (T9, T11); their
-  `-to-file` variants and `get-mobile-page-conversion-guide` are in the second wave (T21).
+  `-to-file` variants are served since the second wave (T21b); `get-mobile-page-conversion-guide` is not
+  ported (T21a: it needs clio's web-to-mobile analysis engine, see
+  [t21a status](status/t21a-page-package-status.md#not-ported)).
 
 Known differences, each with its reason:
 - clio 8.1.0.134 run as `dotnet clio.dll` answered every `docs://help/command/*` with its no-documentation
@@ -206,7 +210,7 @@ for live checks; several may be deliberately left to clio.
 
 ## Checkpoint (2026-10-20)
 
-Code at `fdc3aa4`, after the first wave of the clio 8.1.0.142 work was merged:
+Code at `caa2eb0`, after both waves of the clio 8.1.0.142 work were merged (first wave up to `fdc3aa4`):
 
 - **Contracts on 8.1.0.142** (`0bb560b`): `docs/clio-inventory.json` and the embedded contracts regenerated
   from clio 8.1.0.142; the prompt table too (`674b18d`). See W4.
@@ -219,22 +223,25 @@ Code at `fdc3aa4`, after the first wave of the clio 8.1.0.142 work was merged:
   ([status](status/t20-new-args-status.md)).
 - **T6 write side** (`fdc3aa4`): the 15 knowledge, toolkit and telemetry tools that were clio-only
   ([status](status/t6-write-status.md)).
+- **T21a** (second wave, stream a): `create-package`, `place-section-in-workplace`, `localize-page`,
+  `trigger-smoke` ported; `page-smoke` and `get-mobile-page-conversion-guide` not ported, with the reasons in
+  [t21a-page-package-status.md](status/t21a-page-package-status.md#not-ported).
+- **T21b** (second wave, stream b): `execute-esq-to-file`, `odata-read-to-file`, `get-component-info-to-file`,
+  `get-request-info-to-file`, `list-entity-client-schemas-to-file`; inline `odata-read` and `execute-esq` now
+  run the same code as their twins: `odata-read` takes clio 8.1.0.142's arguments, both answer in its shapes
+  ([t21b-to-file-status.md](status/t21b-to-file-status.md)).
 
-Served: 191 of clio 8.1.0.142's 235 indexed tools plus `get-tool-contract`, all 19 resident tools.
-`scripts/compare-contracts.py` against 8.1.0.142: 980 match, 0 unexplained (details in
-[the comparison report](status/clio-comparison-2026-10-20.md)). Not served: the 33 T16 tools (D3) and 11
-new 8.1.0.142 tools in the second wave (T21): `localize-page`, `page-smoke`, `trigger-smoke`,
-`place-section-in-workplace`, `create-package`, `get-mobile-page-conversion-guide`, `execute-esq-to-file`,
-`odata-read-to-file`, `get-component-info-to-file`, `get-request-info-to-file`,
-`list-entity-client-schemas-to-file`.
+Served: 200 of clio 8.1.0.142's 235 indexed tools plus `get-tool-contract`, all 19 resident tools.
+`scripts/compare-contracts.py` against 8.1.0.142: 1025 match, 70 known not-ported rows (the 35 not-served
+tools, each on two surfaces), 1 known fit-multi-name, 0 unexplained (details in
+[the comparison report](status/clio-comparison-2026-10-20.md)). Not served: the 33 T16 tools (D3),
+`page-smoke` and `get-mobile-page-conversion-guide` (T21a, not ported in this release).
 
 No live stand was called for the 8.1.0.142 work; it was compared with clio 8.1.0.142's own MCP server
 without a stand, on fake stands (`scripts/fake-stands/`) and on local fixtures. The live write window run
 and the two-stand parity run remain for T17.
 
-The appendix below is generated and was last generated before T6's write side and T19 were merged: it
-still lists those 21 tools under "T6" and "T19 new in clio 8.1.0.142" although they are served now. It is
-regenerated with `scripts/clio-inventory.py` after the second wave.
+The appendix below was regenerated with `scripts/clio-inventory.py` at `caa2eb0`.
 
 ## Recovery checkpoint (2026-10-03)
 
@@ -301,7 +308,7 @@ this checkpoint table and linked reports describe current implementation status.
 | T16 | Local machine, infrastructure and workspace tools (W7) — deferred (D3), not in `v0.2.0` | T1, T4 | later |
 | T19 | Object rights, default record rights, entity connections (new in clio 8.1.0.142) — **done** 2026-10-20, see [t19-rights-connections-status.md](status/t19-rights-connections-status.md) | T5 on 8.1.0.142 | 3b |
 | T20 | Arguments clio 8.1.0.142 added to served tools — **done** 2026-10-20, see [t20-new-args-status.md](status/t20-new-args-status.md) | T5 on 8.1.0.142 | 3b |
-| T21 | The other 11 tools new in clio 8.1.0.142 (second wave, streams a and b) — in progress | T5 on 8.1.0.142 | 3b |
+| T21 | The other 11 tools new in clio 8.1.0.142 (second wave, streams a and b) — **done** 2026-10-20: 9 ported, `page-smoke` and `get-mobile-page-conversion-guide` not ported in `v0.2.0`, see [t21a-page-package-status.md](status/t21a-page-package-status.md) and [t21b-to-file-status.md](status/t21b-to-file-status.md) | T5 on 8.1.0.142 | 3b |
 | T17 | Full parity run (window run and two stands), docs, release `v0.2.0` | T5–T15, T19–T21 (not T16) | 4 |
 | T18 | CAADT plugin switch, pilot, default switch (W8, second half) | T17 | 5 |
 
@@ -328,7 +335,7 @@ splits into independent areas once the write harness and shared infrastructure e
 
 | Task | Count | Tools |
 |---|---|---|
-| done (served by creatio-mcp-go) | 170 | `add-custom-logging`, `add-data-binding-row`, `add-package-dependency`, `advise-theme-palette`, `build-theme`, `check-theming-access`, `clear-themes-cache`, `clio-run`, `clio-run-destructive`, `compile-creatio`, `compile-status`, `create-app`, `create-app-section`, `create-business-process`, `create-client-unit-schema`, `create-data-binding`, `create-data-binding-db`, `create-entity-business-rules`, `create-entity-schema`, `create-lookup`, `create-page`, `create-page-business-rules`, `create-related-page-addon`, `create-schema`, `create-server-to-server-oauth-app`, `create-sql-schema`, `create-sys-setting`, `create-theme`, `create-user-task`, `create-user-task-page`, `dataforge-context`, `dataforge-find-lookups`, `dataforge-find-tables`, `dataforge-get-relations`, `dataforge-get-table-columns`, `dataforge-initialize`, `dataforge-status`, `dataforge-update`, `delete-app`, `delete-app-section`, `delete-entity-business-rules`, `delete-page-business-rules`, `delete-schema`, `delete-theme`, `describe-business-process`, `describe-environment`, `download-configuration-by-build`, `download-configuration-by-environment`, `download-sys-setting-file`, `enroll-sequence-participants`, `execute-dataservice-batch`, `execute-esq`, `execute-sql-script`, `export-schema`, `find-app`, `find-empty-iis-port`, `find-entity-schema`, `finish-hotfix`, `generate-process-model`, `get-app-info`, `get-classic-list-columns`, `get-classic-page-sources`, `get-client-unit-schema`, `get-component-info`, `get-email-template`, `get-entity-schema-column-properties`, `get-entity-schema-properties`, `get-fsm-mode`, `get-guidance`, `get-identity-assertion`, `get-identity-public-jwk`, `get-knowledge-feedback-policy`, `get-package-file`, `get-page`, `get-page-hierarchy`, `get-process-page-facts`, `get-process-signature`, `get-record-rights`, `get-related-page-addon`, `get-request-info`, `get-schema`, `get-schema-name-prefix`, `get-sequence-context`, `get-sql-schema`, `get-sys-setting`, `get-target-package`, `get-telemetry-consent`, `get-theme`, `get-user-culture`, `import-schema`, `info-knowledge`, `inspect-access`, `inspect-license`, `inspect-role`, `inspect-user`, `install-application`, `install-dashboards-migrator`, `install-gate`, `install-process-builder`, `install-sql-schema`, `last-compilation-log`, `list-app-sections`, `list-apps`, `list-entity-client-schemas`, `list-environments`, `list-knowledge-examples`, `list-knowledge-sources`, `list-package-files`, `list-packages`, `list-page-templates`, `list-pages`, `list-printables`, `list-sys-settings`, `list-themes`, `list-user-tasks`, `manage-access`, `manage-license`, `manage-role`, `manage-user`, `merge-creatio-artifact`, `modify-business-process`, `modify-business-process-as-new-version`, `modify-entity-schema-column`, `modify-user-task-parameters`, `odata-create`, `odata-delete`, `odata-read`, `odata-update`, `pkg-to-db`, `pkg-to-file-system`, `read-data-binding-db`, `read-entity-business-rules`, `read-page-business-rules`, `regenerate-identity-signing-key`, `register-process-element`, `remove-data-binding-row`, `remove-data-binding-row-db`, `remove-package-dependency`, `resolve-oauth-system-user`, `restart-by-credentials`, `restart-by-environment-name`, `restart-status`, `run-process`, `set-active-business-process-version`, `set-background-image`, `set-entity-schema-properties`, `set-fsm-mode`, `set-logo`, `set-record-rights`, `set-user-theme`, `start-creatio`, `sync-pages`, `sync-schemas`, `unlock-for-hotfix`, `update-app-section`, `update-client-unit-schema`, `update-email-template`, `update-entity-business-rules`, `update-entity-schema`, `update-page`, `update-page-business-rules`, `update-schema`, `update-sql-schema`, `update-sys-setting`, `update-theme`, `upload-image`, `upsert-data-binding-row-db`, `validate-page`, `validate-process-graph`, `verify-oauth-app` |
-| T6 guidance and knowledge | 15 | `add-knowledge-source`, `configure-knowledge-feedback-policy`, `delete-knowledge`, `delete-toolkit`, `disable-knowledge-source`, `enable-knowledge-source`, `experimental`, `export-component-registry`, `install-knowledge`, `install-toolkit`, `remove-knowledge-source`, `send-telemetry`, `update-knowledge`, `update-toolkit`, `withdraw-telemetry-consent` |
+| done (served by creatio-mcp-go) | 200 | `add-custom-logging`, `add-data-binding-row`, `add-knowledge-source`, `add-package-dependency`, `advise-theme-palette`, `apply-default-record-rights`, `build-theme`, `check-theming-access`, `clear-themes-cache`, `clio-run`, `clio-run-destructive`, `compile-creatio`, `compile-status`, `configure-knowledge-feedback-policy`, `create-app`, `create-app-section`, `create-business-process`, `create-client-unit-schema`, `create-data-binding`, `create-data-binding-db`, `create-entity-business-rules`, `create-entity-schema`, `create-lookup`, `create-package`, `create-page`, `create-page-business-rules`, `create-related-page-addon`, `create-schema`, `create-server-to-server-oauth-app`, `create-sql-schema`, `create-sys-setting`, `create-theme`, `create-user-task`, `create-user-task-page`, `dataforge-context`, `dataforge-find-lookups`, `dataforge-find-tables`, `dataforge-get-relations`, `dataforge-get-table-columns`, `dataforge-initialize`, `dataforge-status`, `dataforge-update`, `delete-app`, `delete-app-section`, `delete-entity-business-rules`, `delete-knowledge`, `delete-page-business-rules`, `delete-schema`, `delete-theme`, `delete-toolkit`, `describe-business-process`, `describe-environment`, `disable-knowledge-source`, `download-configuration-by-build`, `download-configuration-by-environment`, `download-sys-setting-file`, `enable-knowledge-source`, `enroll-sequence-participants`, `execute-dataservice-batch`, `execute-esq`, `execute-esq-to-file`, `execute-sql-script`, `experimental`, `export-component-registry`, `export-schema`, `find-app`, `find-empty-iis-port`, `find-entity-schema`, `finish-hotfix`, `generate-process-model`, `get-app-info`, `get-classic-list-columns`, `get-classic-page-sources`, `get-client-unit-schema`, `get-component-info`, `get-component-info-to-file`, `get-email-template`, `get-entity-connections`, `get-entity-schema-column-properties`, `get-entity-schema-properties`, `get-fsm-mode`, `get-guidance`, `get-identity-assertion`, `get-identity-public-jwk`, `get-knowledge-feedback-policy`, `get-object-rights`, `get-package-file`, `get-page`, `get-page-hierarchy`, `get-process-page-facts`, `get-process-signature`, `get-record-rights`, `get-related-page-addon`, `get-request-info`, `get-request-info-to-file`, `get-schema`, `get-schema-name-prefix`, `get-sequence-context`, `get-sql-schema`, `get-sys-setting`, `get-target-package`, `get-telemetry-consent`, `get-theme`, `get-user-culture`, `import-schema`, `info-knowledge`, `inspect-access`, `inspect-license`, `inspect-role`, `inspect-user`, `install-application`, `install-dashboards-migrator`, `install-gate`, `install-knowledge`, `install-process-builder`, `install-sql-schema`, `install-toolkit`, `last-compilation-log`, `list-app-sections`, `list-apps`, `list-entity-client-schemas`, `list-entity-client-schemas-to-file`, `list-environments`, `list-knowledge-examples`, `list-knowledge-sources`, `list-package-files`, `list-packages`, `list-page-templates`, `list-pages`, `list-printables`, `list-sys-settings`, `list-themes`, `list-user-tasks`, `localize-page`, `manage-access`, `manage-license`, `manage-role`, `manage-user`, `merge-creatio-artifact`, `modify-business-process`, `modify-business-process-as-new-version`, `modify-entity-schema-column`, `modify-user-task-parameters`, `odata-create`, `odata-delete`, `odata-read`, `odata-read-to-file`, `odata-update`, `pkg-to-db`, `pkg-to-file-system`, `place-section-in-workplace`, `read-data-binding-db`, `read-entity-business-rules`, `read-page-business-rules`, `regenerate-identity-signing-key`, `register-process-element`, `remove-data-binding-row`, `remove-data-binding-row-db`, `remove-knowledge-source`, `remove-package-dependency`, `resolve-oauth-system-user`, `restart-by-credentials`, `restart-by-environment-name`, `restart-status`, `run-process`, `send-telemetry`, `set-active-business-process-version`, `set-background-image`, `set-default-record-rights`, `set-entity-schema-properties`, `set-fsm-mode`, `set-logo`, `set-object-rights`, `set-record-rights`, `set-user-theme`, `start-creatio`, `sync-pages`, `sync-schemas`, `trigger-smoke`, `unlock-for-hotfix`, `update-app-section`, `update-client-unit-schema`, `update-email-template`, `update-entity-business-rules`, `update-entity-connections`, `update-entity-schema`, `update-knowledge`, `update-page`, `update-page-business-rules`, `update-schema`, `update-sql-schema`, `update-sys-setting`, `update-theme`, `update-toolkit`, `upload-image`, `upsert-data-binding-row-db`, `validate-page`, `validate-process-graph`, `verify-oauth-app`, `withdraw-telemetry-consent` |
 | T16 local, infrastructure, workspace | 33 | `StopAllCreatio`, `add-item-model`, `add-package`, `assert-infrastructure`, `check-auth-code-flow`, `check-settings-health`, `clear-browser-session`, `clear-redis-db-by-credentials`, `clear-redis-db-by-environment`, `create-workspace`, `deploy-creatio`, `generate-source-code`, `get-browser-session`, `get-identity-service-config`, `link-from-repository-by-env-package-path`, `link-from-repository-by-environment`, `link-from-repository-unlocked`, `list-creatio-builds`, `list-db-templates`, `new-integration-test-project`, `new-test-project`, `new-ui-project`, `prune-db-templates`, `push-workspace`, `reg-web-app`, `restore-db-by-credentials`, `restore-db-by-environment`, `restore-db-to-local-server`, `restore-workspace`, `show-passing-infrastructure`, `stop-all-creatio`, `stop-creatio`, `uninstall-creatio` |
-| T19 new in clio 8.1.0.142 | 17 | `apply-default-record-rights`, `create-package`, `execute-esq-to-file`, `get-component-info-to-file`, `get-entity-connections`, `get-mobile-page-conversion-guide`, `get-object-rights`, `get-request-info-to-file`, `list-entity-client-schemas-to-file`, `localize-page`, `odata-read-to-file`, `page-smoke`, `place-section-in-workplace`, `set-default-record-rights`, `set-object-rights`, `trigger-smoke`, `update-entity-connections` |
+| T21a not ported: needs a headless Chromium driven over CDP, plus browser discovery, download and consent | 1 | `page-smoke` |
+| T21a not ported: clio's ~15,800-line web-to-mobile analysis engine | 1 | `get-mobile-page-conversion-guide` |
