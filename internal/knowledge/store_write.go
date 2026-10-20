@@ -175,7 +175,9 @@ func writeAtomic(dir, name string, data []byte) error {
 	if err := os.WriteFile(temporary, data, 0o666); err != nil {
 		return err
 	}
-	return os.Rename(temporary, target)
+	// On Windows a reader holding the target open refuses the replace for a moment; that is retried for
+	// the same bounded window clio gives appsettings.json. On Unix the rename cannot be refused that way.
+	return publishWithRetry(temporary, target)
 }
 
 func (s Store) locksRoot() (string, error) {
