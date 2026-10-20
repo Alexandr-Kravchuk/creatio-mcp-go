@@ -76,6 +76,11 @@ def main():
     parser.add_argument("--evidence", default=str(REPO / "evidence" / "t21b-latest.json"))
     parser.add_argument("--show", action="store_true", help="also print both answers (values) for each case")
     options = parser.parse_args()
+    # Every path is resolved before the working directory changes to the fresh workspace.
+    options.evidence = os.path.abspath(options.evidence)
+    options.settings = os.path.abspath(options.settings)
+    options.go_bin = os.path.abspath(options.go_bin)
+    options.cases = [os.path.abspath(path) for path in options.cases]
 
     cases = [case for path in options.cases for case in json.loads(pathlib.Path(path).read_text(encoding="utf-8"))]
     workdir = pathlib.Path(tempfile.mkdtemp(prefix="t21b-"))

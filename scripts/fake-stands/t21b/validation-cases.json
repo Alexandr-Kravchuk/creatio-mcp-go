@@ -1,99 +1,1062 @@
 [
- {"label": "esq: output-file absent", "tool": "execute-esq-to-file", "args": {"query": {"rootSchemaName": "Contact"}}},
- {"label": "esq: output-file empty", "tool": "execute-esq-to-file", "args": {"query": {"rootSchemaName": "Contact"}, "output-file": ""}},
- {"label": "esq: output-file blank", "tool": "execute-esq-to-file", "args": {"query": {"rootSchemaName": "Contact"}, "output-file": "   "}},
- {"label": "esq: output-file outside", "tool": "execute-esq-to-file", "args": {"query": {"rootSchemaName": "Contact"}, "output-file": "/etc/t21b-{side}.json"}, "files": ["output-file"]},
- {"label": "esq: output-file traversal", "tool": "execute-esq-to-file", "args": {"query": {"rootSchemaName": "Contact"}, "output-file": "../../../../../../../../etc/t21b.json"}},
- {"label": "esq: output-file exists (dir)", "tool": "execute-esq-to-file", "args": {"query": {"rootSchemaName": "Contact"}, "output-file": "{tmp}"}},
- {"label": "esq: output-file number", "tool": "execute-esq-to-file", "args": {"query": {"rootSchemaName": "Contact"}, "output-file": 5}},
- {"label": "esq: bad path and SQL query", "tool": "execute-esq-to-file", "args": {"query": "select Id from Contact", "output-file": "/etc/x.json"}},
- {"label": "esq: SQL query", "tool": "execute-esq-to-file", "args": {"query": "select Id, Name from Contact where Name = 'x'", "output-file": "{side}/sql.json"}, "files": ["output-file"]},
- {"label": "esq: where member", "tool": "execute-esq-to-file", "args": {"query": {"rootSchemaName": "Contact", "where": {}}, "output-file": "{side}/where.json"}, "files": ["output-file"]},
- {"label": "esq: no rootSchemaName", "tool": "execute-esq-to-file", "args": {"query": {"columns": {"items": {}}}, "output-file": "{side}/noroot.json"}, "files": ["output-file"]},
- {"label": "esq: query string not JSON", "tool": "execute-esq-to-file", "args": {"query": "{oops", "output-file": "{side}/oops.json"}},
- {"label": "esq: query number", "tool": "execute-esq-to-file", "args": {"query": 5, "output-file": "{side}/num.json"}},
- {"label": "esq: query absent", "tool": "execute-esq-to-file", "args": {"output-file": "{side}/absent.json"}},
- {"label": "esq: top-level columns", "tool": "execute-esq-to-file", "args": {"query": {"rootSchemaName": "Contact"}, "columns": ["Id"], "output-file": "{side}/cols.json"}},
- {"label": "esq: unknown arg", "tool": "execute-esq-to-file", "args": {"query": {"rootSchemaName": "Contact"}, "bogus": 1, "output-file": "{side}/bogus.json"}},
- {"label": "esq: outputFile alias", "tool": "execute-esq-to-file", "args": {"query": {"rootSchemaName": "Contact"}, "outputFile": "{side}/alias.json"}},
- {"label": "esq: columns array", "tool": "execute-esq-to-file", "args": {"query": {"rootSchemaName": "Contact", "columns": ["Id"]}, "output-file": "{side}/colarr.json"}},
- {"label": "esq: timeout string", "tool": "execute-esq-to-file", "args": {"query": {"rootSchemaName": "Contact"}, "timeout": "x", "output-file": "{side}/t.json"}},
- {"label": "esq: unreachable", "tool": "execute-esq-to-file", "args": {"query": {"rootSchemaName": "Contact", "columns": {"items": {"Id": {"expression": {"expressionType": 0, "columnPath": "Id"}}}}}, "output-file": "{side}/unreach.json"}, "files": ["output-file"]},
-
- {"label": "odata: output-file absent", "tool": "odata-read-to-file", "args": {"entity": "Contact"}},
- {"label": "odata: output-file empty", "tool": "odata-read-to-file", "args": {"entity": "Contact", "output-file": ""}},
- {"label": "odata: output-file blank", "tool": "odata-read-to-file", "args": {"entity": "Contact", "output-file": "  "}},
- {"label": "odata: output-file outside", "tool": "odata-read-to-file", "args": {"entity": "Contact", "output-file": "/etc/t21b.json"}},
- {"label": "odata: output-file exists", "tool": "odata-read-to-file", "args": {"entity": "Contact", "output-file": "{tmp}"}},
- {"label": "odata: entity absent", "tool": "odata-read-to-file", "args": {"output-file": "{side}/a.json"}},
- {"label": "odata: entity bad", "tool": "odata-read-to-file", "args": {"entity": "Con tact", "output-file": "{side}/a.json"}},
- {"label": "odata: entity bad, top 0", "tool": "odata-read-to-file", "args": {"entity": "Con tact", "top": 0, "output-file": "/etc/x.json"}},
- {"label": "odata: top 0 and bad path", "tool": "odata-read-to-file", "args": {"entity": "Contact", "top": 0, "output-file": "/etc/x.json"}},
- {"label": "odata: top 101", "tool": "odata-read-to-file", "args": {"entity": "Contact", "top": 101, "output-file": "{side}/a.json"}},
- {"label": "odata: top string", "tool": "odata-read-to-file", "args": {"entity": "Contact", "top": "5", "output-file": "{side}/a.json"}},
- {"label": "odata: skip -1", "tool": "odata-read-to-file", "args": {"entity": "Contact", "skip": -1, "output-file": "{side}/a.json"}},
- {"label": "odata: raw filter", "tool": "odata-read-to-file", "args": {"entity": "Contact", "filter": "Name eq 'x'", "output-file": "{side}/a.json"}},
- {"label": "odata: outputFile alias", "tool": "odata-read-to-file", "args": {"entity": "Contact", "outputFile": "{side}/a.json"}},
- {"label": "odata: output_file alias", "tool": "odata-read-to-file", "args": {"entity": "Contact", "output_file": "{side}/a.json"}},
- {"label": "odata: orderBy alias", "tool": "odata-read-to-file", "args": {"entity": "Contact", "orderBy": "Name", "output-file": "{side}/a.json"}},
- {"label": "odata: limit and unknown", "tool": "odata-read-to-file", "args": {"entity": "Contact", "limit": 5, "zzz": 1, "aaa": 2, "output-file": "{side}/a.json"}},
- {"label": "odata: select number", "tool": "odata-read-to-file", "args": {"entity": "Contact", "select": 5, "output-file": "{side}/a.json"}},
- {"label": "odata: select array with number", "tool": "odata-read-to-file", "args": {"entity": "Contact", "select": ["Id", 5], "output-file": "{side}/a.json"}},
- {"label": "odata: select bad member", "tool": "odata-read-to-file", "args": {"entity": "Contact", "select": "Id,Na me", "output-file": "{side}/a.json"}},
- {"label": "odata: expand bad member", "tool": "odata-read-to-file", "args": {"entity": "Contact", "expand": ["Account($select=Id)"], "output-file": "{side}/a.json"}},
- {"label": "odata: order-by bad", "tool": "odata-read-to-file", "args": {"entity": "Contact", "order-by": "Name up", "output-file": "{side}/a.json"}},
- {"label": "odata: order-by two clauses ok", "tool": "odata-read-to-file", "args": {"entity": "Contact", "order-by": "Name asc, CreatedOn desc", "output-file": "{side}/a.json"}},
- {"label": "odata: filters null", "tool": "odata-read-to-file", "args": {"entity": "Contact", "filters": null, "output-file": "{side}/a.json"}},
- {"label": "odata: filters empty", "tool": "odata-read-to-file", "args": {"entity": "Contact", "filters": {}, "output-file": "{side}/a.json"}},
- {"label": "odata: filters string", "tool": "odata-read-to-file", "args": {"entity": "Contact", "filters": "x", "output-file": "{side}/a.json"}},
- {"label": "odata: filters and alias", "tool": "odata-read-to-file", "args": {"entity": "Contact", "filters": {"and": [{"field": "Name", "value": "x"}]}, "output-file": "{side}/a.json"}},
- {"label": "odata: condition null", "tool": "odata-read-to-file", "args": {"entity": "Contact", "filters": {"all": [null]}, "output-file": "{side}/a.json"}},
- {"label": "odata: condition column alias", "tool": "odata-read-to-file", "args": {"entity": "Contact", "filters": {"all": [{"column": "Name", "value": "x"}]}, "output-file": "{side}/a.json"}},
- {"label": "odata: condition no field", "tool": "odata-read-to-file", "args": {"entity": "Contact", "filters": {"all": [{"field": " ", "value": "x"}]}, "output-file": "{side}/a.json"}},
- {"label": "odata: condition bad field", "tool": "odata-read-to-file", "args": {"entity": "Contact", "filters": {"all": [{"field": "Na-me", "value": "x"}]}, "output-file": "{side}/a.json"}},
- {"label": "odata: condition value and in", "tool": "odata-read-to-file", "args": {"entity": "Contact", "filters": {"any": [{"field": "Name", "value": "x", "in": ["y"]}]}, "output-file": "{side}/a.json"}},
- {"label": "odata: condition neither", "tool": "odata-read-to-file", "args": {"entity": "Contact", "filters": {"any": [{"field": "Name"}]}, "output-file": "{side}/a.json"}},
- {"label": "odata: condition in empty", "tool": "odata-read-to-file", "args": {"entity": "Contact", "filters": {"all": [{"field": "Name", "in": []}]}, "output-file": "{side}/a.json"}},
- {"label": "odata: condition in with op", "tool": "odata-read-to-file", "args": {"entity": "Contact", "filters": {"all": [{"field": "Name", "op": "eq", "in": ["a"]}]}, "output-file": "{side}/a.json"}},
- {"label": "odata: condition bad op", "tool": "odata-read-to-file", "args": {"entity": "Contact", "filters": {"all": [{"field": "Name", "op": "like", "value": "a"}]}, "output-file": "{side}/a.json"}},
- {"label": "odata: field number", "tool": "odata-read-to-file", "args": {"entity": "Contact", "filters": {"all": [{"field": 5, "value": "a"}]}, "output-file": "{side}/a.json"}},
- {"label": "odata: count string", "tool": "odata-read-to-file", "args": {"entity": "Contact", "count": "yes", "output-file": "{side}/a.json"}},
- {"label": "odata: unreachable", "tool": "odata-read-to-file", "args": {"entity": "Contact", "output-file": "{side}/unreach.json"}, "files": ["output-file"]},
- {"label": "odata: unknown environment", "tool": "odata-read-to-file", "environment": false, "args": {"environment-name": "nope", "entity": "Contact", "output-file": "{side}/unknown.json"}},
-
- {"label": "gci: output-file absent", "tool": "get-component-info-to-file", "environment": false, "args": {"version": "8.3.3", "component-type": "crt.Button"}},
- {"label": "gci: output-file empty", "tool": "get-component-info-to-file", "environment": false, "args": {"version": "8.3.3", "component-type": "crt.Button", "output-file": ""}},
- {"label": "gci: output-file outside", "tool": "get-component-info-to-file", "environment": false, "args": {"version": "8.3.3", "component-type": "crt.Button", "output-file": "/etc/x.md"}},
- {"label": "gci: output-file exists", "tool": "get-component-info-to-file", "environment": false, "args": {"version": "8.3.3", "component-type": "crt.Button", "output-file": "{tmp}"}},
- {"label": "gci: bad path and both selectors", "tool": "get-component-info-to-file", "environment": false, "args": {"version": "8.3.3", "component-type": "crt.Button", "composite": "Expanded list", "output-file": "/etc/x.md"}},
- {"label": "gci: both selectors", "tool": "get-component-info-to-file", "environment": false, "args": {"version": "8.3.3", "component-type": "crt.Button", "composite": "Expanded list", "output-file": "{side}/both.md"}, "files": ["output-file"]},
- {"label": "gci: unknown arg", "tool": "get-component-info-to-file", "environment": false, "args": {"version": "8.3.3", "bogus": 1, "output-file": "{side}/bogus.md"}, "files": ["output-file"]},
- {"label": "gci: outputFile alias", "tool": "get-component-info-to-file", "environment": false, "args": {"version": "8.3.3", "outputFile": "{side}/alias.md"}, "files": ["outputFile"]},
- {"label": "gci: detail", "tool": "get-component-info-to-file", "environment": false, "args": {"version": "8.3.3", "component-type": "crt.Button", "output-file": "{side}/button.md"}, "files": ["output-file"]},
- {"label": "gci: detail nested dir", "tool": "get-component-info-to-file", "environment": false, "args": {"version": "8.3.3", "component-type": "crt.TabContainer", "output-file": "{side}/a/b/c/tabs.md"}, "files": ["output-file"]},
- {"label": "gci: composite", "tool": "get-component-info-to-file", "environment": false, "args": {"version": "8.3.3", "composite": "Expanded list", "output-file": "{side}/composite.md"}, "files": ["output-file"]},
- {"label": "gci: list (no documentation)", "tool": "get-component-info-to-file", "environment": false, "args": {"version": "8.3.3", "search": "tab", "output-file": "{side}/list.md"}, "files": ["output-file"]},
- {"label": "gci: not found", "tool": "get-component-info-to-file", "environment": false, "args": {"version": "8.3.3", "component-type": "crt.Nope", "output-file": "{side}/nope.md"}, "files": ["output-file"]},
- {"label": "gci: mobile detail", "tool": "get-component-info-to-file", "environment": false, "args": {"version": "8.3.3", "schema-type": "mobile", "component-type": "crt.Toggle", "output-file": "{side}/toggle.md"}, "files": ["output-file"]},
- {"label": "gci: environment unreachable", "tool": "get-component-info-to-file", "args": {"component-type": "crt.Button", "output-file": "{side}/env.md"}, "files": ["output-file"]},
-
- {"label": "gri: output-file absent", "tool": "get-request-info-to-file", "environment": false, "args": {"version": "8.3.3", "request-type": "crt.PrintablesRequest"}},
- {"label": "gri: output-file blank", "tool": "get-request-info-to-file", "environment": false, "args": {"version": "8.3.3", "request-type": "crt.PrintablesRequest", "output-file": " "}},
- {"label": "gri: output-file outside", "tool": "get-request-info-to-file", "environment": false, "args": {"version": "8.3.3", "request-type": "crt.PrintablesRequest", "output-file": "/etc/x.md"}},
- {"label": "gri: unknown arg", "tool": "get-request-info-to-file", "environment": false, "args": {"version": "8.3.3", "bogus": true, "output-file": "{side}/bogus.md"}, "files": ["output-file"]},
- {"label": "gri: detail", "tool": "get-request-info-to-file", "environment": false, "args": {"version": "8.3.3", "request-type": "crt.PrintablesRequest", "output-file": "{side}/printables.md"}, "files": ["output-file"]},
- {"label": "gri: detail 2", "tool": "get-request-info-to-file", "environment": false, "args": {"version": "8.3.3", "request-type": "crt.RunBusinessProcessRequest", "output-file": "{side}/runbp.md"}, "files": ["output-file"]},
- {"label": "gri: mobile", "tool": "get-request-info-to-file", "environment": false, "args": {"version": "8.3.3", "schema-type": "mobile", "request-type": "crt.UpdateRecordRequest", "output-file": "{side}/mob.md"}, "files": ["output-file"]},
- {"label": "gri: list", "tool": "get-request-info-to-file", "environment": false, "args": {"version": "8.3.3", "output-file": "{side}/list.md"}, "files": ["output-file"]},
- {"label": "gri: not found", "tool": "get-request-info-to-file", "environment": false, "args": {"version": "8.3.3", "request-type": "crt.Nope", "output-file": "{side}/nope.md"}, "files": ["output-file"]},
-
- {"label": "lecs: output-file absent", "tool": "list-entity-client-schemas-to-file", "args": {"entity-name": "Contact"}},
- {"label": "lecs: output-file empty", "tool": "list-entity-client-schemas-to-file", "args": {"entity-name": "Contact", "output-file": ""}},
- {"label": "lecs: output-file outside", "tool": "list-entity-client-schemas-to-file", "args": {"entity-name": "Contact", "output-file": "/etc/x.json"}},
- {"label": "lecs: bad path, no entity", "tool": "list-entity-client-schemas-to-file", "args": {"output-file": "/etc/x.json"}},
- {"label": "lecs: entity absent", "tool": "list-entity-client-schemas-to-file", "args": {"output-file": "{side}/x.json"}},
- {"label": "lecs: entity blank", "tool": "list-entity-client-schemas-to-file", "args": {"entity-name": " ", "output-file": "{side}/x.json"}},
- {"label": "lecs: unknown arg", "tool": "list-entity-client-schemas-to-file", "args": {"entity-name": "Contact", "bogus": 1, "output-file": "{side}/x.json"}},
- {"label": "lecs: unreachable", "tool": "list-entity-client-schemas-to-file", "args": {"entity-name": "Contact", "output-file": "{side}/x.json"}, "files": ["output-file"]},
- {"label": "lecs: unknown environment", "tool": "list-entity-client-schemas-to-file", "environment": false, "args": {"environment-name": "nope", "entity-name": "Contact", "output-file": "{side}/x.json"}}
+ {
+  "label": "esq: output-file absent",
+  "tool": "execute-esq-to-file",
+  "args": {
+   "query": {
+    "rootSchemaName": "Contact"
+   }
+  }
+ },
+ {
+  "label": "esq: output-file empty",
+  "tool": "execute-esq-to-file",
+  "args": {
+   "query": {
+    "rootSchemaName": "Contact"
+   },
+   "output-file": ""
+  }
+ },
+ {
+  "label": "esq: output-file blank",
+  "tool": "execute-esq-to-file",
+  "args": {
+   "query": {
+    "rootSchemaName": "Contact"
+   },
+   "output-file": "   "
+  }
+ },
+ {
+  "label": "esq: output-file outside",
+  "tool": "execute-esq-to-file",
+  "args": {
+   "query": {
+    "rootSchemaName": "Contact"
+   },
+   "output-file": "/etc/t21b-{side}.json"
+  },
+  "files": [
+   "output-file"
+  ]
+ },
+ {
+  "label": "esq: output-file traversal",
+  "tool": "execute-esq-to-file",
+  "args": {
+   "query": {
+    "rootSchemaName": "Contact"
+   },
+   "output-file": "../../../../../../../../etc/t21b.json"
+  }
+ },
+ {
+  "label": "esq: output-file exists (dir)",
+  "tool": "execute-esq-to-file",
+  "args": {
+   "query": {
+    "rootSchemaName": "Contact"
+   },
+   "output-file": "{tmp}"
+  }
+ },
+ {
+  "label": "esq: output-file number",
+  "tool": "execute-esq-to-file",
+  "args": {
+   "query": {
+    "rootSchemaName": "Contact"
+   },
+   "output-file": 5
+  }
+ },
+ {
+  "label": "esq: bad path and SQL query",
+  "tool": "execute-esq-to-file",
+  "args": {
+   "query": "select Id from Contact",
+   "output-file": "/etc/x.json"
+  }
+ },
+ {
+  "label": "esq: SQL query",
+  "tool": "execute-esq-to-file",
+  "args": {
+   "query": "select Id, Name from Contact where Name = 'x'",
+   "output-file": "{side}/sql.json"
+  },
+  "files": [
+   "output-file"
+  ]
+ },
+ {
+  "label": "esq: where member",
+  "tool": "execute-esq-to-file",
+  "args": {
+   "query": {
+    "rootSchemaName": "Contact",
+    "where": {}
+   },
+   "output-file": "{side}/where.json"
+  },
+  "files": [
+   "output-file"
+  ]
+ },
+ {
+  "label": "esq: no rootSchemaName",
+  "tool": "execute-esq-to-file",
+  "args": {
+   "query": {
+    "columns": {
+     "items": {}
+    }
+   },
+   "output-file": "{side}/noroot.json"
+  },
+  "files": [
+   "output-file"
+  ]
+ },
+ {
+  "label": "esq: query string not JSON",
+  "tool": "execute-esq-to-file",
+  "args": {
+   "query": "{oops",
+   "output-file": "{side}/oops.json"
+  },
+  "known-differences": [
+   "$.error"
+  ],
+  "known-differences-reason": "parser message: .NET JsonException text vs Go encoding/json text"
+ },
+ {
+  "label": "esq: query number",
+  "tool": "execute-esq-to-file",
+  "args": {
+   "query": 5,
+   "output-file": "{side}/num.json"
+  }
+ },
+ {
+  "label": "esq: query absent",
+  "tool": "execute-esq-to-file",
+  "args": {
+   "output-file": "{side}/absent.json"
+  }
+ },
+ {
+  "label": "esq: top-level columns",
+  "tool": "execute-esq-to-file",
+  "args": {
+   "query": {
+    "rootSchemaName": "Contact"
+   },
+   "columns": [
+    "Id"
+   ],
+   "output-file": "{side}/cols.json"
+  }
+ },
+ {
+  "label": "esq: unknown arg",
+  "tool": "execute-esq-to-file",
+  "args": {
+   "query": {
+    "rootSchemaName": "Contact"
+   },
+   "bogus": 1,
+   "output-file": "{side}/bogus.json"
+  },
+  "known-differences": [
+   "$.error"
+  ],
+  "known-differences-reason": "transport failure worded by Go (dial tcp ... connection refused) instead of .NET (Connection refused (...))"
+ },
+ {
+  "label": "esq: outputFile alias",
+  "tool": "execute-esq-to-file",
+  "args": {
+   "query": {
+    "rootSchemaName": "Contact"
+   },
+   "outputFile": "{side}/alias.json"
+  }
+ },
+ {
+  "label": "esq: columns array",
+  "tool": "execute-esq-to-file",
+  "args": {
+   "query": {
+    "rootSchemaName": "Contact",
+    "columns": [
+     "Id"
+    ]
+   },
+   "output-file": "{side}/colarr.json"
+  }
+ },
+ {
+  "label": "esq: timeout string",
+  "tool": "execute-esq-to-file",
+  "args": {
+   "query": {
+    "rootSchemaName": "Contact"
+   },
+   "timeout": "x",
+   "output-file": "{side}/t.json"
+  }
+ },
+ {
+  "label": "esq: unreachable",
+  "tool": "execute-esq-to-file",
+  "args": {
+   "query": {
+    "rootSchemaName": "Contact",
+    "columns": {
+     "items": {
+      "Id": {
+       "expression": {
+        "expressionType": 0,
+        "columnPath": "Id"
+       }
+      }
+     }
+    }
+   },
+   "output-file": "{side}/unreach.json"
+  },
+  "files": [
+   "output-file"
+  ],
+  "known-differences": [
+   "$.error"
+  ],
+  "known-differences-reason": "transport failure worded by Go (dial tcp ... connection refused) instead of .NET (Connection refused (...))"
+ },
+ {
+  "label": "odata: output-file absent",
+  "tool": "odata-read-to-file",
+  "args": {
+   "entity": "Contact"
+  }
+ },
+ {
+  "label": "odata: output-file empty",
+  "tool": "odata-read-to-file",
+  "args": {
+   "entity": "Contact",
+   "output-file": ""
+  }
+ },
+ {
+  "label": "odata: output-file blank",
+  "tool": "odata-read-to-file",
+  "args": {
+   "entity": "Contact",
+   "output-file": "  "
+  }
+ },
+ {
+  "label": "odata: output-file outside",
+  "tool": "odata-read-to-file",
+  "args": {
+   "entity": "Contact",
+   "output-file": "/etc/t21b.json"
+  }
+ },
+ {
+  "label": "odata: output-file exists",
+  "tool": "odata-read-to-file",
+  "args": {
+   "entity": "Contact",
+   "output-file": "{tmp}"
+  }
+ },
+ {
+  "label": "odata: entity absent",
+  "tool": "odata-read-to-file",
+  "args": {
+   "output-file": "{side}/a.json"
+  }
+ },
+ {
+  "label": "odata: entity bad",
+  "tool": "odata-read-to-file",
+  "args": {
+   "entity": "Con tact",
+   "output-file": "{side}/a.json"
+  }
+ },
+ {
+  "label": "odata: entity bad, top 0",
+  "tool": "odata-read-to-file",
+  "args": {
+   "entity": "Con tact",
+   "top": 0,
+   "output-file": "/etc/x.json"
+  }
+ },
+ {
+  "label": "odata: top 0 and bad path",
+  "tool": "odata-read-to-file",
+  "args": {
+   "entity": "Contact",
+   "top": 0,
+   "output-file": "/etc/x.json"
+  }
+ },
+ {
+  "label": "odata: top 101",
+  "tool": "odata-read-to-file",
+  "args": {
+   "entity": "Contact",
+   "top": 101,
+   "output-file": "{side}/a.json"
+  }
+ },
+ {
+  "label": "odata: top string",
+  "tool": "odata-read-to-file",
+  "args": {
+   "entity": "Contact",
+   "top": "5",
+   "output-file": "{side}/a.json"
+  },
+  "known-differences": [
+   "$.error"
+  ],
+  "known-differences-reason": "transport failure worded by Go (dial tcp ... connection refused) instead of .NET (Connection refused (...))"
+ },
+ {
+  "label": "odata: skip -1",
+  "tool": "odata-read-to-file",
+  "args": {
+   "entity": "Contact",
+   "skip": -1,
+   "output-file": "{side}/a.json"
+  }
+ },
+ {
+  "label": "odata: raw filter",
+  "tool": "odata-read-to-file",
+  "args": {
+   "entity": "Contact",
+   "filter": "Name eq 'x'",
+   "output-file": "{side}/a.json"
+  }
+ },
+ {
+  "label": "odata: outputFile alias",
+  "tool": "odata-read-to-file",
+  "args": {
+   "entity": "Contact",
+   "outputFile": "{side}/a.json"
+  }
+ },
+ {
+  "label": "odata: output_file alias",
+  "tool": "odata-read-to-file",
+  "args": {
+   "entity": "Contact",
+   "output_file": "{side}/a.json"
+  }
+ },
+ {
+  "label": "odata: orderBy alias",
+  "tool": "odata-read-to-file",
+  "args": {
+   "entity": "Contact",
+   "orderBy": "Name",
+   "output-file": "{side}/a.json"
+  }
+ },
+ {
+  "label": "odata: limit and unknown",
+  "tool": "odata-read-to-file",
+  "args": {
+   "entity": "Contact",
+   "limit": 5,
+   "zzz": 1,
+   "aaa": 2,
+   "output-file": "{side}/a.json"
+  },
+  "known-differences": [
+   "$.error"
+  ],
+  "known-differences-reason": "unknown keys are named in sorted order (Go receives arguments as a map), clio names them in request order"
+ },
+ {
+  "label": "odata: select number",
+  "tool": "odata-read-to-file",
+  "args": {
+   "entity": "Contact",
+   "select": 5,
+   "output-file": "{side}/a.json"
+  }
+ },
+ {
+  "label": "odata: select array with number",
+  "tool": "odata-read-to-file",
+  "args": {
+   "entity": "Contact",
+   "select": [
+    "Id",
+    5
+   ],
+   "output-file": "{side}/a.json"
+  }
+ },
+ {
+  "label": "odata: select bad member",
+  "tool": "odata-read-to-file",
+  "args": {
+   "entity": "Contact",
+   "select": "Id,Na me",
+   "output-file": "{side}/a.json"
+  }
+ },
+ {
+  "label": "odata: expand bad member",
+  "tool": "odata-read-to-file",
+  "args": {
+   "entity": "Contact",
+   "expand": [
+    "Account($select=Id)"
+   ],
+   "output-file": "{side}/a.json"
+  }
+ },
+ {
+  "label": "odata: order-by bad",
+  "tool": "odata-read-to-file",
+  "args": {
+   "entity": "Contact",
+   "order-by": "Name up",
+   "output-file": "{side}/a.json"
+  }
+ },
+ {
+  "label": "odata: order-by two clauses ok",
+  "tool": "odata-read-to-file",
+  "args": {
+   "entity": "Contact",
+   "order-by": "Name asc, CreatedOn desc",
+   "output-file": "{side}/a.json"
+  },
+  "known-differences": [
+   "$.error"
+  ],
+  "known-differences-reason": "transport failure worded by Go (dial tcp ... connection refused) instead of .NET (Connection refused (...))"
+ },
+ {
+  "label": "odata: filters null",
+  "tool": "odata-read-to-file",
+  "args": {
+   "entity": "Contact",
+   "filters": null,
+   "output-file": "{side}/a.json"
+  }
+ },
+ {
+  "label": "odata: filters empty",
+  "tool": "odata-read-to-file",
+  "args": {
+   "entity": "Contact",
+   "filters": {},
+   "output-file": "{side}/a.json"
+  }
+ },
+ {
+  "label": "odata: filters string",
+  "tool": "odata-read-to-file",
+  "args": {
+   "entity": "Contact",
+   "filters": "x",
+   "output-file": "{side}/a.json"
+  }
+ },
+ {
+  "label": "odata: filters and alias",
+  "tool": "odata-read-to-file",
+  "args": {
+   "entity": "Contact",
+   "filters": {
+    "and": [
+     {
+      "field": "Name",
+      "value": "x"
+     }
+    ]
+   },
+   "output-file": "{side}/a.json"
+  }
+ },
+ {
+  "label": "odata: condition null",
+  "tool": "odata-read-to-file",
+  "args": {
+   "entity": "Contact",
+   "filters": {
+    "all": [
+     null
+    ]
+   },
+   "output-file": "{side}/a.json"
+  }
+ },
+ {
+  "label": "odata: condition column alias",
+  "tool": "odata-read-to-file",
+  "args": {
+   "entity": "Contact",
+   "filters": {
+    "all": [
+     {
+      "column": "Name",
+      "value": "x"
+     }
+    ]
+   },
+   "output-file": "{side}/a.json"
+  }
+ },
+ {
+  "label": "odata: condition no field",
+  "tool": "odata-read-to-file",
+  "args": {
+   "entity": "Contact",
+   "filters": {
+    "all": [
+     {
+      "field": " ",
+      "value": "x"
+     }
+    ]
+   },
+   "output-file": "{side}/a.json"
+  }
+ },
+ {
+  "label": "odata: condition bad field",
+  "tool": "odata-read-to-file",
+  "args": {
+   "entity": "Contact",
+   "filters": {
+    "all": [
+     {
+      "field": "Na-me",
+      "value": "x"
+     }
+    ]
+   },
+   "output-file": "{side}/a.json"
+  }
+ },
+ {
+  "label": "odata: condition value and in",
+  "tool": "odata-read-to-file",
+  "args": {
+   "entity": "Contact",
+   "filters": {
+    "any": [
+     {
+      "field": "Name",
+      "value": "x",
+      "in": [
+       "y"
+      ]
+     }
+    ]
+   },
+   "output-file": "{side}/a.json"
+  }
+ },
+ {
+  "label": "odata: condition neither",
+  "tool": "odata-read-to-file",
+  "args": {
+   "entity": "Contact",
+   "filters": {
+    "any": [
+     {
+      "field": "Name"
+     }
+    ]
+   },
+   "output-file": "{side}/a.json"
+  }
+ },
+ {
+  "label": "odata: condition in empty",
+  "tool": "odata-read-to-file",
+  "args": {
+   "entity": "Contact",
+   "filters": {
+    "all": [
+     {
+      "field": "Name",
+      "in": []
+     }
+    ]
+   },
+   "output-file": "{side}/a.json"
+  }
+ },
+ {
+  "label": "odata: condition in with op",
+  "tool": "odata-read-to-file",
+  "args": {
+   "entity": "Contact",
+   "filters": {
+    "all": [
+     {
+      "field": "Name",
+      "op": "eq",
+      "in": [
+       "a"
+      ]
+     }
+    ]
+   },
+   "output-file": "{side}/a.json"
+  }
+ },
+ {
+  "label": "odata: condition bad op",
+  "tool": "odata-read-to-file",
+  "args": {
+   "entity": "Contact",
+   "filters": {
+    "all": [
+     {
+      "field": "Name",
+      "op": "like",
+      "value": "a"
+     }
+    ]
+   },
+   "output-file": "{side}/a.json"
+  }
+ },
+ {
+  "label": "odata: field number",
+  "tool": "odata-read-to-file",
+  "args": {
+   "entity": "Contact",
+   "filters": {
+    "all": [
+     {
+      "field": 5,
+      "value": "a"
+     }
+    ]
+   },
+   "output-file": "{side}/a.json"
+  }
+ },
+ {
+  "label": "odata: count string",
+  "tool": "odata-read-to-file",
+  "args": {
+   "entity": "Contact",
+   "count": "yes",
+   "output-file": "{side}/a.json"
+  }
+ },
+ {
+  "label": "odata: unreachable",
+  "tool": "odata-read-to-file",
+  "args": {
+   "entity": "Contact",
+   "output-file": "{side}/unreach.json"
+  },
+  "files": [
+   "output-file"
+  ],
+  "known-differences": [
+   "$.error"
+  ],
+  "known-differences-reason": "transport failure worded by Go (dial tcp ... connection refused) instead of .NET (Connection refused (...))"
+ },
+ {
+  "label": "odata: unknown environment",
+  "tool": "odata-read-to-file",
+  "environment": false,
+  "args": {
+   "environment-name": "nope",
+   "entity": "Contact",
+   "output-file": "{side}/unknown.json"
+  }
+ },
+ {
+  "label": "gci: output-file absent",
+  "tool": "get-component-info-to-file",
+  "environment": false,
+  "args": {
+   "version": "8.3.3",
+   "component-type": "crt.Button"
+  }
+ },
+ {
+  "label": "gci: output-file empty",
+  "tool": "get-component-info-to-file",
+  "environment": false,
+  "args": {
+   "version": "8.3.3",
+   "component-type": "crt.Button",
+   "output-file": ""
+  }
+ },
+ {
+  "label": "gci: output-file outside",
+  "tool": "get-component-info-to-file",
+  "environment": false,
+  "args": {
+   "version": "8.3.3",
+   "component-type": "crt.Button",
+   "output-file": "/etc/x.md"
+  }
+ },
+ {
+  "label": "gci: output-file exists",
+  "tool": "get-component-info-to-file",
+  "environment": false,
+  "args": {
+   "version": "8.3.3",
+   "component-type": "crt.Button",
+   "output-file": "{tmp}"
+  }
+ },
+ {
+  "label": "gci: bad path and both selectors",
+  "tool": "get-component-info-to-file",
+  "environment": false,
+  "args": {
+   "version": "8.3.3",
+   "component-type": "crt.Button",
+   "composite": "Expanded list",
+   "output-file": "/etc/x.md"
+  }
+ },
+ {
+  "label": "gci: both selectors",
+  "tool": "get-component-info-to-file",
+  "environment": false,
+  "args": {
+   "version": "8.3.3",
+   "component-type": "crt.Button",
+   "composite": "Expanded list",
+   "output-file": "{side}/both.md"
+  },
+  "files": [
+   "output-file"
+  ]
+ },
+ {
+  "label": "gci: unknown arg",
+  "tool": "get-component-info-to-file",
+  "environment": false,
+  "args": {
+   "version": "8.3.3",
+   "bogus": 1,
+   "output-file": "{side}/bogus.md"
+  },
+  "files": [
+   "output-file"
+  ]
+ },
+ {
+  "label": "gci: outputFile alias",
+  "tool": "get-component-info-to-file",
+  "environment": false,
+  "args": {
+   "version": "8.3.3",
+   "outputFile": "{side}/alias.md"
+  },
+  "files": [
+   "outputFile"
+  ]
+ },
+ {
+  "label": "gci: detail",
+  "tool": "get-component-info-to-file",
+  "environment": false,
+  "args": {
+   "version": "8.3.3",
+   "component-type": "crt.Button",
+   "output-file": "{side}/button.md"
+  },
+  "files": [
+   "output-file"
+  ]
+ },
+ {
+  "label": "gci: detail nested dir",
+  "tool": "get-component-info-to-file",
+  "environment": false,
+  "args": {
+   "version": "8.3.3",
+   "component-type": "crt.TabContainer",
+   "output-file": "{side}/a/b/c/tabs.md"
+  },
+  "files": [
+   "output-file"
+  ]
+ },
+ {
+  "label": "gci: composite",
+  "tool": "get-component-info-to-file",
+  "environment": false,
+  "args": {
+   "version": "8.3.3",
+   "composite": "Expanded list",
+   "output-file": "{side}/composite.md"
+  },
+  "files": [
+   "output-file"
+  ]
+ },
+ {
+  "label": "gci: list (no documentation)",
+  "tool": "get-component-info-to-file",
+  "environment": false,
+  "args": {
+   "version": "8.3.3",
+   "search": "tab",
+   "output-file": "{side}/list.md"
+  },
+  "files": [
+   "output-file"
+  ]
+ },
+ {
+  "label": "gci: not found",
+  "tool": "get-component-info-to-file",
+  "environment": false,
+  "args": {
+   "version": "8.3.3",
+   "component-type": "crt.Nope",
+   "output-file": "{side}/nope.md"
+  },
+  "files": [
+   "output-file"
+  ]
+ },
+ {
+  "label": "gci: mobile detail",
+  "tool": "get-component-info-to-file",
+  "environment": false,
+  "args": {
+   "version": "8.3.3",
+   "schema-type": "mobile",
+   "component-type": "crt.Toggle",
+   "output-file": "{side}/toggle.md"
+  },
+  "files": [
+   "output-file"
+  ]
+ },
+ {
+  "label": "gci: environment unreachable",
+  "tool": "get-component-info-to-file",
+  "args": {
+   "component-type": "crt.Button",
+   "output-file": "{side}/env.md"
+  },
+  "files": [
+   "output-file"
+  ]
+ },
+ {
+  "label": "gri: output-file absent",
+  "tool": "get-request-info-to-file",
+  "environment": false,
+  "args": {
+   "version": "8.3.3",
+   "request-type": "crt.PrintablesRequest"
+  }
+ },
+ {
+  "label": "gri: output-file blank",
+  "tool": "get-request-info-to-file",
+  "environment": false,
+  "args": {
+   "version": "8.3.3",
+   "request-type": "crt.PrintablesRequest",
+   "output-file": " "
+  }
+ },
+ {
+  "label": "gri: output-file outside",
+  "tool": "get-request-info-to-file",
+  "environment": false,
+  "args": {
+   "version": "8.3.3",
+   "request-type": "crt.PrintablesRequest",
+   "output-file": "/etc/x.md"
+  }
+ },
+ {
+  "label": "gri: unknown arg",
+  "tool": "get-request-info-to-file",
+  "environment": false,
+  "args": {
+   "version": "8.3.3",
+   "bogus": true,
+   "output-file": "{side}/bogus.md"
+  },
+  "files": [
+   "output-file"
+  ]
+ },
+ {
+  "label": "gri: detail",
+  "tool": "get-request-info-to-file",
+  "environment": false,
+  "args": {
+   "version": "8.3.3",
+   "request-type": "crt.PrintablesRequest",
+   "output-file": "{side}/printables.md"
+  },
+  "files": [
+   "output-file"
+  ]
+ },
+ {
+  "label": "gri: detail 2",
+  "tool": "get-request-info-to-file",
+  "environment": false,
+  "args": {
+   "version": "8.3.3",
+   "request-type": "crt.RunBusinessProcessRequest",
+   "output-file": "{side}/runbp.md"
+  },
+  "files": [
+   "output-file"
+  ]
+ },
+ {
+  "label": "gri: mobile",
+  "tool": "get-request-info-to-file",
+  "environment": false,
+  "args": {
+   "version": "8.3.3",
+   "schema-type": "mobile",
+   "request-type": "crt.UpdateRecordRequest",
+   "output-file": "{side}/mob.md"
+  },
+  "files": [
+   "output-file"
+  ]
+ },
+ {
+  "label": "gri: list",
+  "tool": "get-request-info-to-file",
+  "environment": false,
+  "args": {
+   "version": "8.3.3",
+   "output-file": "{side}/list.md"
+  },
+  "files": [
+   "output-file"
+  ]
+ },
+ {
+  "label": "gri: not found",
+  "tool": "get-request-info-to-file",
+  "environment": false,
+  "args": {
+   "version": "8.3.3",
+   "request-type": "crt.Nope",
+   "output-file": "{side}/nope.md"
+  },
+  "files": [
+   "output-file"
+  ]
+ },
+ {
+  "label": "lecs: output-file absent",
+  "tool": "list-entity-client-schemas-to-file",
+  "args": {
+   "entity-name": "Contact"
+  }
+ },
+ {
+  "label": "lecs: output-file empty",
+  "tool": "list-entity-client-schemas-to-file",
+  "args": {
+   "entity-name": "Contact",
+   "output-file": ""
+  }
+ },
+ {
+  "label": "lecs: output-file outside",
+  "tool": "list-entity-client-schemas-to-file",
+  "args": {
+   "entity-name": "Contact",
+   "output-file": "/etc/x.json"
+  }
+ },
+ {
+  "label": "lecs: bad path, no entity",
+  "tool": "list-entity-client-schemas-to-file",
+  "args": {
+   "output-file": "/etc/x.json"
+  }
+ },
+ {
+  "label": "lecs: entity absent",
+  "tool": "list-entity-client-schemas-to-file",
+  "args": {
+   "output-file": "{side}/x.json"
+  }
+ },
+ {
+  "label": "lecs: entity blank",
+  "tool": "list-entity-client-schemas-to-file",
+  "args": {
+   "entity-name": " ",
+   "output-file": "{side}/x.json"
+  }
+ },
+ {
+  "label": "lecs: unknown arg",
+  "tool": "list-entity-client-schemas-to-file",
+  "args": {
+   "entity-name": "Contact",
+   "bogus": 1,
+   "output-file": "{side}/x.json"
+  },
+  "known-differences": [
+   "$.error"
+  ],
+  "known-differences-reason": "transport failure worded by Go (dial tcp ... connection refused) instead of .NET (Connection refused (...))"
+ },
+ {
+  "label": "lecs: unreachable",
+  "tool": "list-entity-client-schemas-to-file",
+  "args": {
+   "entity-name": "Contact",
+   "output-file": "{side}/x.json"
+  },
+  "files": [
+   "output-file"
+  ],
+  "known-differences": [
+   "$.error"
+  ],
+  "known-differences-reason": "transport failure worded by Go (dial tcp ... connection refused) instead of .NET (Connection refused (...))"
+ },
+ {
+  "label": "lecs: unknown environment",
+  "tool": "list-entity-client-schemas-to-file",
+  "environment": false,
+  "args": {
+   "environment-name": "nope",
+   "entity-name": "Contact",
+   "output-file": "{side}/x.json"
+  }
+ }
 ]

@@ -1,0 +1,819 @@
+{
+  "schema": 1,
+  "counts": {
+    "match": 53,
+    "known-diff": 1,
+    "mismatch": 0
+  },
+  "cases": [
+    {
+      "tool": "odata-read",
+      "case": "odata-read collection",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "odata-read-to-file",
+      "case": "odata-read-to-file collection",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [
+        "output-file"
+      ],
+      "sha256": {
+        "clio": {
+          "output-file": "e5972b69ba173469098dc7173a721cee7ecfeaf4d03d7a8cc16ce60055bd063e"
+        },
+        "go": {
+          "output-file": "e5972b69ba173469098dc7173a721cee7ecfeaf4d03d7a8cc16ce60055bd063e"
+        }
+      }
+    },
+    {
+      "tool": "odata-read-to-file",
+      "case": "odata-read-to-file temp dir, nested",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [
+        "output-file"
+      ],
+      "sha256": {
+        "clio": {
+          "output-file": "e5972b69ba173469098dc7173a721cee7ecfeaf4d03d7a8cc16ce60055bd063e"
+        },
+        "go": {
+          "output-file": "e5972b69ba173469098dc7173a721cee7ecfeaf4d03d7a8cc16ce60055bd063e"
+        }
+      }
+    },
+    {
+      "tool": "odata-read-to-file",
+      "case": "odata-read-to-file same path twice (first)",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [
+        "output-file"
+      ],
+      "sha256": {
+        "clio": {
+          "output-file": "e5972b69ba173469098dc7173a721cee7ecfeaf4d03d7a8cc16ce60055bd063e"
+        },
+        "go": {
+          "output-file": "e5972b69ba173469098dc7173a721cee7ecfeaf4d03d7a8cc16ce60055bd063e"
+        }
+      }
+    },
+    {
+      "tool": "odata-read-to-file",
+      "case": "odata-read-to-file same path twice (refused)",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [
+        "output-file"
+      ],
+      "sha256": {
+        "clio": {
+          "output-file": "e5972b69ba173469098dc7173a721cee7ecfeaf4d03d7a8cc16ce60055bd063e"
+        },
+        "go": {
+          "output-file": "e5972b69ba173469098dc7173a721cee7ecfeaf4d03d7a8cc16ce60055bd063e"
+        }
+      }
+    },
+    {
+      "tool": "odata-read",
+      "case": "odata-read filters select order count",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "odata-read-to-file",
+      "case": "odata-read-to-file filters select order count",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [
+        "output-file"
+      ],
+      "sha256": {
+        "clio": {
+          "output-file": "b5a7f7f3e876e53d3ea4f68e22f7f863096688cab7f35503ac2a2f59631b6920"
+        },
+        "go": {
+          "output-file": "b5a7f7f3e876e53d3ea4f68e22f7f863096688cab7f35503ac2a2f59631b6920"
+        }
+      }
+    },
+    {
+      "tool": "odata-read",
+      "case": "odata-read single entity",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "odata-read-to-file",
+      "case": "odata-read-to-file single entity",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [
+        "output-file"
+      ],
+      "sha256": {
+        "clio": {
+          "output-file": "76d1e645619dc45f6c92648ecacf5433758175208d592d7aa007c25bbe6019b9"
+        },
+        "go": {
+          "output-file": "76d1e645619dc45f6c92648ecacf5433758175208d592d7aa007c25bbe6019b9"
+        }
+      }
+    },
+    {
+      "tool": "odata-read",
+      "case": "odata-read count missing",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "odata-read-to-file",
+      "case": "odata-read-to-file count missing",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {
+          "output-file": null
+        },
+        "go": {
+          "output-file": null
+        }
+      }
+    },
+    {
+      "tool": "odata-read",
+      "case": "odata-read wrong entity set",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "odata-read-to-file",
+      "case": "odata-read-to-file wrong entity set",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {
+          "output-file": null
+        },
+        "go": {
+          "output-file": null
+        }
+      }
+    },
+    {
+      "tool": "odata-read",
+      "case": "odata-read invalid query explained",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "odata-read-to-file",
+      "case": "odata-read-to-file invalid query explained",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {
+          "output-file": null
+        },
+        "go": {
+          "output-file": null
+        }
+      }
+    },
+    {
+      "tool": "odata-read",
+      "case": "odata-read lookup column filter",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "odata-read-to-file",
+      "case": "odata-read-to-file lookup column filter",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {
+          "output-file": null
+        },
+        "go": {
+          "output-file": null
+        }
+      }
+    },
+    {
+      "tool": "odata-read",
+      "case": "odata-read server error",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "odata-read-to-file",
+      "case": "odata-read-to-file server error",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {
+          "output-file": null
+        },
+        "go": {
+          "output-file": null
+        }
+      }
+    },
+    {
+      "tool": "odata-read",
+      "case": "odata-read HTML 404",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "odata-read-to-file",
+      "case": "odata-read-to-file HTML 404",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {
+          "output-file": null
+        },
+        "go": {
+          "output-file": null
+        }
+      }
+    },
+    {
+      "tool": "odata-read",
+      "case": "odata-read outage page",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "odata-read-to-file",
+      "case": "odata-read-to-file outage page",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {
+          "output-file": null
+        },
+        "go": {
+          "output-file": null
+        }
+      }
+    },
+    {
+      "tool": "odata-read",
+      "case": "odata-read routing miss",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "odata-read-to-file",
+      "case": "odata-read-to-file routing miss",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {
+          "output-file": null
+        },
+        "go": {
+          "output-file": null
+        }
+      }
+    },
+    {
+      "tool": "odata-read",
+      "case": "odata-read proxy body",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "odata-read-to-file",
+      "case": "odata-read-to-file proxy body",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {
+          "output-file": null
+        },
+        "go": {
+          "output-file": null
+        }
+      }
+    },
+    {
+      "tool": "odata-read",
+      "case": "odata-read empty body",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "odata-read-to-file",
+      "case": "odata-read-to-file empty body",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {
+          "output-file": null
+        },
+        "go": {
+          "output-file": null
+        }
+      }
+    },
+    {
+      "tool": "odata-read",
+      "case": "odata-read not JSON",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "odata-read-to-file",
+      "case": "odata-read-to-file not JSON",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {
+          "output-file": null
+        },
+        "go": {
+          "output-file": null
+        }
+      }
+    },
+    {
+      "tool": "odata-read",
+      "case": "odata-read old orderBy key refused",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "execute-esq",
+      "case": "execute-esq rows",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "execute-esq-to-file",
+      "case": "execute-esq-to-file rows",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [
+        "output-file"
+      ],
+      "sha256": {
+        "clio": {
+          "output-file": "ac6309e544049201827027e1ac8ff7c545f9184488f7a4fa1cc13397aad05d61"
+        },
+        "go": {
+          "output-file": "ac6309e544049201827027e1ac8ff7c545f9184488f7a4fa1cc13397aad05d61"
+        }
+      }
+    },
+    {
+      "tool": "execute-esq-to-file",
+      "case": "execute-esq-to-file rows, query as string",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [
+        "output-file"
+      ],
+      "sha256": {
+        "clio": {
+          "output-file": "ac6309e544049201827027e1ac8ff7c545f9184488f7a4fa1cc13397aad05d61"
+        },
+        "go": {
+          "output-file": "ac6309e544049201827027e1ac8ff7c545f9184488f7a4fa1cc13397aad05d61"
+        }
+      }
+    },
+    {
+      "tool": "execute-esq-to-file",
+      "case": "execute-esq-to-file empty rows",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [
+        "output-file"
+      ],
+      "sha256": {
+        "clio": {
+          "output-file": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        "go": {
+          "output-file": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        }
+      }
+    },
+    {
+      "tool": "execute-esq",
+      "case": "execute-esq no rows array",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "execute-esq-to-file",
+      "case": "execute-esq-to-file no rows array",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [
+        "output-file"
+      ],
+      "sha256": {
+        "clio": {
+          "output-file": "912989e81fd4bc742ced72aa4e557c1ac798dcd10b3a2d6f00c4a2e6356a4ea7"
+        },
+        "go": {
+          "output-file": "912989e81fd4bc742ced72aa4e557c1ac798dcd10b3a2d6f00c4a2e6356a4ea7"
+        }
+      }
+    },
+    {
+      "tool": "execute-esq-to-file",
+      "case": "execute-esq-to-file responseStatus failure",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {
+          "output-file": null
+        },
+        "go": {
+          "output-file": null
+        }
+      }
+    },
+    {
+      "tool": "execute-esq-to-file",
+      "case": "execute-esq-to-file errorInfo failure",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {
+          "output-file": null
+        },
+        "go": {
+          "output-file": null
+        }
+      }
+    },
+    {
+      "tool": "execute-esq-to-file",
+      "case": "execute-esq-to-file unmarked failure",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {
+          "output-file": null
+        },
+        "go": {
+          "output-file": null
+        }
+      }
+    },
+    {
+      "tool": "execute-esq-to-file",
+      "case": "execute-esq-to-file array body",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {
+          "output-file": null
+        },
+        "go": {
+          "output-file": null
+        }
+      }
+    },
+    {
+      "tool": "execute-esq-to-file",
+      "case": "execute-esq-to-file blank body",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {
+          "output-file": null
+        },
+        "go": {
+          "output-file": null
+        }
+      }
+    },
+    {
+      "tool": "execute-esq-to-file",
+      "case": "execute-esq-to-file unknown column",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {
+          "output-file": null
+        },
+        "go": {
+          "output-file": null
+        }
+      }
+    },
+    {
+      "tool": "execute-esq-to-file",
+      "case": "execute-esq-to-file unknown member warning",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [
+        "output-file"
+      ],
+      "sha256": {
+        "clio": {
+          "output-file": "ac6309e544049201827027e1ac8ff7c545f9184488f7a4fa1cc13397aad05d61"
+        },
+        "go": {
+          "output-file": "ac6309e544049201827027e1ac8ff7c545f9184488f7a4fa1cc13397aad05d61"
+        }
+      }
+    },
+    {
+      "tool": "execute-esq",
+      "case": "execute-esq flat call suggestion",
+      "verdict": "known-diff",
+      "differences": [
+        "$.suggestedquery.filters.items.filter0.leftexpression.columnpath: value differs",
+        "$.suggestedquery.filters.items.filter0.rightexpression.parameter.datavaluetype: value differs",
+        "$.suggestedquery.filters.items.filter0.rightexpression.parameter.value: value differs",
+        "$.suggestedquery.filters.items.filter1.leftexpression.columnpath: value differs",
+        "$.suggestedquery.filters.items.filter1.rightexpression.parameter.datavaluetype: value differs",
+        "$.suggestedquery.filters.items.filter1.rightexpression.parameter.value: value differs"
+      ],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "execute-esq-to-file",
+      "case": "execute-esq-to-file SQL suggestion",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {
+          "output-file": null
+        },
+        "go": {
+          "output-file": null
+        }
+      }
+    },
+    {
+      "tool": "execute-esq",
+      "case": "execute-esq write SQL refused",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "execute-esq",
+      "case": "execute-esq SQL with number filter",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "execute-esq",
+      "case": "execute-esq rowCount string",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "list-entity-client-schemas",
+      "case": "list-entity-client-schemas",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "list-entity-client-schemas-to-file",
+      "case": "list-entity-client-schemas-to-file",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [
+        "output-file"
+      ],
+      "sha256": {
+        "clio": {
+          "output-file": "0600c97f6c99cb6fd1167f1e28e54ebca7c0e6a24bfb9e0ae398dd5e4d80fc9b"
+        },
+        "go": {
+          "output-file": "0600c97f6c99cb6fd1167f1e28e54ebca7c0e6a24bfb9e0ae398dd5e4d80fc9b"
+        }
+      }
+    },
+    {
+      "tool": "list-entity-client-schemas-to-file",
+      "case": "list-entity-client-schemas-to-file empty graph",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [
+        "output-file"
+      ],
+      "sha256": {
+        "clio": {
+          "output-file": "90b37da6efe535e728c8e975cfef5afda4e894c62d493c8a86d99d191754ba4e"
+        },
+        "go": {
+          "output-file": "90b37da6efe535e728c8e975cfef5afda4e894c62d493c8a86d99d191754ba4e"
+        }
+      }
+    },
+    {
+      "tool": "list-entity-client-schemas-to-file",
+      "case": "list-entity-client-schemas-to-file unknown entity",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {
+          "output-file": null
+        },
+        "go": {
+          "output-file": null
+        }
+      }
+    }
+  ]
+}
