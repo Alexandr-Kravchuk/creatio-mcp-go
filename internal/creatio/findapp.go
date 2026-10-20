@@ -41,10 +41,10 @@ type FindAppResponse struct {
 
 const findAppRowCount = 10000
 
-// FindApp mirrors clio's FindAppCommand: one SysInstalledApp query, then one ApplicationSection query that
-// OR-groups every candidate application id. The code filter runs before sections are loaded; the pattern is
-// matched afterwards because it also covers section captions and codes. A failed section query still returns
-// the applications, only without sections, as clio does.
+// FindApp mirrors clio 8.1.0.142's FindAppCommand: one SysInstalledApp query, then one ApplicationSection
+// query with a single IN filter on every candidate application id. The code filter runs before sections are
+// loaded; the pattern is matched afterwards because it also covers section captions and codes. A failed
+// section query fails the call (ENG-102120): no sections would look like applications that have none.
 func (c *Client) FindApp(ctx context.Context, input FindAppRequest) FindAppResponse {
 	pattern := strings.TrimSpace(input.SearchPattern)
 	code := strings.TrimSpace(input.Code)
@@ -66,7 +66,10 @@ func (c *Client) FindApp(ctx context.Context, input FindAppRequest) FindAppRespo
 			ids = append(ids, id)
 		}
 	}
-	sectionsByApp := c.findAppSections(ctx, ids)
+	sectionsByApp, err := c.findAppSections(ctx, ids)
+	if err != nil {
+		return FindAppResponse{Error: err.Error()}
+	}
 	results := make([]AppSearchResult, 0, len(candidates))
 	for _, row := range candidates {
 		id := rowString(row, "Id")
@@ -93,18 +96,19 @@ func (c *Client) FindApp(ctx context.Context, input FindAppRequest) FindAppRespo
 }
 
 // findAppSections loads the sections of every candidate application in one request, keyed by lower-cased
-// application id. Any failure yields no sections at all rather than an error, matching clio.
-func (c *Client) findAppSections(ctx context.Context, appIDs []string) map[string][]AppSectionSearchResult {
+// application id. clio 8.1.0.142 sends one IN filter, not an OR group: the virtual ApplicationSection schema
+// reads only the first ApplicationId filter, so an OR group returned the sections of one application only.
+func (c *Client) findAppSections(ctx context.Context, appIDs []string) (map[string][]AppSectionSearchResult, error) {
 	grouped := map[string][]AppSectionSearchResult{}
 	if len(appIDs) == 0 {
-		return grouped
+		return grouped, nil
 	}
-	rows, err := c.selectRows(ctx, selectQueryWithOrFilter("ApplicationSection", map[string]string{
+	rows, err := c.selectRows(ctx, selectQueryWithInFilter("ApplicationSection", map[string]string{
 		"Id": "Id", "ApplicationId": "ApplicationId", "Caption": "Caption", "Code": "Code",
 		"Description": "Description", "EntitySchemaName": "EntitySchemaName",
 	}, "ApplicationId", appIDs, 0, findAppRowCount))
 	if err != nil {
-		return map[string][]AppSectionSearchResult{}
+		return nil, fmt.Errorf("Failed to load application sections: %s", err.Error())
 	}
 	for _, row := range rows {
 		key := strings.ToLower(rowString(row, "ApplicationId"))
@@ -122,7 +126,7 @@ func (c *Client) findAppSections(ctx context.Context, appIDs []string) map[strin
 			return compareOrdinalIgnoreCase(sections[i].Code, sections[j].Code) < 0
 		})
 	}
-	return grouped
+	return grouped, nil
 }
 
 func appMatchesPattern(app AppSearchResult, pattern string) bool {
@@ -154,6 +158,17 @@ func nonBlankOrNil(value string) *string {
 		return nil
 	}
 	return &value
+}
+
+// selectQueryWithInFilter is clio 8.1.0.142's BuildSelectQueryWithInFilter: one IN filter whose right
+// expressions carry every value, inside an AND group.
+func selectQueryWithInFilter(root string, columns map[string]string, column string, values []string, dataValueType, rowCount int) map[string]any {
+	query := buildSelectQuery(root, columns, nil, rowCount)
+	filter := inFilter(column, values, dataValueType)
+	filter["trimDateTimeParameterToDate"] = false
+	query["filters"] = map[string]any{"filterType": 6, "isEnabled": true, "trimDateTimeParameterToDate": false,
+		"logicalOperation": 0, "items": map[string]any{"filter0": filter}}
+	return query
 }
 
 // selectQueryWithOrFilter is clio's BuildSelectQueryWithOrFilter: one equality filter per value on the same

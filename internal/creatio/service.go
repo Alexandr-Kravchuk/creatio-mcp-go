@@ -165,7 +165,8 @@ func (c *Client) getClioGateJSON(ctx context.Context, route string, query url.Va
 	}
 	// ClioGate answers a missing package or file with HTTP 400 or an HTML error page, never with a reason.
 	if response.status == http.StatusBadRequest || response.status >= http.StatusInternalServerError || looksLikeHTML(response.payload) {
-		return nil, fmt.Errorf("ClioGate could not complete %s (HTTP %d). The package or file may not exist; inspect the Creatio Error.log. If the installed gate artifacts are stale, run install-gate and retry", route, response.status)
+		// clio 8.1.0.142 (ShowPackageFileContentCommand.DeserializeResponse) names the route only.
+		return nil, fmt.Errorf("ClioGate could not complete /%s. The package or file may not exist; inspect the Creatio Error.log. If the installed gate artifacts are stale, run install-gate and retry.", route)
 	}
 	if response.status < http.StatusOK || response.status >= http.StatusMultipleChoices {
 		return nil, fmt.Errorf("ClioGate %s returned HTTP %d", route, response.status)

@@ -55,17 +55,17 @@ func (c *Client) resolveCurrentTargetPackage(ctx context.Context) TargetPackageR
 	}
 	packageID, ok := parseGUID(currentPackageID)
 	if !ok || packageID == emptyGUID {
-		return targetPackageUnresolvable(fmt.Sprintf("No package was named, and the environment's %s system setting does not point at one, so there is nowhere to deliver the package data. Name the package explicitly (see list-packages for the available names).", currentPackageSettingCode))
+		return targetPackageUnresolvable(fmt.Sprintf("No package was named, and the environment's %s system setting does not point at one, so there is nowhere to deliver the package data. "+themeWriteAskForPackage, currentPackageSettingCode))
 	}
-	rows, err := c.selectTargetPackages(ctx, map[string]any{"Id": comparisonFilter("Id", packageID, 0, 3)})
+	rows, err := c.selectTargetPackages(ctx, map[string]any{"UId": comparisonFilter("UId", packageID, 0, 3)})
 	if err != nil {
 		return targetPackageUnavailable(err)
 	}
 	if len(rows) > 1 {
-		return targetPackageUnresolvable(fmt.Sprintf("The environment's %s system setting points at package '%s', which matched %d packages, so the delivery target cannot be told apart. Name the package explicitly (see list-packages for the available names).", currentPackageSettingCode, currentPackageID, len(rows)))
+		return targetPackageUnresolvable(fmt.Sprintf("The environment's %s system setting points at package '%s', which matched %d packages, so the delivery target cannot be told apart. "+themeWriteAskForPackage, currentPackageSettingCode, currentPackageID, len(rows)))
 	}
 	if len(rows) == 0 || strings.TrimSpace(rows[0].Name) == "" {
-		return targetPackageUnresolvable(fmt.Sprintf("The environment's %s system setting points at package '%s', which could not be resolved to a usable package. Name the package explicitly (see list-packages for the available names).", currentPackageSettingCode, currentPackageID))
+		return targetPackageUnresolvable(fmt.Sprintf("The environment's %s system setting points at package '%s', which could not be resolved to a usable package. "+themeWriteAskForPackage, currentPackageSettingCode, currentPackageID))
 	}
 	row := rows[0]
 	if row.locked() {
@@ -97,7 +97,7 @@ func (row targetPackageRow) locked() bool { return row.InstallType != nil && *ro
 
 func materializeTargetPackage(row targetPackageRow, subject string) TargetPackageResult {
 	if uid, ok := parseGUID(row.UID); !ok || uid == emptyGUID {
-		return targetPackageUnresolvable(subject + " has no usable UId in the environment, so package data cannot be addressed to it. Name another package (see list-packages for the available names).")
+		return targetPackageUnresolvable(subject + " has no usable UId in the environment, so package data cannot be addressed to it. " + themeWriteAskForPackage)
 	}
 	return TargetPackageResult{Success: true, PackageName: row.Name}
 }

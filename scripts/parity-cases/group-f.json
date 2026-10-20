@@ -1,6 +1,6 @@
 [
-  {"label": "compile-status latest", "tool": "compile-status", "clio-run": true},
-  {"label": "compile-status unknown operation-id", "tool": "compile-status", "args": {"operation-id": " zz-no-such-operation "}, "clio-run": true},
+  {"label": "compile-status latest", "tool": "compile-status", "clio-run": true, "known-differences": ["$.checkedutc", "$.compilationhistory[*].finishedsecondsago", "$.olderfailures[*].finishedsecondsago"], "why": "clio 8.1.0.142 lists the compilation history as of the moment each server reads it: checked-utc is each host's own clock and finished-seconds-ago counts back from it."},
+  {"label": "compile-status unknown operation-id", "tool": "compile-status", "args": {"operation-id": " zz-no-such-operation "}, "clio-run": true, "known-differences": ["$.checkedutc", "$.compilationhistory[*].finishedsecondsago", "$.olderfailures[*].finishedsecondsago"], "why": "clio 8.1.0.142 lists the compilation history as of the moment each server reads it: checked-utc is each host's own clock and finished-seconds-ago counts back from it."},
   {"label": "compile-status operation-id wrong type", "tool": "compile-status", "args": {"operation-id": 5}, "clio-run": true},
   {"label": "restart-status latest", "tool": "restart-status", "args": {"ignored": 1}, "clio-run": true},
   {"label": "restart-status operation-id wrong type", "tool": "restart-status", "args": {"operation-id": true}, "clio-run": true},

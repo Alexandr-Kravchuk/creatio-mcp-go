@@ -270,8 +270,10 @@ func invokeHiddenTool(ctx context.Context, envs *environments, hostTools hiddenT
 	ctx = withProgress(ctx, progress)
 	switch name {
 	case "get-sql-schema":
+		// clio 8.1.0.142's SqlSchemaGetArgs: schema-name plus SchemaGetBaseArgs' output-file.
 		var input struct {
 			SchemaName string `json:"schema-name"`
+			OutputFile string `json:"output-file"`
 		}
 		if err := decodeStrictArgs(withoutEnvironmentArgs(args, scopeDirect), &input); err != nil {
 			return nil, fmt.Errorf("decode get-sql-schema arguments: %w", err)
@@ -283,7 +285,7 @@ func invokeHiddenTool(ctx context.Context, envs *environments, hostTools hiddenT
 		if failure != nil {
 			return structuredToolResult(creatio.SQLSchemaResult{Error: redacted(failure)}), nil
 		}
-		return structuredToolResult(client.GetSQLSchema(ctx, input.SchemaName)), nil
+		return structuredToolResult(client.GetSQLSchemaTo(ctx, input.SchemaName, input.OutputFile)), nil
 	case "get-package-file":
 		var input struct {
 			PackageName string `json:"package-name"`
@@ -468,25 +470,13 @@ type clioRunArgs struct {
 	Args    map[string]any `json:"args,omitempty"`
 }
 
-var odataReadContract = map[string]any{
-	"name":        "odata-read",
-	"description": "Read an OData v4 collection. Supports entity, select, orderBy, top, skip and count.",
-	"inputSchema": map[string]any{
-		"type":     "object",
-		"required": []string{"entity"},
-		"properties": map[string]any{
-			"entity":  map[string]string{"type": "string"},
-			"select":  map[string]any{"type": "array", "items": map[string]string{"type": "string"}},
-			"orderBy": map[string]string{"type": "string"},
-			"top":     map[string]string{"type": "integer"},
-			"skip":    map[string]string{"type": "integer"},
-			"count":   map[string]string{"type": "boolean"},
-		},
-	},
-}
-
+// hiddenToolContracts names the hidden tools dispatched by invokeHiddenTool. get-tool-contract answers with
+// clio 8.1.0.142's own contract from internal/cliocontract, which carries every one of them
+// (TestHiddenToolContractsAreServedFromClioInventory); an entry here is only a fallback for an inventory that
+// lacks the tool. odata-read's entry is the name alone: its hand-written schema still described the
+// pre-8.1.0.142 orderBy argument, which clio no longer has (tool_odata_read142.go serves the 8.1.0.142 one).
 var hiddenToolContracts = map[string]map[string]any{
-	"odata-read": odataReadContract,
+	"odata-read": {"name": "odata-read"},
 	"get-package-file": {
 		"name":        "get-package-file",
 		"description": "Read one package-relative file and the generated package project file through ClioGate 2.0.0.47 or newer. Paths must be relative and stay inside the package Files directory.",
@@ -497,9 +487,10 @@ var hiddenToolContracts = map[string]map[string]any{
 	},
 	"get-sql-schema": {
 		"name":        "get-sql-schema",
-		"description": "Read one uniquely named SQL script schema and its body through the native SqlScriptSchemaDesignerService. This Go prototype returns the body in the response and does not write output-file.",
+		"description": "Read one uniquely named SQL script schema and its body through the native SqlScriptSchemaDesignerService. With output-file the body is written to that file and left out of the response.",
 		"inputSchema": map[string]any{"type": "object", "required": []string{"schema-name"}, "properties": map[string]any{
 			"schema-name": map[string]string{"type": "string"},
+			"output-file": map[string]string{"type": "string"},
 		}},
 	},
 	"list-package-files": {

@@ -37,7 +37,9 @@ func TestGroupFToolsAnswerByRawNameAndThroughClioRun(t *testing.T) {
 		want string
 	}{
 		"compile-status": {map[string]any{"operation-id": "abc", "ignored": 1},
-			`{"success":true,"status":"not-found","note":"` + runtimeCompileNotFoundNote + `"}`},
+			// The fake's GetApplicationInfo reports no session offset, so the history cannot be read (clio 8.1.0.142).
+			`{"success":true,"status":"not-found","note":"This MCP server session holds no record of operation-id 'abc' for this environment.` +
+				compileNotARunVerdict + compileHistoryUnavailableNote + `","compilation-history-error":"` + compileHistoryUnreadableError + `"}`},
 		"restart-status":       {map[string]any{}, `{"success":true,"status":"not-found","note":"` + runtimeRestartNotFoundNote + `"}`},
 		"last-compilation-log": {map[string]any{}, `{"success":true,"compilation-succeeded":true,"build-result":0,"diagnostics":[]}`},
 		"get-fsm-mode":         {map[string]any{"ignored": 1}, `{"mode":"on","useStaticFileContent":false,"staticFileContent":null}`},

@@ -713,7 +713,7 @@ func (r *classicPageRun) detailEntry(ctx context.Context, topUID, name string) *
 	}
 	entry := newObject()
 	entry.set("body", newString(schema.body()))
-	if title := schemaCaption(schema.values["caption"]); strings.TrimSpace(title) != "" {
+	if title := schemaCaption(schema.values["caption"], r.client.profileCultureFunc(ctx)); strings.TrimSpace(title) != "" {
 		entry.set("title", newString(title))
 	}
 	if merged {

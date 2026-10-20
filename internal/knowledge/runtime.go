@@ -407,6 +407,10 @@ func (r *Runtime) GuideNames() []string { return r.resolvedCatalog().names }
 // Catalog lists guidance and reference articles ordered by URI, for resources/list.
 func (r *Runtime) Catalog() []Descriptor { return r.resolvedCatalog().byURI }
 
+// CatalogByName lists guidance and reference articles ordered by name (KnowledgeGuidanceSource.GetCatalog),
+// for get-guidance's catalog.
+func (r *Runtime) CatalogByName() []Descriptor { return r.resolvedCatalog().byName }
+
 func (r *Runtime) resolvedCatalog() *resolvedCatalog {
 	r.EnsureActivated()
 	r.mu.Lock()

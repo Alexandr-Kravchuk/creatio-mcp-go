@@ -6,11 +6,14 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/Alexandr-Kravchuk/creatio-mcp-go/internal/cliocontract"
 	"github.com/Alexandr-Kravchuk/creatio-mcp-go/internal/creatio"
 	"github.com/Alexandr-Kravchuk/creatio-mcp-go/internal/hosttools"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -335,6 +338,27 @@ func TestStageTwoReadToolsDispatchByRawName(t *testing.T) {
 		result, err := session.CallTool(context.Background(), call)
 		if err != nil || result.IsError || result.StructuredContent == nil {
 			t.Fatalf("raw call %q result = %#v, err = %v", call.Name, result, err)
+		}
+	}
+	// clio 8.1.0.142's get-sql-schema accepts output-file (SchemaGetBaseArgs) and writes the body there.
+	output := filepath.Join(t.TempDir(), "UsrQuery.sql")
+	result, err := session.CallTool(context.Background(), &mcp.CallToolParams{Name: "clio-run", Arguments: map[string]any{
+		"command": "get-sql-schema", "args": map[string]any{"schema-name": "UsrQuery", "output-file": output}}})
+	if err != nil || result.IsError {
+		t.Fatalf("get-sql-schema output-file = %#v, err = %v", result, err)
+	}
+	if data, readErr := os.ReadFile(output); readErr != nil || string(data) != "SELECT 1;" {
+		t.Fatalf("output-file = %q, err = %v", data, readErr)
+	}
+}
+
+// Every built-in hidden tool's contract comes from clio 8.1.0.142's inventory; the hand-written entries in
+// hiddenToolContracts are never what get-tool-contract answers with.
+func TestHiddenToolContractsAreServedFromClioInventory(t *testing.T) {
+	inventory := cliocontract.Load()
+	for name := range hiddenToolContracts {
+		if _, ok := inventory.Contracts[name]; !ok {
+			t.Errorf("%s has no clio contract; its hand-written fallback would be served", name)
 		}
 	}
 }

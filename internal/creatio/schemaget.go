@@ -128,7 +128,7 @@ func (c *Client) GetSourceCodeSchema(ctx context.Context, input SourceCodeSchema
 	body := schema.body()
 	result := SourceCodeSchemaResult{
 		Success: true, SchemaName: firstNonEmpty(schema.name(), input.SchemaName), SchemaUID: schemaUID,
-		PackageName: schema.packageName(), Caption: schemaCaption(schema.values["caption"]), BodyLength: utf16Length(body),
+		PackageName: schema.packageName(), Caption: schemaCaption(schema.values["caption"], c.profileCultureFunc(ctx)), BodyLength: utf16Length(body),
 	}
 	if outputPath != "" {
 		if err := schemaGetWriteAtomic(outputPath, []byte(body)); err != nil {
@@ -171,7 +171,7 @@ func (c *Client) GetClientUnitSchema(ctx context.Context, input ClientUnitSchema
 	schemaName := firstNonEmpty(schema.name(), input.SchemaName)
 	result := ClientUnitSchemaResult{
 		Success: true, SchemaName: schemaName, SchemaUID: schemaUID, PackageName: schema.packageName(),
-		Caption: schemaCaption(schema.values["caption"]), BodyLength: utf16Length(body), FullHierarchy: input.FullHierarchy,
+		Caption: schemaCaption(schema.values["caption"], c.profileCultureFunc(ctx)), BodyLength: utf16Length(body), FullHierarchy: input.FullHierarchy,
 	}
 	if input.FullHierarchy {
 		merged := schemaGetMergedStrings(schema.values["localizableStrings"])

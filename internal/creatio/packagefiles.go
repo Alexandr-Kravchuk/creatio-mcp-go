@@ -88,7 +88,7 @@ func (c *Client) GetPackageFile(ctx context.Context, packageName, filePath strin
 		projectContent, err = c.readPackageFile(ctx, packageName, projectPath)
 		if err != nil {
 			projectContent = ""
-			projectError = fmt.Sprintf("The generated project %q is unavailable: %v", projectPath, err)
+			projectError = fmt.Sprintf("The generated project '%s' is unavailable: %v", projectPath, err)
 		}
 	}
 	return PackageFileResult{

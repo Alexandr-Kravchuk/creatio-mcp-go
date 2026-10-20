@@ -12,7 +12,7 @@ against the SAME two server processes, which checks that one Go process serves m
 Printed and persisted: verdicts, timings, and the JSON paths that differ. Never values, URLs,
 environment names or credentials, so the evidence file is safe to share.
 """
-import argparse, json, os, pathlib, subprocess, sys, time
+import argparse, json, os, pathlib, re, subprocess, sys, time
 
 REPO = pathlib.Path(__file__).resolve().parent.parent
 
@@ -103,6 +103,21 @@ def protocol_call(server, case):
         if isinstance(result.get(key), list):
             result = {**result, key: sorted(result[key], key=lambda item: json.dumps(item, sort_keys=True))}
     return result, seconds
+
+
+def known_difference(path, known):
+    """Whether a reported difference is listed in the case's known-differences. "[*]" in a listed path stands
+    for any list index, so a time-dependent field of every row is listed once (compile-status's
+    $.compilationhistory[*].finishedsecondsago)."""
+    path = path.split(":")[0]
+    for pattern in known:
+        if "[*]" not in pattern:
+            if path == pattern:
+                return True
+            continue
+        if re.fullmatch(re.escape(pattern).replace(re.escape("[*]"), r"\[\d+\]"), path):
+            return True
+    return False
 
 
 def normalize(value):
@@ -282,7 +297,7 @@ def main():
             if options.go_env_mode == "variables":
                 # Go is given no name in this mode, so it cannot echo one (compile-status, get-fsm-mode, ...).
                 known.add("$.environmentname")
-            if outcome == "mismatch" and paths and all(path.split(":")[0] in known for path in paths):
+            if outcome == "mismatch" and paths and all(known_difference(path, known) for path in paths):
                 # Listed in the case file with the reason; reported, but not counted as a regression.
                 outcome = "known-diff"
             # Environments are numbered, not named, so the evidence file stays free of environment names.

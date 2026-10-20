@@ -225,6 +225,15 @@ func TestValidatePageRunsMarkerAndSectionChecks(t *testing.T) {
 	if ok := ValidatePage(PageValidateRequest{Body: body(`[{"a": 1},]`, "{}")}); !ok.Valid || len(ok.Validation.Warnings) != 1 {
 		t.Fatalf("ok = %#v", ok)
 	}
+	// clio 8.1.0.142 parses JSON sections with JsonCommentHandling.Skip: comments are not errors.
+	for _, diff := range []string{`[/* c */{"operation": "remove", "name": "X"}]`, "[// line\n{\"a\": \"//not a comment\"}]"} {
+		if commented := ValidatePage(PageValidateRequest{Body: body(diff, "{}")}); !commented.Valid || !commented.Validation.ContentOK {
+			t.Fatalf("commented %q = %#v", diff, commented)
+		}
+	}
+	if unterminated := ValidatePage(PageValidateRequest{Body: body(`[/* open {"a": 1}]`, "{}")}); unterminated.Validation.ContentOK {
+		t.Fatalf("an unterminated comment must fail: %#v", unterminated)
+	}
 	converters := ValidatePage(PageValidateRequest{Body: body("[]", "[]")})
 	if converters.Valid || converters.Validation.ContentOK ||
 		converters.Validation.Errors[0] != "Invalid JavaScript object section in SCHEMA_CONVERTERS: section must remain an object literal." {

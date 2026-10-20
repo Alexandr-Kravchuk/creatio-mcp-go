@@ -7,6 +7,8 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -456,6 +458,29 @@ func TestClioGatePackageFileReadsAuthenticateAndNormalizePaths(t *testing.T) {
 	}
 }
 
+// clio 8.1.0.142's ShowPackageFileContentCommand: an unreadable generated project is reported with clio's text.
+func TestGetPackageFileReportsAnUnreadableProjectLikeClio(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/ServiceModel/AuthService.svc/Login" {
+			_, _ = w.Write([]byte(`{"Code":0}`))
+			return
+		}
+		if r.URL.Query().Get("filePath") == "cliogate.csproj" {
+			w.WriteHeader(http.StatusBadRequest)
+			_, _ = w.Write([]byte(`<html>Bad Request</html>`))
+			return
+		}
+		_, _ = w.Write([]byte(`"using System;"`))
+	}))
+	defer server.Close()
+	result := newFormsTestClient(t, server.URL).GetPackageFile(context.Background(), "cliogate", "cs/CreatioApiGateway.cs")
+	want := "The generated project 'cliogate.csproj' is unavailable: ClioGate could not complete /rest/CreatioApiGateway/GetPackageFileContent. " +
+		"The package or file may not exist; inspect the Creatio Error.log. If the installed gate artifacts are stale, run install-gate and retry."
+	if !result.Success || result.Content != "using System;" || result.ProjectError != want {
+		t.Fatalf("result = %#v", result)
+	}
+}
+
 func TestGetSQLSchemaResolvesByUniqueNameAndReadsDesignerBody(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/ServiceModel/AuthService.svc/Login" {
@@ -501,6 +526,17 @@ func TestGetSQLSchemaResolvesByUniqueNameAndReadsDesignerBody(t *testing.T) {
 	result := client.GetSQLSchema(context.Background(), " UsrReport ")
 	if !result.Success || result.SchemaName != "UsrReport" || result.SchemaUID != "sql-guid" || result.PackageName != "UsrPackage" || result.Caption != "Report query" || result.Body != "SELECT '𐐀';" || result.BodyLength != utf16Length(result.Body) {
 		t.Fatalf("SQL schema result = %#v", result)
+	}
+	// clio 8.1.0.142's output-file: the body goes to the file and is left out of the answer; no overwrite.
+	output := filepath.Join(t.TempDir(), "out", "UsrReport.sql")
+	written := client.GetSQLSchemaTo(context.Background(), "UsrReport", output)
+	if data, err := os.ReadFile(output); err != nil || string(data) != "SELECT '𐐀';" || written.Body != "" || !written.Success ||
+		written.BodyLength != result.BodyLength || written.Caption != "Report query" {
+		t.Fatalf("written = %#v, file = %q, err = %v", written, data, err)
+	}
+	if again := client.GetSQLSchemaTo(context.Background(), "UsrReport", output); again.Success ||
+		!strings.Contains(again.Error, "already exists; refusing to overwrite it") {
+		t.Fatalf("second write = %#v", again)
 	}
 }
 
