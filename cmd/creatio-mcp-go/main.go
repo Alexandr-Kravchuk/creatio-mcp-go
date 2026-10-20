@@ -373,15 +373,8 @@ func invokeHiddenTool(ctx context.Context, envs *environments, hostTools hiddenT
 			SearchPattern: input.SearchPattern, Limit: input.Limit, UID: input.UID,
 		})), nil
 	case "odata-read":
-		client, err := envs.target(name, args, scopeName)
-		if err != nil {
-			return nil, errors.New(redacted(err))
-		}
-		result, err := invokeODataRead(ctx, client, withoutEnvironmentArgs(args, scopeName))
-		if err != nil {
-			return nil, err
-		}
-		return structuredToolResult(result), nil
+		// clio 8.1.0.142's ODataReadTool, shared with odata-read-to-file (tool_odata_read142.go).
+		return odataReadAnswer(ctx, envs, args)
 	case "find-empty-iis-port":
 		var input struct{}
 		// The port scan is local; clio ignores an environment selector here, and so does this server.
@@ -390,26 +383,16 @@ func invokeHiddenTool(ctx context.Context, envs *environments, hostTools hiddenT
 		}
 		return structuredToolResult(hostTools.findEmptyIISPort(ctx)), nil
 	case "execute-esq":
-		var input struct {
-			Query     json.RawMessage `json:"query"`
-			TimeoutMS *int            `json:"timeout,omitempty"`
-		}
-		if err := decodeStrictArgs(withoutEnvironmentArgs(args, scopeName), &input); err != nil {
-			return nil, fmt.Errorf("decode execute-esq arguments: %w", err)
-		}
-		if len(input.Query) == 0 {
-			return nil, errors.New("query is required")
-		}
-		client, failure, err := envs.resolve(name, args, scopeName)
+		// clio 8.1.0.142's ExecuteEsqTool.Run, shared with execute-esq-to-file (tool_esq142.go).
+		bound, err := clioBind(name, args, esqMembers)
 		if err != nil {
 			return nil, err
 		}
-		if failure != nil {
-			return structuredToolResult(creatio.ESQFailure(redacted(failure))), nil
+		response, err := esqRun(ctx, envs, name, bound, creatio.ESQMaxResponseBytes, true)
+		if err != nil {
+			return nil, err
 		}
-		return structuredToolResult(client.ExecuteESQ(ctx, creatio.ExecuteESQRequest{
-			Query: input.Query, TimeoutMS: input.TimeoutMS,
-		})), nil
+		return toFileResult(response), nil
 	case "get-entity-schema-properties":
 		var input struct {
 			SchemaName   string `json:"schema-name"`
@@ -593,20 +576,6 @@ var hiddenToolContracts = map[string]map[string]any{
 			"properties": map[string]any{"environmentName": map[string]string{"type": "string", "description": "Target registered Clio environment name."}},
 		},
 	},
-}
-
-func invokeODataRead(ctx context.Context, client *creatio.Client, args map[string]any) (creatio.ODataReadResult, error) {
-	encoded, err := json.Marshal(args)
-	if err != nil {
-		return creatio.ODataReadResult{}, fmt.Errorf("encode odata-read arguments: %w", err)
-	}
-	var input creatio.ODataReadRequest
-	decoder := json.NewDecoder(bytes.NewReader(encoded))
-	decoder.DisallowUnknownFields()
-	if err := decoder.Decode(&input); err != nil {
-		return creatio.ODataReadResult{}, fmt.Errorf("decode odata-read arguments: %w", err)
-	}
-	return client.ODataRead(ctx, input)
 }
 
 // clioFailure prefixes a tool failure the way clio does. Argument-binding refusals carry no prefix in clio,

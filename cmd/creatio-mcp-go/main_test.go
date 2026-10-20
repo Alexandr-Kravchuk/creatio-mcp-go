@@ -102,7 +102,7 @@ func TestTwoTierMCPExposesContractAndRunsHiddenToolByRawName(t *testing.T) {
 		case "/ServiceModel/AuthService.svc/Login":
 			_, _ = w.Write([]byte(`{"Code":0}`))
 		case "/0/odata/Contact":
-			_, _ = w.Write([]byte(`{"value":[{"Id":"contact-1","Name":"Ada"}]}`))
+			_, _ = w.Write([]byte(`{"@odata.context":"http://x/odata/$metadata#Contact","value":[{"Id":"contact-1","Name":"Ada"}]}`))
 		default:
 			t.Errorf("unexpected Creatio route %s", r.URL.Path)
 			http.NotFound(w, r)
@@ -174,9 +174,9 @@ func TestTwoTierMCPExposesContractAndRunsHiddenToolByRawName(t *testing.T) {
 		if !ok {
 			t.Fatalf("call %q structured content = %#v", call.Name, result.StructuredContent)
 		}
-		rows, ok := rowsResult["rows"].([]any)
+		rows, ok := rowsResult["value"].([]any)
 		if !ok || len(rows) != 1 {
-			t.Fatalf("call %q rows = %#v", call.Name, rowsResult["rows"])
+			t.Fatalf("call %q value = %#v", call.Name, rowsResult["value"])
 		}
 	}
 	unsupported, err := session.CallTool(context.Background(), &mcp.CallToolParams{
@@ -184,8 +184,10 @@ func TestTwoTierMCPExposesContractAndRunsHiddenToolByRawName(t *testing.T) {
 			"command": "odata-read", "args": map[string]any{"entity": "Contact", "filters": map[string]any{}},
 		},
 	})
-	if err != nil || !unsupported.IsError {
-		t.Fatalf("unsupported filter must fail before HTTP: result = %#v, err = %v", unsupported, err)
+	// clio 8.1.0.142 answers an empty filters object with success:false and error-code argument.
+	if err != nil || !strings.Contains(unsupported.Content[0].(*mcp.TextContent).Text,
+		`"error":"filters must contain at least one condition in all or any.","error-code":"argument"`) {
+		t.Fatalf("empty filters must fail before HTTP: result = %#v, err = %v", unsupported, err)
 	}
 }
 
@@ -376,7 +378,7 @@ func TestMCPResponsesIncludeOneTextCopyForEveryHiddenTool(t *testing.T) {
 		case "/0/DataService/json/SyncReply/RuntimeEntitySchemaRequest":
 			_, _ = w.Write([]byte(`{"success":true,"schema":{"uId":"schema-1","name":"Contact","columns":{"items":{}}}}`))
 		case "/0/odata/Contact":
-			_, _ = w.Write([]byte(`{"value":[]}`))
+			_, _ = w.Write([]byte(`{"@odata.context":"http://x/odata/$metadata#Contact","value":[]}`))
 		case "/0/rest/CreatioApiGateway/GetPackageFilesDirectoryContent":
 			_, _ = w.Write([]byte(`[]`))
 		case "/0/rest/CreatioApiGateway/GetPackageFileContent":

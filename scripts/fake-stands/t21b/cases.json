@@ -1,0 +1,789 @@
+[
+ {
+  "label": "odata-read collection",
+  "tool": "odata-read",
+  "args": {
+   "entity": "Contact"
+  }
+ },
+ {
+  "label": "odata-read-to-file collection",
+  "tool": "odata-read-to-file",
+  "args": {
+   "entity": "Contact",
+   "output-file": "{side}/contacts.json"
+  },
+  "files": [
+   "output-file"
+  ]
+ },
+ {
+  "label": "odata-read-to-file temp dir, nested",
+  "tool": "odata-read-to-file",
+  "args": {
+   "entity": "Contact",
+   "output-file": "{tmp}/{side}/deep/er/contacts.json"
+  },
+  "files": [
+   "output-file"
+  ]
+ },
+ {
+  "label": "odata-read-to-file same path twice (first)",
+  "tool": "odata-read-to-file",
+  "args": {
+   "entity": "Contact",
+   "output-file": "shared-{who}.json"
+  },
+  "files": [
+   "output-file"
+  ]
+ },
+ {
+  "label": "odata-read-to-file same path twice (refused)",
+  "tool": "odata-read-to-file",
+  "args": {
+   "entity": "Contact",
+   "output-file": "shared-{who}.json"
+  },
+  "files": [
+   "output-file"
+  ]
+ },
+ {
+  "label": "odata-read filters select order count",
+  "tool": "odata-read",
+  "args": {
+   "entity": "Contact",
+   "filters": {
+    "all": [
+     {
+      "field": "Account/Id",
+      "value": "a0000000-0000-0000-0000-000000000001"
+     },
+     {
+      "field": "Name",
+      "op": "contains",
+      "value": "O'Neil & co"
+     }
+    ],
+    "any": [
+     {
+      "field": "Id",
+      "in": [
+       "c0000000-0000-0000-0000-000000000001",
+       "c0000000-0000-0000-0000-000000000002"
+      ]
+     },
+     {
+      "field": "Email",
+      "op": "ne",
+      "value": null
+     }
+    ]
+   },
+   "select": "Id, Name",
+   "expand": [
+    "Account"
+   ],
+   "order-by": "Name desc, CreatedOn",
+   "top": 2,
+   "skip": 0,
+   "count": true
+  }
+ },
+ {
+  "label": "odata-read-to-file filters select order count",
+  "tool": "odata-read-to-file",
+  "args": {
+   "entity": "Contact",
+   "filters": {
+    "all": [
+     {
+      "field": "Account/Id",
+      "value": "a0000000-0000-0000-0000-000000000001"
+     },
+     {
+      "field": "Name",
+      "op": "contains",
+      "value": "O'Neil & co"
+     }
+    ],
+    "any": [
+     {
+      "field": "Id",
+      "in": [
+       "c0000000-0000-0000-0000-000000000001",
+       "c0000000-0000-0000-0000-000000000002"
+      ]
+     },
+     {
+      "field": "Email",
+      "op": "ne",
+      "value": null
+     }
+    ]
+   },
+   "select": "Id, Name",
+   "expand": [
+    "Account"
+   ],
+   "order-by": "Name desc, CreatedOn",
+   "top": 2,
+   "skip": 0,
+   "count": true,
+   "output-file": "{side}/filtered.json"
+  },
+  "files": [
+   "output-file"
+  ]
+ },
+ {
+  "label": "odata-read single entity",
+  "tool": "odata-read",
+  "args": {
+   "entity": "Contact",
+   "filters": {
+    "all": [
+     {
+      "field": "Name",
+      "value": "single"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "label": "odata-read-to-file single entity",
+  "tool": "odata-read-to-file",
+  "args": {
+   "entity": "Contact",
+   "filters": {
+    "all": [
+     {
+      "field": "Name",
+      "value": "single"
+     }
+    ]
+   },
+   "output-file": "{side}/single.json"
+  },
+  "files": [
+   "output-file"
+  ]
+ },
+ {
+  "label": "odata-read count missing",
+  "tool": "odata-read",
+  "args": {
+   "entity": "Contact",
+   "filters": {
+    "all": [
+     {
+      "field": "Name",
+      "value": "nocount"
+     }
+    ]
+   },
+   "count": true
+  }
+ },
+ {
+  "label": "odata-read-to-file count missing",
+  "tool": "odata-read-to-file",
+  "args": {
+   "entity": "Contact",
+   "filters": {
+    "all": [
+     {
+      "field": "Name",
+      "value": "nocount"
+     }
+    ]
+   },
+   "count": true,
+   "output-file": "{side}/nocount.json"
+  },
+  "files": [
+   "output-file"
+  ]
+ },
+ {
+  "label": "odata-read wrong entity set",
+  "tool": "odata-read",
+  "args": {
+   "entity": "Contact",
+   "filters": {
+    "all": [
+     {
+      "field": "Name",
+      "value": "wrongset"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "label": "odata-read-to-file wrong entity set",
+  "tool": "odata-read-to-file",
+  "args": {
+   "entity": "Contact",
+   "filters": {
+    "all": [
+     {
+      "field": "Name",
+      "value": "wrongset"
+     }
+    ]
+   },
+   "output-file": "{side}/wrongset.json"
+  },
+  "files": [
+   "output-file"
+  ]
+ },
+ {
+  "label": "odata-read invalid query explained",
+  "tool": "odata-read",
+  "args": {
+   "entity": "Contact",
+   "select": [
+    "Id",
+    "Nmae",
+    "Acount/Name"
+   ],
+   "expand": "Acount",
+   "order-by": "CreatdOn desc",
+   "filters": {
+    "all": [
+     {
+      "field": "Name",
+      "value": "invalid"
+     },
+     {
+      "field": "OwnerId",
+      "value": "x"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "label": "odata-read-to-file invalid query explained",
+  "tool": "odata-read-to-file",
+  "args": {
+   "entity": "Contact",
+   "select": [
+    "Id",
+    "Nmae",
+    "Acount/Name"
+   ],
+   "expand": "Acount",
+   "order-by": "CreatdOn desc",
+   "filters": {
+    "all": [
+     {
+      "field": "Name",
+      "value": "invalid"
+     },
+     {
+      "field": "OwnerId",
+      "value": "x"
+     }
+    ]
+   },
+   "output-file": "{side}/invalid.json"
+  },
+  "files": [
+   "output-file"
+  ]
+ },
+ {
+  "label": "odata-read lookup column filter",
+  "tool": "odata-read",
+  "args": {
+   "entity": "Contact",
+   "filters": {
+    "all": [
+     {
+      "field": "AccountId",
+      "value": "a0000000-0000-0000-0000-000000000001"
+     },
+     {
+      "field": "TaxId",
+      "value": "1"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "label": "odata-read-to-file lookup column filter",
+  "tool": "odata-read-to-file",
+  "args": {
+   "entity": "Contact",
+   "filters": {
+    "all": [
+     {
+      "field": "AccountId",
+      "value": "a0000000-0000-0000-0000-000000000001"
+     }
+    ]
+   },
+   "output-file": "{side}/lookup.json"
+  },
+  "files": [
+   "output-file"
+  ]
+ },
+ {
+  "label": "odata-read server error",
+  "tool": "odata-read",
+  "args": {
+   "entity": "Contact",
+   "filters": {
+    "all": [
+     {
+      "field": "Name",
+      "value": "server"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "label": "odata-read-to-file server error",
+  "tool": "odata-read-to-file",
+  "args": {
+   "entity": "Contact",
+   "filters": {
+    "all": [
+     {
+      "field": "Name",
+      "value": "server"
+     }
+    ]
+   },
+   "output-file": "{side}/server.json"
+  },
+  "files": [
+   "output-file"
+  ]
+ },
+ {
+  "label": "odata-read HTML 404",
+  "tool": "odata-read",
+  "args": {
+   "entity": "HtmlPage"
+  }
+ },
+ {
+  "label": "odata-read-to-file HTML 404",
+  "tool": "odata-read-to-file",
+  "args": {
+   "entity": "HtmlPage",
+   "output-file": "{side}/html.json"
+  },
+  "files": [
+   "output-file"
+  ]
+ },
+ {
+  "label": "odata-read outage page",
+  "tool": "odata-read",
+  "args": {
+   "entity": "OutagePage"
+  }
+ },
+ {
+  "label": "odata-read-to-file outage page",
+  "tool": "odata-read-to-file",
+  "args": {
+   "entity": "OutagePage",
+   "output-file": "{side}/outage.json"
+  },
+  "files": [
+   "output-file"
+  ]
+ },
+ {
+  "label": "odata-read routing miss",
+  "tool": "odata-read",
+  "args": {
+   "entity": "Unregistered"
+  }
+ },
+ {
+  "label": "odata-read-to-file routing miss",
+  "tool": "odata-read-to-file",
+  "args": {
+   "entity": "Unregistered",
+   "output-file": "{side}/unreg.json"
+  },
+  "files": [
+   "output-file"
+  ]
+ },
+ {
+  "label": "odata-read proxy body",
+  "tool": "odata-read",
+  "args": {
+   "entity": "Proxy"
+  }
+ },
+ {
+  "label": "odata-read-to-file proxy body",
+  "tool": "odata-read-to-file",
+  "args": {
+   "entity": "Proxy",
+   "output-file": "{side}/proxy.json"
+  },
+  "files": [
+   "output-file"
+  ]
+ },
+ {
+  "label": "odata-read empty body",
+  "tool": "odata-read",
+  "args": {
+   "entity": "Empty"
+  }
+ },
+ {
+  "label": "odata-read-to-file empty body",
+  "tool": "odata-read-to-file",
+  "args": {
+   "entity": "Empty",
+   "output-file": "{side}/empty.json"
+  },
+  "files": [
+   "output-file"
+  ]
+ },
+ {
+  "label": "odata-read not JSON",
+  "tool": "odata-read",
+  "args": {
+   "entity": "NotJson"
+  }
+ },
+ {
+  "label": "odata-read-to-file not JSON",
+  "tool": "odata-read-to-file",
+  "args": {
+   "entity": "NotJson",
+   "output-file": "{side}/notjson.json"
+  },
+  "files": [
+   "output-file"
+  ]
+ },
+ {
+  "label": "odata-read old orderBy key refused",
+  "tool": "odata-read",
+  "args": {
+   "entity": "Contact",
+   "orderBy": "Name"
+  }
+ },
+ {
+  "label": "execute-esq rows",
+  "tool": "execute-esq",
+  "args": {
+   "query": {
+    "rootSchemaName": "EsqRows",
+    "columns": {
+     "items": {
+      "Id": {
+       "expression": {
+        "expressionType": 0,
+        "columnPath": "Id"
+       }
+      }
+     }
+    }
+   }
+  }
+ },
+ {
+  "label": "execute-esq-to-file rows",
+  "tool": "execute-esq-to-file",
+  "args": {
+   "query": {
+    "rootSchemaName": "EsqRows",
+    "columns": {
+     "items": {
+      "Id": {
+       "expression": {
+        "expressionType": 0,
+        "columnPath": "Id"
+       }
+      }
+     }
+    }
+   },
+   "output-file": "{side}/rows.json"
+  },
+  "files": [
+   "output-file"
+  ]
+ },
+ {
+  "label": "execute-esq-to-file rows, query as string",
+  "tool": "execute-esq-to-file",
+  "args": {
+   "query": "{\"rootSchemaName\":\"EsqRows\"}",
+   "timeout": "5000",
+   "output-file": "{tmp}/{side}-rows-string.json"
+  },
+  "files": [
+   "output-file"
+  ]
+ },
+ {
+  "label": "execute-esq-to-file empty rows",
+  "tool": "execute-esq-to-file",
+  "args": {
+   "query": {
+    "rootSchemaName": "EsqEmptyRows"
+   },
+   "output-file": "{side}/empty-rows.json"
+  },
+  "files": [
+   "output-file"
+  ]
+ },
+ {
+  "label": "execute-esq no rows array",
+  "tool": "execute-esq",
+  "args": {
+   "query": {
+    "rootSchemaName": "EsqNoRows"
+   }
+  }
+ },
+ {
+  "label": "execute-esq-to-file no rows array",
+  "tool": "execute-esq-to-file",
+  "args": {
+   "query": {
+    "rootSchemaName": "EsqNoRows"
+   },
+   "output-file": "{side}/norows.json"
+  },
+  "files": [
+   "output-file"
+  ]
+ },
+ {
+  "label": "execute-esq-to-file responseStatus failure",
+  "tool": "execute-esq-to-file",
+  "args": {
+   "query": {
+    "rootSchemaName": "EsqFail"
+   },
+   "output-file": "{side}/fail.json"
+  },
+  "files": [
+   "output-file"
+  ]
+ },
+ {
+  "label": "execute-esq-to-file errorInfo failure",
+  "tool": "execute-esq-to-file",
+  "args": {
+   "query": {
+    "rootSchemaName": "EsqInfo"
+   },
+   "output-file": "{side}/info.json"
+  },
+  "files": [
+   "output-file"
+  ]
+ },
+ {
+  "label": "execute-esq-to-file unmarked failure",
+  "tool": "execute-esq-to-file",
+  "args": {
+   "query": {
+    "rootSchemaName": "EsqUnmarked"
+   },
+   "output-file": "{side}/unmarked.json"
+  },
+  "files": [
+   "output-file"
+  ]
+ },
+ {
+  "label": "execute-esq-to-file array body",
+  "tool": "execute-esq-to-file",
+  "args": {
+   "query": {
+    "rootSchemaName": "EsqArray"
+   },
+   "output-file": "{side}/array.json"
+  },
+  "files": [
+   "output-file"
+  ]
+ },
+ {
+  "label": "execute-esq-to-file blank body",
+  "tool": "execute-esq-to-file",
+  "args": {
+   "query": {
+    "rootSchemaName": "EsqBlank"
+   },
+   "output-file": "{side}/blank.json"
+  },
+  "files": [
+   "output-file"
+  ]
+ },
+ {
+  "label": "execute-esq-to-file unknown column",
+  "tool": "execute-esq-to-file",
+  "args": {
+   "query": {
+    "rootSchemaName": "EsqUnknownCol",
+    "columns": {
+     "items": {
+      "Id": {
+       "expression": {
+        "expressionType": 0,
+        "columnPath": "Id"
+       }
+      },
+      "Nope": {
+       "expression": {
+        "expressionType": 0,
+        "columnPath": "Nope"
+       }
+      }
+     }
+    }
+   },
+   "output-file": "{side}/unknowncol.json"
+  },
+  "files": [
+   "output-file"
+  ]
+ },
+ {
+  "label": "execute-esq-to-file unknown member warning",
+  "tool": "execute-esq-to-file",
+  "args": {
+   "query": {
+    "rootSchemaName": "EsqRows",
+    "brandNewMember": 1
+   },
+   "output-file": "{side}/warn.json"
+  },
+  "files": [
+   "output-file"
+  ]
+ },
+ {
+  "label": "execute-esq flat call suggestion",
+  "tool": "execute-esq",
+  "args": {
+   "schema-name": "Contact",
+   "columns": [
+    "Id",
+    "Name"
+   ],
+   "filters": {
+    "Name": "Ada",
+    "AccountId": "a0000000-0000-0000-0000-000000000001"
+   },
+   "row-count": 5
+  },
+  "known-differences": [
+   "$.suggestedquery.filters.items.filter0.leftexpression.columnpath",
+   "$.suggestedquery.filters.items.filter0.rightexpression.parameter.datavaluetype",
+   "$.suggestedquery.filters.items.filter0.rightexpression.parameter.value",
+   "$.suggestedquery.filters.items.filter1.leftexpression.columnpath",
+   "$.suggestedquery.filters.items.filter1.rightexpression.parameter.datavaluetype",
+   "$.suggestedquery.filters.items.filter1.rightexpression.parameter.value"
+  ],
+  "known-differences-reason": "filters object member order: Go receives call arguments as a map, so filterN follow sorted member names instead of request order"
+ },
+ {
+  "label": "execute-esq-to-file SQL suggestion",
+  "tool": "execute-esq-to-file",
+  "args": {
+   "query": "SELECT TOP 7 [Id], Name FROM dbo.Contact WHERE Name = 'O''Neil' AND AccountId = 'a0000000-0000-0000-0000-000000000001'",
+   "output-file": "{side}/sql.json"
+  },
+  "files": [
+   "output-file"
+  ]
+ },
+ {
+  "label": "execute-esq write SQL refused",
+  "tool": "execute-esq",
+  "args": {
+   "query": "delete from Contact"
+  }
+ },
+ {
+  "label": "execute-esq SQL with number filter",
+  "tool": "execute-esq",
+  "args": {
+   "query": "select Id from Contact where Age = 5"
+  }
+ },
+ {
+  "label": "execute-esq rowCount string",
+  "tool": "execute-esq",
+  "args": {
+   "query": {
+    "rootSchemaName": "Contact",
+    "rowCount": "5",
+    "columns": {
+     "items": {}
+    }
+   }
+  }
+ },
+ {
+  "label": "list-entity-client-schemas",
+  "tool": "list-entity-client-schemas",
+  "args": {
+   "entity-name": "LecsEntity"
+  }
+ },
+ {
+  "label": "list-entity-client-schemas-to-file",
+  "tool": "list-entity-client-schemas-to-file",
+  "args": {
+   "entity-name": "LecsEntity",
+   "output-file": "{side}/lecs.json"
+  },
+  "files": [
+   "output-file"
+  ]
+ },
+ {
+  "label": "list-entity-client-schemas-to-file empty graph",
+  "tool": "list-entity-client-schemas-to-file",
+  "args": {
+   "entity-name": "LecsEmpty",
+   "output-file": "{side}/lecs-empty.json"
+  },
+  "files": [
+   "output-file"
+  ]
+ },
+ {
+  "label": "list-entity-client-schemas-to-file unknown entity",
+  "tool": "list-entity-client-schemas-to-file",
+  "args": {
+   "entity-name": "Nope",
+   "output-file": "{side}/lecs-nope.json"
+  },
+  "files": [
+   "output-file"
+  ]
+ }
+]

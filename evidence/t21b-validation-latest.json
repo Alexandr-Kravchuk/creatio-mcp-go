@@ -1,0 +1,1252 @@
+{
+  "schema": 1,
+  "counts": {
+    "match": 84,
+    "known-diff": 9,
+    "mismatch": 0
+  },
+  "cases": [
+    {
+      "tool": "execute-esq-to-file",
+      "case": "esq: output-file absent",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "execute-esq-to-file",
+      "case": "esq: output-file empty",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "execute-esq-to-file",
+      "case": "esq: output-file blank",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "execute-esq-to-file",
+      "case": "esq: output-file outside",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {
+          "output-file": null
+        },
+        "go": {
+          "output-file": null
+        }
+      }
+    },
+    {
+      "tool": "execute-esq-to-file",
+      "case": "esq: output-file traversal",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "execute-esq-to-file",
+      "case": "esq: output-file exists (dir)",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "execute-esq-to-file",
+      "case": "esq: output-file number",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "execute-esq-to-file",
+      "case": "esq: bad path and SQL query",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "execute-esq-to-file",
+      "case": "esq: SQL query",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {
+          "output-file": null
+        },
+        "go": {
+          "output-file": null
+        }
+      }
+    },
+    {
+      "tool": "execute-esq-to-file",
+      "case": "esq: where member",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {
+          "output-file": null
+        },
+        "go": {
+          "output-file": null
+        }
+      }
+    },
+    {
+      "tool": "execute-esq-to-file",
+      "case": "esq: no rootSchemaName",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {
+          "output-file": null
+        },
+        "go": {
+          "output-file": null
+        }
+      }
+    },
+    {
+      "tool": "execute-esq-to-file",
+      "case": "esq: query string not JSON",
+      "verdict": "known-diff",
+      "differences": [
+        "$.error: value differs"
+      ],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "execute-esq-to-file",
+      "case": "esq: query number",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "execute-esq-to-file",
+      "case": "esq: query absent",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "execute-esq-to-file",
+      "case": "esq: top-level columns",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "execute-esq-to-file",
+      "case": "esq: unknown arg",
+      "verdict": "known-diff",
+      "differences": [
+        "$.error: value differs"
+      ],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "execute-esq-to-file",
+      "case": "esq: outputFile alias",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "execute-esq-to-file",
+      "case": "esq: columns array",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "execute-esq-to-file",
+      "case": "esq: timeout string",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "execute-esq-to-file",
+      "case": "esq: unreachable",
+      "verdict": "known-diff",
+      "differences": [
+        "$.error: value differs"
+      ],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {
+          "output-file": null
+        },
+        "go": {
+          "output-file": null
+        }
+      }
+    },
+    {
+      "tool": "odata-read-to-file",
+      "case": "odata: output-file absent",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "odata-read-to-file",
+      "case": "odata: output-file empty",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "odata-read-to-file",
+      "case": "odata: output-file blank",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "odata-read-to-file",
+      "case": "odata: output-file outside",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "odata-read-to-file",
+      "case": "odata: output-file exists",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "odata-read-to-file",
+      "case": "odata: entity absent",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "odata-read-to-file",
+      "case": "odata: entity bad",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "odata-read-to-file",
+      "case": "odata: entity bad, top 0",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "odata-read-to-file",
+      "case": "odata: top 0 and bad path",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "odata-read-to-file",
+      "case": "odata: top 101",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "odata-read-to-file",
+      "case": "odata: top string",
+      "verdict": "known-diff",
+      "differences": [
+        "$.error: value differs"
+      ],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "odata-read-to-file",
+      "case": "odata: skip -1",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "odata-read-to-file",
+      "case": "odata: raw filter",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "odata-read-to-file",
+      "case": "odata: outputFile alias",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "odata-read-to-file",
+      "case": "odata: output_file alias",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "odata-read-to-file",
+      "case": "odata: orderBy alias",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "odata-read-to-file",
+      "case": "odata: limit and unknown",
+      "verdict": "known-diff",
+      "differences": [
+        "$.error: value differs"
+      ],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "odata-read-to-file",
+      "case": "odata: select number",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "odata-read-to-file",
+      "case": "odata: select array with number",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "odata-read-to-file",
+      "case": "odata: select bad member",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "odata-read-to-file",
+      "case": "odata: expand bad member",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "odata-read-to-file",
+      "case": "odata: order-by bad",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "odata-read-to-file",
+      "case": "odata: order-by two clauses ok",
+      "verdict": "known-diff",
+      "differences": [
+        "$.error: value differs"
+      ],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "odata-read-to-file",
+      "case": "odata: filters null",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "odata-read-to-file",
+      "case": "odata: filters empty",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "odata-read-to-file",
+      "case": "odata: filters string",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "odata-read-to-file",
+      "case": "odata: filters and alias",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "odata-read-to-file",
+      "case": "odata: condition null",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "odata-read-to-file",
+      "case": "odata: condition column alias",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "odata-read-to-file",
+      "case": "odata: condition no field",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "odata-read-to-file",
+      "case": "odata: condition bad field",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "odata-read-to-file",
+      "case": "odata: condition value and in",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "odata-read-to-file",
+      "case": "odata: condition neither",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "odata-read-to-file",
+      "case": "odata: condition in empty",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "odata-read-to-file",
+      "case": "odata: condition in with op",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "odata-read-to-file",
+      "case": "odata: condition bad op",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "odata-read-to-file",
+      "case": "odata: field number",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "odata-read-to-file",
+      "case": "odata: count string",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "odata-read-to-file",
+      "case": "odata: unreachable",
+      "verdict": "known-diff",
+      "differences": [
+        "$.error: value differs"
+      ],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {
+          "output-file": null
+        },
+        "go": {
+          "output-file": null
+        }
+      }
+    },
+    {
+      "tool": "odata-read-to-file",
+      "case": "odata: unknown environment",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "get-component-info-to-file",
+      "case": "gci: output-file absent",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "get-component-info-to-file",
+      "case": "gci: output-file empty",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "get-component-info-to-file",
+      "case": "gci: output-file outside",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "get-component-info-to-file",
+      "case": "gci: output-file exists",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "get-component-info-to-file",
+      "case": "gci: bad path and both selectors",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "get-component-info-to-file",
+      "case": "gci: both selectors",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {
+          "output-file": null
+        },
+        "go": {
+          "output-file": null
+        }
+      }
+    },
+    {
+      "tool": "get-component-info-to-file",
+      "case": "gci: unknown arg",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {
+          "output-file": null
+        },
+        "go": {
+          "output-file": null
+        }
+      }
+    },
+    {
+      "tool": "get-component-info-to-file",
+      "case": "gci: outputFile alias",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {
+          "outputFile": null
+        },
+        "go": {
+          "outputFile": null
+        }
+      }
+    },
+    {
+      "tool": "get-component-info-to-file",
+      "case": "gci: detail",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [
+        "output-file"
+      ],
+      "sha256": {
+        "clio": {
+          "output-file": "2092b1b4d15250dc46a023b64347e40b977fe0a10b9a995e89b422fa8d8d1358"
+        },
+        "go": {
+          "output-file": "2092b1b4d15250dc46a023b64347e40b977fe0a10b9a995e89b422fa8d8d1358"
+        }
+      }
+    },
+    {
+      "tool": "get-component-info-to-file",
+      "case": "gci: detail nested dir",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [
+        "output-file"
+      ],
+      "sha256": {
+        "clio": {
+          "output-file": "f10e7ad5a22208b9829208328f6dc5890487d8575c24cf6e88436bcdef092d50"
+        },
+        "go": {
+          "output-file": "f10e7ad5a22208b9829208328f6dc5890487d8575c24cf6e88436bcdef092d50"
+        }
+      }
+    },
+    {
+      "tool": "get-component-info-to-file",
+      "case": "gci: composite",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [
+        "output-file"
+      ],
+      "sha256": {
+        "clio": {
+          "output-file": "a46b3f165fc7639aebd3b855f85b5a8aba3d5dafeb8a9a8c2c4d28cb85ce7a24"
+        },
+        "go": {
+          "output-file": "a46b3f165fc7639aebd3b855f85b5a8aba3d5dafeb8a9a8c2c4d28cb85ce7a24"
+        }
+      }
+    },
+    {
+      "tool": "get-component-info-to-file",
+      "case": "gci: list (no documentation)",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {
+          "output-file": null
+        },
+        "go": {
+          "output-file": null
+        }
+      }
+    },
+    {
+      "tool": "get-component-info-to-file",
+      "case": "gci: not found",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {
+          "output-file": null
+        },
+        "go": {
+          "output-file": null
+        }
+      }
+    },
+    {
+      "tool": "get-component-info-to-file",
+      "case": "gci: mobile detail",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [
+        "output-file"
+      ],
+      "sha256": {
+        "clio": {
+          "output-file": "013235dbd4bcbcfe090f924238ef2762b0f24ac507cd1423009899e471415fa3"
+        },
+        "go": {
+          "output-file": "013235dbd4bcbcfe090f924238ef2762b0f24ac507cd1423009899e471415fa3"
+        }
+      }
+    },
+    {
+      "tool": "get-component-info-to-file",
+      "case": "gci: environment unreachable",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [
+        "output-file"
+      ],
+      "sha256": {
+        "clio": {
+          "output-file": "023a0e447bab052bc68ef60c01f018ebed3bc0a921fbc62a1deac7a6e8e3b949"
+        },
+        "go": {
+          "output-file": "023a0e447bab052bc68ef60c01f018ebed3bc0a921fbc62a1deac7a6e8e3b949"
+        }
+      }
+    },
+    {
+      "tool": "get-request-info-to-file",
+      "case": "gri: output-file absent",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "get-request-info-to-file",
+      "case": "gri: output-file blank",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "get-request-info-to-file",
+      "case": "gri: output-file outside",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "get-request-info-to-file",
+      "case": "gri: unknown arg",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {
+          "output-file": null
+        },
+        "go": {
+          "output-file": null
+        }
+      }
+    },
+    {
+      "tool": "get-request-info-to-file",
+      "case": "gri: detail",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [
+        "output-file"
+      ],
+      "sha256": {
+        "clio": {
+          "output-file": "57d42dcb20bbdb87444362e58586fcee510b18ee01cc52ed24e8c0e6fcd71f43"
+        },
+        "go": {
+          "output-file": "57d42dcb20bbdb87444362e58586fcee510b18ee01cc52ed24e8c0e6fcd71f43"
+        }
+      }
+    },
+    {
+      "tool": "get-request-info-to-file",
+      "case": "gri: detail 2",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [
+        "output-file"
+      ],
+      "sha256": {
+        "clio": {
+          "output-file": "cf0857635bc17489829164c41f8eb8232d0e9b27ec4d90b9fcc2bf36ad19e2a4"
+        },
+        "go": {
+          "output-file": "cf0857635bc17489829164c41f8eb8232d0e9b27ec4d90b9fcc2bf36ad19e2a4"
+        }
+      }
+    },
+    {
+      "tool": "get-request-info-to-file",
+      "case": "gri: mobile",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [
+        "output-file"
+      ],
+      "sha256": {
+        "clio": {
+          "output-file": "500a4761b9515c260e6b2aad959b2518d50dce1d9d06695fe832ca948a907304"
+        },
+        "go": {
+          "output-file": "500a4761b9515c260e6b2aad959b2518d50dce1d9d06695fe832ca948a907304"
+        }
+      }
+    },
+    {
+      "tool": "get-request-info-to-file",
+      "case": "gri: list",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {
+          "output-file": null
+        },
+        "go": {
+          "output-file": null
+        }
+      }
+    },
+    {
+      "tool": "get-request-info-to-file",
+      "case": "gri: not found",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {
+          "output-file": null
+        },
+        "go": {
+          "output-file": null
+        }
+      }
+    },
+    {
+      "tool": "list-entity-client-schemas-to-file",
+      "case": "lecs: output-file absent",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "list-entity-client-schemas-to-file",
+      "case": "lecs: output-file empty",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "list-entity-client-schemas-to-file",
+      "case": "lecs: output-file outside",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "list-entity-client-schemas-to-file",
+      "case": "lecs: bad path, no entity",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "list-entity-client-schemas-to-file",
+      "case": "lecs: entity absent",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "list-entity-client-schemas-to-file",
+      "case": "lecs: entity blank",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "list-entity-client-schemas-to-file",
+      "case": "lecs: unknown arg",
+      "verdict": "known-diff",
+      "differences": [
+        "$.error: value differs"
+      ],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    },
+    {
+      "tool": "list-entity-client-schemas-to-file",
+      "case": "lecs: unreachable",
+      "verdict": "known-diff",
+      "differences": [
+        "$.error: value differs"
+      ],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {
+          "output-file": null
+        },
+        "go": {
+          "output-file": null
+        }
+      }
+    },
+    {
+      "tool": "list-entity-client-schemas-to-file",
+      "case": "lecs: unknown environment",
+      "verdict": "match",
+      "differences": [],
+      "files": "same",
+      "written": [],
+      "sha256": {
+        "clio": {},
+        "go": {}
+      }
+    }
+  ]
+}
