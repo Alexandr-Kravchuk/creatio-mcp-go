@@ -136,8 +136,10 @@ Measured against `dotnet clio.dll mcp-server` of clio 8.1.0.142, no Creatio stan
 
 - `internal/creatio/pageget.go`: hierarchy layers also keep `caption` (localize-page reads ancestor titles).
 - `internal/creatio/datawrite_process_verify.go`: `resolveSeeded` (provenance with seed ids; `resolve` calls it), and the
-  fenced error text names a refused connection as clio does ("Connection refused (host:port)") — run-process's watch
-  warnings now read the same way.
+  fenced error text names a refused connection as clio does ("Connection refused (host:port)"), which run-process's
+  watch warnings use too. Checked for regressions with the T20 suites, before (fdc3aa4) and after: the fake stand
+  (`scripts/fake-stands/t20/cases.json`) 48/48 match and identical requests both times; the refusal cases
+  (`validation-cases.json`) 109 match, 1 error-text, 4 mismatch both times (the same pre-existing cases).
 - `docs/clio-inventory.json`: six lines of the `tasks` map. `docs/clio-inventory.md` regenerates from
   `scripts/clio-inventory.py` and was not edited by hand.
 
