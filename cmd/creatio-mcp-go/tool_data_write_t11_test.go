@@ -199,7 +199,7 @@ func TestRunProcessToolAnswersByTheResponseDeadline(t *testing.T) {
 			_, _ = io.WriteString(w, `{"success":true,"rows":[{"Id":"aaaaaaaa-0000-0000-0000-000000000001","Name":"UsrParityProcess","Caption":"Own","VersionParentUId":"aaaaaaaa-0000-0000-0000-000000000001","IsActiveVersion":true}]}`)
 		case strings.HasSuffix(r.URL.Path, "/ProcessSchemaRequest"):
 			_, _ = io.WriteString(w, `{"success":true,"schema":{"metaData":"{\"metaData\":{\"schema\":{\"parameters\":[]}}}"}}`)
-		case strings.HasSuffix(r.URL.Path, "/RunProcess"):
+		case strings.HasSuffix(r.URL.Path, "/RunSpecifiedProcessVersion"):
 			launches.Add(1)
 			if slowRun.Load() {
 				time.Sleep(1500 * time.Millisecond)

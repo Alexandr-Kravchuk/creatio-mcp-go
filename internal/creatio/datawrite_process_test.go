@@ -42,7 +42,7 @@ func newDataWriteProcessFake(t *testing.T) (*dataWriteProcessFake, *Client) {
 				`{"name":"Ref","dataValueType":"b295071f-7ea9-4e62-8d1a-919bf3732ff2","referenceSchemaUId":"cccccccc-0000-0000-0000-000000000001","direction":0},` +
 				`{"name":"Output","dataValueType":"325a73b8-0f47-44a0-8412-7606f78003ac","direction":1}]}}}`)
 			io.WriteString(w, `{"success":true,"schema":{"metaData":`+string(metadata)+`}}`)
-		case "/0/ServiceModel/ProcessEngineService.svc/RunProcess":
+		case "/0/ServiceModel/ProcessEngineService.svc/RunSpecifiedProcessVersion":
 			fake.launches++
 			_ = json.Unmarshal(body, &fake.lastLaunch)
 			io.WriteString(w, fake.runAnswer)
