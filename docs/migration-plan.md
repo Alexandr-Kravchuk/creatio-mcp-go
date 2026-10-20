@@ -134,29 +134,34 @@ Live, against clio 8.1.0.134 and the installed curated library 1.15.95: `scripts
 33 cases, 31 match, 2 known differences, 0 mismatches; the full case set 349 cases, 0 mismatches; every
 prompt rendered for every captured argument combination equals clio's text.
 
+T6 write side (2026-10-20), see [t6-write-status.md](status/t6-write-status.md). Done, from clio 8.1.0.142:
+`install-knowledge`, `update-knowledge` (GitHub-release and NuGet transports), `delete-knowledge`, `add-`,
+`remove-`, `enable-`, `disable-knowledge-source`, `configure-knowledge-feedback-policy`, `send-telemetry`,
+`withdraw-telemetry-consent` (outbox, run state, background upload), `experimental`,
+`export-component-registry`, `install-`, `update-`, `delete-toolkit`. They write clio's `appsettings.json`
+and installation store under clio's own OS locks (`.locks`, `appsettings.json.lock`), in clio's order and
+crash-safe publication sequence; a concurrency test runs Go writers and real clio processes on one home.
+`scripts/compare-t6-writes.py`: 145 answers, settings sections and written files equal clio's, one known
+difference. `info-knowledge checkUpdates` now contacts the publisher, and repository diagnostics are
+redacted with clio's rules before they are fenced.
+
 Remaining, in clio only for now:
-- Install, update and bootstrap of the curated library (`install-knowledge`, `update-knowledge`, the
-  GitHub-release / NuGet / Git transports), `delete-knowledge`, and the source tools `add-`, `remove-`,
-  `enable-`, `disable-knowledge-source`, `configure-knowledge-feedback-policy`. They write clio's
-  `appsettings.json` and the installation store under clio's file locks (`.locks`, high-water marks,
-  staging, pruning), which clio's hourly autoupdate also writes; a partial port risks the user's cache.
-- `send-telemetry`, `withdraw-telemetry-consent` (clio's TelemetryService: outbox, flush, consent writes).
-- `get-component-info(-to-file)`, `export-component-registry`, `get-request-info(-to-file)`,
-  `merge-creatio-artifact`, `get-mobile-page-conversion-guide`: none of them reads the knowledge runtime
-  (they use clio's component registry client, embedded catalogs and Creatio probes), so they belong with the
-  Creatio-side tasks, not here. `delete-toolkit` and `experimental` are toolkit/feature commands (W7).
+- Installing or updating a `git`-type knowledge source (clio's Git CLI transport; the runtime does not read
+  checkouts), clio's `mcp-server` startup bootstrap of the curated library and its hourly autoupdate.
+- `get-component-info(-to-file)` variants, `get-request-info(-to-file)`, `merge-creatio-artifact`,
+  `get-mobile-page-conversion-guide` belong with the Creatio-side tasks.
 
 Known differences, each with its reason:
 - clio 8.1.0.134 run as `dotnet clio.dll` answers every `docs://help/command/*` with its no-documentation
   fallback and `docs://help/restart|flushdb` with an exception text; this server serves the help text of
   the installed clio tool.
-- clio prints both paths of a failed `info-knowledge` as `[redacted-path]` (shared redaction, T4);
-  `knowledgeUntrusted` fences and flattens repository-controlled diagnostics like clio but does not run
-  clio's secret-scrubbing rules (T4).
-- `info-knowledge checkUpdates: true` reports `unknown` instead of contacting the publisher.
-- Git-type knowledge sources are not read.
-- An activation marker that lags the library's accepted sequence is reported, not reconciled (clio
-  rewrites `current.json` and prunes generations; a reader must not).
+- `git`-type knowledge sources are not read, installed or updated (see above).
+- A reader reports an activation marker that lags the library's accepted sequence instead of reconciling it
+  (clio rewrites `current.json` and prunes generations on any command; a reader must not). The write tools
+  reconcile it under clio's locks, as clio does.
+- Telemetry's `clio_version` names this server's build; served-content attributes are not emitted.
+- clio 8.1.0.142's Cursor toolkit install copies plugin-runtime directories through an inverted filter (a clio
+  defect); it is reproduced for parity.
 - clio binds a bool prompt argument only from a JSON boolean, which the Go SDK's string-typed prompt
   arguments cannot carry, so `restart-by-credentials` (required `isNetCore`) cannot be rendered here.
 - This server answers bundle compatibility as clio `8.1.0` and declares clio's 218-tool catalog as its
@@ -253,7 +258,7 @@ this checkpoint table and linked reports describe current implementation status.
 | T3 | CI on GitHub and release automation (W8, first half) — **done**, see [releasing.md](releasing.md) | — | 1 |
 | T4 | Shared infrastructure: redaction, envelope type, write safety, long-running operations, `rest/` helper (W2) — **done** 2026-10-03, see W2 | T1 | 2 |
 | T5 | Contract and resident-list parity (W4) — **done** 2026-10-03, see W4 | T1 | 2 |
-| T6 | Guidance, prompts, resources, knowledge tools from clio-knowledge bundles (W5, D2) — **read side done**, see below | — (rebase after T1) | 2, started early |
+| T6 | Guidance, prompts, resources, knowledge tools from clio-knowledge bundles (W5, D2) — **done** except `git`-type sources, see W5 and [t6-write-status.md](status/t6-write-status.md) | — (rebase after T1) | 2, started early |
 | T7–T15 | Write tools, one task per W6 area — **partial**, 30 tools added in the recovery checkpoint. T7 applications **done** in the second round (all 6 tools); create/section update/delete and app delete passed a live paired scenario; `install-application` waits for the window run, see [T7/T8 status](status/t7-t8-t10-status.md) | T1, T2, T4, decision D1 | 3 (in parallel) |
 | T16 | Local machine, infrastructure and workspace tools (W7) — deferred (D3) | T1, T4 | later |
 | T17 | Full parity run, docs, release `v0.2.0` | T5–T16 | 4 |
