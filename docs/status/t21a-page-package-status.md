@@ -75,7 +75,7 @@ Measured against `dotnet clio.dll mcp-server` of clio 8.1.0.142, no Creatio stan
 
 ### localize-page
 
-- No stand: 23 cases, 22 match, 1 both-failed (malformed `resources` JSON wording, below).
+- No stand: 22 cases, 21 match, 1 both-failed (malformed `resources` JSON wording, below).
 - Fake stand: 23 cases — report-only, inactive and absent culture, missing page, no editable schema, hierarchy refused,
   unknown keys with the data-source hint, own and inherited keys with caption, idempotent re-run, a value equal to the
   inherited one, coverage after a write, numbers and booleans, a replacing schema, save refused, save not stored, save
