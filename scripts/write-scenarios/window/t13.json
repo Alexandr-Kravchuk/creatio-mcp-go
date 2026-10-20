@@ -173,13 +173,22 @@
                 "source": "Start1",
                 "target": "End1"
               }
+            ],
+            "parameters": [
+              {
+                "name": "UsrParityResult",
+                "type": "Integer",
+                "direction": "Variable",
+                "value": "0"
+              }
             ]
           }
         },
         "known-differences": [
-          "$.executionlogmessages[1].value"
+          "$.executionlogmessages[1].value",
+          "$.executionlogmessages[2].value"
         ],
-        "why": "The created schema's UId differs per side. clio 8.1.0.134 binds descriptor as a string; master (served here) also takes the object sent here."
+        "why": "Line 2 names the new process's UId and line 3 is the write digest, whose schemaUId is that UId; both are created per side (the rest of the digest, checksum included, was compared by hand in T23 and is identical)."
       },
       {
         "kind": "read-back",
@@ -213,7 +222,8 @@
                 "type": "formulaTask",
                 "caption": "Formula",
                 "formula": {
-                  "body": "1 + 1"
+                  "body": "1 + 1",
+                  "resultProcessParameter": "UsrParityResult"
                 }
               }
             },

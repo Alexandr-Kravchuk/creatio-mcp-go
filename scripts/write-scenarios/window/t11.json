@@ -58,7 +58,7 @@
         "creates": "UsrParity{run}{side}Proc",
         "args": {
           "package-name": "{pkg}",
-          "descriptor": "{\"name\":\"UsrParity{run}{side}Proc\",\"caption\":\"Parity process {run}\",\"packageName\":\"{pkg}\",\"elements\":[{\"name\":\"Start1\",\"type\":\"start\"},{\"name\":\"End1\",\"type\":\"terminate\"}],\"flows\":[{\"source\":\"Start1\",\"target\":\"End1\"}],\"parameters\":[{\"name\":\"UsrParityText\",\"caption\":\"Parity text\",\"dataValueType\":\"Text\",\"direction\":\"In\"}],\"mappings\":[]}"
+          "descriptor": "{\"name\":\"UsrParity{run}{side}Proc\",\"caption\":\"Parity process {run}\",\"packageName\":\"{pkg}\",\"elements\":[{\"name\":\"Start1\",\"type\":\"startEvent\"},{\"name\":\"End1\",\"type\":\"endEvent\"}],\"flows\":[{\"source\":\"Start1\",\"target\":\"End1\"}],\"parameters\":[{\"name\":\"UsrParityText\",\"caption\":\"Parity text\",\"type\":\"Text\",\"direction\":\"In\"}],\"mappings\":[]}"
         }
       },
       {
