@@ -290,7 +290,9 @@ func esqIsMisplacedPart(key string) bool {
 	return false
 }
 
-func esqIsUnknownMember(key string) bool { return !esqSelectQueryMembers[key] && !esqIsMisplacedPart(key) }
+func esqIsUnknownMember(key string) bool {
+	return !esqSelectQueryMembers[key] && !esqIsMisplacedPart(key)
+}
 
 func esqShapeProblem(name string, value *jnode) string {
 	key := esqKey(name)
