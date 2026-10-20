@@ -8,7 +8,9 @@
         "label": "mode before",
         "tool": "get-fsm-mode",
         "clio-environment-key": "environmentName",
-        "args": {}
+        "args": {},
+        "clio-run": true,
+        "why": "clio's tool takes flat arguments (environmentName), not the args record a direct call sends, so the read goes through clio-run on both sides, as in parity-cases/group-f.json."
       },
       {
         "kind": "expect",
@@ -36,7 +38,9 @@
         "tool": "get-fsm-mode",
         "clio-environment-key": "environmentName",
         "settle-seconds": 30,
-        "args": {}
+        "args": {},
+        "clio-run": true,
+        "why": "clio's tool takes flat arguments (environmentName), not the args record a direct call sends, so the read goes through clio-run on both sides, as in parity-cases/group-f.json."
       },
       {
         "kind": "expect",
@@ -63,7 +67,9 @@
         "tool": "get-fsm-mode",
         "clio-environment-key": "environmentName",
         "settle-seconds": 30,
-        "args": {}
+        "args": {},
+        "clio-run": true,
+        "why": "clio's tool takes flat arguments (environmentName), not the args record a direct call sends, so the read goes through clio-run on both sides, as in parity-cases/group-f.json."
       },
       {
         "kind": "expect",
@@ -92,7 +98,9 @@
         "label": "public jwk",
         "tool": "get-identity-public-jwk",
         "clio-environment-key": "environmentName",
-        "args": {}
+        "args": {},
+        "clio-run": true,
+        "why": "clio's tool takes flat arguments (environmentName), not the args record a direct call sends, so the read goes through clio-run on both sides, as in parity-cases/group-f.json."
       }
     ]
   },
