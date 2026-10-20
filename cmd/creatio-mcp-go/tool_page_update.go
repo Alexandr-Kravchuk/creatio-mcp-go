@@ -30,6 +30,12 @@ func init() {
 			Validate           *bool  `json:"validate"`
 			IncludeOperations  *bool  `json:"include-operations"`
 		}
+		// clio 8.1.0.142's binder refusal for include-operations of another kind (T20).
+		if value, ok := args["include-operations"]; ok && value != nil {
+			if _, isBool := value.(bool); !isBool {
+				return nil, fmt.Errorf("invalid-parameter-type: argument 'include-operations' for MCP tool 'update-page' must be a boolean. Received an incompatible JSON value.")
+			}
+		}
 		if err := decodeStrictArgs(withoutEnvironmentArgs(args, scopeDirect), &input); err != nil {
 			return nil, fmt.Errorf("decode update-page arguments: %w", err)
 		}
