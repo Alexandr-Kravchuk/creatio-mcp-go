@@ -1,0 +1,788 @@
+[
+ {
+  "label": "gor not administered",
+  "tool": "get-object-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrOrder"
+  }
+ },
+ {
+  "label": "gor administered",
+  "tool": "get-object-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrInvoice"
+  }
+ },
+ {
+  "label": "gor grantee row",
+  "tool": "get-object-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrInvoice",
+   "grantee": "a29a3ba5-4b0d-de11-9a51-005056c00008"
+  }
+ },
+ {
+  "label": "gor grantee no row",
+  "tool": "get-object-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrInvoice",
+   "grantee": "11111111-1111-1111-1111-111111111111"
+  }
+ },
+ {
+  "label": "gor author no match",
+  "tool": "get-object-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrInvoice",
+   "author": "22222222-2222-2222-2222-222222222222"
+  }
+ },
+ {
+  "label": "gor stored while off",
+  "tool": "get-object-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrStored"
+  }
+ },
+ {
+  "label": "gor by title",
+  "tool": "get-object-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "Creatio functionality"
+  }
+ },
+ {
+  "label": "gor shared title",
+  "tool": "get-object-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "Shared title"
+  }
+ },
+ {
+  "label": "gor code not found",
+  "tool": "get-object-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrMissing"
+  }
+ },
+ {
+  "label": "gor no code no title",
+  "tool": "get-object-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "No such thing"
+  }
+ },
+ {
+  "label": "gor layered",
+  "tool": "get-object-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrLayered"
+  }
+ },
+ {
+  "label": "gor broken",
+  "tool": "get-object-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrBroken"
+  }
+ },
+ {
+  "label": "gor include connected",
+  "tool": "get-object-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrInvoice",
+   "include-connected": true
+  }
+ },
+ {
+  "label": "gor include connected missing schema",
+  "tool": "get-object-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrOrder",
+   "include-connected": true
+  }
+ },
+ {
+  "label": "sor grant without enable",
+  "tool": "set-object-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrOrder",
+   "grantee": "11111111-1111-1111-1111-111111111111",
+   "operations": "read"
+  }
+ },
+ {
+  "label": "sor grant preview",
+  "tool": "set-object-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrOrder",
+   "grantee": "11111111-1111-1111-1111-111111111111",
+   "operations": "edit,read",
+   "enable-operation-permissions": true,
+   "preview": true
+  }
+ },
+ {
+  "label": "sor grant enable",
+  "tool": "set-object-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrOrder",
+   "grantee": "11111111-1111-1111-1111-111111111111",
+   "operations": "read,edit",
+   "enable-operation-permissions": true
+  }
+ },
+ {
+  "label": "gor after grant",
+  "tool": "get-object-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrOrder",
+   "grantee": "11111111-1111-1111-1111-111111111111"
+  }
+ },
+ {
+  "label": "sor revoke edit",
+  "tool": "set-object-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrOrder",
+   "grantee": "11111111-1111-1111-1111-111111111111",
+   "operations": "EDIT",
+   "revoke": true
+  }
+ },
+ {
+  "label": "sor revoke on not administered",
+  "tool": "set-object-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrStored",
+   "grantee": "11111111-1111-1111-1111-111111111111",
+   "operations": "read",
+   "revoke": true
+  }
+ },
+ {
+  "label": "sor duplicate rows",
+  "tool": "set-object-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrLayered",
+   "grantee": "11111111-1111-1111-1111-111111111111",
+   "operations": "delete"
+  }
+ },
+ {
+  "label": "sor already has",
+  "tool": "set-object-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrInvoice",
+   "grantee": "22222222-2222-2222-2222-222222222222",
+   "operations": "read"
+  }
+ },
+ {
+  "label": "sor revoke no row",
+  "tool": "set-object-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrInvoice",
+   "grantee": "11111111-1111-1111-1111-111111111111",
+   "operations": "read",
+   "revoke": true
+  }
+ },
+ {
+  "label": "sor revoke last granting",
+  "tool": "set-object-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "Feature",
+   "grantee": "a29a3ba5-4b0d-de11-9a51-005056c00008",
+   "operations": "read,create,edit,delete",
+   "revoke": true
+  }
+ },
+ {
+  "label": "sor disable preview",
+  "tool": "set-object-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrInvoice",
+   "disable-operation-permissions": true,
+   "preview": true
+  }
+ },
+ {
+  "label": "sor disable",
+  "tool": "set-object-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrInvoice",
+   "disable-operation-permissions": true
+  }
+ },
+ {
+  "label": "sor disable again",
+  "tool": "set-object-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrInvoice",
+   "disable-operation-permissions": true
+  }
+ },
+ {
+  "label": "sor enable only",
+  "tool": "set-object-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrStored",
+   "enable-operation-permissions": true
+  }
+ },
+ {
+  "label": "sor enable already on",
+  "tool": "set-object-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrStored",
+   "enable-operation-permissions": true
+  }
+ },
+ {
+  "label": "sor title refused",
+  "tool": "set-object-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "Creatio functionality",
+   "enable-operation-permissions": true
+  }
+ },
+ {
+  "label": "sor unknown grantee",
+  "tool": "set-object-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrOrder",
+   "grantee": "33333333-3333-3333-3333-333333333333",
+   "operations": "read"
+  }
+ },
+ {
+  "label": "sor broken",
+  "tool": "set-object-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrBroken",
+   "enable-operation-permissions": true
+  }
+ },
+ {
+  "label": "sor missing",
+  "tool": "set-object-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrMissing",
+   "enable-operation-permissions": true
+  }
+ },
+ {
+  "label": "sdr grant without enable",
+  "tool": "set-default-record-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrOrder",
+   "author": "a29a3ba5-4b0d-de11-9a51-005056c00008",
+   "grantee": "11111111-1111-1111-1111-111111111111",
+   "operations": "read"
+  }
+ },
+ {
+  "label": "sdr grant preview",
+  "tool": "set-default-record-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrOrder",
+   "author": "a29a3ba5-4b0d-de11-9a51-005056c00008",
+   "grantee": "11111111-1111-1111-1111-111111111111",
+   "operations": "read,edit",
+   "level": "delegated",
+   "enable-record-permissions": true,
+   "preview": true
+  }
+ },
+ {
+  "label": "sdr grant enable",
+  "tool": "set-default-record-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrOrder",
+   "author": "a29a3ba5-4b0d-de11-9a51-005056c00008",
+   "grantee": "11111111-1111-1111-1111-111111111111",
+   "operations": "read,edit",
+   "level": "Delegated",
+   "do-not-apply-for-manager": true,
+   "enable-record-permissions": true
+  }
+ },
+ {
+  "label": "gor after record grant",
+  "tool": "get-object-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrOrder"
+  }
+ },
+ {
+  "label": "sdr lower level",
+  "tool": "set-default-record-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrOrder",
+   "author": "a29a3ba5-4b0d-de11-9a51-005056c00008",
+   "grantee": "11111111-1111-1111-1111-111111111111",
+   "operations": "edit",
+   "do-not-apply-for-manager": false
+  }
+ },
+ {
+  "label": "sdr revoke",
+  "tool": "set-default-record-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrOrder",
+   "author": "a29a3ba5-4b0d-de11-9a51-005056c00008",
+   "grantee": "11111111-1111-1111-1111-111111111111",
+   "operations": "read,edit",
+   "revoke": true
+  }
+ },
+ {
+  "label": "sdr disable",
+  "tool": "set-default-record-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrOrder",
+   "disable-record-permissions": true
+  }
+ },
+ {
+  "label": "sdr duplicates",
+  "tool": "set-default-record-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrRecords",
+   "author": "a29a3ba5-4b0d-de11-9a51-005056c00008",
+   "grantee": "11111111-1111-1111-1111-111111111111",
+   "operations": "read"
+  }
+ },
+ {
+  "label": "sdr no change",
+  "tool": "set-default-record-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrInvoice",
+   "author": "a29a3ba5-4b0d-de11-9a51-005056c00008",
+   "grantee": "11111111-1111-1111-1111-111111111111",
+   "operations": "read"
+  }
+ },
+ {
+  "label": "sdr revoke missing rule",
+  "tool": "set-default-record-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrInvoice",
+   "author": "22222222-2222-2222-2222-222222222222",
+   "grantee": "11111111-1111-1111-1111-111111111111",
+   "operations": "read",
+   "revoke": true
+  }
+ },
+ {
+  "label": "sdr enable already",
+  "tool": "set-default-record-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrInvoice",
+   "enable-record-permissions": true
+  }
+ },
+ {
+  "label": "sdr stored rule off",
+  "tool": "set-default-record-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrStored",
+   "author": "11111111-1111-1111-1111-111111111111",
+   "grantee": "22222222-2222-2222-2222-222222222222",
+   "operations": "delete",
+   "revoke": true
+  }
+ },
+ {
+  "label": "sdr unknown author",
+  "tool": "set-default-record-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrInvoice",
+   "author": "33333333-3333-3333-3333-333333333333",
+   "grantee": "11111111-1111-1111-1111-111111111111",
+   "operations": "read"
+  }
+ },
+ {
+  "label": "sdr broken",
+  "tool": "set-default-record-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrBroken",
+   "enable-record-permissions": true
+  }
+ },
+ {
+  "label": "adr off",
+  "tool": "apply-default-record-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrOrder"
+  }
+ },
+ {
+  "label": "adr wait",
+  "tool": "apply-default-record-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrInvoice"
+  }
+ },
+ {
+  "label": "adr no wait",
+  "tool": "apply-default-record-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrInvoice",
+   "wait": false
+  }
+ },
+ {
+  "label": "adr broken",
+  "tool": "apply-default-record-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrBroken"
+  }
+ },
+ {
+  "label": "adr missing",
+  "tool": "apply-default-record-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrMissing"
+  }
+ },
+ {
+  "label": "gec read",
+  "tool": "get-entity-connections",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "Account",
+   "package-name": "Custom"
+  }
+ },
+ {
+  "label": "gec unknown package",
+  "tool": "get-entity-connections",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "Account",
+   "package-name": "Nope"
+  }
+ },
+ {
+  "label": "gec unknown object",
+  "tool": "get-entity-connections",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrNope",
+   "package-name": "Custom"
+  }
+ },
+ {
+  "label": "uec unknown and not lookup",
+  "tool": "update-entity-connections",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "Account",
+   "package-name": "Custom",
+   "connections": [
+    "Owner",
+    "Name",
+    "Zzz"
+   ]
+  }
+ },
+ {
+  "label": "uec reorder and add",
+  "tool": "update-entity-connections",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "Account",
+   "package-name": "Custom",
+   "connections": [
+    "Owner",
+    "Type",
+    "PrimaryContact"
+   ]
+  }
+ },
+ {
+  "label": "gec after update",
+  "tool": "get-entity-connections",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "Account",
+   "package-name": "Custom"
+  }
+ },
+ {
+  "label": "uec unchanged",
+  "tool": "update-entity-connections",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "Account",
+   "package-name": "Custom",
+   "connections": [
+    "owner",
+    "Type",
+    "PrimaryContact"
+   ]
+  }
+ },
+ {
+  "label": "uec remove one",
+  "tool": "update-entity-connections",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "Account",
+   "package-name": "Custom",
+   "connections": [
+    "Type",
+    "Owner"
+   ]
+  }
+ },
+ {
+  "label": "uec remove all",
+  "tool": "update-entity-connections",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "Account",
+   "package-name": "Custom",
+   "connections": []
+  }
+ },
+ {
+  "label": "gec after remove",
+  "tool": "get-entity-connections",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "Account",
+   "package-name": "Custom"
+  }
+ },
+ {
+  "label": "sor save fails",
+  "tool": "set-object-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrSaveFails",
+   "grantee": "11111111-1111-1111-1111-111111111111",
+   "operations": "read"
+  }
+ },
+ {
+  "label": "sor save lies",
+  "tool": "set-object-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrSaveLies",
+   "grantee": "11111111-1111-1111-1111-111111111111",
+   "operations": "read"
+  }
+ },
+ {
+  "label": "sor save error applied",
+  "tool": "set-object-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrSaveError",
+   "grantee": "11111111-1111-1111-1111-111111111111",
+   "operations": "read"
+  }
+ },
+ {
+  "label": "sdr save fails",
+  "tool": "set-default-record-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrSaveFails",
+   "author": "11111111-1111-1111-1111-111111111111",
+   "grantee": "22222222-2222-2222-2222-222222222222",
+   "operations": "read"
+  }
+ },
+ {
+  "label": "sdr save lies",
+  "tool": "set-default-record-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrSaveLies",
+   "author": "11111111-1111-1111-1111-111111111111",
+   "grantee": "22222222-2222-2222-2222-222222222222",
+   "operations": "read"
+  }
+ },
+ {
+  "label": "sdr save error applied",
+  "tool": "set-default-record-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrSaveError",
+   "author": "11111111-1111-1111-1111-111111111111",
+   "grantee": "22222222-2222-2222-2222-222222222222",
+   "operations": "delete"
+  }
+ },
+ {
+  "label": "sdr bad stored level",
+  "tool": "set-default-record-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrBadLevel",
+   "author": "a29a3ba5-4b0d-de11-9a51-005056c00008",
+   "grantee": "11111111-1111-1111-1111-111111111111",
+   "operations": "read"
+  }
+ },
+ {
+  "label": "gor bad stored level",
+  "tool": "get-object-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrBadLevel"
+  }
+ },
+ {
+  "label": "adr refused",
+  "tool": "apply-default-record-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrApplyRefused"
+  }
+ },
+ {
+  "label": "adr queued",
+  "tool": "apply-default-record-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrApplyQueued"
+  }
+ },
+ {
+  "label": "adr garbage",
+  "tool": "apply-default-record-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrApplyGarbage"
+  }
+ },
+ {
+  "label": "adr slow",
+  "tool": "apply-default-record-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrApplySlow",
+   "timeout-seconds": 3
+  }
+ },
+ {
+  "label": "adr slow again warns",
+  "tool": "apply-default-record-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrApplySlow",
+   "wait": false
+  }
+ },
+ {
+  "label": "gec fallback",
+  "tool": "get-entity-connections",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "Contact",
+   "package-name": "Custom"
+  }
+ },
+ {
+  "label": "uec fallback refused",
+  "tool": "update-entity-connections",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "Contact",
+   "package-name": "Custom",
+   "connections": [
+    "Owner"
+   ]
+  }
+ },
+ {
+  "label": "gec ignored addon",
+  "tool": "get-entity-connections",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "Lead",
+   "package-name": "Custom"
+  }
+ },
+ {
+  "label": "uec ignored addon refused",
+  "tool": "update-entity-connections",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "Lead",
+   "package-name": "Custom",
+   "connections": [
+    "Owner"
+   ]
+  }
+ },
+ {
+  "label": "gor hang",
+  "tool": "get-object-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrHang"
+  }
+ }
+]
