@@ -17,7 +17,9 @@
           "description": "Created by scripts/compare-mcp-writes.py; safe to delete"
         },
         "capture": {
-          "pkg": "$.package-name"
+          "pkg": "$.package-name",
+          "pkguid": "$.packageuid",
+          "appuid": "$.applicationid"
         },
         "retry-while": "rebuilding the OData library",
         "retry-attempts": 6,
@@ -56,7 +58,27 @@
           "title-localizations": {
             "en-US": "Parity rights {run}"
           }
-        }
+        },
+        "creates": "UsrParity{run}{side}Rts",
+        "why": "Named as an object of this run so its name is neutralized in every answer; delete-app removes it with the package, the cleanup only covers a run that stops before that. The second log line is the publish time (\"published in 2.8s\"), measured per call.",
+        "known-differences": [
+          "$.executionlogmessages[1].value"
+        ]
+      },
+      {
+        "kind": "cleanup",
+        "for": "UsrParity{run}{side}Rts",
+        "server": "clio",
+        "calls": [
+          {
+            "tool": "delete-schema",
+            "clio-run": true,
+            "args": {
+              "schema-name": "UsrParity{run}{side}Rts",
+              "remote": true
+            }
+          }
+        ]
       },
       {
         "kind": "read-back",
@@ -143,7 +165,11 @@
         "args": {
           "entity-schema-name": "UsrParity{run}{side}Rts",
           "timeout-seconds": 60
-        }
+        },
+        "known-differences": [
+          "$.output"
+        ],
+        "why": "The output names the id of the record-rights process the stand starts, a new id per call; the text around it is identical."
       },
       {
         "kind": "write",
