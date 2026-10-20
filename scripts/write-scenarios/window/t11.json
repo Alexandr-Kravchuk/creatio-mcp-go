@@ -58,15 +58,62 @@
         "creates": "UsrParity{run}{side}Proc",
         "args": {
           "package-name": "{pkg}",
-          "descriptor": "{\"name\":\"UsrParity{run}{side}Proc\",\"caption\":\"Parity process {run}\",\"packageName\":\"{pkg}\",\"elements\":[{\"name\":\"Start1\",\"type\":\"start\"},{\"name\":\"End1\",\"type\":\"terminate\"}],\"flows\":[{\"source\":\"Start1\",\"target\":\"End1\"}],\"parameters\":[{\"name\":\"UsrParityText\",\"caption\":\"Parity text\",\"dataValueType\":\"Text\",\"direction\":\"Input\"}],\"mappings\":[]}"
+          "descriptor": "{\"name\":\"UsrParity{run}{side}Proc\",\"caption\":\"Parity process {run}\",\"packageName\":\"{pkg}\",\"elements\":[{\"name\":\"Start1\",\"type\":\"start\"},{\"name\":\"End1\",\"type\":\"terminate\"}],\"flows\":[{\"source\":\"Start1\",\"target\":\"End1\"}],\"parameters\":[{\"name\":\"UsrParityText\",\"caption\":\"Parity text\",\"dataValueType\":\"Text\",\"direction\":\"In\"}],\"mappings\":[]}"
         }
       },
       {
         "kind": "cleanup",
         "for": "UsrParity{run}{side}Proc",
         "server": "clio",
-        "why": "delete-app removes the process with the package; this cleanup records the removal and covers a run that stops before delete-app.",
+        "why": "delete-app removes the process with the package; this cleanup records the removal and covers a run that stops before delete-app. The lookup first finds whether the process exists: an empty capture means it was never saved.",
         "calls": [
+          {
+            "tool": "execute-esq",
+            "clio-run": true,
+            "args": {
+              "query": {
+                "rootSchemaName": "SysSchema",
+                "operationType": 0,
+                "rowCount": 1,
+                "columns": {
+                  "items": {
+                    "Id": {
+                      "expression": {
+                        "expressionType": 0,
+                        "columnPath": "Id"
+                      }
+                    }
+                  }
+                },
+                "filters": {
+                  "filterType": 6,
+                  "isEnabled": true,
+                  "logicalOperation": 0,
+                  "items": {
+                    "own": {
+                      "filterType": 1,
+                      "comparisonType": 3,
+                      "isEnabled": true,
+                      "leftExpression": {
+                        "expressionType": 0,
+                        "columnPath": "Name"
+                      },
+                      "rightExpression": {
+                        "expressionType": 2,
+                        "parameter": {
+                          "dataValueType": 1,
+                          "value": "UsrParity{run}{side}Proc"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "capture": {
+              "procSchemaId": "$.rows[0].id"
+            }
+          },
           {
             "tool": "delete-schema",
             "clio-run": true,

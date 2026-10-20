@@ -10,7 +10,11 @@
         "server": "clio",
         "clio-run": true,
         "args": {},
-        "why": "Both sides' install goes through clio first, so the package is present when the Go call runs."
+        "why": "Both sides' install goes through clio first, so the package is present when the Go call runs. The install compiles and restarts the stand; the 420 s settle before each side lets the previous build end, and the logs are timing-dependent.",
+        "settle-seconds": 420,
+        "known-differences": [
+          "$.executionlogmessages"
+        ]
       },
       {
         "kind": "write",
@@ -21,7 +25,16 @@
         "known-differences": [
           "$.executionlogmessages"
         ],
-        "why": "The install log (upload, backup, install log lines, health checks) is timing-dependent; exit-code is compared."
+        "why": "The install log (upload, backup, install log lines, health checks) is timing-dependent; exit-code is compared. A refusal while the previous install still builds is retried.",
+        "settle-seconds": 420,
+        "retry-while": "A configuration build is already running",
+        "retry-seconds": 900
+      },
+      {
+        "kind": "expect",
+        "step": "reinstall through each server",
+        "path": "$.exitcode",
+        "equals": 0
       },
       {
         "kind": "read-back",
@@ -198,7 +211,10 @@
               "element": {
                 "name": "Formula1",
                 "type": "formulaTask",
-                "caption": "Formula"
+                "caption": "Formula",
+                "formula": {
+                  "body": "1 + 1"
+                }
               }
             },
             {
