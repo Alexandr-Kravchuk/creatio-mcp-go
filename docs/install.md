@@ -193,9 +193,8 @@ The write tools change the Creatio environment the call names, as clio's do. The
   and a pointer to `clio-run`, as clio refuses it;
 - an environment marked `Safe` in clio's settings is refused;
 - `get-page` and the tools with `output-file` / `output-directory` write local files the way clio does
-  and never overwrite an existing `output-file`; the exception is `get-sql-schema`, which refuses
-  `output-file` as an unknown argument and returns the body inline
-  ([implementation.md](implementation.md));
+  and never overwrite an existing `output-file` (`get-sql-schema` included: the path must be inside the
+  workspace or the OS temp directory, and the body is then left out of the answer);
 - long operations (compile, restart, installs, process runs) report progress and answer "still running"
   after a response deadline while the work continues; `compile-status` / `restart-status` read the
   operations this process started. `CLIO_MCP_RESPONSE_DEADLINE_SECONDS` overrides the deadline as in clio

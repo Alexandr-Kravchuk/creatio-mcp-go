@@ -152,6 +152,23 @@ Unix. Details: [status/t21b-to-file-status.md](status/t21b-to-file-status.md).
   read has no ceiling. `odata-read-to-file`'s 64 MiB refusal may report a different byte count than clio.
   Neither was measured.
 
+## Aligned with clio 8.1.0.142 after the live run
+
+A live read run against clio 8.1.0.142 found 20 answers that clio 142 changed since 8.1.0.134; they now
+match ([status/t22-live-parity-142-status.md](status/t22-live-parity-142-status.md)):
+
+- `compile-status` / `restart-status`: a not-found answer reads the environment's compilation history
+  (with a 40-second limit) and carries clio's note;
+- `find-app`: sections load with one query, and a failed section query fails the call;
+- `get-target-package`: the `CurrentPackageId` setting is matched on the package UId, with clio's refusal text;
+- `get-page`: `include-operations` defaults to counts per operation type;
+- `get-client-unit-schema`, `get-schema`, `get-sql-schema`, `get-classic-page-sources`: captions in the
+  user's profile culture, then en-US;
+- `validate-page`: comments inside JSON sections are skipped;
+- `get-guidance`: a missing name or `list` answers with the guide catalog; the server instructions say so;
+- `get-sql-schema` accepts `output-file`;
+- the ClioGate failure text of the package-file tools is worded as clio's.
+
 ## Known differences from clio
 
 Each one is recorded with its reason in the area reports under [status/](status/). The ones you are most
@@ -191,7 +208,11 @@ likely to notice:
 - Contracts: compared live with clio 8.1.0.142's MCP server at `caa2eb0`: 1025 match, 70 known not-ported
   rows (the 35 tools not served, each on two surfaces), 1 known multi-name batch clio shortens,
   0 unexplained.
-- Reads: live parity against clio 8.1.0.134 on two stands, 706 calls, 0 mismatches (2026-10-03).
+- Reads: live parity against clio 8.1.0.142 on one stand at `ca0e5a1` (2026-10-20, read cases only): 815 match,
+  27 both-failed, 41 known-diff, 0 error-text, 0 mismatches. The first run at `caa2eb0` had 20 mismatches,
+  all clio 142 behaviour changes or stand data, none a regression; details in
+  [t22 status](status/t22-live-parity-142-status.md). Earlier: clio 8.1.0.134, two stands, 706 calls,
+  0 mismatches (2026-10-03).
 - The 8.1.0.142 work (T19, T20, T6 writes, T21a, T21b) was compared with clio 8.1.0.142 without a live Creatio: on
   refusal paths, fake stands and local fixtures.
 - Several write success paths (compile, restart, package installs, `install-application`,

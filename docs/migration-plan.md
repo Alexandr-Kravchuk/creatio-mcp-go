@@ -13,7 +13,7 @@ T21b):
 | Contract comparison | — | `scripts/compare-contracts.py` against 8.1.0.142: 1025 match, 0 unexplained; known: the 35 not-served tools (each on two surfaces, 70 rows) and one multi-name batch clio shortens ([comparison report](status/clio-comparison-2026-10-20.md)) |
 | MCP prompts and resources | 74 prompts, 195 resources, 5 resource templates (with its installed knowledge bundles) | 74 prompts (generated from 8.1.0.142), 5 resource templates, the knowledge catalog (T6) |
 | Environments per process | any, per call (`environment-name`) | any, per call, from clio's `appsettings.json` (T1); `CREATIO_*` as the default |
-| Live parity | — | last measured against clio 8.1.0.134 (2026-10-03): 706 calls on two stands served by one process, 0 mismatches (T4). No live stand run against 8.1.0.142 yet: the 142 work is compared without a stand, on fake stands and canned Creatio answers (T17) |
+| Live parity | — | last measured against clio 8.1.0.134 (2026-10-03): 706 calls on two stands served by one process, 0 mismatches (T4). Against 8.1.0.142 (2026-10-20, `ca0e5a1`, read cases, stand `s16123120`): 815 match, 27 both-failed, 41 known-diff, 0 mismatches ([T22](status/t22-live-parity-142-status.md)). Write paths against 142 are compared on fake stands and canned Creatio answers (T17) |
 
 ## What "done" means
 
