@@ -59,7 +59,8 @@
         "known-differences": [
           "$.executionlogmessages"
         ],
-        "why": "The side that runs second finds file design mode already disabled, so it imports nothing."
+        "why": "The side that runs second finds file design mode already disabled, so it imports nothing. clio's 'off' ends with the configuration write, after which IIS recycles the application pool; the 120 s settle lets the stand answer again before the second side probes it (in T23 the Go probe, sent at once, timed out after 45 s).",
+        "settle-seconds": 120
       },
       {
         "kind": "read-back",
