@@ -19,7 +19,8 @@ full detail): 950 match, 100 known:not-ported (other tasks), 1 known:fit-multi-n
 | `install-`, `update-`, `delete-toolkit` | `internal/toolkit` | stub CLIs on a temporary PATH, temporary HOME, local git checkout for Cursor | harness: 28/28 match: CLI invocations, `~/.claude/settings.json`, `~/.codex/config.toml`, `~/.agents/plugins/marketplace.json`, Cursor files, `~/.clio/managed-skills.json` |
 
 The harness is `scripts/compare-t6-writes.py --clio-dll <clio.dll> --go-bin <binary> --work <scratch>`
-(summary in `evidence/t6-writes.json`). Each side gets its own temporary `CLIO_HOME`, `HOME`, `TMPDIR` and
+(summary in `evidence/t6-writes.json`: 140 answers and written files plus 6 settings comparisons, 145 match,
+1 known, 0 unexplained). Each side gets its own temporary `CLIO_HOME`, `HOME`, `TMPDIR` and
 telemetry root seeded with the settings clio wrote at its first start; knowledge comes from a local signed
 GitHub-release/NuGet fixture, telemetry goes to a local collector, the registry is a local file, coding
 agents are stub CLIs. Nothing touches the network or this machine's clio settings, cache or agents.
@@ -44,23 +45,35 @@ three attempts) and publish atomically (`ReplaceFileW` with clio's retry window 
   writers next to three loops of real clio processes (`install-`, `update-`, `delete-knowledge`,
   `add-`/`disable-knowledge-source`, `experimental`) on the same home. Last run: 33 clio processes, 6 clio
   publications and 178 Go publications interleaved on the same sources, ~31,000 store reads, no violation;
-  afterwards clio's `info-knowledge` accepts the generations Go wrote and Go reads the one clio wrote.
+  afterwards clio's `info-knowledge` accepts the generations Go wrote and Go reads the one clio wrote. The
+  test also requires at least one clio publication during the run (earlier runs saw 1 to 6), only to show
+  that clio really competed; on a slow machine it can read 0, then rerun it. The invariants are the proof.
 - `TestLockExcludesAnotherProcess`, `TestSettingsWriteWaitsForAnotherProcess`: a second OS process holds the
   lock; this process is refused (try-lock) or waits (lock) until it lets go.
 - Negative control: with the OS lock disabled the same tests fail with lost settings updates, torn reads and
   "not owned by Clio" store errors.
 
+## Decisions for the owner
+
+- **Not done: the Git transport.** A `git`-type knowledge source can be added, enabled, disabled, removed and
+  deleted, but `install-` and `update-knowledge` do not run Git: they answer with a pointer to
+  `clio install-/update-knowledge`. The runtime does not read Git checkouts (T6 read side) and clio's Git
+  transport and repository reader (about 1,200 lines driving the Git CLI) are not ported. clio's "not
+  installed; use install-knowledge" refusal for an update is reproduced.
+- **A clio defect is reproduced.** clio 8.1.0.142 copies a Cursor plugin-runtime directory through an
+  inverted filter (`CopyDirectoryWithFilter` copies the entries the filter rejects), so only the
+  `__pycache__`/`.pyc` content of a runtime directory reaches `~/.cursor`, and Cursor gets empty runtime
+  directories. This server does the same so both leave the same files; switching to a working copy is one
+  function (`copyTree` in `internal/toolkit/cursor.go`). The defect should be reported to clio.
+- **Telemetry `clio_version` carries `creatio-mcp-go/<build>`.** If the collector validates that attribute as
+  a version, it answers 4xx and the batch is dropped as a permanent rejection without any visible error.
+  The alternative is a version-shaped value (for example clio's compatibility version `8.1.0`), which would
+  attribute the events to clio.
+
 ## Known differences, each with its reason
 
-- A `git`-type knowledge source can be added, enabled, disabled, removed and deleted, but `install-` and
-  `update-knowledge` do not run Git: they answer with a pointer to `clio install-/update-knowledge`. The
-  runtime does not read Git checkouts (T6 read side) and the Git CLI transport is not ported. clio's
-  "not installed; use install-knowledge" refusal for an update is reproduced.
-- Telemetry's `clio_version` attribute carries `creatio-mcp-go/<build>`; the served-content attributes clio
-  adds after guidance reads (`guidance_reads`, ...) are not emitted, this server does not meter them.
-- clio 8.1.0.142 copies a Cursor plugin-runtime directory through an inverted filter
-  (`CopyDirectoryWithFilter` copies entries the filter rejects), so only `__pycache__`/`.pyc` content of a
-  runtime directory reaches `~/.cursor`. This is reproduced for parity and is a clio defect to report.
+- Telemetry's served-content attributes clio adds after guidance reads (`guidance_reads`, ...) are not
+  emitted: this server does not meter served content.
 - Deliberately safer than clio, invisible in answers: a source directory is created with its ownership marker
   in place (temporary directory + rename), readers wait up to 200 ms for a missing marker and treat a
   directory deleted under them as "not installed", a publication re-creates a source directory a concurrent

@@ -148,6 +148,9 @@ func TestTelemetryToolsKeepClioConsent(t *testing.T) {
 		t.Fatalf("extra field: %v", answer)
 	}
 	recorded := t6Run(t, session, "send-telemetry", map[string]any{"session_id": "s1", "event_name": "workflow_started", "telemetry_consent": "granted"})
+	// The recorded event starts a background flush that reads the telemetry environment; it must finish
+	// while this test's isolated environment is still in place.
+	telemetryFlusher().Drain()
 	if recorded["status"] != "recorded" || len(recorded["event_id"].(string)) != 32 {
 		t.Fatalf("recorded: %v", recorded)
 	}

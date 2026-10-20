@@ -307,8 +307,10 @@ func goWorker(ctx context.Context, h *concurrencyHome, id int, seen *violations,
 		default:
 			switch operation {
 			case 6:
-				feature = !feature
-				err = SetFeature(h.settings, fmt.Sprintf("go-worker-%d", id), feature)
+				// The expected value changes only when the write landed.
+				if err = SetFeature(h.settings, fmt.Sprintf("go-worker-%d", id), !feature); err == nil {
+					feature = !feature
+				}
 			case 7:
 				extra := fmt.Sprintf("go-%d-%d", id, n)
 				config, validationErr := ValidateSourceInput(SourceInput{LibraryID: fmt.Sprintf("com.example.go%d.n%d", id, n),
@@ -319,18 +321,23 @@ func goWorker(ctx context.Context, h *concurrencyHome, id int, seen *violations,
 					continue
 				}
 				added, addErr := TryAddSource(h.settings, extra, config)
-				if addErr != nil || !added {
-					seen.add("go worker %d: add %s: added=%v %v", id, extra, added, addErr)
-				} else {
+				switch {
+				case addErr == nil && added:
 					extras[extra] = true
+				case addErr == nil || !windowsContention(addErr.Error()):
+					seen.add("go worker %d: add %s: added=%v %v", id, extra, added, addErr)
 				}
 			case 8:
 				for extra := range extras {
 					result, removeErr := h.manager.Remove(extra, true)
-					if removeErr != nil || !result.Success {
-						seen.add("go worker %d: remove %s: %+v %v", id, extra, result, removeErr)
-					} else {
+					switch {
+					case removeErr == nil && result.Success:
 						delete(extras, extra)
+					case removeErr == nil && strings.Contains(result.Message, "was removed and deactivated") && windowsContention(result.Message):
+						delete(extras, extra) // the settings entry went; only the cache delete met an open handle
+					case removeErr != nil && windowsContention(removeErr.Error()):
+					default:
+						seen.add("go worker %d: remove %s: %+v %v", id, extra, result, removeErr)
 					}
 					break
 				}

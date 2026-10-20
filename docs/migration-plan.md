@@ -141,7 +141,7 @@ T6 write side (2026-10-20), see [t6-write-status.md](status/t6-write-status.md).
 `export-component-registry`, `install-`, `update-`, `delete-toolkit`. They write clio's `appsettings.json`
 and installation store under clio's own OS locks (`.locks`, `appsettings.json.lock`), in clio's order and
 crash-safe publication sequence; a concurrency test runs Go writers and real clio processes on one home.
-`scripts/compare-t6-writes.py`: 145 answers, settings sections and written files equal clio's, one known
+`scripts/compare-t6-writes.py`: 140 answers and written files plus 6 settings comparisons; all equal clio's but one known
 difference. `info-knowledge checkUpdates` now contacts the publisher, and repository diagnostics are
 redacted with clio's rules before they are fenced.
 
