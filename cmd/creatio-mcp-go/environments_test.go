@@ -43,7 +43,7 @@ func newFakeCreatio(t *testing.T, name string, oauth bool) *fakeCreatio {
 				w.WriteHeader(http.StatusUnauthorized)
 				return
 			}
-			_, _ = fmt.Fprintf(w, `{"value":[{"Name":%q}]}`, name)
+			_, _ = fmt.Fprintf(w, `{"@odata.context":"http://x/odata/$metadata#Contact","value":[{"Name":%q}]}`, name)
 		default:
 			http.NotFound(w, r)
 		}
@@ -99,7 +99,7 @@ func newTwoEnvironments(t *testing.T) twoEnvironments {
 func odataName(t *testing.T, result *mcp.CallToolResult) string {
 	t.Helper()
 	var decoded struct {
-		Rows []map[string]any `json:"rows"`
+		Rows []map[string]any `json:"value"`
 	}
 	if result.IsError || json.Unmarshal([]byte(result.Content[0].(*mcp.TextContent).Text), &decoded) != nil || len(decoded.Rows) != 1 {
 		t.Fatalf("odata-read result = %#v", result.Content[0])
@@ -130,7 +130,7 @@ func TestOneProcessServesTwoEnvironmentsInParallel(t *testing.T) {
 				return
 			}
 			var decoded struct {
-				Rows []map[string]any `json:"rows"`
+				Rows []map[string]any `json:"value"`
 			}
 			if result.IsError || json.Unmarshal([]byte(result.Content[0].(*mcp.TextContent).Text), &decoded) != nil ||
 				len(decoded.Rows) != 1 || decoded.Rows[0]["Name"] != want {

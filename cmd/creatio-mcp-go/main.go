@@ -373,15 +373,8 @@ func invokeHiddenTool(ctx context.Context, envs *environments, hostTools hiddenT
 			SearchPattern: input.SearchPattern, Limit: input.Limit, UID: input.UID,
 		})), nil
 	case "odata-read":
-		client, err := envs.target(name, args, scopeName)
-		if err != nil {
-			return nil, errors.New(redacted(err))
-		}
-		result, err := invokeODataRead(ctx, client, withoutEnvironmentArgs(args, scopeName))
-		if err != nil {
-			return nil, err
-		}
-		return structuredToolResult(result), nil
+		// clio 8.1.0.142's ODataReadTool, shared with odata-read-to-file (tool_odata_read142.go).
+		return odataReadAnswer(ctx, envs, args)
 	case "find-empty-iis-port":
 		var input struct{}
 		// The port scan is local; clio ignores an environment selector here, and so does this server.
@@ -595,19 +588,6 @@ var hiddenToolContracts = map[string]map[string]any{
 	},
 }
 
-func invokeODataRead(ctx context.Context, client *creatio.Client, args map[string]any) (creatio.ODataReadResult, error) {
-	encoded, err := json.Marshal(args)
-	if err != nil {
-		return creatio.ODataReadResult{}, fmt.Errorf("encode odata-read arguments: %w", err)
-	}
-	var input creatio.ODataReadRequest
-	decoder := json.NewDecoder(bytes.NewReader(encoded))
-	decoder.DisallowUnknownFields()
-	if err := decoder.Decode(&input); err != nil {
-		return creatio.ODataReadResult{}, fmt.Errorf("decode odata-read arguments: %w", err)
-	}
-	return client.ODataRead(ctx, input)
-}
 
 // clioFailure prefixes a tool failure the way clio does. Argument-binding refusals carry no prefix in clio,
 // because they are raised before the tool runs.

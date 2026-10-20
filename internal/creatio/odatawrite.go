@@ -610,6 +610,8 @@ type odataCSDLType struct {
 	baseType      string
 	properties    map[string]bool
 	propertyTypes map[string]string
+	// navigations maps a NavigationProperty name to its target type's short name (read side only).
+	navigations map[string]string
 }
 
 // odataParseCSDL reads EntityType declarations the way clio's XmlReader loop does (DTDs prohibited).
@@ -651,7 +653,7 @@ func odataParseCSDL(body string) (map[string]*odataCSDLType, []string, error) {
 					if _, seen := types[name]; !seen {
 						order = append(order, name)
 					}
-					types[name] = &odataCSDLType{name: name, baseType: baseType, properties: map[string]bool{}, propertyTypes: map[string]string{}}
+					types[name] = &odataCSDLType{name: name, baseType: baseType, properties: map[string]bool{}, propertyTypes: map[string]string{}, navigations: map[string]string{}}
 					current = name
 					continue
 				}
@@ -667,6 +669,18 @@ func odataParseCSDL(body string) (map[string]*odataCSDLType, []string, error) {
 					if propertyType, ok := attribute("Type"); ok {
 						typ.propertyTypes[name] = propertyType
 					}
+				}
+			case "NavigationProperty":
+				name, hasName := attribute("Name")
+				target, hasType := attribute("Type")
+				if hasName && hasType {
+					if strings.HasPrefix(target, "Collection(") && strings.HasSuffix(target, ")") {
+						target = target[len("Collection(") : len(target)-1]
+					}
+					if dot := strings.LastIndex(target, "."); dot >= 0 {
+						target = target[dot+1:]
+					}
+					typ.navigations[name] = target
 				}
 			case "ComplexType", "EntityContainer":
 				current = ""
@@ -703,6 +717,11 @@ func odataCollectInherited(target *odataCSDLType, types map[string]*odataCSDLTyp
 		for name, typ := range base.propertyTypes {
 			if _, ok := derived.propertyTypes[name]; !ok {
 				derived.propertyTypes[name] = typ
+			}
+		}
+		for name, target := range base.navigations {
+			if _, ok := derived.navigations[name]; !ok {
+				derived.navigations[name] = target
 			}
 		}
 	}
