@@ -1,0 +1,189 @@
+[
+  {
+    "label": "object rights, default record rules and connections on a lookup this run creates",
+    "why": "T19 tools of clio 8.1.0.142. Each side creates its own application and a lookup in its package, turns operation permissions on with a grant to All employees, revokes one operation, turns them off again, turns record permissions on with one default rule, applies the rules to the (empty) table, turns record permissions off, then sets the lookup's Connections to its inherited CreatedBy lookup and back to none. Uninstalling the application removes the lookup with its rights. Not yet run on a stand: run it on the disposable stand only (decision D1).",
+    "steps": [
+      {
+        "kind": "write",
+        "label": "create-app",
+        "tool": "create-app",
+        "clio-run": true,
+        "creates": "UsrParity{run}{side}App",
+        "args": {
+          "name": "UsrParity{run}{side}App",
+          "code": "UsrParity{run}{side}App",
+          "template-code": "AppFreedomUI",
+          "with-mobile-pages": false,
+          "description": "Created by scripts/compare-mcp-writes.py; safe to delete"
+        },
+        "capture": {
+          "pkg": "$.package-name"
+        }
+      },
+      {
+        "kind": "cleanup",
+        "for": "UsrParity{run}{side}App",
+        "server": "clio",
+        "why": "Uninstalling the application removes its package, the lookup and the lookup's rights.",
+        "calls": [
+          {
+            "tool": "delete-app",
+            "clio-run": true,
+            "args": {
+              "app-name": "UsrParity{run}{side}App"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "write",
+        "label": "create lookup",
+        "tool": "create-lookup",
+        "clio-run": true,
+        "args": {
+          "schema-name": "UsrParity{run}{side}Rts",
+          "package-name": "{pkg}",
+          "title-localizations": {
+            "en-US": "Parity rights {run}"
+          }
+        }
+      },
+      {
+        "kind": "read-back",
+        "label": "read rights before",
+        "tool": "get-object-rights",
+        "args": {
+          "entity-schema-name": "UsrParity{run}{side}Rts"
+        }
+      },
+      {
+        "kind": "write",
+        "label": "grant and enable (preview)",
+        "tool": "set-object-rights",
+        "clio-run": true,
+        "args": {
+          "entity-schema-name": "UsrParity{run}{side}Rts",
+          "grantee": "a29a3ba5-4b0d-de11-9a51-005056c00008",
+          "operations": "read,create,edit,delete",
+          "enable-operation-permissions": true,
+          "preview": true
+        }
+      },
+      {
+        "kind": "write",
+        "label": "grant and enable",
+        "tool": "set-object-rights",
+        "clio-run": true,
+        "args": {
+          "entity-schema-name": "UsrParity{run}{side}Rts",
+          "grantee": "a29a3ba5-4b0d-de11-9a51-005056c00008",
+          "operations": "read,create,edit,delete",
+          "enable-operation-permissions": true
+        }
+      },
+      {
+        "kind": "write",
+        "label": "revoke delete",
+        "tool": "set-object-rights",
+        "clio-run": true,
+        "args": {
+          "entity-schema-name": "UsrParity{run}{side}Rts",
+          "grantee": "a29a3ba5-4b0d-de11-9a51-005056c00008",
+          "operations": "delete",
+          "revoke": true
+        }
+      },
+      {
+        "kind": "read-back",
+        "label": "read rights after revoke",
+        "tool": "get-object-rights",
+        "args": {
+          "entity-schema-name": "UsrParity{run}{side}Rts",
+          "grantee": "a29a3ba5-4b0d-de11-9a51-005056c00008"
+        }
+      },
+      {
+        "kind": "write",
+        "label": "disable operation permissions",
+        "tool": "set-object-rights",
+        "clio-run": true,
+        "args": {
+          "entity-schema-name": "UsrParity{run}{side}Rts",
+          "disable-operation-permissions": true
+        }
+      },
+      {
+        "kind": "write",
+        "label": "default rule and enable",
+        "tool": "set-default-record-rights",
+        "clio-run": true,
+        "args": {
+          "entity-schema-name": "UsrParity{run}{side}Rts",
+          "author": "a29a3ba5-4b0d-de11-9a51-005056c00008",
+          "grantee": "a29a3ba5-4b0d-de11-9a51-005056c00008",
+          "operations": "read,edit",
+          "enable-record-permissions": true
+        }
+      },
+      {
+        "kind": "write",
+        "label": "apply rules to existing records",
+        "tool": "apply-default-record-rights",
+        "clio-run": true,
+        "args": {
+          "entity-schema-name": "UsrParity{run}{side}Rts",
+          "timeout-seconds": 60
+        }
+      },
+      {
+        "kind": "write",
+        "label": "disable record permissions",
+        "tool": "set-default-record-rights",
+        "clio-run": true,
+        "args": {
+          "entity-schema-name": "UsrParity{run}{side}Rts",
+          "disable-record-permissions": true
+        }
+      },
+      {
+        "kind": "read-back",
+        "label": "read rights after",
+        "tool": "get-object-rights",
+        "args": {
+          "entity-schema-name": "UsrParity{run}{side}Rts"
+        }
+      },
+      {
+        "kind": "read-back",
+        "label": "read connections",
+        "tool": "get-entity-connections",
+        "args": {
+          "entity-schema-name": "UsrParity{run}{side}Rts",
+          "package-name": "{pkg}"
+        }
+      },
+      {
+        "kind": "write",
+        "label": "set connections",
+        "tool": "update-entity-connections",
+        "clio-run": true,
+        "args": {
+          "entity-schema-name": "UsrParity{run}{side}Rts",
+          "package-name": "{pkg}",
+          "connections": ["CreatedBy"]
+        }
+      },
+      {
+        "kind": "write",
+        "label": "clear connections",
+        "tool": "update-entity-connections",
+        "clio-run": true,
+        "args": {
+          "entity-schema-name": "UsrParity{run}{side}Rts",
+          "package-name": "{pkg}",
+          "connections": []
+        }
+      }
+    ]
+  }
+]
