@@ -266,6 +266,17 @@ class NeutralizeTest(unittest.TestCase):
             result = harness.expect({"step": "read", "path": path, "equals": equals}, "e", state)
             self.assertEqual(result["verdict"], verdict, (path, equals, result))
 
+    def test_known_difference_covers_its_subtree(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("compare_mcp_writes_known", HARNESS)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        known = {"$.executionlogmessages"}
+        self.assertTrue(module.is_known("$.executionlogmessages", known))
+        self.assertTrue(module.is_known("$.executionlogmessages[12].value", known))
+        self.assertFalse(module.is_known("$.executionlogmessagescount", known))
+        self.assertFalse(module.is_known("$.success", known))
+
 
 if __name__ == "__main__":
     unittest.main()

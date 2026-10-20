@@ -117,6 +117,11 @@ def resolve_path(value, path):
     return True, value
 
 
+def is_known(path, known):
+    """A known difference covers its own path and everything under it: `$.log` covers `$.log[3].value`."""
+    return any(path == entry or path.startswith(entry + ".") or path.startswith(entry + "[") for entry in known)
+
+
 def failed(value):
     return isinstance(value, dict) and (value.get("success") is False or value.get("exitcode", 0) != 0)
 
@@ -361,7 +366,7 @@ class Harness:
         compared = {side: neutralize(answers[side], state[side]["replacements"]) for side in SIDES}
         outcome, paths = verdict(compared["clio"], compared["go"])
         known = set(step.get("known-differences", []))
-        if outcome == "mismatch" and paths and all(path.split(":")[0] in known for path in paths):
+        if outcome == "mismatch" and paths and all(is_known(path.split(":")[0], known) for path in paths):
             outcome = "known-diff"
         if outcome == "match" and all(failed(answers[side]) for side in SIDES):
             # Identical refusals are not a tested write: nothing was created to read back.
