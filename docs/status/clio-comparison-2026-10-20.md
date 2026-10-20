@@ -1,5 +1,51 @@
 # creatio-mcp-go vs clio: comparison (2026-10-20)
 
+## Current state after the first wave (2026-10-20, `fdc3aa4`)
+
+The first wave of the 8.1.0.142 work (streams A–D) is merged: contracts and prompts moved to the
+8.1.0.142 baseline (`0bb560b`, `674b18d`), T19 rights and connections
+([status](t19-rights-connections-status.md)), T20 new arguments ([status](t20-new-args-status.md)) and the
+T6 write side ([status](t6-write-status.md)). Measured at `fdc3aa4` without a Creatio stand:
+
+| | clio 8.1.0.142 | creatio-mcp-go |
+|---|---:|---:|
+| Tools in the get-tool-contract index (+ `get-tool-contract`) | 235 + 1 | 191 + 1 |
+| Resident in tools/list | 19 | 19 |
+| MCP prompts | 74 | 74 |
+| Not served | — | 44: 33 T16 (decision D3) + 11 second wave |
+
+How the server side was counted: `get-tool-contract` with `detail=index-entries` and tools/list of the
+built binary; clio's side from `docs/clio-inventory.json`.
+
+Contract comparison, `python3 scripts/compare-contracts.py --clio-dll <clio 8.1.0.142 clio.dll> --go-bin
+<binary built at fdc3aa4>` (the evidence file `evidence/contracts-latest.json` is not committed):
+`{"match": 980, "known:not-ported": 88, "known:fit-multi-name": 1}`, 0 unexplained. The 88 are the 44
+not-served tools, each counted on two surfaces; the one `fit-multi-name` is the two-tool batch
+`get-page,update-page` that clio shortens to 18 KB.
+
+Of the next steps at the end of this report, 1–4 are done for the first wave: both scripts read the new
+`get-tool-contract` shape, the inventory and contracts are on 8.1.0.142, the four tools that refused the
+new arguments accept them (T20), and the 17 new tools are assigned (6 done in T19, 11 in the second wave).
+Step 5 is decided: the 15 T6 tools are ported, T16 stays deferred. Step 6 (the window run and the parity run
+on two stands) is still open; no stand was called for any of the 8.1.0.142 work.
+
+Still different from clio, each with its reason in the area report: a call without `environment-name`
+goes to this server's default target, where clio 8.1.0.142 refuses it; `git`-type knowledge sources are not
+installed or updated here; `validate-page` runs a declared subset of clio's rules (the `known-containers`
+check is among those not run).
+
+### Second wave (streams a and b)
+
+> **Placeholder — filled in by the orchestrator after the second wave is merged.** Tools being ported in
+> parallel now: `localize-page`, `page-smoke`, `trigger-smoke`, `place-section-in-workplace`,
+> `create-package`, `get-mobile-page-conversion-guide`, `execute-esq-to-file`, `odata-read-to-file`,
+> `get-component-info-to-file`, `get-request-info-to-file`, `list-entity-client-schemas-to-file`.
+> To fill: served count, contract-comparison result, links to `t21a-*` / `t21b-*` status files.
+
+The sections below are the report as written earlier on 2026-10-20, before the first wave merged: they
+describe `cc1462a` against the 8.1.0.134 contracts and are kept as recorded.
+
+
 State of `main` at `cc1462a` ("Make the stage-3 tests pass on Linux and Windows") compared with clio
 **8.1.0.134** (the parity baseline in `docs/clio-inventory.json`) and with clio **8.1.0.142** (latest release,
 2026-10-19).

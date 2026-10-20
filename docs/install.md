@@ -10,11 +10,13 @@ same release, unpack it, and note the full path to `creatio-mcp-go` (`creatio-mc
 
 ```bash
 shasum -a 256 -c SHA256SUMS --ignore-missing
-tar -xzf creatio-mcp-go_0.1.0_darwin_arm64.tar.gz
+tar -xzf creatio-mcp-go_0.2.0_darwin_arm64.tar.gz
 ```
 
-On Windows, compare `(Get-FileHash .\creatio-mcp-go_0.1.0_windows_amd64.zip).Hash` with the line in
-`SHA256SUMS`, then unpack the zip.
+On Windows, compare `(Get-FileHash .\creatio-mcp-go_0.2.0_windows_amd64.zip).Hash` with the line in
+`SHA256SUMS`, then unpack the zip. Archives are named `creatio-mcp-go_<version>_<os>_<arch>`
+(`scripts/build-release.sh`); `creatio-mcp-go --version` prints the release tag the binary was built from
+(a local `go build` prints `unstamped`).
 
 The macOS binaries are signed with a Developer ID certificate and notarized by Apple, so they start
 as downloaded; macOS checks the notarization online on the first launch. The Windows binary is not
@@ -25,7 +27,8 @@ signed: if Windows marks it as blocked, run `Unblock-File .\creatio-mcp-go.exe` 
 One server process serves every environment registered in clio, the same way clio does: each call
 names its target with `environment-name` (`get-fsm-mode` takes `environmentName`, as in clio).
 
-**clio's settings file.** The server reads clio's `appsettings.json` and never writes it:
+**clio's settings file.** The server reads clio's `appsettings.json` for the environments. Only the
+knowledge tools and `experimental` write it (section 6), under clio's own file lock:
 
 | Platform | File |
 |---|---|
@@ -131,53 +134,70 @@ environment and tell me how many applications there are."* A working setup answe
 starting; the first call then fails with the reason, for example `forms login rejected credentials` or
 `DataService SelectQuery returned HTTP 404`.
 
-tools/list carries the same resident tools as clio's, in clio's order and with clio's descriptions,
-input schemas and annotations — 15 of clio's 19 for now (`get-component-info`, `get-request-info`,
-`merge-creatio-artifact` and `clio-run-destructive` are not ported yet). The rest
-are called by name, directly or through `clio-run`, and `get-tool-contract` returns clio's contract for
-each tool served here. Every tool takes its arguments flat or wrapped as `{"args": {...}}`, the shape
-tools/list publishes:
+## 6. Which clio this matches
 
-| Tool | What it reads |
+The tool contracts are clio **8.1.0.142**'s: `docs/clio-inventory.json` records that version's live
+tools/list, get-tool-contract index and every contract, and the binary embeds it
+(`internal/cliocontract`). tools/list carries all 19 of clio's resident tools, in clio's order and with
+clio's descriptions, input schemas and annotations. `get-tool-contract` answers in clio 8.1.0.142's shape
+(the one-line `tool-index` with its `legend` by default; `detail=index-entries`, `full` or `short`), but
+only for the tools served here. Every tool takes its arguments flat or wrapped as `{"args": {...}}`, the
+shape tools/list publishes.
+
+clio's settings file and knowledge store are shared with the clio you have installed. For tools that
+write them, run a clio of the same version (8.1.0.142) next to this server: the file locks, store layout
+and settings keys are 8.1.0.142's.
+
+What is served, by area (the full per-tool list with the task that ported it is in
+[clio-inventory.md](clio-inventory.md) and the appendix of [migration-plan.md](migration-plan.md)):
+
+| Area | Examples |
 |---|---|
-| `list-environments` | Environments registered in clio's `appsettings.json`, secrets masked |
-| `list-apps` | Installed applications |
-| `list-packages` | Packages, with name filter and paging |
-| `list-app-sections` | Sections of one application |
-| `list-pages` | Freedom UI pages by package, application or name |
-| `get-entity-schema-properties` | Columns of an entity schema |
-| `execute-esq` | Any DataService SelectQuery (ESQ) passed as JSON |
-| `get-sql-schema` | Body of an SQL script schema |
-| `list-package-files`, `get-package-file` | Package files; need cliogate 2.0.0.47+ on the site |
-| `odata-read` | OData entity reads with projection, ordering and paging |
-| `get-app-info`, `find-app` | One application's package, entities and pages; search applications |
-| `find-entity-schema`, `get-entity-schema-column-properties` | Find entity schemas; one column's properties |
-| `list-entity-client-schemas` | Client (page) schemas built on an entity |
-| `get-page` | A Freedom UI page, written to `.clio-pages/<schema>/` as `body.js`, `bundle.json`, `meta.json` |
-| `read-entity-business-rules`, `read-page-business-rules` | Business rules of an entity or a page |
-| `get-record-rights` | Access rights on one record |
-| `get-process-signature` | Parameters of a business process |
-| `get-sys-setting`, `list-sys-settings` | System setting values |
-| `get-user-culture`, `get-schema-name-prefix`, `get-target-package` | Current user culture, schema name prefix, package new schemas go to |
-| `describe-environment` | Creatio version, runtime, current user and cliogate state |
-| `list-themes`, `list-printables`, `list-user-tasks`, `list-page-templates` | Themes, printables, process user tasks, page templates |
-| `get-page-hierarchy`, `get-client-unit-schema`, `get-schema` | Page layer chain; client and other schema bodies, optionally to `output-file` |
-| `validate-page` | Offline check of a Freedom UI page body; covers only part of clio's rules and says which |
-| `get-classic-page-sources`, `get-classic-list-columns` | Classic UI page sources; Classic section list columns |
-| `describe-business-process`, `get-process-page-facts` | Process graph; what a page offers to a process |
-| `get-sequence-context`, `read-data-binding-db`, `get-email-template`, `get-related-page-addon` | Sequences, package data bindings, email templates, related-page add-ons |
-| `inspect-user`, `inspect-role`, `inspect-license`, `inspect-access` | Users, roles, licenses, operation rights |
-| `check-theming-access`, `get-theme` | Theming rights; one theme's CSS |
-| `last-compilation-log`, `get-fsm-mode` | Last compilation result; file-system mode |
-| `compile-status`, `restart-status` | Status of jobs this server started; it starts none, so these answer not-found |
-| `resolve-oauth-system-user`, `verify-oauth-app` | OAuth technical user; check an OAuth client can get a token |
-| `dataforge-status`, `dataforge-context`, `dataforge-find-tables`, `dataforge-find-lookups`, `dataforge-get-relations`, `dataforge-get-table-columns` | Data Forge state and lookups through Creatio |
-| `find-empty-iis-port`, `start-creatio` | Local machine: free IIS port, start a local Creatio |
+| Environments and contracts | `list-environments`, `describe-environment`, `get-tool-contract`, `clio-run`, `clio-run-destructive` |
+| Applications | `list-apps`, `find-app`, `get-app-info`, `create-app`, `create-/update-/delete-app-section`, `delete-app`, `install-application` |
+| Entity and other schemas | `find-entity-schema`, `get-entity-schema-properties`, `create-entity-schema`, `create-lookup`, `update-entity-schema`, `modify-entity-schema-column`, `create-/update-/delete-schema`, `create-/update-/install-sql-schema`, `export-/import-schema` |
+| Pages | `list-pages`, `get-page`, `create-page`, `update-page`, `sync-pages`, `validate-page` (a declared subset of clio's rules), `create-related-page-addon`, `create-user-task-page`, `get-component-info`, `merge-creatio-artifact` |
+| Business rules | `read-/create-/update-/delete-entity-business-rules`, the same four for pages |
+| Data | `execute-esq`, `odata-read`, `odata-create`, `odata-update`, `odata-delete`, `execute-dataservice-batch`, `execute-sql-script`, data bindings (`create-data-binding(-db)`, `add-/remove-/upsert-…-row`), `run-process`, `get-request-info` |
+| Settings, users, access | `get-/list-/create-/update-sys-setting(s)`, `set-fsm-mode`, `manage-user`, `manage-role`, `manage-license`, `manage-access`, `inspect-*`, `get-/set-record-rights`, `get-/set-object-rights`, `set-/apply-default-record-rights`, `get-/update-entity-connections`, OAuth and identity tools |
+| Processes | `describe-business-process`, `create-business-process`, `modify-business-process(-as-new-version)`, `set-active-business-process-version`, `generate-process-model`, user tasks, `validate-process-graph`, `install-process-builder` |
+| Themes, branding, email | `list-themes`, `get-/create-/update-/delete-theme`, `build-theme`, `set-logo`, `set-background-image`, `upload-image`, `advise-theme-palette`, email templates |
+| Packages, compile, restart | `list-packages`, package files, `add-/remove-package-dependency`, `compile-creatio`, `compile-status`, `restart-by-environment-name`, `restart-by-credentials`, `restart-status`, `pkg-to-db`, `pkg-to-file-system`, `install-gate`, hotfix, `download-configuration-*`, Data Forge |
+| Knowledge, toolkit, telemetry | `get-guidance`, `install-/update-/delete-knowledge`, `add-/remove-/enable-/disable-knowledge-source`, `install-/update-/delete-toolkit`, `experimental`, `export-component-registry`, `get-telemetry-consent`, `send-telemetry`, `withdraw-telemetry-consent` |
+| Local machine | `find-empty-iis-port`, `start-creatio` |
 
-Nothing here writes to Creatio. `get-page` writes local files, the way clio does, under
-`output-directory` or the workspace root; tools with `output-file` write only that file and never
-overwrite one. `start-creatio` starts a local process; the `-write-probe`
-command-line flag inserts and deletes a test record and is not meant for everyday use.
+Not served in this release:
+
+- clio's local-machine, infrastructure and workspace tools (`deploy-creatio`, `uninstall-creatio`,
+  `restore-db-*`, `clear-redis-*`, `create-/push-/restore-workspace`, `reg-web-app`, `stop-creatio`,
+  `list-creatio-builds`, browser-session tools, …): 33 tools, kept in clio by decision D3
+  ([migration-plan.md](migration-plan.md#decisions-2026-10-03));
+- the clio 8.1.0.142 tools that are still being ported; the current list is in
+  [status/clio-comparison-2026-10-20.md](status/clio-comparison-2026-10-20.md).
+
+Calling a tool that is not served answers clio's "unknown tool" refusal with suggestions; use clio for it.
+
+## 7. Writes and their safety
+
+The write tools change the Creatio environment the call names, as clio's do. The same rules apply:
+
+- `clio-run` and `clio-run-destructive` run any tool, as in clio, and record which tool they
+  ran in `_meta["clio-run"]`;
+- a direct call by raw name to a hidden tool that is not read-only is refused with `confirmation-required`
+  and a pointer to `clio-run`, as clio refuses it;
+- an environment marked `Safe` in clio's settings is refused;
+- `get-page` and the tools with `output-file` / `output-directory` write local files the way clio does
+  and never overwrite an existing `output-file`;
+- long operations (compile, restart, installs, process runs) report progress and answer "still running"
+  after a response deadline while the work continues; `compile-status` / `restart-status` read the
+  operations this process started. `CLIO_MCP_RESPONSE_DEADLINE_SECONDS` overrides the deadline as in clio
+  (defaults in `cmd/creatio-mcp-go/operations.go` and `tool_pkg_write_restart.go`).
+
+The `-write-probe` command-line flag inserts and deletes a test record and is not meant for everyday use.
+
+What was compared with clio and how is recorded per area in [status/](status/). Many write success paths
+are checked against HTTP fixtures, a canned Creatio or a fake stand rather than a live site; the area
+reports say which.
 
 Found an answer that differs from clio's for the same call? Open an issue with the tool name and the
 arguments. To compare many calls at once, run `scripts/compare-mcp.py` against an environment
@@ -185,38 +205,51 @@ registered in clio; write tools are compared with `scripts/compare-mcp-writes.py
 disposable stand (see [parity.md](parity.md)). How releases are built, signed and published:
 [releasing.md](releasing.md).
 
-## 6. Guidance, prompts and resources
+## 8. Guidance, prompts and resources
 
 The server sends clio's `initialize` instructions, which tell the agent to read `get-guidance`
-`core-rules` and `routing` before any operation. The guidance comes from the clio-knowledge bundle that
-**clio** installed; this server reads the same cache and never downloads, updates, repairs or prunes it.
+`core-rules` and `routing` before any operation. The guidance comes from the clio-knowledge bundles in
+clio's knowledge store; this server reads the same store and, through the knowledge tools, installs,
+updates and deletes bundles in it the way clio does.
 
 - Where: clio's home — `CLIO_HOME`, else `~/creatio/clio` (macOS, Linux) or `%LOCALAPPDATA%\creatio\clio`
   (Windows) — its `appsettings.json` section `knowledge` (sources, `root-path`, `topic-pins`) and the
   installed generations under `knowledge/sources/`.
-- Prerequisite: run clio once so it installs the curated library — start `clio mcp-server` or run
-  `clio install-knowledge`. Until then `get-guidance` answers `success: false` with
-  `errorCode: guidance-unavailable` and a `diagnostics` text saying why. `clio update-knowledge` brings a
-  newer generation; this server picks it up on the next call, without a restart.
+- Prerequisite: the curated library must be installed. clio installs it when `clio mcp-server` starts and
+  updates it hourly; this server does neither on its own. Run `clio install-knowledge` (or start
+  `clio mcp-server` once). This server's `install-knowledge` through `clio-run` does the same, but its
+GitHub-release and NuGet transports are tested only against local fixtures, never against the real
+publishers ([status/t6-write-status.md](status/t6-write-status.md)), so prefer clio for this. Until then
+  `get-guidance` answers `success: false` with `errorCode: guidance-unavailable` and a `diagnostics` text
+  saying why. A newer generation installed by either server is picked up on the next call, without a
+  restart.
 - Trust: every generation is verified on activation exactly as clio verifies it — the ECDSA P-256 manifest
   signature (the built-in `com.creatio.clio` library only with the key pinned in clio, other libraries
   with the key file their source configures), the SHA-256 and length of every file, no unsigned files,
   the compatibility range (this server answers it as clio `8.1.0`, MCP tool contract `1.1.0`) and the
   required tools. A refused generation falls back to the previous one, as in clio.
-- Not read: Git-type sources (clio reads their checkout directly). `info-knowledge` with
-  `checkUpdates: true` reports `unknown`; use `clio info-knowledge --check-updates`.
+- Writes: `install-`, `update-`, `delete-knowledge`, `add-`, `remove-`, `enable-`, `disable-knowledge-source`
+  and `configure-knowledge-feedback-policy` write clio's store and `appsettings.json` under clio's own
+  OS locks, so clio and this server can run at the same time on one home
+  ([status/t6-write-status.md](status/t6-write-status.md)). Installing and updating use the GitHub-release
+  and NuGet transports. `info-knowledge` with `checkUpdates: true` contacts the publisher.
+- Not ported: Git-type sources. They can be added, enabled, disabled, removed and deleted, but
+  `install-knowledge` / `update-knowledge` answer with a pointer to `clio install-/update-knowledge`, and
+  the runtime does not read their checkout.
 
 Served from the bundle: `get-guidance`, the `docs://knowledge/{libraryId}/{itemId}` and legacy
 `docs://mcp/guides/...`, `docs://mcp/references/...` resources (`resources/list` pages them 100 at a
 time, as clio does), `list-knowledge-sources`, `info-knowledge`, `list-knowledge-examples`,
-`get-knowledge-feedback-policy`. `get-telemetry-consent` reads clio's `telemetry/consent.json`. These
-tools ignore `environment-name`: they read only local clio state.
+`get-knowledge-feedback-policy`. The knowledge and telemetry tools ignore `environment-name`: they work
+only on local clio state.
 
-The 74 MCP prompts are clio's, with the same names, arguments and text. `docs://help/command/{name}` is
-clio's CLI help: it is read from `help/en` of the newest clio installed as a .NET tool
+Telemetry: `get-telemetry-consent`, `send-telemetry` and `withdraw-telemetry-consent` use clio's consent
+file, outbox and run state. Events carry `creatio-mcp-go/<build>` as `clio_version`.
+
+The 74 MCP prompts are clio 8.1.0.142's, with the same names, arguments and text. `docs://help/command/{name}`
+is clio's CLI help: it is read from `help/en` of the newest clio installed as a .NET tool
 (`~/.dotnet/tools/.store/clio/...`); without one the answer is "`<name>` command does not provide
 documentation.".
 
-Still only in clio: installing, updating and deleting knowledge (`install-knowledge`, `update-knowledge`,
-`delete-knowledge`), managing sources (`add-`, `remove-`, `enable-`, `disable-knowledge-source`),
-`configure-knowledge-feedback-policy`, `send-telemetry`, `withdraw-telemetry-consent`.
+Toolkit: `install-`, `update-`, `delete-toolkit` set up clio's AI toolkit for Claude Code, Codex and Cursor
+by running the same CLI commands and writing the same files clio writes.
