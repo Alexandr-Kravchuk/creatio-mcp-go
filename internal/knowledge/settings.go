@@ -399,14 +399,38 @@ func validateSource(raw *rawSource) (SourceConfig, error) {
 		if raw.PackageID != nil || raw.TrustedKeyID != nil || raw.TrustedPublicKeyPath != nil {
 			return source, errors.New("NuGet package and signing settings are not valid for a Git knowledge source. (Parameter 'source')")
 		}
-		source.Branch = strings.TrimSpace(optional(raw.Branch))
-		source.Tag = strings.TrimSpace(optional(raw.Tag))
+		if source.Branch, err = normalizeGitReference(raw.Branch, "branch"); err != nil {
+			return source, err
+		}
+		if source.Tag, err = normalizeGitReference(raw.Tag, "tag"); err != nil {
+			return source, err
+		}
 		source.Commit = strings.ToLower(strings.TrimSpace(optional(raw.Commit)))
 		if source.Commit != "" && !gitCommitPattern.MatchString(source.Commit) {
 			return source, errors.New("Knowledge Git commit must be a complete SHA-1 or SHA-256 object ID. (Parameter 'value')")
 		}
 	}
 	return source, nil
+}
+
+// normalizeGitReference is clio's NormalizeGitReference: blank is absent, anything Git could read as an
+// option, a range or a revision expression is refused.
+func normalizeGitReference(value *string, kind string) (string, error) {
+	if value == nil || strings.TrimSpace(*value) == "" {
+		return "", nil
+	}
+	reference := strings.TrimSpace(*value)
+	unsafe := len([]rune(reference)) > 200 || strings.HasPrefix(reference, "-") || strings.Contains(reference, "..") ||
+		strings.Contains(reference, "@{") || strings.HasSuffix(reference, ".") || strings.HasSuffix(reference, "/")
+	for _, r := range reference {
+		if unicode.IsControl(r) || unicode.IsSpace(r) || strings.ContainsRune("~^:?*[\\\"", r) {
+			unsafe = true
+		}
+	}
+	if unsafe {
+		return "", fmt.Errorf("Knowledge Git %s is not a safe reference name. (Parameter '%s')", kind, kind)
+	}
+	return reference, nil
 }
 
 func normalizeTrustedKeyID(value *string) (string, error) {
