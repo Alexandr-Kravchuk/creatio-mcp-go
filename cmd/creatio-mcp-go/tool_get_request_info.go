@@ -24,34 +24,45 @@ var dataWriteRequestInfoAliases = map[string]string{
 // alias or unknown key is answered in the tool's own envelope.
 func init() {
 	registerTool(map[string]any{"name": "get-request-info"}, func(ctx context.Context, envs *environments, args map[string]any) (*mcp.CallToolResult, error) {
-		values := make(map[string]string, len(dataWriteRequestInfoArgNames))
-		for _, name := range dataWriteRequestInfoArgNames {
-			value, err := optionalStringArg(args, "get-request-info", name)
-			if err != nil {
-				return nil, err
-			}
-			values[name] = value
+		response, err := requestInfoAnswer(ctx, envs, "get-request-info", args)
+		if err != nil {
+			return nil, err
 		}
-		if message := dataWriteRequestInfoAliasError(args); message != "" {
-			return structuredToolResult(creatio.DataWriteRequestInfoFailure(message)), nil
-		}
-		request := creatio.DataWriteRequestInfoRequest{
-			RequestType:     values["request-type"],
-			Search:          values["search"],
-			SchemaType:      values["schema-type"],
-			Version:         values["version"],
-			EnvironmentName: values["environment-name"],
-			URI:             values["uri"],
-			Resolve: func() (*creatio.Client, error) {
-				client, failure, err := envs.resolve("get-request-info", args, scopeDirect)
-				if failure != nil {
-					return nil, failure
-				}
-				return client, err
-			},
-		}
-		return structuredToolResult(creatio.DataWriteRequestInfoGet(ctx, request)), nil
+		return structuredToolResult(response), nil
 	})
+}
+
+// requestInfoAnswer is RequestInfoTool.GetRequestInfo for the named tool (get-request-info, or its -to-file
+// twin, whose binding failures name the twin): a binding failure is raised, everything else is answered in
+// the tool's envelope.
+func requestInfoAnswer(ctx context.Context, envs *environments, tool string, args map[string]any) (creatio.DataWriteRequestInfoResponse, error) {
+	values := make(map[string]string, len(dataWriteRequestInfoArgNames))
+	for _, name := range dataWriteRequestInfoArgNames {
+		value, err := optionalStringArg(args, tool, name)
+		if err != nil {
+			return creatio.DataWriteRequestInfoResponse{}, err
+		}
+		values[name] = value
+	}
+	if message := dataWriteRequestInfoAliasError(args); message != "" {
+		return creatio.DataWriteRequestInfoFailure(message), nil
+	}
+	request := creatio.DataWriteRequestInfoRequest{
+		RequestType:     values["request-type"],
+		Search:          values["search"],
+		SchemaType:      values["schema-type"],
+		Version:         values["version"],
+		EnvironmentName: values["environment-name"],
+		URI:             values["uri"],
+		Resolve: func() (*creatio.Client, error) {
+			client, failure, err := envs.resolve(tool, args, scopeDirect)
+			if failure != nil {
+				return nil, failure
+			}
+			return client, err
+		},
+	}
+	return creatio.DataWriteRequestInfoGet(ctx, request), nil
 }
 
 // dataWriteRequestInfoAliasError is clio's BuildLegacyAliasError over the keys RequestInfoArgs does not bind.

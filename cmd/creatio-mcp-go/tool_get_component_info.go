@@ -25,35 +25,46 @@ var componentInfoAliases = map[string]string{
 // arguments fails binding (raised); an alias or unknown key is answered in the tool's own envelope.
 func init() {
 	registerTool(map[string]any{"name": "get-component-info"}, func(ctx context.Context, envs *environments, args map[string]any) (*mcp.CallToolResult, error) {
-		values := make(map[string]string, len(componentInfoArgNames))
-		for _, name := range componentInfoArgNames {
-			value, err := optionalStringArg(args, "get-component-info", name)
-			if err != nil {
-				return nil, err
-			}
-			values[name] = value
+		response, err := componentInfoAnswer(ctx, envs, "get-component-info", args)
+		if err != nil {
+			return nil, err
 		}
-		if message := componentInfoAliasError(args); message != "" {
-			return structuredToolResult(creatio.ComponentInfoArgumentFailure(message)), nil
-		}
-		request := creatio.ComponentInfoRequest{
-			ComponentType:   values["component-type"],
-			Composite:       values["composite"],
-			Search:          values["search"],
-			SchemaType:      values["schema-type"],
-			Version:         values["version"],
-			EnvironmentName: values["environment-name"],
-			URI:             values["uri"],
-			Resolve: func() (*creatio.Client, error) {
-				client, failure, err := envs.resolve("get-component-info", args, scopeDirect)
-				if failure != nil {
-					return nil, failure
-				}
-				return client, err
-			},
-		}
-		return structuredToolResult(creatio.ComponentInfoGet(ctx, request)), nil
+		return structuredToolResult(response), nil
 	})
+}
+
+// componentInfoAnswer is ComponentInfoTool.GetComponentInfo for the named tool (get-component-info, or its
+// -to-file twin, whose binding failures name the twin): a binding failure is raised, everything else is
+// answered in the tool's envelope.
+func componentInfoAnswer(ctx context.Context, envs *environments, tool string, args map[string]any) (creatio.ComponentInfoResponse, error) {
+	values := make(map[string]string, len(componentInfoArgNames))
+	for _, name := range componentInfoArgNames {
+		value, err := optionalStringArg(args, tool, name)
+		if err != nil {
+			return creatio.ComponentInfoResponse{}, err
+		}
+		values[name] = value
+	}
+	if message := componentInfoAliasError(args); message != "" {
+		return creatio.ComponentInfoArgumentFailure(message), nil
+	}
+	request := creatio.ComponentInfoRequest{
+		ComponentType:   values["component-type"],
+		Composite:       values["composite"],
+		Search:          values["search"],
+		SchemaType:      values["schema-type"],
+		Version:         values["version"],
+		EnvironmentName: values["environment-name"],
+		URI:             values["uri"],
+		Resolve: func() (*creatio.Client, error) {
+			client, failure, err := envs.resolve(tool, args, scopeDirect)
+			if failure != nil {
+				return nil, failure
+			}
+			return client, err
+		},
+	}
+	return creatio.ComponentInfoGet(ctx, request), nil
 }
 
 // componentInfoAliasError is clio's BuildLegacyAliasError over the keys ComponentInfoArgs does not bind.
