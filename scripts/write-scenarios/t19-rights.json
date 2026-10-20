@@ -68,6 +68,66 @@
         "server": "clio",
         "calls": [
           {
+            "tool": "execute-esq",
+            "clio-run": true,
+            "args": {
+              "query": {
+                "rootSchemaName": "Lookup",
+                "operationType": 0,
+                "rowCount": 1,
+                "columns": {
+                  "items": {
+                    "Id": {
+                      "expression": {
+                        "expressionType": 0,
+                        "columnPath": "Id"
+                      }
+                    }
+                  }
+                },
+                "filters": {
+                  "filterType": 6,
+                  "isEnabled": true,
+                  "logicalOperation": 0,
+                  "items": {
+                    "own": {
+                      "filterType": 1,
+                      "comparisonType": 3,
+                      "isEnabled": true,
+                      "leftExpression": {
+                        "expressionType": 0,
+                        "columnPath": "Name"
+                      },
+                      "rightExpression": {
+                        "expressionType": 2,
+                        "parameter": {
+                          "dataValueType": 1,
+                          "value": "Parity rights {run}"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "capture": {
+              "lookupRowId": "$.rows[0].id"
+            }
+          },
+          {
+            "tool": "execute-dataservice-batch",
+            "clio-run": true,
+            "args": {
+              "operations": [
+                {
+                  "operation": "delete",
+                  "schema-name": "Lookup",
+                  "record-id": "{lookupRowId}"
+                }
+              ]
+            }
+          },
+          {
             "tool": "delete-schema",
             "clio-run": true,
             "args": {
@@ -75,7 +135,8 @@
               "remote": true
             }
           }
-        ]
+        ],
+        "why": "create-lookup registers the lookup in Lookups; neither delete-schema nor delete-app removes that row, so it is deleted first (found by its caption), as in window/t8.json."
       },
       {
         "kind": "read-back",

@@ -12,17 +12,42 @@
         "creates": "UsrParity{run}{side}Rp",
         "retry-while": "temporarily unavailable",
         "retry-seconds": 300,
-        "args": {"name": "Parity {run} {side} Rp", "code": "Parity{run}{side}Rp", "template-code": "AppFreedomUI", "with-mobile-pages": false},
-        "capture": {"pkg": "$.packagename", "pkguid": "$.packageuid", "appuid": "$.applicationid"},
-        "known-differences": ["$.applicationname", "$.entities[0].caption", "$.entities[0].uid", "$.pages[0].uid",
-                              "$.pages[1].uid", "$.pages[2].uid", "$.dataforge.warnings[0]", "$.dataforge.warnings[1]"],
+        "args": {
+          "name": "Parity {run} {side} Rp",
+          "code": "Parity{run}{side}Rp",
+          "template-code": "AppFreedomUI",
+          "with-mobile-pages": false
+        },
+        "capture": {
+          "pkg": "$.packagename",
+          "pkguid": "$.packageuid",
+          "appuid": "$.applicationid"
+        },
+        "known-differences": [
+          "$.applicationname",
+          "$.entities[0].caption",
+          "$.entities[0].uid",
+          "$.pages[0].uid",
+          "$.pages[1].uid",
+          "$.pages[2].uid",
+          "$.dataforge.warnings[0]",
+          "$.dataforge.warnings[1]"
+        ],
         "why": "Setup through clio on both sides; ids and the display name differ per side."
       },
       {
         "kind": "cleanup",
         "for": "UsrParity{run}{side}Rp",
         "server": "clio",
-        "calls": [{"tool": "delete-app", "clio-run": true, "args": {"app-name": "UsrParity{run}{side}Rp"}}]
+        "calls": [
+          {
+            "tool": "delete-app",
+            "clio-run": true,
+            "args": {
+              "app-name": "UsrParity{run}{side}Rp"
+            }
+          }
+        ]
       },
       {
         "kind": "write",
@@ -37,23 +62,56 @@
         }
       },
       {
+        "kind": "cleanup",
+        "for": "UsrParity{run}{side}Proc",
+        "server": "clio",
+        "why": "delete-app removes the process with the package; this cleanup records the removal and covers a run that stops before delete-app.",
+        "calls": [
+          {
+            "tool": "delete-schema",
+            "clio-run": true,
+            "args": {
+              "schema-name": "UsrParity{run}{side}Proc",
+              "remote": true
+            }
+          }
+        ]
+      },
+      {
         "kind": "write",
         "label": "run own process",
         "tool": "run-process",
         "clio-run": true,
         "target": "UsrParity{run}{side}Proc",
-        "args": {"process-name": "UsrParity{run}{side}Proc", "parameters": {"UsrParityText": "parity"}},
-        "known-differences": ["$.processid"],
+        "args": {
+          "process-name": "UsrParity{run}{side}Proc",
+          "parameters": {
+            "UsrParityText": "parity"
+          }
+        },
+        "known-differences": [
+          "$.processid"
+        ],
         "why": "Each launch gets its own run id."
       },
-      {"kind": "expect", "step": "run own process", "path": "$.status", "equals": "completed"},
+      {
+        "kind": "expect",
+        "step": "run own process",
+        "path": "$.status",
+        "equals": "completed"
+      },
       {
         "kind": "write",
         "label": "run own process with a wrong-case parameter",
         "tool": "run-process",
         "clio-run": true,
         "target": "UsrParity{run}{side}Proc",
-        "args": {"process-name": "UsrParity{run}{side}Proc", "parameters": {"usrparitytext": "parity"}}
+        "args": {
+          "process-name": "UsrParity{run}{side}Proc",
+          "parameters": {
+            "usrparitytext": "parity"
+          }
+        }
       }
     ]
   },
@@ -68,16 +126,38 @@
         "clio-run": true,
         "server": "clio",
         "creates": "UsrParity{run}{side}Sql",
-        "args": {"entity": "Contact", "rows": [{"Name": "UsrParity{run}{side}Sql", "Notes": "Parity initial"}]},
-        "capture": {"id": "$.results[0].id"}
+        "args": {
+          "entity": "Contact",
+          "rows": [
+            {
+              "Name": "UsrParity{run}{side}Sql",
+              "Notes": "Parity initial"
+            }
+          ]
+        },
+        "capture": {
+          "id": "$.results[0].id"
+        }
       },
       {
         "kind": "cleanup",
         "for": "UsrParity{run}{side}Sql",
         "server": "clio",
         "calls": [
-          {"tool": "execute-dataservice-batch", "clio-run": true, "destructive": true,
-           "args": {"operations": [{"operation": "delete", "schema-name": "Contact", "record-id": "{id}"}]}}
+          {
+            "tool": "execute-dataservice-batch",
+            "clio-run": true,
+            "destructive": true,
+            "args": {
+              "operations": [
+                {
+                  "operation": "delete",
+                  "schema-name": "Contact",
+                  "record-id": "{id}"
+                }
+              ]
+            }
+          }
         ]
       },
       {
@@ -86,7 +166,9 @@
         "tool": "execute-sql-script",
         "clio-run": true,
         "target": "UsrParity{run}{side}Sql",
-        "args": {"script": "UPDATE Contact SET Notes = 'Parity updated' WHERE Name = 'UsrParity{run}{side}Sql'"}
+        "args": {
+          "script": "UPDATE Contact SET Notes = 'Parity updated' WHERE Name = 'UsrParity{run}{side}Sql'"
+        }
       },
       {
         "kind": "read-back",
@@ -94,7 +176,9 @@
         "target": "UsrParity{run}{side}Sql",
         "tool": "execute-sql-script",
         "clio-run": true,
-        "args": {"script": "SELECT Name, Notes FROM Contact WHERE Name = 'UsrParity{run}{side}Sql'"}
+        "args": {
+          "script": "SELECT Name, Notes FROM Contact WHERE Name = 'UsrParity{run}{side}Sql'"
+        }
       },
       {
         "kind": "read-back",
@@ -102,7 +186,10 @@
         "target": "UsrParity{run}{side}Sql",
         "tool": "execute-sql-script",
         "clio-run": true,
-        "args": {"script": "SELECT Name, Notes FROM Contact WHERE Name = 'UsrParity{run}{side}Sql'", "view": "json"}
+        "args": {
+          "script": "SELECT Name, Notes FROM Contact WHERE Name = 'UsrParity{run}{side}Sql'",
+          "view": "json"
+        }
       }
     ]
   }
