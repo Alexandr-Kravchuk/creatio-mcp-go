@@ -1,7 +1,7 @@
 # creatio-mcp-go v0.2.0 — release notes (draft)
 
-> **Draft.** Not released yet. Numbers are as of `fdc3aa4` (2026-10-20, after the first wave of the clio
-> 8.1.0.142 work); the second-wave section below is filled in after streams a and b are merged.
+> **Draft.** Not released yet. Numbers are as of `caa2eb0` (2026-10-20, after both waves of the clio
+> 8.1.0.142 work, streams a and b of the second wave merged).
 
 v0.1.0 (2026-09-28) was a read-only preview: 14 tools, one Creatio site per process set by `CREATIO_*`
 variables. v0.2.0 is the first release that can stand in for `clio mcp-server` in everyday agent work —
@@ -9,7 +9,7 @@ reads **and writes**, every clio environment from one process, and clio 8.1.0.14
 
 ## Highlights
 
-- **191 of clio 8.1.0.142's 235 tools** (plus `get-tool-contract`), with the same names, arguments,
+- **200 of clio 8.1.0.142's 235 tools** (plus `get-tool-contract`), with the same names, arguments,
   contracts and answer shapes. All 19 resident tools are in tools/list, in clio's order.
   Source: [status/clio-comparison-2026-10-20.md](status/clio-comparison-2026-10-20.md).
 - **Write tools for every Creatio area** clio covers: applications, entity and other schemas, Freedom UI
@@ -20,7 +20,7 @@ reads **and writes**, every clio environment from one process, and clio 8.1.0.14
 - **clio's contracts, served from clio's own answers.** tools/list and `get-tool-contract` come from a
   recorded clio 8.1.0.142 inventory embedded in the binary, in 8.1.0.142's new `get-tool-contract` shape
   (`tool-index` + `legend`, `detail=index-entries|full|short`). Contract comparison against clio 8.1.0.142:
-  980 match, 0 unexplained.
+  1025 match, 0 unexplained.
 - **Guidance, prompts and resources from clio-knowledge** — the same signed bundles clio installs, verified
   the same way; all 74 prompts (T6).
 - **Write safety like clio's:** `clio-run` / `clio-run-destructive`, `confirmation-required` for a direct
@@ -73,15 +73,84 @@ CI on every push (build, `go vet`, tests, Linux and Windows), a release workflow
 script with macOS signing and notarization ([releasing.md](releasing.md)). `creatio-mcp-go --version`
 prints the release tag.
 
+## Breaking changes
+
+- **`odata-read` takes clio 8.1.0.142's arguments and answers in its shape.** A call built from the
+  contract `get-tool-contract` returns (`filters`, `expand`, `select`, `order-by`, `top`, `skip`, `count`, …)
+  is served; before, filters and expands were refused and the ordering key was `orderBy`. The answer is
+  clio's (`success`, `count`, `value`, `next-link`, `total-count`, `error-code`, `correlation-id`, …);
+  the v0.1.x `{rows, count}` answer is gone, and failures come back as clio's answer with `success: false`
+  instead of a raised tool error. The old `orderBy` key is refused with clio's rename hint to `order-by`.
+- **`execute-esq` answers as clio 8.1.0.142's `ExecuteEsqTool`:** a call that carries SQL text or a flat
+  query (schema, columns or filters outside a SelectQuery) is refused with clio's hint and, where clio can
+  translate it, a `suggested-query`; SelectQuery shape problems are refused as clio refuses them; unknown
+  members come back as `warnings`; a result over the inline 200 000-byte ceiling points to
+  `execute-esq-to-file`.
+
+Both now share their code with the `-to-file` twins below. Details:
+[status/t21b-to-file-status.md](status/t21b-to-file-status.md).
+
 ## Second wave (stream a/b)
 
-> **Placeholder — the orchestrator fills this in after streams a and b are merged.**
-> Tools being ported in parallel now:
-> `localize-page`, `page-smoke`, `trigger-smoke`, `place-section-in-workplace`, `create-package`,
-> `get-mobile-page-conversion-guide`, `execute-esq-to-file`, `odata-read-to-file`,
-> `get-component-info-to-file`, `get-request-info-to-file`, `list-entity-client-schemas-to-file`.
-> To update after the merge: the tool count in Highlights, the contract-comparison numbers, links to the
-> status files.
+The other 11 tools clio 8.1.0.142 added (T21). Nine are ported from the 8.1.0.142 source and compared with
+clio 8.1.0.142's own MCP server, without a Creatio stand: refusal paths against an unreachable environment
+and the rest against a fake stand (the two documentation twins read the documentation from clio's CDN on
+both sides).
+
+### Pages, packages and smoke checks (T21a)
+
+| Tool | No stand | Fake stand |
+|---|---|---|
+| `create-package` | 11 cases: 10 match, 1 both failed | 18 cases: 8 match, 10 differ only in the fresh `package-uid` |
+| `place-section-in-workplace` | 21 cases: 20 match, 1 both failed | 21 cases: 13 match, 8 differ only in ids generated on each side |
+| `localize-page` | 22 cases: 21 match, 1 both failed | 23 cases: 23 match |
+| `trigger-smoke` | 25 cases: 25 match | 14 cases: 14 match |
+
+Not ported in this release:
+
+- **`page-smoke`** opens a Freedom UI page in a headless Chromium and drives it over the DevTools
+  protocol, with browser discovery, a headless-shell download and a consent question — about 5,300 lines
+  of clio. Registering only its argument checks would answer without running a check, so it is not
+  registered; use clio for it.
+- **`get-mobile-page-conversion-guide`** is computed by clio's web-to-mobile analysis engine (about
+  15,800 lines); nothing short of that engine produces its answer.
+
+Details: [status/t21a-page-package-status.md](status/t21a-page-package-status.md).
+
+### Answers written to a file (T21b)
+
+| Tool | Refusal paths | Fake stand |
+|---|---|---|
+| `execute-esq-to-file` | 17 match, 3 known | 12 match; 5 files byte-identical |
+| `odata-read-to-file` | 36 match, 4 known | 17 match; 6 files byte-identical; rejected bodies write nothing on both sides |
+| `get-component-info-to-file` | — | 15 cases, 15 match; 5 documentation files byte-identical |
+| `get-request-info-to-file` | — | 9 cases, 9 match; 3 documentation files byte-identical |
+| `list-entity-client-schemas-to-file` | 7 match, 2 known | 3 match; 2 files byte-identical |
+| `odata-read` (inline) | — | 15 match |
+| `execute-esq` (inline) | — | 5 match, 1 known |
+
+"Known" are differences in wording (Go's transport and JSON-parser texts) and in the order of argument
+keys, each listed in the status file.
+`output-file` follows clio's path rules (inside the workspace or the OS temp directory, never in clio's
+configuration directory, never over an existing file); content is written as bytes, the same on Windows and
+Unix. Details: [status/t21b-to-file-status.md](status/t21b-to-file-status.md).
+
+### Second-wave differences from clio
+
+- `create-package`, `place-section-in-workplace`, `localize-page`, `trigger-smoke`: the answer text is
+  written in System.Text.Json's default spelling (`'`, `→`), clio writes it relaxed; the JSON values are
+  the same.
+- `create-package`, `place-section-in-workplace`: `QuerySysSettings` is sent with
+  `sysSettingsNameCollection`; clio writes `SysSettingsNameCollection`. Creatio reads both.
+- `localize-page`: malformed `resources` JSON is refused with the Go decoder's wording after clio's prefix.
+- `trigger-smoke`: the create body lists the values sorted and re-encodes numbers (`1.50` is sent as `1.5`).
+- `get-component-info-to-file`, `get-request-info-to-file`: `documentationSource` (`cdn` / `cache`) depends
+  on whether the documentation cache was warm.
+- The five `-to-file` tools: a symbolic link swapped into a parent directory between the path check and the
+  write is not detected.
+- `odata-read`: reads at most 4 MiB inline and answers a larger body as a transport failure; clio's inline
+  read has no ceiling. `odata-read-to-file`'s 64 MiB refusal may report a different byte count than clio.
+  Neither was measured.
 
 ## Known differences from clio
 
@@ -95,7 +164,8 @@ likely to notice:
 - Several unknown argument keys or payload synonyms in one call are listed in sorted order; clio lists
   them in request order.
 - Transport failures (TLS, timeouts) read in Go's words; refused connections, unknown hosts and resets
-  use .NET's texts where the area reports say so.
+  use .NET's texts where the area reports say so (the T21b tools word a refused connection in Go's words
+  too).
 - Floating-point last digits in `advise-theme-palette`, JSON key order of some `descriptor` /
   `operations` objects.
 - Telemetry events carry `creatio-mcp-go/<build>` as `clio_version`; served-content attributes are not
@@ -105,6 +175,7 @@ likely to notice:
 
 ## Not in this release
 
+- **`page-smoke` and `get-mobile-page-conversion-guide`** (see "Second wave" above): use clio for them.
 - **33 local-machine, infrastructure and workspace tools** (T16: `deploy-creatio`, `uninstall-creatio`,
   `restore-db-*`, `clear-redis-*`, `create-/push-/restore-workspace`, `reg-web-app`, `stop-creatio`,
   browser-session tools, …). They stay in clio on purpose (decision D3 in
@@ -117,9 +188,11 @@ likely to notice:
 
 ## Verification status
 
-- Contracts: compared live with clio 8.1.0.142's MCP server, 0 unexplained differences.
+- Contracts: compared live with clio 8.1.0.142's MCP server at `caa2eb0`: 1025 match, 70 known not-ported
+  rows (the 35 tools not served, each on two surfaces), 1 known multi-name batch clio shortens,
+  0 unexplained.
 - Reads: live parity against clio 8.1.0.134 on two stands, 706 calls, 0 mismatches (2026-10-03).
-- The 8.1.0.142 work (T19, T20, T6 writes) was compared with clio 8.1.0.142 without a live Creatio: on
+- The 8.1.0.142 work (T19, T20, T6 writes, T21a, T21b) was compared with clio 8.1.0.142 without a live Creatio: on
   refusal paths, fake stands and local fixtures.
 - Several write success paths (compile, restart, package installs, `install-application`,
   `install-process-builder`, `set-logo` / `set-background-image`, `run-process` launches, Data Forge

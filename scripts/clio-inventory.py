@@ -96,11 +96,15 @@ TASKS = {
     ],
     "T19 new in clio 8.1.0.142": [
         "apply-default-record-rights", "create-package", "execute-esq-to-file", "get-component-info-to-file",
-        "get-entity-connections", "get-mobile-page-conversion-guide", "get-object-rights",
+        "get-entity-connections", "get-object-rights",
         "get-request-info-to-file", "list-entity-client-schemas-to-file", "localize-page", "odata-read-to-file",
-        "page-smoke", "place-section-in-workplace", "set-default-record-rights", "set-object-rights",
+        "place-section-in-workplace", "set-default-record-rights", "set-object-rights",
         "trigger-smoke", "update-entity-connections",
     ],
+    # The two second-wave tools T21a decided not to port in v0.2.0 (docs/status/t21a-page-package-status.md).
+    "T21a not ported: needs a headless Chromium driven over CDP, plus browser discovery, download and consent": [
+        "page-smoke"],
+    "T21a not ported: clio's ~15,800-line web-to-mobile analysis engine": ["get-mobile-page-conversion-guide"],
 }
 UNASSIGNED = "unassigned (no task yet; decide before T17)"
 DONE = "done (served by creatio-mcp-go)"

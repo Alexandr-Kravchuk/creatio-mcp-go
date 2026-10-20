@@ -133,7 +133,8 @@ Runs of 2026-10-20 against clio 8.1.0.142; `evidence/t21b-validation-latest.json
 - `docs/implementation.md`, `README.md` and `docs/install.md` still describe the old odata-read /
   execute-esq, and the generated `docs/clio-inventory.md` still labels the five tools "T19 new in clio
   8.1.0.142" (regenerating it needs a live clio run and rewrites the migration-plan appendix); left to the
-  coordinator.
+  coordinator. Done after the merge: the inventory and the appendix were regenerated at `caa2eb0` and these
+  three documents corrected.
 - Live parity cases: `scripts/mcp-parity-cases.json` has one execute-esq case, a valid 142 SelectQuery; no
   case uses odata-read, so nothing there relies on the pre-142 shapes.
 - The execute-esq switch commit was reverted on a scratch tree: the result builds and passes `go vet`.

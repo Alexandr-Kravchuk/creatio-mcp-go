@@ -154,15 +154,15 @@ What is served, by area (the full per-tool list with the task that ported it is 
 | Area | Examples |
 |---|---|
 | Environments and contracts | `list-environments`, `describe-environment`, `get-tool-contract`, `clio-run`, `clio-run-destructive` |
-| Applications | `list-apps`, `find-app`, `get-app-info`, `create-app`, `create-/update-/delete-app-section`, `delete-app`, `install-application` |
+| Applications | `list-apps`, `find-app`, `get-app-info`, `create-app`, `create-/update-/delete-app-section`, `delete-app`, `install-application`, `place-section-in-workplace` |
 | Entity and other schemas | `find-entity-schema`, `get-entity-schema-properties`, `create-entity-schema`, `create-lookup`, `update-entity-schema`, `modify-entity-schema-column`, `create-/update-/delete-schema`, `create-/update-/install-sql-schema`, `export-/import-schema` |
-| Pages | `list-pages`, `get-page`, `create-page`, `update-page`, `sync-pages`, `validate-page` (a declared subset of clio's rules), `create-related-page-addon`, `create-user-task-page`, `get-component-info`, `merge-creatio-artifact` |
+| Pages | `list-pages`, `get-page`, `create-page`, `update-page`, `sync-pages`, `validate-page` (a declared subset of clio's rules), `create-related-page-addon`, `create-user-task-page`, `get-component-info(-to-file)`, `list-entity-client-schemas(-to-file)`, `localize-page`, `merge-creatio-artifact` |
 | Business rules | `read-/create-/update-/delete-entity-business-rules`, the same four for pages |
-| Data | `execute-esq`, `odata-read`, `odata-create`, `odata-update`, `odata-delete`, `execute-dataservice-batch`, `execute-sql-script`, data bindings (`create-data-binding(-db)`, `add-/remove-/upsert-…-row`), `run-process`, `get-request-info` |
+| Data | `execute-esq(-to-file)`, `odata-read(-to-file)`, `odata-create`, `odata-update`, `odata-delete`, `execute-dataservice-batch`, `execute-sql-script`, data bindings (`create-data-binding(-db)`, `add-/remove-/upsert-…-row`), `run-process`, `get-request-info(-to-file)` |
 | Settings, users, access | `get-/list-/create-/update-sys-setting(s)`, `set-fsm-mode`, `manage-user`, `manage-role`, `manage-license`, `manage-access`, `inspect-*`, `get-/set-record-rights`, `get-/set-object-rights`, `set-/apply-default-record-rights`, `get-/update-entity-connections`, OAuth and identity tools |
-| Processes | `describe-business-process`, `create-business-process`, `modify-business-process(-as-new-version)`, `set-active-business-process-version`, `generate-process-model`, user tasks, `validate-process-graph`, `install-process-builder` |
+| Processes | `describe-business-process`, `create-business-process`, `modify-business-process(-as-new-version)`, `set-active-business-process-version`, `generate-process-model`, user tasks, `validate-process-graph`, `install-process-builder`, `trigger-smoke` |
 | Themes, branding, email | `list-themes`, `get-/create-/update-/delete-theme`, `build-theme`, `set-logo`, `set-background-image`, `upload-image`, `advise-theme-palette`, email templates |
-| Packages, compile, restart | `list-packages`, package files, `add-/remove-package-dependency`, `compile-creatio`, `compile-status`, `restart-by-environment-name`, `restart-by-credentials`, `restart-status`, `pkg-to-db`, `pkg-to-file-system`, `install-gate`, hotfix, `download-configuration-*`, Data Forge |
+| Packages, compile, restart | `list-packages`, `create-package`, package files, `add-/remove-package-dependency`, `compile-creatio`, `compile-status`, `restart-by-environment-name`, `restart-by-credentials`, `restart-status`, `pkg-to-db`, `pkg-to-file-system`, `install-gate`, hotfix, `download-configuration-*`, Data Forge |
 | Knowledge, toolkit, telemetry | `get-guidance`, `install-/update-/delete-knowledge`, `add-/remove-/enable-/disable-knowledge-source`, `install-/update-/delete-toolkit`, `experimental`, `export-component-registry`, `get-telemetry-consent`, `send-telemetry`, `withdraw-telemetry-consent` |
 | Local machine | `find-empty-iis-port`, `start-creatio` |
 
@@ -172,8 +172,14 @@ Not served in this release:
   `restore-db-*`, `clear-redis-*`, `create-/push-/restore-workspace`, `reg-web-app`, `stop-creatio`,
   `list-creatio-builds`, browser-session tools, …): 33 tools, kept in clio by decision D3
   ([migration-plan.md](migration-plan.md#decisions-2026-10-03));
-- the clio 8.1.0.142 tools that are still being ported; the current list is in
-  [status/clio-comparison-2026-10-20.md](status/clio-comparison-2026-10-20.md).
+- `page-smoke` and `get-mobile-page-conversion-guide`, new in clio 8.1.0.142: the first needs a headless
+  Chromium driven over the DevTools protocol, the second clio's web-to-mobile analysis engine
+  ([status/t21a-page-package-status.md](status/t21a-page-package-status.md#not-ported)).
+
+`odata-read` and `execute-esq` answer as clio 8.1.0.142's: `odata-read` takes its arguments (`filters`,
+`expand`, `order-by`, …) and returns its shape (`success`, `count`, `value`, `next-link`, …), not v0.1.x's
+`{rows, count}`; the old `orderBy` key is refused with clio's rename hint
+([release notes](release-notes-v0.2.0.md#breaking-changes)).
 
 Calling a tool that is not served answers clio's "unknown tool" refusal with suggestions; use clio for it.
 
@@ -187,7 +193,9 @@ The write tools change the Creatio environment the call names, as clio's do. The
   and a pointer to `clio-run`, as clio refuses it;
 - an environment marked `Safe` in clio's settings is refused;
 - `get-page` and the tools with `output-file` / `output-directory` write local files the way clio does
-  and never overwrite an existing `output-file`;
+  and never overwrite an existing `output-file`; the exception is `get-sql-schema`, which refuses
+  `output-file` as an unknown argument and returns the body inline
+  ([implementation.md](implementation.md));
 - long operations (compile, restart, installs, process runs) report progress and answer "still running"
   after a response deadline while the work continues; `compile-status` / `restart-status` read the
   operations this process started. `CLIO_MCP_RESPONSE_DEADLINE_SECONDS` overrides the deadline as in clio
