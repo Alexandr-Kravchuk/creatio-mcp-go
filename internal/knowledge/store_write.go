@@ -134,7 +134,7 @@ type publisherCheckState struct {
 	CheckedAtUtc     string `json:"checkedAtUtc"`
 }
 
-// clioJSON is System.Text.Json with WriteIndented: two-space indentation, no HTML escaping.
+// clioJSON is System.Text.Json with WriteIndented: two-space indentation and the default encoder's escaping.
 func clioJSON(value any) ([]byte, error) {
 	var buffer bytes.Buffer
 	encoder := json.NewEncoder(&buffer)
@@ -143,7 +143,8 @@ func clioJSON(value any) ([]byte, error) {
 	if err := encoder.Encode(value); err != nil {
 		return nil, err
 	}
-	return bytes.TrimRight(buffer.Bytes(), "\n"), nil
+	// System.Text.Json escapes ordinary strings with its default encoder; DateTimeOffset values stay raw.
+	return STJEscape(bytes.TrimRight(buffer.Bytes(), "\n"), IsDotnetTimestamp), nil
 }
 
 // newGUID is a random GUID in .NET's "N" format.

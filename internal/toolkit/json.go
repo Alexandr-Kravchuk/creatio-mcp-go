@@ -17,6 +17,9 @@ import (
 	"unicode/utf16"
 )
 
+// rawString is written without escaping, as System.Text.Json writes a DateTimeOffset value.
+type rawString string
+
 type object struct {
 	keys   []string
 	values map[string]any
@@ -188,6 +191,8 @@ func writeValue(buffer *bytes.Buffer, value any, depth int, stj bool) {
 		buffer.WriteByte(']')
 	case string:
 		writeString(buffer, typed)
+	case rawString:
+		buffer.WriteString(`"` + string(typed) + `"`)
 	case json.Number:
 		buffer.WriteString(typed.String())
 	case bool:

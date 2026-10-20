@@ -554,8 +554,8 @@ func saveManifest(env Environment, manifest *manifestFile) error {
 		if entry.Source != "" {
 			value.set("Source", entry.Source)
 		}
-		value.set("InstalledAtUtc", entry.InstalledAtUtc)
-		value.set("UpdatedAtUtc", entry.UpdatedAtUtc)
+		value.set("InstalledAtUtc", rawString(entry.InstalledAtUtc))
+		value.set("UpdatedAtUtc", rawString(entry.UpdatedAtUtc))
 		agents.set(key, value)
 	}
 	root := newObject()

@@ -19,6 +19,8 @@ import (
 	"sync"
 	"time"
 	"unicode"
+
+	"github.com/Alexandr-Kravchuk/creatio-mcp-go/internal/knowledge"
 )
 
 // Status and consent tokens.
@@ -172,7 +174,7 @@ func newID() string {
 	return hex.EncodeToString(b[:])
 }
 
-func indented(value any) ([]byte, error) {
+func indented(value any, keepRaw func(string) bool) ([]byte, error) {
 	var buffer bytes.Buffer
 	encoder := json.NewEncoder(&buffer)
 	encoder.SetEscapeHTML(false)
@@ -180,16 +182,22 @@ func indented(value any) ([]byte, error) {
 	if err := encoder.Encode(value); err != nil {
 		return nil, err
 	}
-	return bytes.TrimRight(buffer.Bytes(), "\n"), nil
+	return knowledge.STJEscape(bytes.TrimRight(buffer.Bytes(), "\n"), keepRaw), nil
 }
 
 // writeJSON is clio's WriteJson: a temporary file beside the target, moved over it. The temporary name is
 // unique per write, so two processes writing the same file cannot interleave into one temporary file.
 func writeJSON(path string, value any) error {
+	// A DateTimeOffset member (consent and run state) is written raw by System.Text.Json; an event's
+	// attributes are all strings or numbers, so its timestamp string is escaped like any other string.
+	keepRaw := knowledge.IsDotnetTimestamp
+	if _, isEvent := value.(logEvent); isEvent {
+		keepRaw = nil
+	}
 	if err := os.MkdirAll(filepath.Dir(path), 0o777); err != nil {
 		return err
 	}
-	data, err := indented(value)
+	data, err := indented(value, keepRaw)
 	if err != nil {
 		return err
 	}
@@ -343,10 +351,83 @@ func validate(request Request) *EventResult {
 }
 
 type sessionState struct {
-	SessionID string            `json:"session_id"`
-	Events    map[string]string `json:"events"`
-	Workflow  string            `json:"workflow,omitempty"`
+	SessionID string
+	Events    map[string]string
+	Workflow  string
+	order     []string // event names in first-recorded order, as clio's Dictionary keeps them
 	times     map[string]time.Time
+}
+
+func (state *sessionState) record(event string, at time.Time) {
+	if _, ok := state.Events[event]; !ok {
+		state.order = append(state.order, event)
+	}
+	state.Events[event] = dotnetTime(at)
+	state.times[event] = at
+}
+
+// MarshalJSON writes clio's TelemetrySessionState with the events in insertion order.
+func (state *sessionState) MarshalJSON() ([]byte, error) {
+	var buffer bytes.Buffer
+	buffer.WriteString(`{"session_id":`)
+	encoded, _ := json.Marshal(state.SessionID)
+	buffer.Write(encoded)
+	buffer.WriteString(`,"events":{`)
+	for i, name := range state.order {
+		if i > 0 {
+			buffer.WriteByte(',')
+		}
+		key, _ := json.Marshal(name)
+		value, _ := json.Marshal(state.Events[name])
+		buffer.Write(key)
+		buffer.WriteByte(':')
+		buffer.Write(value)
+	}
+	buffer.WriteByte('}')
+	if state.Workflow != "" {
+		buffer.WriteString(`,"workflow":`)
+		encoded, _ = json.Marshal(state.Workflow)
+		buffer.Write(encoded)
+	}
+	buffer.WriteByte('}')
+	return buffer.Bytes(), nil
+}
+
+// parseSession reads a run-state file keeping the order of its events.
+func parseSession(data []byte) (*sessionState, bool) {
+	var raw struct {
+		SessionID string          `json:"session_id"`
+		Events    json.RawMessage `json:"events"`
+		Workflow  string          `json:"workflow"`
+	}
+	if json.Unmarshal(data, &raw) != nil || len(raw.Events) == 0 {
+		return nil, false
+	}
+	state := &sessionState{SessionID: raw.SessionID, Workflow: raw.Workflow, Events: map[string]string{}, times: map[string]time.Time{}}
+	decoder := json.NewDecoder(bytes.NewReader(raw.Events))
+	if token, err := decoder.Token(); err != nil || token != json.Delim('{') {
+		return nil, false
+	}
+	for decoder.More() {
+		key, err := decoder.Token()
+		if err != nil {
+			return nil, false
+		}
+		var value string
+		if err := decoder.Decode(&value); err != nil {
+			return nil, false
+		}
+		parsed, err := time.Parse(time.RFC3339Nano, value)
+		if err != nil {
+			return nil, false
+		}
+		name := key.(string)
+		if _, seen := state.Events[name]; !seen {
+			state.order = append(state.order, name)
+		}
+		state.Events[name], state.times[name] = value, parsed
+	}
+	return state, true
 }
 
 func (s *Service) sessionPath(sessionID, workflow string) string {
@@ -360,19 +441,11 @@ func (s *Service) readSession(sessionID, workflow string) *sessionState {
 	if err != nil {
 		return fresh
 	}
-	var state sessionState
-	if json.Unmarshal(data, &state) != nil || state.Events == nil {
+	state, ok := parseSession(data)
+	if !ok {
 		return fresh
 	}
-	state.times = map[string]time.Time{}
-	for name, value := range state.Events {
-		parsed, err := time.Parse(time.RFC3339Nano, value)
-		if err != nil {
-			return fresh
-		}
-		state.times[name] = parsed
-	}
-	return &state
+	return state
 }
 
 func isSessionStart(event string) bool {
@@ -627,7 +700,7 @@ func (s *Service) record(request Request) (EventResult, error) {
 	if err := writeJSON(filepath.Join(s.eventsDir(), name), event); err != nil {
 		return EventResult{}, err
 	}
-	session.Events[request.EventName] = dotnetTime(at)
+	session.record(request.EventName, at)
 	if err := writeJSON(s.sessionPath(session.SessionID, session.Workflow), session); err != nil {
 		return EventResult{}, err
 	}
