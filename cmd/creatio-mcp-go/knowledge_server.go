@@ -211,37 +211,9 @@ func knowledgeReadArticle(uri string) (*mcp.ReadResourceResult, error) {
 		"[guidance-not-found] Unknown guidance resource '%s'. Use one of the URIs returned by resources/list.", uri))
 }
 
-// knowledgeUntrusted neutralizes text a knowledge repository can influence before it reaches an agent:
-// line breaks and control characters collapse to spaces, fence tokens are defused, the length is capped
-// and the result is fenced as data. It follows clio's SensitiveErrorTextRedactor.RedactUntrustedOrNull
-// without its secret-scrubbing rule chain (that belongs to the shared redactor of task T4).
-func knowledgeUntrusted(text string) string {
-	if strings.TrimSpace(text) == "" {
-		return ""
-	}
-	var builder strings.Builder
-	space := false
-	for _, r := range text {
-		if r < 0x20 || r == 0x7f || r == ' ' || r == ' ' || (r >= '‪' && r <= '‮') || (r >= '⁦' && r <= '⁩') {
-			r = ' '
-		}
-		if r == ' ' {
-			if space {
-				continue
-			}
-			space = true
-		} else {
-			space = false
-		}
-		builder.WriteRune(r)
-	}
-	flattened := strings.TrimSpace(builder.String())
-	flattened = regexp.MustCompile(`(?i)\[\s*untrusted-source-text\s+(begin|end)\s*\]`).ReplaceAllString(flattened, "(fence removed)")
-	if runes := []rune(flattened); len(runes) > 300 {
-		flattened = string(runes[:300]) + "…"
-	}
-	return "[untrusted-source-text begin] " + flattened + " [untrusted-source-text end]"
-}
+// knowledgeUntrusted neutralizes text a knowledge repository or publisher can influence before it reaches an
+// agent: clio's SensitiveErrorTextRedactor.RedactUntrustedOrNull (redaction, flattening, fence, 300-unit cap).
+func knowledgeUntrusted(text string) string { return knowledge.Untrusted(text) }
 
 func knowledgeJSON(value any) string {
 	encoded, _ := json.Marshal(value)

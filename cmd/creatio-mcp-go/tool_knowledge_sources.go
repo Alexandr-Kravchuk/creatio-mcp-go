@@ -171,8 +171,13 @@ func knowledgeBuildInfo(runtime *knowledge.Runtime, store knowledge.Store, alias
 	}
 	current, diagnostic := store.ReadCurrent(alias)
 	if current == nil {
-		if diagnostic == "" {
-			info.UpdateAvailability = "not-installed"
+		info.UpdateAvailability = "not-installed"
+		if checkUpdates && source.Enabled {
+			availability, probeDiagnostic := knowledgeProbeUpdate(runtime, alias, source, nil)
+			info.UpdateAvailability = availability
+			if diagnostic == "" {
+				diagnostic = probeDiagnostic
+			}
 		}
 		info.Diagnostic = knowledgeUntrusted(diagnostic)
 		return info

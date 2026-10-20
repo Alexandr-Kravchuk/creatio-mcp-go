@@ -142,6 +142,8 @@ type Settings struct {
 	Knowledge Config
 	Feedback  FeedbackSettings
 	Features  map[string]bool
+	// legacyRoot is set when the root came from the legacy knowledge-root-path key, which clio migrates.
+	legacyRoot bool
 }
 
 var (
@@ -216,6 +218,7 @@ func ReadSettings(path string) (*Settings, error) {
 	}
 	if settings.Knowledge.RootPath == "" && raw.LegacyKnowledgeDir != nil && strings.TrimSpace(*raw.LegacyKnowledgeDir) != "" {
 		settings.Knowledge.RootPath = filepath.Clean(*raw.LegacyKnowledgeDir)
+		settings.legacyRoot = true
 	}
 	return settings, nil
 }
