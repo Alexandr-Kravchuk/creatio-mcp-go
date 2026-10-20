@@ -700,5 +700,221 @@
    "culture": "es-ES",
    "resources": "{\"UsrSame\": \"Uno\", \"UsrSame\": \"Dos\"}"
   }
+ },
+ {
+  "label": "ts completes and cleans up",
+  "tool": "trigger-smoke",
+  "clio-run": true,
+  "args": {
+   "entity": "UsrRequest",
+   "values": {
+    "Name": "Completes 1"
+   },
+   "watch": [
+    "Activity"
+   ],
+   "timeout": 8
+  }
+ },
+ {
+  "label": "ts run fails",
+  "tool": "trigger-smoke",
+  "clio-run": true,
+  "args": {
+   "entity": "UsrRequest",
+   "values": {
+    "Name": "Fails 1"
+   },
+   "watch": [
+    "Activity"
+   ],
+   "timeout": 8
+  }
+ },
+ {
+  "label": "ts no run starts",
+  "tool": "trigger-smoke",
+  "clio-run": true,
+  "args": {
+   "entity": "UsrRequest",
+   "values": {
+    "Name": "Nothing 1"
+   },
+   "watch": [
+    "Activity"
+   ],
+   "timeout": 1
+  }
+ },
+ {
+  "label": "ts only another user's run",
+  "tool": "trigger-smoke",
+  "clio-run": true,
+  "args": {
+   "entity": "UsrRequest",
+   "values": {
+    "Name": "Foreign 1"
+   },
+   "watch": [
+    "Activity"
+   ],
+   "timeout": 2
+  }
+ },
+ {
+  "label": "ts parked run cancelled",
+  "tool": "trigger-smoke",
+  "clio-run": true,
+  "args": {
+   "entity": "UsrRequest",
+   "values": {
+    "Name": "Parked 1"
+   },
+   "watch": [
+    "Activity"
+   ],
+   "timeout": 8
+  }
+ },
+ {
+  "label": "ts unlinked record skipped",
+  "tool": "trigger-smoke",
+  "clio-run": true,
+  "args": {
+   "entity": "UsrRequest",
+   "values": {
+    "Name": "Unlinked 1"
+   },
+   "watch": [
+    "Activity"
+   ],
+   "timeout": 8
+  }
+ },
+ {
+  "label": "ts process filter",
+  "tool": "trigger-smoke",
+  "clio-run": true,
+  "args": {
+   "entity": "UsrRequest",
+   "values": {
+    "Name": "Mixed 1"
+   },
+   "watch": [
+    "Activity"
+   ],
+   "timeout": 8,
+   "process": "UsrRequestHandler"
+  }
+ },
+ {
+  "label": "ts process by caption",
+  "tool": "trigger-smoke",
+  "clio-run": true,
+  "args": {
+   "entity": "UsrRequest",
+   "values": {
+    "Name": "Mixed 2"
+   },
+   "watch": [
+    "Activity"
+   ],
+   "timeout": 8,
+   "process": "request handler"
+  }
+ },
+ {
+  "label": "ts no process filter mixed",
+  "tool": "trigger-smoke",
+  "clio-run": true,
+  "args": {
+   "entity": "UsrRequest",
+   "values": {
+    "Name": "Mixed 3"
+   },
+   "watch": [
+    "Activity"
+   ],
+   "timeout": 8
+  }
+ },
+ {
+  "label": "ts cleanup off",
+  "tool": "trigger-smoke",
+  "clio-run": true,
+  "args": {
+   "entity": "UsrRequest",
+   "values": {
+    "Name": "Completes 2"
+   },
+   "watch": [
+    "Activity"
+   ],
+   "timeout": 8,
+   "cleanup": false
+  }
+ },
+ {
+  "label": "ts create refused",
+  "tool": "trigger-smoke",
+  "clio-run": true,
+  "args": {
+   "entity": "UsrRequest",
+   "values": {
+    "Name": "Refuse 1"
+   },
+   "watch": [
+    "Activity"
+   ],
+   "timeout": 2
+  }
+ },
+ {
+  "label": "ts create without id",
+  "tool": "trigger-smoke",
+  "clio-run": true,
+  "args": {
+   "entity": "UsrRequest",
+   "values": {
+    "Name": "NoId 1"
+   },
+   "watch": [
+    "Activity"
+   ],
+   "timeout": 2
+  }
+ },
+ {
+  "label": "ts trigger entity watched",
+  "tool": "trigger-smoke",
+  "clio-run": true,
+  "args": {
+   "entity": "UsrRequest",
+   "values": {
+    "Name": "Completes 3"
+   },
+   "watch": [
+    "UsrRequest",
+    "Activity",
+    "UsrNote"
+   ],
+   "timeout": 8
+  }
+ },
+ {
+  "label": "ts unknown watched entity",
+  "tool": "trigger-smoke",
+  "clio-run": true,
+  "args": {
+   "entity": "UsrRequest",
+   "values": {
+    "Name": "Completes 4"
+   },
+   "watch": [
+    "Activity",
+    "UsrMissing"
+   ],
+   "timeout": 8
+  }
  }
 ]

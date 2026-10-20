@@ -131,7 +131,7 @@ func dataWriteWatchBudget(timeout time.Duration, stopAt time.Time) time.Duration
 func timeIsUp(stopAt time.Time) bool { return !stopAt.IsZero() && !time.Now().Before(stopAt) }
 
 func fencedOr(err error, fallback string) string {
-	if fenced := DataWriteUntrusted(err.Error()); fenced != nil {
+	if fenced := DataWriteUntrusted(clioConnectionText(err)); fenced != nil {
 		return *fenced
 	}
 	return fallback
@@ -893,7 +893,15 @@ type runRecordProvenance struct {
 
 // resolve is RunRecordProvenance.Resolve: which candidates provably belong to the run.
 func (p *runRecordProvenance) resolve(candidates []CreatedRecord, runIDs []string, timeout time.Duration, stopAt time.Time) recordProvenance {
+	return p.resolveSeeded(candidates, nil, runIDs, timeout, stopAt)
+}
+
+// resolveSeeded is Resolve with seed ids: records tied from the start (trigger-smoke seeds its trigger).
+func (p *runRecordProvenance) resolveSeeded(candidates []CreatedRecord, seeds, runIDs []string, timeout time.Duration, stopAt time.Time) recordProvenance {
 	provenance := recordProvenance{tied: map[string]bool{}, holdingRun: map[string]string{}, warnings: []string{}}
+	for _, seed := range seeds {
+		provenance.tied[strings.ToLower(seed)] = true
+	}
 	pointsAt := map[string]map[string]bool{}
 	elementOf := map[string]string{}
 	elementOrder := []string{}

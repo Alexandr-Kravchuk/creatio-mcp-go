@@ -345,9 +345,179 @@ class Pages:
 
 CULTURES = [{"Name": "en-US", "Active": True}, {"Name": "es-ES", "Active": True}, {"Name": "de-DE", "Active": False}]
 
+# trigger-smoke fixtures
+ME = "e0000000-0000-0000-0000-000000000001"
+OTHER_USER = "e0000000-0000-0000-0000-000000000002"
+OLD_RUN = "e1000000-0000-0000-0000-000000000001"
+OLD_REQUEST = "e2000000-0000-0000-0000-000000000001"
+LOOKUP_COLUMNS = {"CreatedBy": "Contact", "ModifiedBy": "Contact", "Request": "UsrRequest", "Owner": "Contact"}
+WORLD_SCHEMAS = {
+    "UsrRequest": ("Name", ["Id", "Name", "CreatedOn", "CreatedBy", "ModifiedBy"]),
+    "Activity": ("Title", ["Id", "Title", "CreatedOn", "CreatedBy", "ModifiedBy", "Request", "ProcessElementId"]),
+    "UsrNote": ("Name", ["Id", "Name", "CreatedOn", "CreatedBy", "ModifiedBy"]),
+    "SysProcessLog": ("Name", ["Id", "Name", "CreatedOn", "CreatedBy", "ModifiedBy"]),
+}
+
+
+class ProcessWorld:
+    """Tables a record-triggered process touches: the trigger entity, what its runs write, SysProcessLog and the
+    element logs; inserting a UsrRequest starts the runs its Name asks for."""
+
+    def __init__(self):
+        self.clock = 0
+        self.ids = 0
+        self.tables = {name: [] for name in ("UsrRequest", "Activity", "UsrNote", "SysProcessLog", "SysProcessElementLog",
+                                             "SysProcessElementData")}
+        self.tables["SysProcessLog"].append(self.run(OLD_RUN, "Old run", 2, ME, "UsrOld"))
+        self.tables["UsrRequest"].append({"Id": OLD_REQUEST, "Name": "old", "CreatedOn": self.tick(), "CreatedBy": ME})
+
+    def tick(self):
+        self.clock += 1
+        return f"2026-10-20T10:{self.clock // 60:02d}:{self.clock % 60:02d}.000"
+
+    def new_id(self, prefix):
+        self.ids += 1
+        return f"{prefix}-0000-0000-0000-{self.ids:012d}"
+
+    def run(self, uid, name, status, user, code, root=None, error=None):
+        return {"Id": uid, "Name": name, "CreatedOn": self.tick(), "CreatedBy": user, "Status.Value": status,
+                "ErrorDescription": error or "", "SysSchema.Name": code, "RootId": root or uid}
+
+    def owns(self, root):
+        return root in self.tables or root == "Contact"
+
+    def start(self, request_id, name):
+        """The runs a trigger named `name` starts; each scenario is one word of the name."""
+        log = self.tables["SysProcessLog"]
+        if "Completes" in name or "Unlinked" in name or "Mixed" in name:
+            run_id = self.new_id("f1000000")
+            log.append(self.run(run_id, "Request handler", 2, ME, "UsrRequestHandler"))
+            activity = {"Id": self.new_id("f2000000"), "Title": "Call back", "CreatedOn": self.tick(), "CreatedBy": ME,
+                        "Request": None if "Unlinked" in name else request_id}
+            self.tables["Activity"].append(activity)
+            if "Mixed" in name:
+                sub = self.new_id("f1000000")
+                log.append(self.run(sub, "Sub step", 2, ME, "UsrSub", root=run_id))
+                log.append(self.run(self.new_id("f1000000"), "Nightly sync", 2, ME, "UsrNightly"))
+                log.append(self.run(self.new_id("f1000000"), "Someone else", 2, OTHER_USER, "UsrRequestHandler"))
+        if "Fails" in name:
+            log.append(self.run(self.new_id("f1000000"), "Request handler", 3, ME, "UsrRequestHandler",
+                                error="System.Exception: boom\n   at Handler.Run()"))
+        if "Foreign" in name:
+            log.append(self.run(self.new_id("f1000000"), "Someone else", 2, OTHER_USER, "UsrRequestHandler"))
+        if "Parked" in name:
+            run_id = self.new_id("f1000000")
+            log.append(self.run(run_id, "Approval", 1, ME, "UsrApproval"))
+            element = self.new_id("f3000000")
+            self.tables["SysProcessElementLog"].append({"SysProcess": run_id, "Status.Value": 1, "Caption": "Approve request",
+                                                        "Type": "Terrasoft.Core.Process.ProcessSchemaUserTask"})
+            self.tables["SysProcessElementData"].append({"Id": element, "SysProcess": run_id})
+            self.tables["Activity"].append({"Id": self.new_id("f2000000"), "Title": "Approve", "CreatedOn": self.tick(),
+                                            "CreatedBy": ME, "Request": request_id, "ProcessElementId": element})
+
+    def insert(self, entity, body):
+        name = str(body.get("Name", ""))
+        if "Refuse" in name:
+            return 400, {"error": {"code": "", "message": "Name is not valid.",
+                                   "innererror": {"message": "Column Name refused\nsecond line", "type": "X"}}}
+        if "NoId" in name:
+            return 200, {}
+        uid = self.new_id("f0000000")
+        row = {"Id": uid, "CreatedOn": self.tick(), "CreatedBy": ME}
+        row.update(body)
+        self.tables.setdefault(entity, []).append(row)
+        self.start(uid, name)
+        return 201, {"@odata.context": f"http://127.0.0.1/0/odata/$metadata#{entity}/$entity", "Id": uid, "Name": name}
+
+    def delete(self, entity, uid):
+        rows = self.tables.get(entity, [])
+        found = [row for row in rows if row["Id"] == uid]
+        if not found:
+            return 404, {"error": {"code": "", "message": "Not found"}}
+        rows.remove(found[0])
+        return 204, ""
+
+    def cancel(self, body):
+        uid = str(body.get("processDataIds", "")).lower()
+        for row in self.tables["SysProcessLog"]:
+            if row["Id"] == uid:
+                row["Status.Value"] = 4
+        for row in self.tables["SysProcessElementLog"]:
+            if row["SysProcess"] == uid:
+                row["Status.Value"] = 4
+        self.tables["SysProcessElementData"] = [row for row in self.tables["SysProcessElementData"] if row["SysProcess"] != uid]
+        return ""
+
+    def schema(self, name):
+        if name not in WORLD_SCHEMAS:
+            return {"success": False, "errorInfo": {"message": f"Schema {name} not found"}}
+        display, columns = WORLD_SCHEMAS[name]
+        items = {}
+        for index, column in enumerate(columns):
+            item = {"uId": f"a1000000-0000-0000-0000-{index:012d}", "name": column, "dataValueType": 10 if column in LOOKUP_COLUMNS else 1}
+            if column in LOOKUP_COLUMNS:
+                item["referenceSchemaName"] = LOOKUP_COLUMNS[column]
+            items[item["uId"]] = item
+        return {"success": True, "schema": {"uId": f"a2000000-0000-0000-0000-{len(name):012d}", "name": name,
+                                            "primaryDisplayColumnName": display, "primaryColumnUId": "a1000000-0000-0000-0000-000000000000",
+                                            "columns": {"items": items}}}
+
+    @staticmethod
+    def matches(row, item):
+        filter_type = item.get("filterType")
+        if filter_type == 6:
+            results = [ProcessWorld.matches(row, sub) for sub in (item.get("items") or {}).values() if sub.get("isEnabled", True)]
+            if not results:
+                return True
+            return any(results) if item.get("logicalOperation") == 1 else all(results)
+        path = (item.get("leftExpression") or {}).get("columnPath")
+        value = row.get(path)
+        if filter_type == 2:
+            return (value is None) == bool(item.get("isNull"))
+        if filter_type == 4:
+            wanted = [str((e.get("parameter") or {}).get("value", "")).lower() for e in item.get("rightExpressions") or []]
+            return str(value or "").lower() in wanted
+        right = item.get("rightExpression") or {}
+        if right.get("expressionType") == 1:  # the current user's contact macro
+            return value == ME
+        expected = (right.get("parameter") or {}).get("value")
+        if item.get("comparisonType") == 8:
+            if isinstance(expected, str) and expected.startswith('"'):
+                expected = json.loads(expected)
+            return value is not None and str(value) >= str(expected)
+        return str(value if value is not None else "").lower() == str(expected if expected is not None else "").lower()
+
+    def select(self, body):
+        root = body.get("rootSchemaName")
+        if root == "Contact":
+            return {"success": True, "rows": [{"Id": ME}]}
+        columns = (body.get("columns") or {}).get("items", {})
+        rows = [row for row in self.tables[root] if self.matches(row, body.get("filters") or {"filterType": 6, "items": {}})]
+        for alias, column in columns.items():
+            if column.get("orderPosition", -1) == 0 and column.get("orderDirection") in (1, 2):
+                path = column["expression"]["columnPath"]
+                rows = sorted(rows, key=lambda r: str(r.get(path) or ""), reverse=column["orderDirection"] == 2)
+        count = body.get("rowCount", -1)
+        if isinstance(count, int) and count > 0:
+            rows = rows[:count]
+        answer = []
+        for row in rows:
+            out = {}
+            for alias, column in columns.items():
+                path = (column.get("expression") or {}).get("columnPath")
+                value = row.get(path)
+                if path in LOOKUP_COLUMNS or path in ("SysProcess",):
+                    value = None if value is None else {"value": value, "displayValue": "x"}
+                elif path == "RootId":
+                    value = None if value is None else {"value": value, "displayValue": ""}
+                out[alias] = value
+            answer.append(out)
+        return {"success": True, "rows": answer}
+
 
 class State:
     def __init__(self):
+        self.world = ProcessWorld()
         self.pages = Pages()
         self.packages = {CRT_BASE: package(CRT_BASE, "CrtBase"), CRT_UI: package(CRT_UI, "CrtUIv2"),
                          USR_EXISTING: package(USR_EXISTING, "UsrExisting", maintainer="Customer", install_type=0),
@@ -407,6 +577,8 @@ def select(state, body):
     values = filters_of(body)
     if state.tables.owns(root):
         return state.tables.select(body)
+    if state.world.owns(root):
+        return state.world.select(body)
     if root == "SysCulture":
         return {"success": True, "rows": copy.deepcopy(CULTURES)}
     if root == "SysSchema":
@@ -421,6 +593,20 @@ def select(state, body):
     if root == "SysSettingsValue":
         return {"success": True, "rows": [{"TextValue": "Usr", "GuidValue": None, "ValueTypeName": "ShortText"}]}
     return {"success": False, "errorInfo": {"message": f"Unexpected query on {root}"}}
+
+
+ODATA_KEY = re.compile(r"/odata/([A-Za-z_][A-Za-z0-9_]*)\(([0-9a-fA-F-]{36})\)$")
+ODATA_COLLECTION = re.compile(r"/odata/([A-Za-z_][A-Za-z0-9_]*)$")
+
+
+def odata(state, method, path, body):
+    keyed = ODATA_KEY.search(path)
+    if method == "DELETE" and keyed:
+        return state.world.delete(keyed.group(1), keyed.group(2).lower())
+    collection = ODATA_COLLECTION.search(path)
+    if method == "POST" and collection:
+        return state.world.insert(collection.group(1), body if isinstance(body, dict) else {})
+    return 404, {"error": {"code": "", "message": f"Unexpected OData request {method} {path}"}}
 
 
 def answer(state, path, body):
@@ -438,7 +624,12 @@ def answer(state, path, body):
     if path.endswith("/DataService/json/SyncReply/UpdateQuery"):
         return 200, state.tables.update(body)
     if path.endswith("/DataService/json/SyncReply/RuntimeEntitySchemaRequest"):
-        return 200, state.tables.runtime_schema(body.get("Name") or body.get("name"))
+        name = body.get("Name") or body.get("name")
+        if name in WORLD_SCHEMAS:
+            return 200, state.world.schema(name)
+        return 200, state.tables.runtime_schema(name)
+    if path.endswith("/ProcessEngineService.svc/CancelExecution"):
+        return 200, state.world.cancel(body)
     if path.endswith("/SchemaDataDesignerService.svc/SaveSchema"):
         return 200, state.tables.save_binding(body)
     if path.endswith("/SchemaDataDesignerService.svc/GetBoundSchemaData"):
@@ -525,18 +716,25 @@ def serve(port, directory):
                     if body["name"] == "UsrDropStored":
                         states[side].create(body)
                     status, payload = 0, None
+                elif "/odata/" in path:
+                    status, payload = odata(states[side], self.command, path, body)
                 else:
                     status, payload = answer(states[side], path, body)
                     drop = status == 0
             if drop:
                 return self.drop()
             try:
-                self.reply(status, payload)
+                if status == 204:
+                    self.send_response(204)
+                    self.end_headers()
+                else:
+                    self.reply(status, payload)
             except (BrokenPipeError, ConnectionResetError):
                 pass
 
         do_GET = handle_any
         do_POST = handle_any
+        do_DELETE = handle_any
 
     ThreadingHTTPServer(("127.0.0.1", port), Handler).serve_forever()
 

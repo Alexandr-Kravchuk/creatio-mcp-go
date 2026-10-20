@@ -106,6 +106,16 @@ func (b t21aBinder) object(name string) (map[string]any, error) {
 	return object, nil
 }
 
+// sortedKeys lists an object's keys in a stable order (Go maps keep no request order).
+func sortedKeys(object map[string]any) []string {
+	keys := make([]string, 0, len(object))
+	for key := range object {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	return keys
+}
+
 // t21aEnvironmentAliases is McpToolArgumentSupport.EnvironmentNameAliases.
 var t21aEnvironmentAliases = map[string]string{"environmentName": "environment-name", "environment_name": "environment-name",
 	"environment": "environment-name"}
