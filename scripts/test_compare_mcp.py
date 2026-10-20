@@ -24,5 +24,21 @@ class KnownDifferenceTest(unittest.TestCase):
         self.assertFalse(compare_mcp.known_difference("$.compilationhistory.finishedsecondsago: value differs", known))
 
 
+
+class ClioToolsDirTest(unittest.TestCase):
+    def test_tool_path_of_a_dll_inside_a_tool_store(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as temp:
+            tools = pathlib.Path(temp).resolve() / "clio142"
+            dll = tools / ".store/clio/8.1.0.142/clio/8.1.0.142/tools/net10.0/any/clio.dll"
+            self.assertEqual(compare_mcp.clio_tools_dir(str(dll)), str(tools))
+            env = compare_mcp.with_clio_tools({"A": "1"}, str(dll))
+            self.assertEqual(env, {"A": "1", compare_mcp.CLIO_TOOLS_VARIABLE: str(tools)})
+
+    def test_no_tool_store_leaves_the_environment(self):
+        self.assertIsNone(compare_mcp.clio_tools_dir("/opt/clio/clio.dll"))
+        self.assertIsNone(compare_mcp.clio_tools_dir(None))
+        self.assertEqual(compare_mcp.with_clio_tools({"A": "1"}, "/opt/clio/clio.dll"), {"A": "1"})
+
 if __name__ == "__main__":
     unittest.main()

@@ -11,7 +11,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -22,17 +21,17 @@ import (
 // pkgWriteClioHome is overridden by tests; empty means the user's home directory.
 var pkgWriteClioHome = ""
 
-// pkgWriteBundledArchive finds <folder>/<file> beside the newest clio .NET tool:
+// pkgWriteBundledArchive finds <folder>/<file> beside the newest clio .NET tool in creatio.ClioToolsDirectory():
 // ~/.dotnet/tools/.store/clio/<version>/clio/<version>/tools/<tfm>/any/<folder>/<file>. "" when none carries it.
 func pkgWriteBundledArchive(folder, file string) string {
-	home := pkgWriteClioHome
-	if home == "" {
-		var err error
-		if home, err = os.UserHomeDir(); err != nil {
-			return ""
-		}
+	tools := creatio.ClioToolsDirectory()
+	if pkgWriteClioHome != "" {
+		tools = filepath.Join(pkgWriteClioHome, ".dotnet", "tools")
 	}
-	matches, _ := filepath.Glob(filepath.Join(home, ".dotnet", "tools", ".store", "clio", "*", "clio", "*", "tools", "*", "any", folder, file))
+	if tools == "" {
+		return ""
+	}
+	matches, _ := filepath.Glob(filepath.Join(tools, ".store", "clio", "*", "clio", "*", "tools", "*", "any", folder, file))
 	// Every target framework folder of one clio version carries the same archives; the first one is taken.
 	best, bestVersion := "", []int(nil)
 	for _, match := range matches {

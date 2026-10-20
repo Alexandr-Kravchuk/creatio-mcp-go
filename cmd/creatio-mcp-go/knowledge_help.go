@@ -7,6 +7,8 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/Alexandr-Kravchuk/creatio-mcp-go/internal/creatio"
 )
 
 // docs://help/command/{name} serves clio's own CLI help (help/en/<verb>.txt), which is not knowledge-bundle
@@ -97,14 +99,14 @@ func knowledgeReadHelpFile(verb string) (string, bool) {
 	return strings.TrimPrefix(string(data), "\xEF\xBB\xBF"), true
 }
 
-// knowledgeHelpDirectory finds help/en of the newest clio .NET tool:
+// knowledgeHelpDirectory finds help/en of the newest clio .NET tool in creatio.ClioToolsDirectory():
 // ~/.dotnet/tools/.store/clio/<version>/clio/<version>/tools/<tfm>/any/help/en.
 func knowledgeHelpDirectory() string {
-	home, err := os.UserHomeDir()
-	if err != nil {
+	tools := creatio.ClioToolsDirectory()
+	if tools == "" {
 		return ""
 	}
-	matches, _ := filepath.Glob(filepath.Join(home, ".dotnet", "tools", ".store", "clio", "*", "clio", "*", "tools", "*", "any", "help", "en"))
+	matches, _ := filepath.Glob(filepath.Join(tools, ".store", "clio", "*", "clio", "*", "tools", "*", "any", "help", "en"))
 	best, bestVersion := "", []int(nil)
 	for _, match := range matches {
 		parts := strings.Split(filepath.ToSlash(match), "/")

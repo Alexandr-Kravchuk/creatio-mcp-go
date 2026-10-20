@@ -19,13 +19,13 @@ import (
 	"unicode/utf16"
 )
 
-// processWriteArchiveGlob finds the archive under the dotnet global tool store of clio.
+// processWriteArchiveGlob finds the archive under clio's tool store (ClioToolsDirectory).
 var processWriteArchiveGlob = func() []string {
-	home, err := os.UserHomeDir()
-	if err != nil {
+	tools := ClioToolsDirectory()
+	if tools == "" {
 		return nil
 	}
-	matches, _ := filepath.Glob(filepath.Join(home, ".dotnet", "tools", ".store", "clio", "*", "clio", "*", "tools", "*", "any",
+	matches, _ := filepath.Glob(filepath.Join(tools, ".store", "clio", "*", "clio", "*", "tools", "*", "any",
 		processBuilderPackageName, processBuilderPackageName+".gz"))
 	return matches
 }

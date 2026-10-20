@@ -464,7 +464,8 @@ def start_servers(options):
         clio_env["CLIO_HOME"] = clio_home(options.clio_settings)
     clio = Server(clio_command, env=clio_env)
     try:
-        go = Server(go_command, env=go_environment(options.clio_env, options.clio_settings, options.go_env_mode))
+        go = Server(go_command, env=compare_mcp.with_clio_tools(
+            go_environment(options.clio_env, options.clio_settings, options.go_env_mode), options.clio_dll))
     except BaseException:
         clio.close()
         raise

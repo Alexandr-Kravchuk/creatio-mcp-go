@@ -190,6 +190,29 @@ def settings_candidates():
     return paths
 
 
+CLIO_TOOLS_VARIABLE = "MCPGO_CLIO_TOOLS_DIR"
+
+
+def clio_tools_dir(clio_dll):
+    """The tool path of the compared clio: the directory above .store/clio/<version>/... that holds --clio-dll.
+    This server reads clio's bundled archives and help from there instead of ~/.dotnet/tools, so both servers
+    use the same clio's files. None when the dll is not inside a tool store."""
+    if not clio_dll:
+        return None
+    path = pathlib.Path(clio_dll).expanduser().resolve()
+    for parent in path.parents:
+        if parent.name == ".store":
+            return str(parent.parent)
+    return None
+
+
+def with_clio_tools(env, clio_dll):
+    tools = clio_tools_dir(clio_dll)
+    if tools:
+        env = {**env, CLIO_TOOLS_VARIABLE: tools}
+    return env
+
+
 def go_environment(clio_env, settings_path, mode="variables"):
     env = dict(os.environ)
     if mode == "name":
@@ -255,7 +278,8 @@ def main():
     if options.clio_settings:
         clio_process_env["CLIO_HOME"] = clio_home(options.clio_settings)
     clio = Server(["dotnet", options.clio_dll, "mcp-server"], env=clio_process_env)
-    go = Server([options.go_bin], env=go_environment(names[0], options.clio_settings, options.go_env_mode))
+    go = Server([options.go_bin], env=with_clio_tools(go_environment(names[0], options.clio_settings, options.go_env_mode),
+                                                      options.clio_dll))
     results = []
     # With several environments each case runs for every name in turn, so consecutive calls of one Go
     # process alternate between targets.
