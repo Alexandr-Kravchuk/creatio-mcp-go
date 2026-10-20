@@ -1110,17 +1110,22 @@ func (r *wpRun) selectPackages(filters []rightsFilter) ([]*jnode, error) {
 // selectRows is SelectQueryHelper.ExecuteSelectQuery without a timeout: up to three sends while the server
 // reports a transient failure, 500 ms apart.
 func (r *wpRun) selectRows(root string, columns []rightsColumn, filters []rightsFilter) ([]*jnode, error) {
+	return r.c.clioSelectRows(r.ctx, root, columns, filters)
+}
+
+// clioSelectRows is SelectQueryHelper.ExecuteSelectQuery(BuildSelectQuery(...)) without a request timeout.
+func (c *Client) clioSelectRows(ctx context.Context, root string, columns []rightsColumn, filters []rightsFilter) ([]*jnode, error) {
 	query := rightsSelectQuery(root, columns, filters, 10000, false)
 	var rows []*jnode
 	var err error
 	for attempt := 1; ; attempt++ {
-		rows, err = r.c.rightsSelect(r.ctx, query, rightsRequest{timeout: wpSelectTimeout})
+		rows, err = c.rightsSelect(ctx, query, rightsRequest{timeout: wpSelectTimeout})
 		if err == nil || attempt >= 3 || !wpTransient(err) {
 			break
 		}
 		select {
-		case <-r.ctx.Done():
-			return nil, r.ctx.Err()
+		case <-ctx.Done():
+			return nil, ctx.Err()
 		case <-time.After(500 * time.Millisecond):
 		}
 	}

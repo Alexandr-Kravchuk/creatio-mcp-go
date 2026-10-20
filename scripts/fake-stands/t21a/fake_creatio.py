@@ -218,8 +218,137 @@ class Tables:
         return {"success": True, "items": items}
 
 
+PAGE_TEMPLATE = "c0000000-0000-0000-0000-000000000001"
+PAGE_OWN = "c0000000-0000-0000-0000-000000000002"
+PAGE_FOREIGN = "c0000000-0000-0000-0000-000000000003"
+PAGE_REPLACED_BASE = "c0000000-0000-0000-0000-000000000004"
+PAGE_REPLACED = "c0000000-0000-0000-0000-000000000005"
+PAGE_SAVE_FAILS = "c0000000-0000-0000-0000-000000000006"
+PAGE_SAVE_LIES = "c0000000-0000-0000-0000-000000000007"
+PAGE_INHERITED = "c0000000-0000-0000-0000-000000000008"
+PAGE_SAVE_DROPS = "c0000000-0000-0000-0000-000000000009"
+PAGE_NO_STRINGS = "c0000000-0000-0000-0000-00000000000a"
+PAGE_BROKEN = "c0000000-0000-0000-0000-00000000000b"
+BODY = ('define("UsrPage_FormPage", [], function() { return { viewConfigDiff: /**SCHEMA_VIEW_CONFIG_DIFF*/[{"operation": "insert", '
+        '"name": "UsrBound", "values": {"caption": "$Resources.Strings.UsrBound"}}]/**SCHEMA_VIEW_CONFIG_DIFF*/, '
+        'viewModelConfigDiff: /**SCHEMA_VIEW_MODEL_CONFIG_DIFF*/[{"operation": "merge", "path": [], "values": {"attributes": '
+        '{"UsrBound": {"modelConfig": {"path": "PDS.UsrBound"}}}}}]/**SCHEMA_VIEW_MODEL_CONFIG_DIFF*/ }; });')
+
+
+def culture_values(**values):
+    return [{"cultureName": name.replace("_", "-"), "value": value} for name, value in values.items()]
+
+
+def strings(*entries):
+    return [{"uId": f"d0000000-0000-0000-0000-{index:012d}", "name": name, "values": culture_values(**values)}
+            for index, (name, values) in enumerate(entries, start=1)]
+
+
+def page(uid, name, package_uid, package_name, localizable, caption, parent_caption=None, body=BODY):
+    return {"uId": uid, "name": name, "package": {"uId": package_uid, "name": package_name}, "body": body,
+            "localizableStrings": localizable, "caption": caption,
+            "parent": {"uId": PAGE_TEMPLATE, "caption": parent_caption or culture_values(en_US="Blank page", es_ES="Página en blanco")},
+            "schemaType": 9, "extendParent": False}
+
+
+class Pages:
+    """ClientUnitSchemaDesignerService and SysSchema for localize-page: GetSchema answers what SaveSchema stored."""
+
+    def __init__(self):
+        own_strings = strings(("UsrTitle_caption", {"en_US": "Title"}), ("UsrName_caption", {"en_US": "Name", "es_ES": "Nombre"}),
+                              ("UsrSame", {"en_US": "OK", "es_ES": "OK"}), ("UsrEmpty", {"en_US": "Empty", "es_ES": ""}))
+        template = {"uId": PAGE_TEMPLATE, "name": "PageWithTabsFreedomTemplate", "package": {"uId": CRT_UI, "name": "CrtUIv2"},
+                    "localizableStrings": strings(("ParentKey", {"en_US": "Parent", "es_ES": "Padre"}),
+                                                  ("UsrTitle_caption", {"en_US": "Template title", "de_DE": "Vorlage"})),
+                    "caption": culture_values(en_US="Blank page", es_ES="Página en blanco")}
+        self.template = template
+        self.schemas = {
+            PAGE_OWN: page(PAGE_OWN, "UsrPage_FormPage", USR_PKG, "UsrPkg", own_strings, culture_values(en_US="My page")),
+            PAGE_FOREIGN: page(PAGE_FOREIGN, "UsrForeign_FormPage", CRT_OTHER, "CrtOther", strings(("A", {"en_US": "A"})),
+                               culture_values(en_US="Foreign")),
+            PAGE_REPLACED_BASE: page(PAGE_REPLACED_BASE, "UsrReplaced_FormPage", CRT_OTHER, "CrtOther", strings(("A", {"en_US": "A"})),
+                                     culture_values(en_US="Base")),
+            PAGE_REPLACED: page(PAGE_REPLACED, "UsrReplaced_FormPage", USR_PKG, "UsrPkg", strings(("A", {"en_US": "A"})),
+                                culture_values(en_US="Replaced")),
+            PAGE_SAVE_FAILS: page(PAGE_SAVE_FAILS, "UsrSaveFails_FormPage", USR_PKG, "UsrPkg", strings(("A", {"en_US": "A"})),
+                                  culture_values(en_US="Fails")),
+            PAGE_SAVE_LIES: page(PAGE_SAVE_LIES, "UsrSaveLies_FormPage", USR_PKG, "UsrPkg", strings(("A", {"en_US": "A"})),
+                                 culture_values(en_US="Lies")),
+            PAGE_SAVE_DROPS: page(PAGE_SAVE_DROPS, "UsrSaveDrops_FormPage", USR_PKG, "UsrPkg", strings(("A", {"en_US": "A"})),
+                                  culture_values(en_US="Drops")),
+            PAGE_INHERITED: page(PAGE_INHERITED, "UsrInherited_FormPage", USR_PKG, "UsrPkg", strings(("A", {"en_US": "A"})),
+                                 culture_values(en_US="Renamed page", es_ES="Página en blanco")),
+            PAGE_NO_STRINGS: {"uId": PAGE_NO_STRINGS, "name": "UsrNoStrings_FormPage", "package": {"uId": USR_PKG, "name": "UsrPkg"},
+                              "body": "", "schemaType": 9},
+            PAGE_BROKEN: page(PAGE_BROKEN, "UsrBroken_FormPage", USR_PKG, "UsrPkg", strings(("A", {"en_US": "A"})),
+                              culture_values(en_US="Broken")),
+        }
+        self.checksums = {uid: f"checksum-{uid[-2:]}-0" for uid in self.schemas}
+        self.design = {PAGE_OWN: USR_PKG, PAGE_FOREIGN: USR_PKG, PAGE_REPLACED_BASE: USR_PKG, PAGE_SAVE_FAILS: USR_PKG,
+                       PAGE_SAVE_LIES: USR_PKG, PAGE_INHERITED: USR_PKG, PAGE_SAVE_DROPS: USR_PKG, PAGE_NO_STRINGS: USR_PKG,
+                       PAGE_BROKEN: USR_PKG}
+
+    def base_uid(self, name):
+        """SysSchema by name: the base schema (the first one created under that name)."""
+        return next((uid for uid, schema in self.schemas.items() if schema["name"] == name), None)
+
+    def select(self, body):
+        values = filters_of(body)
+        columns = (body.get("columns") or {}).get("items", {})
+        if "SysPackage.UId" in values:
+            uid = next((u for u, s in self.schemas.items() if s["name"] == values.get("Name")
+                        and s["package"]["uId"] == str(values["SysPackage.UId"]).lower()), None)
+            return {"success": True, "rows": [{"UId": uid}] if uid else []}
+        if "UId" in values:
+            uid = str(values["UId"]).lower()
+            if uid not in self.schemas:
+                return {"success": True, "rows": []}
+            row = {"UId": uid, "Checksum": self.checksums[uid], "ModifiedOn": "2026-10-20T10:00:00"}
+            return {"success": True, "rows": [{alias: row.get(alias) for alias in columns}]}
+        uid = self.base_uid(values.get("Name"))
+        return {"success": True, "rows": [{"UId": uid}] if uid else []}
+
+    def design_package(self, body):
+        uid = body.get("schemaUId")
+        if uid not in self.design:
+            return {"success": False, "errorInfo": {"message": "Unknown schema"}}
+        return {"success": True, "uId": self.design[uid]}
+
+    def parents(self, body):
+        uid = body.get("schemaUId")
+        if uid == PAGE_BROKEN:
+            return {"success": False, "errorInfo": {"message": "Hierarchy denied"}}
+        head = self.schemas[uid]
+        if uid == PAGE_REPLACED_BASE:
+            head = self.schemas[PAGE_REPLACED_BASE]
+        values = [copy.deepcopy(head), copy.deepcopy(self.template)]
+        return {"success": True, "values": values}
+
+    def get(self, body):
+        uid = body.get("schemaUId")
+        if uid not in self.schemas:
+            return {"success": False, "errorInfo": {"message": f"Schema {uid} not found"}}
+        return {"success": True, "schema": copy.deepcopy(self.schemas[uid])}
+
+    def save(self, body):
+        uid = body.get("uId")
+        if uid == PAGE_SAVE_FAILS:
+            return {"success": False, "errorInfo": {"message": "Save denied: no rights"}}
+        if uid == PAGE_SAVE_DROPS:
+            return None
+        if uid != PAGE_SAVE_LIES and uid in self.schemas:
+            self.schemas[uid] = body
+            number = int(self.checksums[uid].rsplit("-", 1)[1]) + 1
+            self.checksums[uid] = f"{self.checksums[uid].rsplit('-', 1)[0]}-{number}"
+        return {"success": True}
+
+
+CULTURES = [{"Name": "en-US", "Active": True}, {"Name": "es-ES", "Active": True}, {"Name": "de-DE", "Active": False}]
+
+
 class State:
     def __init__(self):
+        self.pages = Pages()
         self.packages = {CRT_BASE: package(CRT_BASE, "CrtBase"), CRT_UI: package(CRT_UI, "CrtUIv2"),
                          USR_EXISTING: package(USR_EXISTING, "UsrExisting", maintainer="Customer", install_type=0),
                          USR_PKG: package(USR_PKG, "UsrPkg", install_type=0), CRT_OTHER: package(CRT_OTHER, "CrtOther"),
@@ -278,6 +407,10 @@ def select(state, body):
     values = filters_of(body)
     if state.tables.owns(root):
         return state.tables.select(body)
+    if root == "SysCulture":
+        return {"success": True, "rows": copy.deepcopy(CULTURES)}
+    if root == "SysSchema":
+        return state.pages.select(body)
     if root == "SysPackage":
         rows = [p for p in state.packages.values() if "UId" not in values or p["uId"] == str(values["UId"]).lower()]
         return {"success": True, "rows": [{"Name": p["name"], "UId": p["uId"], "Maintainer": p["maintainer"],
@@ -310,6 +443,17 @@ def answer(state, path, body):
         return 200, state.tables.save_binding(body)
     if path.endswith("/SchemaDataDesignerService.svc/GetBoundSchemaData"):
         return 200, state.tables.bound_data(body)
+    if path.endswith("/ApplicationPackagesService.svc/GetDesignPackageUId"):
+        return 200, state.pages.design_package(body)
+    if path.endswith("/ClientUnitSchemaDesignerService.svc/GetParentSchemas"):
+        return 200, state.pages.parents(body)
+    if path.endswith("/ClientUnitSchemaDesignerService.svc/GetSchema"):
+        return 200, state.pages.get(body)
+    if path.endswith("/ClientUnitSchemaDesignerService.svc/SaveSchema"):
+        saved = state.pages.save(body)
+        return (200, saved) if saved is not None else (0, None)
+    if path.endswith("/rest/WorkplaceService/ResetScriptCache"):
+        return 200, {"success": True}
     if path.endswith("/WorkspaceExplorerService.svc/GetIsFileDesignMode"):
         return 200, {"success": True, "value": False}
     if path.endswith("/rest/ConfigurationDataService/GetData"):
@@ -383,6 +527,7 @@ def serve(port, directory):
                     status, payload = 0, None
                 else:
                     status, payload = answer(states[side], path, body)
+                    drop = status == 0
             if drop:
                 return self.drop()
             try:

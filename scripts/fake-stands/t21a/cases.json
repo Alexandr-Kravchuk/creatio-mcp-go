@@ -474,5 +474,231 @@
    "$.written[1].id",
    "$.written[2].id"
   ]
+ },
+ {
+  "label": "lp report only",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "UsrPage_FormPage",
+   "culture": "es-es"
+  }
+ },
+ {
+  "label": "lp inactive culture report",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "UsrPage_FormPage",
+   "culture": "DE-DE"
+  }
+ },
+ {
+  "label": "lp absent culture",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "UsrPage_FormPage",
+   "culture": "fr-FR"
+  }
+ },
+ {
+  "label": "lp missing page",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "UsrMissing_FormPage",
+   "culture": "es-ES"
+  }
+ },
+ {
+  "label": "lp no editable schema",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "UsrForeign_FormPage",
+   "culture": "es-ES",
+   "caption": "X"
+  }
+ },
+ {
+  "label": "lp hierarchy fails",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "UsrBroken_FormPage",
+   "culture": "es-ES"
+  }
+ },
+ {
+  "label": "lp unknown keys",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "UsrPage_FormPage",
+   "culture": "es-ES",
+   "resources": "{\"UsrBound\": \"x\", \"Nope\": \"y\", \"UsrTitle_caption\": \"T\\u00edtulo\"}"
+  }
+ },
+ {
+  "label": "lp write own and inherited",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "UsrPage_FormPage",
+   "culture": "es-ES",
+   "caption": " Mi p\u00e1gina ",
+   "resources": "{\"UsrTitle_caption\": \"T\\u00edtulo\", \"ParentKey\": \"Padre nuevo\", \"UsrName_caption\": \"Nombre\", \"UsrEmpty\": \"Vac\\u00edo\"}"
+  }
+ },
+ {
+  "label": "lp rerun unchanged",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "UsrPage_FormPage",
+   "culture": "es-ES",
+   "caption": "Mi p\u00e1gina",
+   "resources": "{\"UsrTitle_caption\": \"T\\u00edtulo\", \"ParentKey\": \"Padre nuevo\"}"
+  }
+ },
+ {
+  "label": "lp inherited value unchanged",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "UsrPage_FormPage",
+   "culture": "de-DE",
+   "resources": "{\"UsrTitle_caption\": \"Vorlage\"}"
+  }
+ },
+ {
+  "label": "lp report after write",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "UsrPage_FormPage",
+   "culture": "es-ES"
+  }
+ },
+ {
+  "label": "lp numbers and booleans",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "UsrPage_FormPage",
+   "culture": "es-ES",
+   "resources": "{\"UsrSame\": 5, \"UsrName_caption\": true, \"UsrEmpty\": 1.5}"
+  }
+ },
+ {
+  "label": "lp replacing schema",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "UsrReplaced_FormPage",
+   "culture": "es-ES",
+   "resources": "{\"A\": \"a\"}"
+  }
+ },
+ {
+  "label": "lp save refused",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "UsrSaveFails_FormPage",
+   "culture": "es-ES",
+   "resources": "{\"A\": \"a\"}"
+  }
+ },
+ {
+  "label": "lp save not stored",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "UsrSaveLies_FormPage",
+   "culture": "es-ES",
+   "caption": "c",
+   "resources": "{\"A\": \"a\"}"
+  }
+ },
+ {
+  "label": "lp save dropped",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "UsrSaveDrops_FormPage",
+   "culture": "es-ES",
+   "resources": "{\"A\": \"a\"}"
+  }
+ },
+ {
+  "label": "lp caption inherited",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "UsrInherited_FormPage",
+   "culture": "es-ES"
+  }
+ },
+ {
+  "label": "lp no strings page",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "UsrNoStrings_FormPage",
+   "culture": "es-ES",
+   "caption": "Hola"
+  }
+ },
+ {
+  "label": "lp trailing comma",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "UsrPage_FormPage",
+   "culture": "es-ES",
+   "resources": "{\"UsrSame\": \"Vale\",}"
+  }
+ },
+ {
+  "label": "lp root string",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "UsrPage_FormPage",
+   "culture": "es-ES",
+   "resources": "\"x\""
+  }
+ },
+ {
+  "label": "lp root number",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "UsrPage_FormPage",
+   "culture": "es-ES",
+   "resources": " 5 "
+  }
+ },
+ {
+  "label": "lp array value",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "UsrPage_FormPage",
+   "culture": "es-ES",
+   "resources": "{\n \"a\": [1]}"
+  }
+ },
+ {
+  "label": "lp duplicate keys",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "UsrPage_FormPage",
+   "culture": "es-ES",
+   "resources": "{\"UsrSame\": \"Uno\", \"UsrSame\": \"Dos\"}"
+  }
  }
 ]

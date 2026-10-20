@@ -159,7 +159,7 @@ func (c *Client) createPackage(ctx context.Context, input CreatePackageRequest) 
 		if errors.As(err, &refusal) {
 			return createPackageResult{}, err
 		}
-		text := c.createPackageSendFailureText(err)
+		text := c.clioRequestFailureText(err)
 		exists, checkErr := c.createPackageExists(ctx, packageUID)
 		switch {
 		case checkErr == nil && !exists:
@@ -300,11 +300,11 @@ func (c *Client) createPackageSend(ctx context.Context, id, uid, name, descripti
 	return nil
 }
 
-// createPackageSendFailureText is the message of the exception ExecuteNonReplayablePostRequest throws when the
+// clioRequestFailureText is the message of the exception ExecuteNonReplayablePostRequest throws when the
 // create request gets no answer: a connection closed or reset before the response is the AggregateException
 // over HttpRequestException clio reports (measured against clio 8.1.0.142 on a dropped connection); other
 // transport failures use the client's usual texts.
-func (c *Client) createPackageSendFailureText(err error) string {
+func (c *Client) clioRequestFailureText(err error) string {
 	if errors.Is(err, io.EOF) || errors.Is(err, io.ErrUnexpectedEOF) || errors.Is(err, syscall.ECONNRESET) {
 		return "One or more errors occurred. (An error occurred while sending the request.)"
 	}
