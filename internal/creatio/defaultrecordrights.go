@@ -517,9 +517,32 @@ func (c *Client) startActualization(ctx context.Context, schemaUID string, reque
 	}
 	native, parseErr := dataWriteParseRunResponse([]byte(text))
 	if parseErr != nil {
-		return DataWriteProcessResult{Status: actualizationUnknown, Error: "RunProcess returned a response clio could not read: " + parseErr.Error()}, nil
+		return DataWriteProcessResult{Status: actualizationUnknown, Error: "RunProcess returned a response clio could not read: " +
+			rightsJSONStartError(text, parseErr)}, nil
 	}
 	return dataWriteBuildRunResponse(native, actualizationProcessName), nil
+}
+
+// rightsJSONStartError words a body that does not start like JSON (a proxy's HTML page) as System.Text.Json
+// does; any other parse failure keeps the Go parser's text.
+func rightsJSONStartError(text string, parseErr error) string {
+	line, column := 0, 0
+	for _, r := range text {
+		switch r {
+		case ' ', '\t', '\r':
+			column++
+			continue
+		case '\n':
+			line++
+			column = 0
+			continue
+		}
+		if strings.ContainsRune("{[\"-0123456789tfn", r) {
+			break
+		}
+		return fmt.Sprintf("'%c' is an invalid start of a value. Path: $ | LineNumber: %d | BytePositionInLine: %d.", r, line, column)
+	}
+	return parseErr.Error()
 }
 
 // waitForActualization is WaitForEnd: polls the run's SysProcessLog row every 2 s until it ends or the wait is over.

@@ -152,7 +152,9 @@ func (c *Client) listConnected(ctx context.Context, include bool, rootName strin
 	defer cancel()
 	schema, err := c.GetEntitySchemaProperties(listCtx, EntitySchemaPropertiesRequest{SchemaName: rootName})
 	if err != nil {
-		return nil, nil, rightsDisplayFailure(c.rightsTransportFault(err, timeout)), ""
+		// clio's runtime reader reports the service's own message; the Go reader prefixes it.
+		failure := c.rightsTransportFault(err, timeout)
+		return nil, nil, rightsDisplayError(strings.TrimPrefix(failure.Error(), "runtime schema read failed: ")), ""
 	}
 	seen := map[string]bool{}
 	names := []string{}
