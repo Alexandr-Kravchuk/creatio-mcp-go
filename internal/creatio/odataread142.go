@@ -963,4 +963,3 @@ func odataRawRows(body []byte) []map[string]json.RawMessage {
 	}
 	return nil
 }
-

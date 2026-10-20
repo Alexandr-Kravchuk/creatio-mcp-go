@@ -147,12 +147,12 @@ func odataDescribeServerReportedReadError(kind odataErrorKind, callerInput, stru
 }
 
 var (
-	odataErrorCodePattern       = regexp.MustCompile(`^[A-Za-z0-9_.:-]{1,64}$`)
+	odataErrorCodePattern           = regexp.MustCompile(`^[A-Za-z0-9_.:-]{1,64}$`)
 	odataReadUnknownPropertyPattern = regexp.MustCompile(`Could not find a property named '([A-Za-z_][A-Za-z0-9_]{0,127})' on type '([A-Za-z_][A-Za-z0-9_]{0,127}(?:\.[A-Za-z_][A-Za-z0-9_]{0,127}){0,7})'`)
-	odataColumnPathPattern      = regexp.MustCompile(`Column by path ([A-Za-z_][A-Za-z0-9_]{0,63}(?:[./][A-Za-z_][A-Za-z0-9_]{0,63}){0,3}) not found in schema ([A-Za-z_][A-Za-z0-9_]{0,63})\.`)
-	odataOperandPattern         = regexp.MustCompile(`Found operand types '(Edm\.[A-Za-z][A-Za-z0-9]{0,31})' and '(Edm\.[A-Za-z][A-Za-z0-9]{0,31})' for operator kind '([A-Za-z]{1,32})'`)
-	odataNullPropertyPattern    = regexp.MustCompile(`^Value cannot be null\.\s{1,4}Parameter name: property\s{0,4}$`)
-	odataTypedLiteralTypes      = map[string]bool{"Edm.Date": true, "Edm.DateTimeOffset": true, "Edm.Duration": true, "Edm.Guid": true, "Edm.TimeOfDay": true}
+	odataColumnPathPattern          = regexp.MustCompile(`Column by path ([A-Za-z_][A-Za-z0-9_]{0,63}(?:[./][A-Za-z_][A-Za-z0-9_]{0,63}){0,3}) not found in schema ([A-Za-z_][A-Za-z0-9_]{0,63})\.`)
+	odataOperandPattern             = regexp.MustCompile(`Found operand types '(Edm\.[A-Za-z][A-Za-z0-9]{0,31})' and '(Edm\.[A-Za-z][A-Za-z0-9]{0,31})' for operator kind '([A-Za-z]{1,32})'`)
+	odataNullPropertyPattern        = regexp.MustCompile(`^Value cannot be null\.\s{1,4}Parameter name: property\s{0,4}$`)
+	odataTypedLiteralTypes          = map[string]bool{"Edm.Date": true, "Edm.DateTimeOffset": true, "Edm.Duration": true, "Edm.Guid": true, "Edm.TimeOfDay": true}
 )
 
 // odataDescribeStructuredError is CreatioResponseError.DescribeStructuredODataError.

@@ -588,7 +588,6 @@ var hiddenToolContracts = map[string]map[string]any{
 	},
 }
 
-
 // clioFailure prefixes a tool failure the way clio does. Argument-binding refusals carry no prefix in clio,
 // because they are raised before the tool runs.
 func clioFailure(prefix string, err error) error {
