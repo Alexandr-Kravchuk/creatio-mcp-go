@@ -6,10 +6,7 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
-	"os"
-	"path/filepath"
 
 	"github.com/Alexandr-Kravchuk/creatio-mcp-go/internal/knowledge"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -229,26 +226,7 @@ func invokeGetKnowledgeFeedbackPolicy(_ context.Context, _ *environments, _ map[
 	return structuredToolResult(policy), nil
 }
 
-type telemetryConsentResult struct {
-	Success          bool   `json:"success"`
-	Status           string `json:"status"`
-	TelemetryConsent string `json:"telemetry_consent"`
-}
-
-// invokeGetTelemetryConsent reads <clio home>/telemetry/consent.json like clio's TelemetryService.
+// invokeGetTelemetryConsent reads clio's consent.json (CLIO_TELEMETRY_HOME or <clio home>/telemetry).
 func invokeGetTelemetryConsent(_ context.Context, _ *environments, _ map[string]any) (*mcp.CallToolResult, error) {
-	consent := "unknown"
-	if data, err := os.ReadFile(filepath.Join(knowledge.ClioHome(), "telemetry", "consent.json")); err == nil {
-		var state struct {
-			TelemetryConsent string `json:"telemetry_consent"`
-		}
-		if json.Unmarshal(data, &state) == nil {
-			consent = state.TelemetryConsent
-		}
-	}
-	switch consent {
-	case "granted", "denied":
-		return structuredToolResult(telemetryConsentResult{Success: true, Status: "known", TelemetryConsent: consent}), nil
-	}
-	return structuredToolResult(telemetryConsentResult{Success: true, Status: "unknown", TelemetryConsent: "unknown"}), nil
+	return structuredToolResult(telemetryService().Consent()), nil
 }
