@@ -163,16 +163,16 @@ func rightsLeavesOutcomeUnknown(err error) bool {
 	return errors.As(err, &fault) && (fault.timeout || fault.noAnswer)
 }
 
-// rightsTransportFault turns a Go transport error into the text clio's client reports for it: a timeout as
-// HttpClient's cancellation, a refused connection as the socket's "Connection refused (host:port)".
+// rightsTransportFault turns a Go transport error into the text clio's client reports for it: a timeout as the
+// cancelled task Creatio.Client's request ends in (measured against clio 8.1.0.142 on a request that hangs past
+// its timeout), a refused connection as the socket's "Connection refused (host:port)".
 func (c *Client) rightsTransportFault(err error, timeout time.Duration) error {
 	if !rightsIsConnectionFailure(err) {
 		return err
 	}
 	var netErr net.Error
 	if errors.Is(err, context.DeadlineExceeded) || (errors.As(err, &netErr) && netErr.Timeout()) {
-		return &rightsFault{timeout: true, noAnswer: true, message: fmt.Sprintf(
-			"The request was canceled due to the configured HttpClient.Timeout of %s seconds elapsing.", rightsSeconds(timeout))}
+		return &rightsFault{timeout: true, noAnswer: true, message: "A task was canceled."}
 	}
 	if errors.Is(err, syscall.ECONNREFUSED) {
 		return &rightsFault{noAnswer: true, message: "Connection refused (" + rightsHostPort(c.config.BaseURL) + ")"}

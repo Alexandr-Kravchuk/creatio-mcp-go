@@ -22,6 +22,7 @@ import json
 import pathlib
 import sys
 import threading
+import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 ALL_EMPLOYEES = "a29a3ba5-4b0d-de11-9a51-005056c00008"
@@ -34,6 +35,9 @@ COLUMNS = {"Owner": "66666666-0000-0000-0000-000000000001", "PrimaryContact": "6
            "Type": "66666666-0000-0000-0000-000000000003", "Name": "66666666-0000-0000-0000-000000000004"}
 PROCESS = "77777777-7777-7777-7777-777777777777"
 SLOW_PROCESS = "77777777-7777-7777-7777-777777777778"
+# GetAdministratedObject on this UId answers after the tools' 30 s read timeout: a hang, not a fault.
+HANG_UID = "eeeeeeee-0000-0000-0000-000000000001"
+HANG_SECONDS = 33
 RUNNING = "ed2ae277-b6e2-df11-971b-001d60e938c6"
 CONTACT = "55555555-5555-5555-5555-555555555556"
 LEAD = "55555555-5555-5555-5555-555555555557"
@@ -86,6 +90,7 @@ def objects():
                         node("aaaaaaaa-0000-0000-0000-000000000009", "UsrBadLevel", "Bad level", records=True,
                              rules=[rule(SALES, SUPPORT, 7, 0, 0)]), 0),
     }
+    found["UsrHang"] = ([HANG_UID], node(HANG_UID, "UsrHang", "Hang", operations=True, rows=[row(ALL_EMPLOYEES, 0)]), 0)
     for index, name in enumerate(["UsrSaveFails", "UsrSaveLies", "UsrSaveError", "UsrApplyRefused", "UsrApplyQueued",
                                   "UsrApplySlow", "UsrApplyGarbage"]):
         uid = f"dddddddd-0000-0000-0000-{index + 1:012d}"
@@ -308,7 +313,12 @@ def serve(port, directory):
                 except ValueError:
                     body = {}
                 status, payload = answer(states[side], path, body if isinstance(body, dict) else {})
-            self.reply(status, payload)
+            if path.endswith("/GetAdministratedObject") and isinstance(body, dict) and body.get("schemaUId") == HANG_UID:
+                time.sleep(HANG_SECONDS)  # outside the lock: the other requests go on
+            try:
+                self.reply(status, payload)
+            except (BrokenPipeError, ConnectionResetError):
+                pass  # the caller gave up waiting
 
         do_GET = handle_any
         do_POST = handle_any

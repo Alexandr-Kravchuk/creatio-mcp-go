@@ -43,12 +43,14 @@ Shared code: `objectrights_support.go` (envelope, line log, request deadline, cl
 - No-stand comparison with the clio 8.1.0.142 dll (`dotnet clio.dll mcp-server`, an environment on a closed
   port and a Safe one): 151 calls (missing, wrong-typed, unknown and alias arguments, unknown and Safe
   environments, every validation branch, connection refused); identical except the known differences below.
-- Fake stand `scripts/fake-stands/t19/` (stateful: saves are applied, so read-backs see them): 79 cases
+- Fake stand `scripts/fake-stands/t19/` (stateful: saves are applied, so read-backs see them): 80 cases
   covering reads by code and title, connected objects, grants, revokes, enable/disable, every refusal, failed,
   unverified and error-but-applied saves, record-rule grants/revokes/duplicates/invalid levels, record-rights
   runs (completed, still running, refused, queued, unreadable answer), connections reads, writes, fallback to
-  the EntityConnection table and an add-on the server ignores. All 79 answers are identical to clio 8.1.0.142,
-  and the two servers sent identical requests on all 10 routes.
+  the EntityConnection table, an add-on the server ignores, and a read that hangs past the 30 s timeout (clio
+  reports it as "A task was canceled."). All 80 answers are identical to clio 8.1.0.142 (exact text, and
+  80/80 "match" through `scripts/compare-mcp.py --cases scripts/fake-stands/t19/cases.json`), and the two
+  servers sent identical requests on all 10 routes.
 - `scripts/write-scenarios/t19-rights.json` (create-app, create-lookup, the rights and connections calls,
   delete-app clean-up) validates with `--plan-only`; it has not run on a stand.
 
@@ -61,7 +63,11 @@ Shared code: `objectrights_support.go` (envelope, line log, request deadline, cl
 - `timeout-seconds: 5.0` is refused by clio as not a number; here it reads as 5 (the JSON decoder does not keep
   the literal).
 - A direct call with flat arguments (no `args` wrapper) runs here; clio refuses it. Shared behaviour.
-- Transport failures other than a refused connection, a timeout and a non-JSON body keep Go's error text.
+- Transport failures other than a refused connection, a read timeout and a non-JSON body keep Go's error text;
+  the timeout text of the connections tools' SelectQuery and of a save that hangs is not measured.
+- `get-tool-contract` serves clio's default (short) contract for these tools whatever `detail` asks for; the
+  short description says "detail=full has all", which this server does not honour for named contracts. That
+  holds for every tool once the inventory is regenerated from 8.1.0.142 (inventory stream).
 
 ## Not done
 

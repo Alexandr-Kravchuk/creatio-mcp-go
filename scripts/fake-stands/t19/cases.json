@@ -776,5 +776,13 @@
     "Owner"
    ]
   }
+ },
+ {
+  "label": "gor hang",
+  "tool": "get-object-rights",
+  "clio-run": true,
+  "args": {
+   "entity-schema-name": "UsrHang"
+  }
  }
 ]
