@@ -1,0 +1,920 @@
+[
+ {
+  "label": "cp created with prefix",
+  "tool": "create-package",
+  "clio-run": true,
+  "args": {
+   "package-name": "Calls",
+   "description": "Calls package"
+  },
+  "known-differences": [
+   "$.packageuid"
+  ]
+ },
+ {
+  "label": "cp duplicate",
+  "tool": "create-package",
+  "clio-run": true,
+  "args": {
+   "package-name": "Calls"
+  }
+ },
+ {
+  "label": "cp duplicate other case",
+  "tool": "create-package",
+  "clio-run": true,
+  "args": {
+   "package-name": "usrcalls"
+  }
+ },
+ {
+  "label": "cp prefix kept",
+  "tool": "create-package",
+  "clio-run": true,
+  "args": {
+   "package-name": "usrLower"
+  },
+  "known-differences": [
+   "$.packageuid"
+  ]
+ },
+ {
+  "label": "cp dependencies",
+  "tool": "create-package",
+  "clio-run": true,
+  "args": {
+   "package-name": "WithDeps",
+   "dependencies": [
+    "CrtBase",
+    "crtbase",
+    " CrtUIv2 ",
+    null,
+    ""
+   ]
+  },
+  "known-differences": [
+   "$.packageuid"
+  ]
+ },
+ {
+  "label": "cp missing dependencies",
+  "tool": "create-package",
+  "clio-run": true,
+  "args": {
+   "package-name": "Missing",
+   "dependencies": [
+    "Nope",
+    "CrtBase",
+    "Gone"
+   ]
+  }
+ },
+ {
+  "label": "cp in application",
+  "tool": "create-package",
+  "clio-run": true,
+  "args": {
+   "package-name": "InApp",
+   "application-code": "UsrApp"
+  },
+  "known-differences": [
+   "$.packageuid"
+  ]
+ },
+ {
+  "label": "cp unknown application",
+  "tool": "create-package",
+  "clio-run": true,
+  "args": {
+   "package-name": "NoApp",
+   "application-code": "NoSuchApp"
+  }
+ },
+ {
+  "label": "cp refused by server",
+  "tool": "create-package",
+  "clio-run": true,
+  "args": {
+   "package-name": "RefuseMe"
+  }
+ },
+ {
+  "label": "cp refused no details",
+  "tool": "create-package",
+  "clio-run": true,
+  "args": {
+   "package-name": "NoDetails"
+  }
+ },
+ {
+  "label": "cp dependencies fail",
+  "tool": "create-package",
+  "clio-run": true,
+  "args": {
+   "package-name": "DepsFail",
+   "dependencies": [
+    "CrtBase"
+   ]
+  },
+  "known-differences": [
+   "$.packageuid"
+  ]
+ },
+ {
+  "label": "cp readback fails",
+  "tool": "create-package",
+  "clio-run": true,
+  "args": {
+   "package-name": "ReadbackFail",
+   "description": "d"
+  },
+  "known-differences": [
+   "$.packageuid"
+  ]
+ },
+ {
+  "label": "cp null description",
+  "tool": "create-package",
+  "clio-run": true,
+  "args": {
+   "package-name": "NullDescription"
+  },
+  "known-differences": [
+   "$.packageuid"
+  ]
+ },
+ {
+  "label": "cp no install type",
+  "tool": "create-package",
+  "clio-run": true,
+  "args": {
+   "package-name": "NoInstallType"
+  },
+  "known-differences": [
+   "$.packageuid"
+  ]
+ },
+ {
+  "label": "cp blank application",
+  "tool": "create-package",
+  "clio-run": true,
+  "args": {
+   "package-name": "BlankApp",
+   "application-code": "  "
+  },
+  "known-differences": [
+   "$.packageuid"
+  ]
+ },
+ {
+  "label": "cp drop stored",
+  "tool": "create-package",
+  "clio-run": true,
+  "args": {
+   "package-name": "DropStored"
+  },
+  "known-differences": [
+   "$.packageuid"
+  ]
+ },
+ {
+  "label": "cp drop lost",
+  "tool": "create-package",
+  "clio-run": true,
+  "args": {
+   "package-name": "DropLost"
+  }
+ },
+ {
+  "label": "cp existing package",
+  "tool": "create-package",
+  "clio-run": true,
+  "args": {
+   "package-name": "UsrExisting"
+  }
+ },
+ {
+  "label": "ps mode none",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "UsrOrders",
+   "mode": "none"
+  }
+ },
+ {
+  "label": "ps unknown section",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "UsrMissing",
+   "mode": "none"
+  }
+ },
+ {
+  "label": "ps duplicate code one placed",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "UsrDup",
+   "mode": "none"
+  }
+ },
+ {
+  "label": "ps unknown package",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "UsrOrders",
+   "workplace-name": "Hub",
+   "package-name": "NoPkg"
+  }
+ },
+ {
+  "label": "ps locked package",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "UsrOrders",
+   "workplace-name": "Hub",
+   "package-name": "UsrLocked"
+  }
+ },
+ {
+  "label": "ps unknown role",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "UsrOrders",
+   "workplace-name": "Hub",
+   "package-name": "UsrPkg",
+   "roles": [
+    "Nobody"
+   ]
+  }
+ },
+ {
+  "label": "ps ambiguous role",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "UsrOrders",
+   "workplace-name": "Hub",
+   "package-name": "UsrPkg",
+   "roles": [
+    "Dup"
+   ]
+  }
+ },
+ {
+  "label": "ps unknown role id",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "UsrOrders",
+   "workplace-name": "Hub",
+   "package-name": "UsrPkg",
+   "roles": [
+    "33333333-0000-0000-0000-0000000000ff"
+   ]
+  }
+ },
+ {
+  "label": "ps mode existing missing",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "UsrOrders",
+   "workplace-name": "Hub",
+   "package-name": "UsrPkg",
+   "mode": "existing"
+  }
+ },
+ {
+  "label": "ps mode new taken",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "UsrOrders",
+   "workplace-name": "Sales",
+   "package-name": "UsrPkg",
+   "mode": "new"
+  }
+ },
+ {
+  "label": "ps move hides app",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "UsrOrders",
+   "workplace-name": "Hub",
+   "package-name": "UsrPkg"
+  }
+ },
+ {
+  "label": "ps foreign placement",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "UsrForeign",
+   "workplace-name": "Hub",
+   "package-name": "UsrPkg",
+   "roles": [
+    "Sales"
+   ]
+  }
+ },
+ {
+  "label": "ps foreign workplace position",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "UsrLonely",
+   "workplace-name": "Foreign WP",
+   "package-name": "UsrPkg",
+   "position": 9,
+   "remove-from-my-applications": false
+  }
+ },
+ {
+  "label": "ps create and move",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "UsrOrders",
+   "workplace-name": "Orders Hub",
+   "package-name": "UsrPkg",
+   "roles": [
+    "All employees",
+    "a29a3ba5-4b0d-de11-9a51-005056c00008",
+    "Sales"
+   ],
+   "mode": "new"
+  },
+  "known-differences": [
+   "$.workplace.id",
+   "$.roles[0].grantid",
+   "$.roles[1].grantid",
+   "$.sectionworkplaces[0].id"
+  ]
+ },
+ {
+  "label": "ps rerun converges",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "UsrOrders",
+   "workplace-name": "Orders Hub",
+   "package-name": "UsrPkg",
+   "roles": [
+    "All employees",
+    "Sales"
+   ],
+   "mode": "new"
+  },
+  "known-differences": [
+   "$.workplace.id",
+   "$.roles[0].grantid",
+   "$.roles[1].grantid",
+   "$.sectionworkplaces[0].id"
+  ]
+ },
+ {
+  "label": "ps after move none",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "UsrOrders",
+   "mode": "none"
+  },
+  "known-differences": [
+   "$.sectionworkplaces[0].id"
+  ]
+ },
+ {
+  "label": "ps existing unbound default package",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "UsrLonely",
+   "workplace-name": "Sales",
+   "position": 7,
+   "remove-from-my-applications": false
+  },
+  "known-differences": [
+   "$.section.placementid"
+  ]
+ },
+ {
+  "label": "ps foreign workplace used",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "UsrLonely",
+   "workplace-name": "Foreign WP",
+   "package-name": "UsrPkg",
+   "remove-from-my-applications": false
+  },
+  "known-differences": [
+   "$.section.placementid"
+  ]
+ },
+ {
+  "label": "ps mobile hub",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "UsrTwice",
+   "workplace-name": "Mobile hub",
+   "client-type": "MOBILE",
+   "package-name": "UsrPkg",
+   "roles": [
+    "Sales"
+   ]
+  },
+  "known-differences": [
+   "$.workplace.id",
+   "$.roles[0].grantid",
+   "$.section.placementid",
+   "$.sectionworkplaces[1].id"
+  ]
+ },
+ {
+  "label": "ps twice in my apps",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "UsrTwice",
+   "workplace-name": "Twice Hub",
+   "package-name": "UsrPkg",
+   "roles": [
+    "Sales"
+   ]
+  },
+  "known-differences": [
+   "$.workplace.id",
+   "$.roles[0].grantid",
+   "$.sectionworkplaces[0].id",
+   "$.sectionworkplaces[2].id"
+  ]
+ },
+ {
+  "label": "ps partial failure",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "UsrDup",
+   "workplace-name": "Fail Hub",
+   "package-name": "UsrPkg",
+   "roles": [
+    "Sales"
+   ]
+  },
+  "known-differences": [
+   "$.written[1].id",
+   "$.written[2].id"
+  ]
+ },
+ {
+  "label": "lp report only",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "UsrPage_FormPage",
+   "culture": "es-es"
+  }
+ },
+ {
+  "label": "lp inactive culture report",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "UsrPage_FormPage",
+   "culture": "DE-DE"
+  }
+ },
+ {
+  "label": "lp absent culture",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "UsrPage_FormPage",
+   "culture": "fr-FR"
+  }
+ },
+ {
+  "label": "lp missing page",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "UsrMissing_FormPage",
+   "culture": "es-ES"
+  }
+ },
+ {
+  "label": "lp no editable schema",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "UsrForeign_FormPage",
+   "culture": "es-ES",
+   "caption": "X"
+  }
+ },
+ {
+  "label": "lp hierarchy fails",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "UsrBroken_FormPage",
+   "culture": "es-ES"
+  }
+ },
+ {
+  "label": "lp unknown keys",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "UsrPage_FormPage",
+   "culture": "es-ES",
+   "resources": "{\"UsrBound\": \"x\", \"Nope\": \"y\", \"UsrTitle_caption\": \"T\\u00edtulo\"}"
+  }
+ },
+ {
+  "label": "lp write own and inherited",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "UsrPage_FormPage",
+   "culture": "es-ES",
+   "caption": " Mi p\u00e1gina ",
+   "resources": "{\"UsrTitle_caption\": \"T\\u00edtulo\", \"ParentKey\": \"Padre nuevo\", \"UsrName_caption\": \"Nombre\", \"UsrEmpty\": \"Vac\\u00edo\"}"
+  }
+ },
+ {
+  "label": "lp rerun unchanged",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "UsrPage_FormPage",
+   "culture": "es-ES",
+   "caption": "Mi p\u00e1gina",
+   "resources": "{\"UsrTitle_caption\": \"T\\u00edtulo\", \"ParentKey\": \"Padre nuevo\"}"
+  }
+ },
+ {
+  "label": "lp inherited value unchanged",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "UsrPage_FormPage",
+   "culture": "de-DE",
+   "resources": "{\"UsrTitle_caption\": \"Vorlage\"}"
+  }
+ },
+ {
+  "label": "lp report after write",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "UsrPage_FormPage",
+   "culture": "es-ES"
+  }
+ },
+ {
+  "label": "lp numbers and booleans",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "UsrPage_FormPage",
+   "culture": "es-ES",
+   "resources": "{\"UsrSame\": 5, \"UsrName_caption\": true, \"UsrEmpty\": 1.5}"
+  }
+ },
+ {
+  "label": "lp replacing schema",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "UsrReplaced_FormPage",
+   "culture": "es-ES",
+   "resources": "{\"A\": \"a\"}"
+  }
+ },
+ {
+  "label": "lp save refused",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "UsrSaveFails_FormPage",
+   "culture": "es-ES",
+   "resources": "{\"A\": \"a\"}"
+  }
+ },
+ {
+  "label": "lp save not stored",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "UsrSaveLies_FormPage",
+   "culture": "es-ES",
+   "caption": "c",
+   "resources": "{\"A\": \"a\"}"
+  }
+ },
+ {
+  "label": "lp save dropped",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "UsrSaveDrops_FormPage",
+   "culture": "es-ES",
+   "resources": "{\"A\": \"a\"}"
+  }
+ },
+ {
+  "label": "lp caption inherited",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "UsrInherited_FormPage",
+   "culture": "es-ES"
+  }
+ },
+ {
+  "label": "lp no strings page",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "UsrNoStrings_FormPage",
+   "culture": "es-ES",
+   "caption": "Hola"
+  }
+ },
+ {
+  "label": "lp trailing comma",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "UsrPage_FormPage",
+   "culture": "es-ES",
+   "resources": "{\"UsrSame\": \"Vale\",}"
+  }
+ },
+ {
+  "label": "lp root string",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "UsrPage_FormPage",
+   "culture": "es-ES",
+   "resources": "\"x\""
+  }
+ },
+ {
+  "label": "lp root number",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "UsrPage_FormPage",
+   "culture": "es-ES",
+   "resources": " 5 "
+  }
+ },
+ {
+  "label": "lp array value",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "UsrPage_FormPage",
+   "culture": "es-ES",
+   "resources": "{\n \"a\": [1]}"
+  }
+ },
+ {
+  "label": "lp duplicate keys",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "UsrPage_FormPage",
+   "culture": "es-ES",
+   "resources": "{\"UsrSame\": \"Uno\", \"UsrSame\": \"Dos\"}"
+  }
+ },
+ {
+  "label": "ts completes and cleans up",
+  "tool": "trigger-smoke",
+  "clio-run": true,
+  "args": {
+   "entity": "UsrRequest",
+   "values": {
+    "Name": "Completes 1"
+   },
+   "watch": [
+    "Activity"
+   ],
+   "timeout": 8
+  }
+ },
+ {
+  "label": "ts run fails",
+  "tool": "trigger-smoke",
+  "clio-run": true,
+  "args": {
+   "entity": "UsrRequest",
+   "values": {
+    "Name": "Fails 1"
+   },
+   "watch": [
+    "Activity"
+   ],
+   "timeout": 8
+  }
+ },
+ {
+  "label": "ts no run starts",
+  "tool": "trigger-smoke",
+  "clio-run": true,
+  "args": {
+   "entity": "UsrRequest",
+   "values": {
+    "Name": "Nothing 1"
+   },
+   "watch": [
+    "Activity"
+   ],
+   "timeout": 1
+  }
+ },
+ {
+  "label": "ts only another user's run",
+  "tool": "trigger-smoke",
+  "clio-run": true,
+  "args": {
+   "entity": "UsrRequest",
+   "values": {
+    "Name": "Foreign 1"
+   },
+   "watch": [
+    "Activity"
+   ],
+   "timeout": 2
+  }
+ },
+ {
+  "label": "ts parked run cancelled",
+  "tool": "trigger-smoke",
+  "clio-run": true,
+  "args": {
+   "entity": "UsrRequest",
+   "values": {
+    "Name": "Parked 1"
+   },
+   "watch": [
+    "Activity"
+   ],
+   "timeout": 8
+  }
+ },
+ {
+  "label": "ts unlinked record skipped",
+  "tool": "trigger-smoke",
+  "clio-run": true,
+  "args": {
+   "entity": "UsrRequest",
+   "values": {
+    "Name": "Unlinked 1"
+   },
+   "watch": [
+    "Activity"
+   ],
+   "timeout": 8
+  }
+ },
+ {
+  "label": "ts process filter",
+  "tool": "trigger-smoke",
+  "clio-run": true,
+  "args": {
+   "entity": "UsrRequest",
+   "values": {
+    "Name": "Mixed 1"
+   },
+   "watch": [
+    "Activity"
+   ],
+   "timeout": 8,
+   "process": "UsrRequestHandler"
+  }
+ },
+ {
+  "label": "ts process by caption",
+  "tool": "trigger-smoke",
+  "clio-run": true,
+  "args": {
+   "entity": "UsrRequest",
+   "values": {
+    "Name": "Mixed 2"
+   },
+   "watch": [
+    "Activity"
+   ],
+   "timeout": 8,
+   "process": "request handler"
+  }
+ },
+ {
+  "label": "ts no process filter mixed",
+  "tool": "trigger-smoke",
+  "clio-run": true,
+  "args": {
+   "entity": "UsrRequest",
+   "values": {
+    "Name": "Mixed 3"
+   },
+   "watch": [
+    "Activity"
+   ],
+   "timeout": 8
+  }
+ },
+ {
+  "label": "ts cleanup off",
+  "tool": "trigger-smoke",
+  "clio-run": true,
+  "args": {
+   "entity": "UsrRequest",
+   "values": {
+    "Name": "Completes 2"
+   },
+   "watch": [
+    "Activity"
+   ],
+   "timeout": 8,
+   "cleanup": false
+  }
+ },
+ {
+  "label": "ts create refused",
+  "tool": "trigger-smoke",
+  "clio-run": true,
+  "args": {
+   "entity": "UsrRequest",
+   "values": {
+    "Name": "Refuse 1"
+   },
+   "watch": [
+    "Activity"
+   ],
+   "timeout": 2
+  }
+ },
+ {
+  "label": "ts create without id",
+  "tool": "trigger-smoke",
+  "clio-run": true,
+  "args": {
+   "entity": "UsrRequest",
+   "values": {
+    "Name": "NoId 1"
+   },
+   "watch": [
+    "Activity"
+   ],
+   "timeout": 2
+  }
+ },
+ {
+  "label": "ts trigger entity watched",
+  "tool": "trigger-smoke",
+  "clio-run": true,
+  "args": {
+   "entity": "UsrRequest",
+   "values": {
+    "Name": "Completes 3"
+   },
+   "watch": [
+    "UsrRequest",
+    "Activity",
+    "UsrNote"
+   ],
+   "timeout": 8
+  }
+ },
+ {
+  "label": "ts unknown watched entity",
+  "tool": "trigger-smoke",
+  "clio-run": true,
+  "args": {
+   "entity": "UsrRequest",
+   "values": {
+    "Name": "Completes 4"
+   },
+   "watch": [
+    "Activity",
+    "UsrMissing"
+   ],
+   "timeout": 8
+  }
+ }
+]

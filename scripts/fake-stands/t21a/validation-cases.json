@@ -1,0 +1,884 @@
+[
+ {
+  "label": "cp blank env",
+  "tool": "create-package",
+  "clio-run": true,
+  "args": {
+   "package-name": "X",
+   "environment-name": " "
+  }
+ },
+ {
+  "label": "cp no name",
+  "tool": "create-package",
+  "clio-run": true,
+  "args": {}
+ },
+ {
+  "label": "cp unknown env",
+  "tool": "create-package",
+  "clio-run": true,
+  "args": {
+   "package-name": "X",
+   "environment-name": "nope"
+  }
+ },
+ {
+  "label": "cp safe env",
+  "tool": "create-package",
+  "clio-run": true,
+  "args": {
+   "package-name": "X",
+   "environment-name": "dummysafe"
+  }
+ },
+ {
+  "label": "cp closed",
+  "tool": "create-package",
+  "clio-run": true,
+  "args": {
+   "package-name": "X"
+  }
+ },
+ {
+  "label": "cp alias",
+  "tool": "create-package",
+  "clio-run": true,
+  "args": {
+   "packageName": "X",
+   "zzz": 1,
+   "Package": 2
+  }
+ },
+ {
+  "label": "cp deps wrong",
+  "tool": "create-package",
+  "clio-run": true,
+  "args": {
+   "package-name": "X",
+   "dependencies": "CrtBase"
+  }
+ },
+ {
+  "label": "cp deps item wrong",
+  "tool": "create-package",
+  "clio-run": true,
+  "args": {
+   "package-name": "X",
+   "dependencies": [
+    1
+   ]
+  }
+ },
+ {
+  "label": "cp name num",
+  "tool": "create-package",
+  "clio-run": true,
+  "args": {
+   "package-name": 5
+  }
+ },
+ {
+  "label": "cp desc num",
+  "tool": "create-package",
+  "clio-run": true,
+  "args": {
+   "package-name": "X",
+   "description": true
+  }
+ },
+ {
+  "label": "cp null deps",
+  "tool": "create-package",
+  "clio-run": true,
+  "args": {
+   "package-name": "X",
+   "dependencies": null
+  }
+ },
+ {
+  "label": "ps no code",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "workplace-name": "W"
+  }
+ },
+ {
+  "label": "ps no workplace",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "X"
+  }
+ },
+ {
+  "label": "ps mode none no workplace",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "X",
+   "mode": " NONE "
+  }
+ },
+ {
+  "label": "ps unknown env",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "X",
+   "workplace-name": "W",
+   "environment-name": "nope"
+  }
+ },
+ {
+  "label": "ps safe env",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "X",
+   "workplace-name": "W",
+   "environment-name": "dummysafe"
+  }
+ },
+ {
+  "label": "ps closed",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "X",
+   "workplace-name": "W"
+  }
+ },
+ {
+  "label": "ps bad mode",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "X",
+   "workplace-name": "W",
+   "mode": "maybe"
+  }
+ },
+ {
+  "label": "ps none roles",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "X",
+   "mode": "none",
+   "roles": [
+    "A"
+   ]
+  }
+ },
+ {
+  "label": "ps bad client",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "X",
+   "workplace-name": "W",
+   "client-type": "desktop"
+  }
+ },
+ {
+  "label": "ps blank role",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "X",
+   "workplace-name": "W",
+   "roles": [
+    "A",
+    " "
+   ]
+  }
+ },
+ {
+  "label": "ps null role",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "X",
+   "workplace-name": "W",
+   "roles": [
+    "A",
+    null
+   ]
+  }
+ },
+ {
+  "label": "ps my apps",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "X",
+   "workplace-name": " my applications "
+  }
+ },
+ {
+  "label": "ps my apps keep",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "X",
+   "workplace-name": "My applications",
+   "remove-from-my-applications": false
+  }
+ },
+ {
+  "label": "ps aliases",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "sectionCode": "X",
+   "Workplace": "W",
+   "code": "y",
+   "zz": 1
+  }
+ },
+ {
+  "label": "ps position string",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "X",
+   "workplace-name": "W",
+   "position": "3"
+  }
+ },
+ {
+  "label": "ps position float",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "X",
+   "workplace-name": "W",
+   "position": 3.5
+  }
+ },
+ {
+  "label": "ps position bool",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "X",
+   "workplace-name": "W",
+   "position": true
+  }
+ },
+ {
+  "label": "ps roles string",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "X",
+   "workplace-name": "W",
+   "roles": "A"
+  }
+ },
+ {
+  "label": "ps roles num",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "X",
+   "workplace-name": "W",
+   "roles": [
+    1
+   ]
+  }
+ },
+ {
+  "label": "ps remove string",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "X",
+   "workplace-name": "W",
+   "remove-from-my-applications": "true"
+  }
+ },
+ {
+  "label": "ps mode num",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "X",
+   "workplace-name": "W",
+   "mode": 1
+  }
+ },
+ {
+  "label": "lp no schema",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "culture": "es-ES"
+  }
+ },
+ {
+  "label": "lp no culture",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "P"
+  }
+ },
+ {
+  "label": "lp en-US",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "P",
+   "culture": " EN-us "
+  }
+ },
+ {
+  "label": "lp bad json",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "P",
+   "culture": "es-ES",
+   "resources": "{bad"
+  }
+ },
+ {
+  "label": "lp array json",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "P",
+   "culture": "es-ES",
+   "resources": "[1]"
+  }
+ },
+ {
+  "label": "lp object value",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "P",
+   "culture": "es-ES",
+   "resources": "{\"a\":{\"b\":1}}"
+  }
+ },
+ {
+  "label": "lp null value",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "P",
+   "culture": "es-ES",
+   "resources": "{\"a\":null,\"b\":\"x\",\"c\":null}"
+  }
+ },
+ {
+  "label": "lp blank value",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "P",
+   "culture": "es-ES",
+   "resources": "{\"a\":\" \",\"b\":\"\"}"
+  }
+ },
+ {
+  "label": "lp number value",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "P",
+   "culture": "es-ES",
+   "resources": "{\"a\":5,\"b\":true,\"c\":1.5}"
+  }
+ },
+ {
+  "label": "lp blank caption",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "P",
+   "culture": "es-ES",
+   "caption": "  "
+  }
+ },
+ {
+  "label": "lp control char",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "P",
+   "culture": "es-ES",
+   "resources": "{\"a\":\"x\\u0001\"}"
+  }
+ },
+ {
+  "label": "lp control caption",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "P",
+   "culture": "es-ES",
+   "caption": "x\u0007"
+  }
+ },
+ {
+  "label": "lp closed",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "P",
+   "culture": "es-ES"
+  }
+ },
+ {
+  "label": "lp unknown env",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "P",
+   "culture": "es-ES",
+   "environment-name": "nope"
+  }
+ },
+ {
+  "label": "lp safe env",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "P",
+   "culture": "es-ES",
+   "environment-name": "dummysafe"
+  }
+ },
+ {
+  "label": "lp aliases",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schemaName": "P",
+   "culture": "es-ES",
+   "environment": "x",
+   "zz": 1
+  }
+ },
+ {
+  "label": "lp uri",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "uri": "http://127.0.0.1:9",
+   "login": "a",
+   "password": "b",
+   "schema-name": "P",
+   "culture": "es-ES",
+   "environment-name": ""
+  }
+ },
+ {
+  "label": "lp schema num",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": 1,
+   "culture": "es-ES"
+  }
+ },
+ {
+  "label": "lp resources obj",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "P",
+   "culture": "es-ES",
+   "resources": {
+    "a": "b"
+   }
+  }
+ },
+ {
+  "label": "lp trailing comma",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "P",
+   "culture": "es-ES",
+   "resources": "{\"a\":\"b\",}"
+  }
+ },
+ {
+  "label": "lp empty obj",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "P",
+   "culture": "es-ES",
+   "resources": "{}"
+  }
+ },
+ {
+  "label": "lp null json",
+  "tool": "localize-page",
+  "clio-run": true,
+  "args": {
+   "schema-name": "P",
+   "culture": "es-ES",
+   "resources": "null"
+  }
+ },
+ {
+  "label": "ts blank env",
+  "tool": "trigger-smoke",
+  "clio-run": true,
+  "args": {
+   "entity": "UsrRequest",
+   "values": {
+    "Name": "x"
+   },
+   "watch": [
+    "Activity"
+   ],
+   "environment-name": " "
+  }
+ },
+ {
+  "label": "ts no entity",
+  "tool": "trigger-smoke",
+  "clio-run": true,
+  "args": {
+   "values": {
+    "Name": "x"
+   },
+   "watch": [
+    "Activity"
+   ]
+  }
+ },
+ {
+  "label": "ts bad entity",
+  "tool": "trigger-smoke",
+  "clio-run": true,
+  "args": {
+   "entity": "Usr Request",
+   "values": {
+    "Name": "x"
+   },
+   "watch": [
+    "Activity"
+   ]
+  }
+ },
+ {
+  "label": "ts padded entity",
+  "tool": "trigger-smoke",
+  "clio-run": true,
+  "args": {
+   "entity": " UsrRequest ",
+   "values": {
+    "Name": "x"
+   },
+   "watch": [
+    "Activity"
+   ]
+  }
+ },
+ {
+  "label": "ts no values",
+  "tool": "trigger-smoke",
+  "clio-run": true,
+  "args": {
+   "entity": "UsrRequest",
+   "watch": [
+    "Activity"
+   ]
+  }
+ },
+ {
+  "label": "ts empty values",
+  "tool": "trigger-smoke",
+  "clio-run": true,
+  "args": {
+   "entity": "UsrRequest",
+   "values": {},
+   "watch": [
+    "Activity"
+   ]
+  }
+ },
+ {
+  "label": "ts values array",
+  "tool": "trigger-smoke",
+  "clio-run": true,
+  "args": {
+   "entity": "UsrRequest",
+   "values": [
+    1
+   ],
+   "watch": [
+    "Activity"
+   ]
+  }
+ },
+ {
+  "label": "ts values string",
+  "tool": "trigger-smoke",
+  "clio-run": true,
+  "args": {
+   "entity": "UsrRequest",
+   "values": "x",
+   "watch": [
+    "Activity"
+   ]
+  }
+ },
+ {
+  "label": "ts bad key",
+  "tool": "trigger-smoke",
+  "clio-run": true,
+  "args": {
+   "entity": "UsrRequest",
+   "values": {
+    "Account/Id": "x"
+   },
+   "watch": [
+    "Activity"
+   ]
+  }
+ },
+ {
+  "label": "ts no watch",
+  "tool": "trigger-smoke",
+  "clio-run": true,
+  "args": {
+   "entity": "UsrRequest",
+   "values": {
+    "Name": "x"
+   }
+  }
+ },
+ {
+  "label": "ts empty watch",
+  "tool": "trigger-smoke",
+  "clio-run": true,
+  "args": {
+   "entity": "UsrRequest",
+   "values": {
+    "Name": "x"
+   },
+   "watch": []
+  }
+ },
+ {
+  "label": "ts six watch",
+  "tool": "trigger-smoke",
+  "clio-run": true,
+  "args": {
+   "entity": "UsrRequest",
+   "values": {
+    "Name": "x"
+   },
+   "watch": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F"
+   ]
+  }
+ },
+ {
+  "label": "ts bad watch",
+  "tool": "trigger-smoke",
+  "clio-run": true,
+  "args": {
+   "entity": "UsrRequest",
+   "values": {
+    "Name": "x"
+   },
+   "watch": [
+    "A b"
+   ]
+  }
+ },
+ {
+  "label": "ts null watch item",
+  "tool": "trigger-smoke",
+  "clio-run": true,
+  "args": {
+   "entity": "UsrRequest",
+   "values": {
+    "Name": "x"
+   },
+   "watch": [
+    null
+   ]
+  }
+ },
+ {
+  "label": "ts watch num",
+  "tool": "trigger-smoke",
+  "clio-run": true,
+  "args": {
+   "entity": "UsrRequest",
+   "values": {
+    "Name": "x"
+   },
+   "watch": [
+    1
+   ]
+  }
+ },
+ {
+  "label": "ts timeout 0",
+  "tool": "trigger-smoke",
+  "clio-run": true,
+  "args": {
+   "entity": "UsrRequest",
+   "values": {
+    "Name": "x"
+   },
+   "watch": [
+    "Activity"
+   ],
+   "timeout": 0
+  }
+ },
+ {
+  "label": "ts timeout 31",
+  "tool": "trigger-smoke",
+  "clio-run": true,
+  "args": {
+   "entity": "UsrRequest",
+   "values": {
+    "Name": "x"
+   },
+   "watch": [
+    "Activity"
+   ],
+   "timeout": 31
+  }
+ },
+ {
+  "label": "ts timeout str",
+  "tool": "trigger-smoke",
+  "clio-run": true,
+  "args": {
+   "entity": "UsrRequest",
+   "values": {
+    "Name": "x"
+   },
+   "watch": [
+    "Activity"
+   ],
+   "timeout": "5"
+  }
+ },
+ {
+  "label": "ts cleanup str",
+  "tool": "trigger-smoke",
+  "clio-run": true,
+  "args": {
+   "entity": "UsrRequest",
+   "values": {
+    "Name": "x"
+   },
+   "watch": [
+    "Activity"
+   ],
+   "cleanup": "no"
+  }
+ },
+ {
+  "label": "ts process num",
+  "tool": "trigger-smoke",
+  "clio-run": true,
+  "args": {
+   "entity": "UsrRequest",
+   "values": {
+    "Name": "x"
+   },
+   "watch": [
+    "Activity"
+   ],
+   "process": 1
+  }
+ },
+ {
+  "label": "ts unknown args",
+  "tool": "trigger-smoke",
+  "clio-run": true,
+  "args": {
+   "entity": "UsrRequest",
+   "values": {
+    "Name": "x"
+   },
+   "watch": [
+    "Activity"
+   ],
+   "Environment": "x",
+   "zz": 1
+  }
+ },
+ {
+  "label": "ts unknown env",
+  "tool": "trigger-smoke",
+  "clio-run": true,
+  "args": {
+   "entity": "UsrRequest",
+   "values": {
+    "Name": "x"
+   },
+   "watch": [
+    "Activity"
+   ],
+   "environment-name": "nope"
+  }
+ },
+ {
+  "label": "ts safe env",
+  "tool": "trigger-smoke",
+  "clio-run": true,
+  "args": {
+   "entity": "UsrRequest",
+   "values": {
+    "Name": "x"
+   },
+   "watch": [
+    "Activity"
+   ],
+   "environment-name": "dummysafe"
+  }
+ },
+ {
+  "label": "ts closed",
+  "tool": "trigger-smoke",
+  "clio-run": true,
+  "args": {
+   "entity": "UsrRequest",
+   "values": {
+    "Name": "x"
+   },
+   "watch": [
+    "Activity"
+   ]
+  }
+ },
+ {
+  "label": "ts entity num",
+  "tool": "trigger-smoke",
+  "clio-run": true,
+  "args": {
+   "entity": 1,
+   "values": {
+    "Name": "x"
+   },
+   "watch": [
+    "Activity"
+   ]
+  }
+ }
+]

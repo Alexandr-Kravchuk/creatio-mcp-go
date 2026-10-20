@@ -120,6 +120,8 @@ type pageLayer struct {
 	Parameters         *jnode
 	LocalizableStrings *jnode
 	OptionalProperties *jnode
+	// Caption is the schema title as {cultureName, value} entries (localize-page reads it).
+	Caption *jnode
 }
 
 // GetPage reads a Freedom UI page the way clio's get-page does: SysSchema metadata, the design package,
@@ -355,6 +357,7 @@ func (c *Client) pageLayers(ctx context.Context, schemaUID, packageUID string) (
 		schema.Parameters = hierarchyArray(value["parameters"])
 		schema.LocalizableStrings = hierarchyArray(value["localizableStrings"])
 		schema.OptionalProperties = hierarchyArray(value["optionalProperties"])
+		schema.Caption = hierarchyArray(value["caption"])
 		schemas = append(schemas, schema)
 	}
 	return schemas, nil
