@@ -220,7 +220,9 @@ type GitHubReleaseTransport struct {
 }
 
 // GreaterRevision orders release tags.
-func (GitHubReleaseTransport) GreaterRevision(left, right string) string { return greaterStable(left, right) }
+func (GitHubReleaseTransport) GreaterRevision(left, right string) string {
+	return greaterStable(left, right)
+}
 
 type releaseFailure struct{ message string }
 
