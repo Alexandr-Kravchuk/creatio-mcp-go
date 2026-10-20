@@ -121,6 +121,8 @@ Runs of 2026-10-20 against clio 8.1.0.142; `evidence/t21b-validation-latest.json
   directory descriptors is not ported).
 - The 64 MiB refusal of odata-read-to-file reports the bytes read when the ceiling was passed (limit + 1);
   clio reports its transport's count, which may be larger. Not measured.
+- Inline odata-read reads at most the client's 4 MiB response ceiling and answers a larger body as a
+  transport failure; clio's inline read has no ceiling. Not measured.
 - Cancellation of a running read is not reported with clio's "no output file was written" text (clio says it
   never observes MCP cancellation in practice either).
 
@@ -128,4 +130,10 @@ Runs of 2026-10-20 against clio 8.1.0.142; `evidence/t21b-validation-latest.json
 
 - Nothing of the five tools. The 78 not-ported contract rows belong to other tasks (stream a tools, T16,
   T6 management).
-- `docs/implementation.md` still describes the old odata-read / execute-esq; the coordinator updates it.
+- `docs/implementation.md`, `README.md` and `docs/install.md` still describe the old odata-read /
+  execute-esq, and the generated `docs/clio-inventory.md` still labels the five tools "T19 new in clio
+  8.1.0.142" (regenerating it needs a live clio run and rewrites the migration-plan appendix); left to the
+  coordinator.
+- Live parity cases: `scripts/mcp-parity-cases.json` has one execute-esq case, a valid 142 SelectQuery; no
+  case uses odata-read, so nothing there relies on the pre-142 shapes.
+- The execute-esq switch commit was reverted on a scratch tree: the result builds and passes `go vet`.
