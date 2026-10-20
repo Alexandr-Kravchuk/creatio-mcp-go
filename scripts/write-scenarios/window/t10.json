@@ -6,7 +6,7 @@
       {"kind": "write", "label": "app", "tool": "create-app", "server": "clio", "clio-run": true,
        "creates": "UsrParity{run}{side}App", "retry-while": "temporarily unavailable", "retry-seconds": 300,
        "args": {"name": "Parity {run} {side} App", "code": "Parity{run}{side}App", "template-code": "AppFreedomUI", "with-mobile-pages": false, "description": "Created by scripts/compare-mcp-writes.py; safe to delete"},
-       "capture": {"pkg": "$.packagename"},
+       "capture": {"pkg": "$.packagename", "pkguid": "$.packageuid", "appuid": "$.applicationid"},
        "known-differences": ["$.applicationname", "$.entities[0].caption", "$.entities[0].uid", "$.pages[0].uid", "$.pages[1].uid", "$.pages[2].uid", "$.dataforge.warnings[0]", "$.dataforge.warnings[1]"],
        "why": "Setup through clio on both sides, as in t9-client-unit.json: the application's package holds the rules and delete-app removes it again (create-package has no delete tool)."},
       {"kind": "cleanup", "for": "UsrParity{run}{side}App", "server": "clio",
@@ -14,7 +14,7 @@
       {"kind": "write", "label": "entity", "tool": "create-entity-schema", "clio-run": true,
        "creates": "UsrParity{run}{side}Ent",
        "args": {"package-name": "{pkg}", "schema-name": "UsrParity{run}{side}Ent",
-                "title-localizations": {"en-US": "Parity {run} {side}"},
+                "title-localizations": {"en-US": "Parity {run}"},
                 "columns": [
                   {"column-name": "UsrAmount", "type": "Integer"},
                   {"column-name": "UsrNote", "type": "ShortText"},
@@ -25,7 +25,7 @@
       {"kind": "write", "label": "create-rules", "tool": "create-entity-business-rules", "clio-run": true,
        "creates": "UsrParity{run}{side}Rule",
        "args": {"package-name": "{pkg}", "entity-schema-name": "UsrParity{run}{side}Ent",
-                "rules": [{"caption": "Parity {run} {side}", "name": "UsrParity{run}{side}Rule",
+                "rules": [{"caption": "Parity {run}", "name": "UsrParity{run}{side}Rule",
                            "condition": {"logicalOperation": "AND", "conditions": [
                              {"uId": "a1000000-0000-4000-8000-000000000001", "comparisonType": "greater-than",
                               "leftExpression": {"type": "AttributeValue", "path": "UsrAmount", "uId": "a1000000-0000-4000-8000-000000000002"},
@@ -48,7 +48,7 @@
       {"kind": "expect", "step": "read-created", "path": "$.rules[0].name", "equals": "UsrParity{run}{side}Rule"},
       {"kind": "write", "label": "update-rules", "tool": "update-entity-business-rules", "clio-run": true,
        "args": {"package-name": "{pkg}", "entity-schema-name": "UsrParity{run}{side}Ent",
-                "rules": [{"caption": "Parity {run} {side} updated", "name": "UsrParity{run}{side}Rule", "enabled": false,
+                "rules": [{"caption": "Parity {run} updated", "name": "UsrParity{run}{side}Rule", "enabled": false,
                            "condition": {"logicalOperation": "OR", "conditions": [
                              {"uId": "a1000000-0000-4000-8000-000000000001", "comparisonType": "greater-than",
                               "leftExpression": {"type": "AttributeValue", "path": "UsrAmount", "uId": "a1000000-0000-4000-8000-000000000002"},
@@ -59,7 +59,7 @@
       {"kind": "read-back", "label": "read-updated", "tool": "read-entity-business-rules",
        "args": {"package-name": "{pkg}", "entity-schema-name": "UsrParity{run}{side}Ent"}},
       {"kind": "expect", "step": "read-updated", "path": "$.rules[0].enabled", "equals": false},
-      {"kind": "expect", "step": "read-updated", "path": "$.rules[0].caption", "equals": "Parity {run} {side} updated"},
+      {"kind": "expect", "step": "read-updated", "path": "$.rules[0].caption", "equals": "Parity {run} updated"},
       {"kind": "write", "label": "delete-rules", "tool": "delete-entity-business-rules", "clio-run": true,
        "target": "UsrParity{run}{side}Rule",
        "args": {"package-name": "{pkg}", "entity-schema-name": "UsrParity{run}{side}Ent", "rule-names": ["UsrParity{run}{side}Rule"]}},
@@ -74,7 +74,7 @@
       {"kind": "write", "label": "app", "tool": "create-app", "server": "clio", "clio-run": true,
        "creates": "UsrParity{run}{side}FApp", "retry-while": "temporarily unavailable", "retry-seconds": 300,
        "args": {"name": "Parity {run} {side} FApp", "code": "Parity{run}{side}FApp", "template-code": "AppFreedomUI", "with-mobile-pages": false, "description": "Created by scripts/compare-mcp-writes.py; safe to delete"},
-       "capture": {"pkg": "$.packagename"},
+       "capture": {"pkg": "$.packagename", "pkguid": "$.packageuid", "appuid": "$.applicationid"},
        "known-differences": ["$.applicationname", "$.entities[0].caption", "$.entities[0].uid", "$.pages[0].uid", "$.pages[1].uid", "$.pages[2].uid", "$.dataforge.warnings[0]", "$.dataforge.warnings[1]"],
        "why": "Setup through clio on both sides, as in t9-client-unit.json: the application's package holds the rules and delete-app removes it again (create-package has no delete tool)."},
       {"kind": "cleanup", "for": "UsrParity{run}{side}FApp", "server": "clio",
@@ -82,7 +82,7 @@
       {"kind": "write", "label": "entity", "tool": "create-entity-schema", "clio-run": true,
        "creates": "UsrParity{run}{side}FEnt",
        "args": {"package-name": "{pkg}", "schema-name": "UsrParity{run}{side}FEnt",
-                "title-localizations": {"en-US": "Parity filter {run} {side}"},
+                "title-localizations": {"en-US": "Parity filter {run}"},
                 "columns": [
                   {"column-name": "UsrCountry", "type": "Lookup", "reference-schema-name": "Country"},
                   {"column-name": "UsrAccount", "type": "Lookup", "reference-schema-name": "Account"}
@@ -91,13 +91,14 @@
        "calls": [{"tool": "delete-schema", "clio-run": true, "args": {"schema-name": "UsrParity{run}{side}FEnt", "remote": true}}]},
       {"kind": "write", "label": "create-rules", "tool": "create-entity-business-rules", "clio-run": true,
        "creates": "UsrParity{run}{side}Dep",
+       "capture": {"staticrule": "$.results[1].rulename"},
        "args": {"package-name": "{pkg}", "entity-schema-name": "UsrParity{run}{side}FEnt",
                 "rules": [
-                  {"caption": "Dependent {run} {side}", "name": "UsrParity{run}{side}Dep",
+                  {"caption": "Dependent {run}", "name": "UsrParity{run}{side}Dep",
                    "condition": {"logicalOperation": "AND", "conditions": []},
                    "actions": [{"type": "apply-filter", "uId": "b1000000-0000-4000-8000-000000000001", "target": "UsrAccount",
                                 "targetFilterPath": "Country", "source": "UsrCountry", "clearValue": true, "populateValue": true}]},
-                  {"caption": "Static {run} {side}", "name": "UsrParity{run}{side}Static",
+                  {"caption": "Static {run}", "name": "UsrParity{run}{side}Static",
                    "condition": {"logicalOperation": "AND", "conditions": []},
                    "actions": [{"type": "apply-static-filter", "uId": "b1000000-0000-4000-8000-000000000002", "targetAttribute": "UsrAccount",
                                 "filter": {"logicalOperation": "AND", "filters": [
@@ -120,20 +121,21 @@
       {"kind": "write", "label": "app", "tool": "create-app", "server": "clio", "clio-run": true,
        "creates": "UsrParity{run}{side}PApp", "retry-while": "temporarily unavailable", "retry-seconds": 300,
        "args": {"name": "Parity {run} {side} PApp", "code": "Parity{run}{side}PApp", "template-code": "AppFreedomUI", "with-mobile-pages": false, "description": "Created by scripts/compare-mcp-writes.py; safe to delete"},
-       "capture": {"pkg": "$.packagename"},
+       "capture": {"pkg": "$.packagename", "pkguid": "$.packageuid", "appuid": "$.applicationid"},
        "known-differences": ["$.applicationname", "$.entities[0].caption", "$.entities[0].uid", "$.pages[0].uid", "$.pages[1].uid", "$.pages[2].uid", "$.dataforge.warnings[0]", "$.dataforge.warnings[1]"],
        "why": "Setup through clio on both sides, as in t9-client-unit.json: the application's package holds the rules and delete-app removes it again (create-package has no delete tool)."},
       {"kind": "cleanup", "for": "UsrParity{run}{side}PApp", "server": "clio",
        "calls": [{"tool": "delete-app", "clio-run": true, "args": {"app-name": "UsrParity{run}{side}PApp"}}]},
       {"kind": "write", "label": "page", "tool": "create-page", "clio-run": true,
        "creates": "UsrParity{run}{side}_BlankPage",
+       "capture": {"pageuid": "$.schemauid"},
        "args": {"package-name": "{pkg}", "schema-name": "UsrParity{run}{side}_BlankPage", "template": "BlankPageTemplate"}},
       {"kind": "cleanup", "for": "UsrParity{run}{side}_BlankPage", "server": "own",
        "calls": [{"tool": "delete-schema", "clio-run": true, "args": {"schema-name": "UsrParity{run}{side}_BlankPage", "remote": true}}]},
       {"kind": "write", "label": "create-rules", "tool": "create-page-business-rules", "clio-run": true,
        "creates": "UsrParity{run}{side}PRule",
        "args": {"package-name": "{pkg}", "page-schema-name": "UsrParity{run}{side}_BlankPage",
-                "rules": [{"caption": "Page parity {run} {side}", "name": "UsrParity{run}{side}PRule",
+                "rules": [{"caption": "Page parity {run}", "name": "UsrParity{run}{side}PRule",
                            "condition": {"logicalOperation": "AND", "conditions": [
                              {"uId": "c1000000-0000-4000-8000-000000000001", "comparisonType": "is-filled-in",
                               "leftExpression": {"type": "SysValue", "sysValueName": "CurrentUser", "uId": "c1000000-0000-4000-8000-000000000002"}}]},
@@ -146,14 +148,14 @@
       {"kind": "expect", "step": "read-created", "path": "$.count", "equals": 1},
       {"kind": "write", "label": "update-rules", "tool": "update-page-business-rules", "clio-run": true,
        "args": {"package-name": "{pkg}", "page-schema-name": "UsrParity{run}{side}_BlankPage",
-                "rules": [{"caption": "Page parity {run} {side} updated", "name": "UsrParity{run}{side}PRule",
+                "rules": [{"caption": "Page parity {run} updated", "name": "UsrParity{run}{side}PRule",
                            "condition": {"logicalOperation": "AND", "conditions": [
                              {"uId": "c1000000-0000-4000-8000-000000000001", "comparisonType": "is-filled-in",
                               "leftExpression": {"type": "SysValue", "sysValueName": "CurrentUserContact", "uId": "c1000000-0000-4000-8000-000000000002"}}]},
                            "actions": [{"type": "show-element", "items": ["MainContainer"], "uId": "c1000000-0000-4000-8000-000000000003"}]}]}},
       {"kind": "read-back", "label": "read-updated", "tool": "read-page-business-rules",
        "args": {"package-name": "{pkg}", "page-schema-name": "UsrParity{run}{side}_BlankPage"}},
-      {"kind": "expect", "step": "read-updated", "path": "$.rules[0].caption", "equals": "Page parity {run} {side} updated"}
+      {"kind": "expect", "step": "read-updated", "path": "$.rules[0].caption", "equals": "Page parity {run} updated"}
     ]
   }
 ]

@@ -60,10 +60,7 @@
           }
         },
         "creates": "UsrParity{run}{side}Rts",
-        "why": "Named as an object of this run so its name is neutralized in every answer; delete-app removes it with the package, the cleanup only covers a run that stops before that. The second log line is the publish time (\"published in 2.8s\"), measured per call.",
-        "known-differences": [
-          "$.executionlogmessages[1].value"
-        ]
+        "why": "Named as an object of this run so its name is neutralized in every answer; delete-app removes it with the package, the cleanup only covers a run that stops before that."
       },
       {
         "kind": "cleanup",

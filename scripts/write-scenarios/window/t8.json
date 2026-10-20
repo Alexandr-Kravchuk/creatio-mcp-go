@@ -239,7 +239,12 @@
         "tool": "get-entity-schema-properties",
         "args": {
           "schema-name": "UsrParity{run}{side}Ent"
-        }
+        },
+        "known-differences": [
+          "$.columns[6].uid",
+          "$.columns[7].uid"
+        ],
+        "why": "The run's own columns (UsrParityCode, UsrParityDue) get a new UId per side; inherited columns keep theirs."
       },
       {
         "kind": "expect",
@@ -271,7 +276,11 @@
         "tool": "get-entity-schema-properties",
         "args": {
           "schema-name": "UsrParity{run}{side}Ent"
-        }
+        },
+        "known-differences": [
+          "$.columns[6].uid"
+        ],
+        "why": "The run's own column gets a new UId per side."
       },
       {
         "kind": "expect",
@@ -346,7 +355,7 @@
           "package-name": "{pkg}",
           "schema-name": "UsrParity{run}{side}Kind",
           "title-localizations": {
-            "en-US": "Parity kind {run} {side}"
+            "en-US": "Parity kind {run}"
           }
         }
       },
@@ -390,7 +399,7 @@
                         "expressionType": 2,
                         "parameter": {
                           "dataValueType": 1,
-                          "value": "Parity kind {run} {side}"
+                          "value": "Parity kind {run}"
                         }
                       }
                     }
@@ -437,7 +446,7 @@
         "kind": "expect",
         "step": "properties",
         "path": "$.title",
-        "equals": "Parity kind {run} {side}"
+        "equals": "Parity kind {run}"
       },
       {
         "kind": "read-back",
@@ -446,7 +455,12 @@
         "args": {
           "package-name": "{pkg}",
           "binding-name": "Lookup_UsrParity{run}{side}Kind"
-        }
+        },
+        "known-differences": [
+          "$.executionlogmessages[2].value",
+          "$.executionlogmessages[5].value"
+        ],
+        "why": "Line 3 is the binding schema's UId and line 6 the Lookup row (its Id and CreatedOn/ModifiedOn), both created per side."
       }
     ]
   },
@@ -518,7 +532,7 @@
               "type": "create-lookup",
               "schema-name": "UsrParity{run}{side}SyncKind",
               "title-localizations": {
-                "en-US": "Parity sync kind {run} {side}"
+                "en-US": "Parity sync kind {run}"
               }
             },
             {
@@ -600,7 +614,7 @@
                         "expressionType": 2,
                         "parameter": {
                           "dataValueType": 1,
-                          "value": "Parity sync kind {run} {side}"
+                          "value": "Parity sync kind {run}"
                         }
                       }
                     }
@@ -656,7 +670,7 @@
               "type": "create-lookup",
               "schema-name": "UsrParity{run}{side}SyncKind",
               "title-localizations": {
-                "en-US": "Parity sync kind {run} {side}"
+                "en-US": "Parity sync kind {run}"
               }
             },
             {

@@ -142,7 +142,7 @@
           "package-name": "{pkg}",
           "descriptor": {
             "name": "UsrParity{run}{side}BpProc",
-            "caption": "Parity {run} {side} process",
+            "caption": "Parity {run} process",
             "elements": [
               {
                 "name": "Start1",

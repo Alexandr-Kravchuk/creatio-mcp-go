@@ -238,5 +238,18 @@ class WriteHarnessTest(unittest.TestCase):
         self.assertFalse(self.state.exists())
 
 
+class NeutralizeTest(unittest.TestCase):
+    def test_publish_duration_is_neutralized_and_the_rest_compared(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("compare_mcp_writes", HARNESS)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        clio = module.neutralize({"m": ["Schema 'UsrAclio' published in 2.8s."]}, {"UsrAclio": "UsrA{side}"})
+        go = module.neutralize({"m": ["Schema 'UsrAgo' published in 12s."]}, {"UsrAgo": "UsrA{side}"})
+        self.assertEqual(clio, go)
+        self.assertEqual(clio["m"][0], "Schema 'UsrA{side}' published in <seconds>s.")
+        self.assertNotEqual(module.neutralize("published in 2.8s, then failed", {}),
+                            module.neutralize("published in 2.8s, then saved", {}))
+
 if __name__ == "__main__":
     unittest.main()

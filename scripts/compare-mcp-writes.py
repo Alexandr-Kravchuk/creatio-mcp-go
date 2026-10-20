@@ -75,17 +75,21 @@ def placeholders(value):
     return set(PLACEHOLDER.findall(text))
 
 
+# Durations the stand measures per call ("Schema 'X' published in 2.8s."); the rest of the line is compared.
+TIMING = re.compile(r"(published in )\d+(?:\.\d+)?s\b")
+
+
 def neutralize(value, replacements):
     """Replace each side's concrete names and captured ids with their template, case-insensitively,
-    in keys and string values, so clio's and Go's objects compare equal."""
-    if not replacements:
-        return value
+    in keys and string values, so clio's and Go's objects compare equal. Per-call durations (TIMING) become
+    `<seconds>`."""
     pattern = re.compile("|".join(re.escape(concrete) for concrete in sorted(replacements, key=len, reverse=True)),
-                         re.IGNORECASE)
+                         re.IGNORECASE) if replacements else None
     lookup = {concrete.lower(): template for concrete, template in replacements.items()}
 
     def text(item):
-        return pattern.sub(lambda m: lookup[m.group(0).lower()], item)
+        item = TIMING.sub(r"\1<seconds>s", item)
+        return pattern.sub(lambda m: lookup[m.group(0).lower()], item) if pattern else item
 
     def walk(item):
         if isinstance(item, dict):

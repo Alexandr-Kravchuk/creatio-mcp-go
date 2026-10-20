@@ -21,10 +21,19 @@
         "capture": {
           "pkg": "$.packagename",
           "pkguid": "$.packageuid",
-          "appuid": "$.applicationid"
+          "appuid": "$.applicationid",
+          "formuid": "$.pages[1].uid"
         },
-        "known-differences": ["$.applicationname", "$.entities[0].caption", "$.entities[0].uid", "$.pages[0].uid",
-                              "$.pages[1].uid", "$.pages[2].uid", "$.dataforge.warnings[0]", "$.dataforge.warnings[1]"],
+        "known-differences": [
+          "$.applicationname",
+          "$.entities[0].caption",
+          "$.entities[0].uid",
+          "$.pages[0].uid",
+          "$.pages[1].uid",
+          "$.pages[2].uid",
+          "$.dataforge.warnings[0]",
+          "$.dataforge.warnings[1]"
+        ],
         "why": "Setup through clio on both sides; ids and the display name differ per side."
       },
       {

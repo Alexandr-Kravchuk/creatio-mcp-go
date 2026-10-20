@@ -64,7 +64,11 @@
         "args": {
           "package-name": "{pkgname}",
           "binding-name": "SysSettingsValue_LogoImage"
-        }
+        },
+        "known-differences": [
+          "$.executionlogmessages[2].value"
+        ],
+        "why": "The third log line is the binding schema's UId, created per side."
       },
       {
         "kind": "cleanup",
@@ -155,7 +159,11 @@
         "args": {
           "package-name": "{pkgname}",
           "binding-name": "SysImage_ShellBackground"
-        }
+        },
+        "known-differences": [
+          "$.executionlogmessages[2].value"
+        ],
+        "why": "The third log line is the binding schema's UId, created per side."
       },
       {
         "kind": "read-back",
@@ -164,7 +172,11 @@
         "args": {
           "package-name": "{pkgname}",
           "binding-name": "SysSettingsValue_CrtBackgroundConfig"
-        }
+        },
+        "known-differences": [
+          "$.executionlogmessages[2].value"
+        ],
+        "why": "The third log line is the binding schema's UId, created per side."
       },
       {
         "kind": "cleanup",
