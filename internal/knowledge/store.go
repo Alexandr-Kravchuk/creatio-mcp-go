@@ -214,18 +214,36 @@ func (s Store) readCurrentMarker(alias string) (*CurrentState, string, error) {
 		return nil, "", nil
 	}
 	if err := s.validateSourceRoot(alias, sourceRoot); err != nil {
-		return nil, "", err
+		// clio creates a source directory before its ownership marker, and a delete renames the whole
+		// directory away: a missing marker is first given a moment to appear, and a directory that vanished
+		// meanwhile means nothing is installed.
+		for attempt := 0; attempt < 10 && err != nil; attempt++ {
+			time.Sleep(20 * time.Millisecond)
+			if _, statErr := os.Stat(sourceRoot); statErr != nil {
+				return nil, "", nil
+			}
+			err = s.validateSourceRoot(alias, sourceRoot)
+		}
+		if err != nil {
+			return nil, "", err
+		}
 	}
 	markerPath := filepath.Join(sourceRoot, currentFileName)
 	if _, err := os.Stat(markerPath); err != nil {
 		return nil, "", nil
 	}
+	vanished := func(err error) error {
+		if _, statErr := os.Stat(markerPath); errors.Is(statErr, os.ErrNotExist) {
+			return nil // deleted while it was being read: nothing is installed now
+		}
+		return err
+	}
 	if err := ensureNoLink(sourceRoot, markerPath); err != nil {
-		return nil, "", err
+		return nil, "", vanished(err)
 	}
 	data, err := readBoundedFile(markerPath, maxMarkerBytes)
 	if err != nil {
-		return nil, "", err
+		return nil, "", vanished(err)
 	}
 	var state CurrentState
 	if err := decodeStrict(data, &state); err != nil {

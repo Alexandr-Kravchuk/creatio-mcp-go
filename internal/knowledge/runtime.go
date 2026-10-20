@@ -109,6 +109,14 @@ func (r *Runtime) settingsPath() string {
 // LoadSettings returns the current clio settings (cached by size and modification time).
 func (r *Runtime) LoadSettings() (*Settings, error) { return r.settings.load(r.settingsPath()) }
 
+// InvalidateSettings drops the cached settings, so the next read sees a write this process just made even
+// when the rewritten file kept its size and modification time.
+func (r *Runtime) InvalidateSettings() {
+	r.settings.mu.Lock()
+	r.settings.value = nil
+	r.settings.mu.Unlock()
+}
+
 // LastDiagnostic is why the last activation pass left something inactive, or "".
 func (r *Runtime) LastDiagnostic() string {
 	r.mu.Lock()

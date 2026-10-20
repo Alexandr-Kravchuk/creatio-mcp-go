@@ -1,0 +1,636 @@
+{
+ "schema": 1,
+ "known-differences": {
+  "git-transport": "a git-type source is installed by clio (git CLI); this server refuses with a pointer to clio",
+  "clio-version": "telemetry's clio_version attribute names this server's build, not clio's"
+ },
+ "scenarios": {
+  "knowledge-sources": {
+   "counts": {
+    "match": 27,
+    "known:git-transport": 1
+   },
+   "rows": [
+    {
+     "label": "install-knowledge",
+     "verdict": "match"
+    },
+    {
+     "label": "install-knowledge",
+     "verdict": "match"
+    },
+    {
+     "label": "delete-knowledge",
+     "verdict": "match"
+    },
+    {
+     "label": "add-knowledge-source",
+     "verdict": "match"
+    },
+    {
+     "label": "add-knowledge-source",
+     "verdict": "match"
+    },
+    {
+     "label": "add-knowledge-source",
+     "verdict": "match"
+    },
+    {
+     "label": "add-knowledge-source",
+     "verdict": "match"
+    },
+    {
+     "label": "add-knowledge-source",
+     "verdict": "match"
+    },
+    {
+     "label": "add-knowledge-source",
+     "verdict": "match"
+    },
+    {
+     "label": "add-knowledge-source",
+     "verdict": "match"
+    },
+    {
+     "label": "enable-knowledge-source",
+     "verdict": "match"
+    },
+    {
+     "label": "disable-knowledge-source",
+     "verdict": "match"
+    },
+    {
+     "label": "disable-knowledge-source",
+     "verdict": "match"
+    },
+    {
+     "label": "enable-knowledge-source",
+     "verdict": "match"
+    },
+    {
+     "label": "install-knowledge",
+     "verdict": "known:git-transport"
+    },
+    {
+     "label": "update-knowledge",
+     "verdict": "match"
+    },
+    {
+     "label": "delete-knowledge",
+     "verdict": "match"
+    },
+    {
+     "label": "remove-knowledge-source",
+     "verdict": "match"
+    },
+    {
+     "label": "remove-knowledge-source",
+     "verdict": "match"
+    },
+    {
+     "label": "remove-knowledge-source",
+     "verdict": "match"
+    },
+    {
+     "label": "list-knowledge-sources",
+     "verdict": "match"
+    },
+    {
+     "label": "configure-knowledge-feedback-policy",
+     "verdict": "match"
+    },
+    {
+     "label": "configure-knowledge-feedback-policy",
+     "verdict": "match"
+    },
+    {
+     "label": "configure-knowledge-feedback-policy",
+     "verdict": "match"
+    },
+    {
+     "label": "configure-knowledge-feedback-policy",
+     "verdict": "match"
+    },
+    {
+     "label": "configure-knowledge-feedback-policy",
+     "verdict": "match"
+    },
+    {
+     "label": "configure-knowledge-feedback-policy",
+     "verdict": "match"
+    },
+    {
+     "label": "appsettings.json sections",
+     "verdict": "match"
+    }
+   ]
+  },
+  "knowledge-install": {
+   "counts": {
+    "match": 30
+   },
+   "rows": [
+    {
+     "label": "add-knowledge-source",
+     "verdict": "match"
+    },
+    {
+     "label": "add-knowledge-source",
+     "verdict": "match"
+    },
+    {
+     "label": "update-knowledge",
+     "verdict": "match"
+    },
+    {
+     "label": "install-knowledge",
+     "verdict": "match"
+    },
+    {
+     "label": "install-knowledge",
+     "verdict": "match"
+    },
+    {
+     "label": "update-knowledge",
+     "verdict": "match"
+    },
+    {
+     "label": "update-knowledge",
+     "verdict": "match"
+    },
+    {
+     "label": "info-knowledge",
+     "verdict": "match"
+    },
+    {
+     "label": "install-knowledge",
+     "verdict": "match"
+    },
+    {
+     "label": "info-knowledge",
+     "verdict": "match"
+    },
+    {
+     "label": "info-knowledge",
+     "verdict": "match"
+    },
+    {
+     "label": "update-knowledge",
+     "verdict": "match"
+    },
+    {
+     "label": "update-knowledge",
+     "verdict": "match"
+    },
+    {
+     "label": "update-knowledge",
+     "verdict": "match"
+    },
+    {
+     "label": "get-guidance",
+     "verdict": "match"
+    },
+    {
+     "label": "disable-knowledge-source",
+     "verdict": "match"
+    },
+    {
+     "label": "update-knowledge",
+     "verdict": "match"
+    },
+    {
+     "label": "delete-knowledge",
+     "verdict": "match"
+    },
+    {
+     "label": "info-knowledge",
+     "verdict": "match"
+    },
+    {
+     "label": "enable-knowledge-source",
+     "verdict": "match"
+    },
+    {
+     "label": "install-knowledge",
+     "verdict": "match"
+    },
+    {
+     "label": "update-knowledge",
+     "verdict": "match"
+    },
+    {
+     "label": "remove-knowledge-source",
+     "verdict": "match"
+    },
+    {
+     "label": "info-knowledge",
+     "verdict": "match"
+    },
+    {
+     "label": "list-knowledge-sources",
+     "verdict": "match"
+    },
+    {
+     "label": "files knowledge/sources/5312fb609f60384731fcfcb9",
+     "verdict": "match"
+    },
+    {
+     "label": "file",
+     "verdict": "match"
+    },
+    {
+     "label": "file",
+     "verdict": "match"
+    },
+    {
+     "label": "file",
+     "verdict": "match"
+    },
+    {
+     "label": "appsettings.json sections",
+     "verdict": "match"
+    }
+   ]
+  },
+  "telemetry": {
+   "counts": {
+    "match": 29
+   },
+   "rows": [
+    {
+     "label": "get-telemetry-consent",
+     "verdict": "match"
+    },
+    {
+     "label": "send-telemetry",
+     "verdict": "match"
+    },
+    {
+     "label": "send-telemetry",
+     "verdict": "match"
+    },
+    {
+     "label": "send-telemetry",
+     "verdict": "match"
+    },
+    {
+     "label": "send-telemetry",
+     "verdict": "match"
+    },
+    {
+     "label": "send-telemetry",
+     "verdict": "match"
+    },
+    {
+     "label": "send-telemetry",
+     "verdict": "match"
+    },
+    {
+     "label": "send-telemetry",
+     "verdict": "match"
+    },
+    {
+     "label": "send-telemetry",
+     "verdict": "match"
+    },
+    {
+     "label": "send-telemetry",
+     "verdict": "match"
+    },
+    {
+     "label": "send-telemetry",
+     "verdict": "match"
+    },
+    {
+     "label": "send-telemetry",
+     "verdict": "match"
+    },
+    {
+     "label": "send-telemetry",
+     "verdict": "match"
+    },
+    {
+     "label": "send-telemetry",
+     "verdict": "match"
+    },
+    {
+     "label": "send-telemetry",
+     "verdict": "match"
+    },
+    {
+     "label": "get-telemetry-consent",
+     "verdict": "match"
+    },
+    {
+     "label": "send-telemetry",
+     "verdict": "match"
+    },
+    {
+     "label": "fixture received",
+     "verdict": "match"
+    },
+    {
+     "label": "files telemetry",
+     "verdict": "match"
+    },
+    {
+     "label": "send-telemetry",
+     "verdict": "match"
+    },
+    {
+     "label": "files telemetry",
+     "verdict": "match"
+    },
+    {
+     "label": "file",
+     "verdict": "match"
+    },
+    {
+     "label": "file",
+     "verdict": "match"
+    },
+    {
+     "label": "withdraw-telemetry-consent",
+     "verdict": "match"
+    },
+    {
+     "label": "files telemetry",
+     "verdict": "match"
+    },
+    {
+     "label": "send-telemetry",
+     "verdict": "match"
+    },
+    {
+     "label": "withdraw-telemetry-consent",
+     "verdict": "match"
+    },
+    {
+     "label": "get-telemetry-consent",
+     "verdict": "match"
+    },
+    {
+     "label": "appsettings.json sections",
+     "verdict": "match"
+    }
+   ]
+  },
+  "experimental": {
+   "counts": {
+    "match": 15
+   },
+   "rows": [
+    {
+     "label": "experimental",
+     "verdict": "match"
+    },
+    {
+     "label": "experimental",
+     "verdict": "match"
+    },
+    {
+     "label": "experimental",
+     "verdict": "match"
+    },
+    {
+     "label": "experimental",
+     "verdict": "match"
+    },
+    {
+     "label": "experimental",
+     "verdict": "match"
+    },
+    {
+     "label": "experimental",
+     "verdict": "match"
+    },
+    {
+     "label": "experimental",
+     "verdict": "match"
+    },
+    {
+     "label": "experimental",
+     "verdict": "match"
+    },
+    {
+     "label": "experimental",
+     "verdict": "match"
+    },
+    {
+     "label": "experimental",
+     "verdict": "match"
+    },
+    {
+     "label": "experimental",
+     "verdict": "match"
+    },
+    {
+     "label": "experimental",
+     "verdict": "match"
+    },
+    {
+     "label": "experimental",
+     "verdict": "match"
+    },
+    {
+     "label": "experimental",
+     "verdict": "match"
+    },
+    {
+     "label": "appsettings.json sections",
+     "verdict": "match"
+    }
+   ]
+  },
+  "export-component-registry": {
+   "counts": {
+    "match": 16
+   },
+   "rows": [
+    {
+     "label": "export-component-registry",
+     "verdict": "match"
+    },
+    {
+     "label": "export-component-registry",
+     "verdict": "match"
+    },
+    {
+     "label": "export-component-registry",
+     "verdict": "match"
+    },
+    {
+     "label": "export-component-registry",
+     "verdict": "match"
+    },
+    {
+     "label": "export-component-registry",
+     "verdict": "match"
+    },
+    {
+     "label": "export-component-registry",
+     "verdict": "match"
+    },
+    {
+     "label": "export-component-registry",
+     "verdict": "match"
+    },
+    {
+     "label": "export-component-registry",
+     "verdict": "match"
+    },
+    {
+     "label": "export-component-registry",
+     "verdict": "match"
+    },
+    {
+     "label": "export-component-registry",
+     "verdict": "match"
+    },
+    {
+     "label": "export-component-registry",
+     "verdict": "match"
+    },
+    {
+     "label": "export-component-registry",
+     "verdict": "match"
+    },
+    {
+     "label": "files .clio-migration",
+     "verdict": "match"
+    },
+    {
+     "label": "files out",
+     "verdict": "match"
+    },
+    {
+     "label": "file",
+     "verdict": "match"
+    },
+    {
+     "label": "appsettings.json sections",
+     "verdict": "match"
+    }
+   ]
+  },
+  "toolkit": {
+   "counts": {
+    "match": 28
+   },
+   "rows": [
+    {
+     "label": "install-toolkit",
+     "verdict": "match"
+    },
+    {
+     "label": "install-toolkit",
+     "verdict": "match"
+    },
+    {
+     "label": "install-toolkit",
+     "verdict": "match"
+    },
+    {
+     "label": "install-toolkit",
+     "verdict": "match"
+    },
+    {
+     "label": "install-toolkit",
+     "verdict": "match"
+    },
+    {
+     "label": "install-toolkit",
+     "verdict": "match"
+    },
+    {
+     "label": "install-toolkit",
+     "verdict": "match"
+    },
+    {
+     "label": "file",
+     "verdict": "match"
+    },
+    {
+     "label": "file",
+     "verdict": "match"
+    },
+    {
+     "label": "file",
+     "verdict": "match"
+    },
+    {
+     "label": "file",
+     "verdict": "match"
+    },
+    {
+     "label": "file",
+     "verdict": "match"
+    },
+    {
+     "label": "file",
+     "verdict": "match"
+    },
+    {
+     "label": "files home/.cursor",
+     "verdict": "match"
+    },
+    {
+     "label": "files home/.agents",
+     "verdict": "match"
+    },
+    {
+     "label": "update-toolkit",
+     "verdict": "match"
+    },
+    {
+     "label": "update-toolkit",
+     "verdict": "match"
+    },
+    {
+     "label": "file",
+     "verdict": "match"
+    },
+    {
+     "label": "file",
+     "verdict": "match"
+    },
+    {
+     "label": "file",
+     "verdict": "match"
+    },
+    {
+     "label": "delete-toolkit",
+     "verdict": "match"
+    },
+    {
+     "label": "delete-toolkit",
+     "verdict": "match"
+    },
+    {
+     "label": "file",
+     "verdict": "match"
+    },
+    {
+     "label": "files home/.cursor",
+     "verdict": "match"
+    },
+    {
+     "label": "files home/.clio",
+     "verdict": "match"
+    },
+    {
+     "label": "install-toolkit",
+     "verdict": "match"
+    },
+    {
+     "label": "install-toolkit",
+     "verdict": "match"
+    },
+    {
+     "label": "appsettings.json sections",
+     "verdict": "match"
+    }
+   ]
+  }
+ }
+}
