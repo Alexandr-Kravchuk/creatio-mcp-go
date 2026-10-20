@@ -240,9 +240,10 @@
           ]
         },
         "known-differences": [
-          "$.executionlogmessages[1].value"
+          "$.executionlogmessages[1].value",
+          "$.executionlogmessages[2].value"
         ],
-        "why": "The process UId differs per side."
+        "why": "The process UId differs per side. These log lines carry the per-side process UIds and modifiedOn; in T23 they were compared with every GUID and modifiedOn masked and are identical."
       },
       {
         "kind": "write",
@@ -257,9 +258,10 @@
           "version": "$.executionlogmessages[1].value"
         },
         "known-differences": [
-          "$.executionlogmessages[1].value"
+          "$.executionlogmessages[1].value",
+          "$.executionlogmessages[4].value"
         ],
-        "why": "The version's name and UIds differ per side."
+        "why": "The version's name and UIds differ per side. These log lines carry the per-side process UIds and modifiedOn; in T23 they were compared with every GUID and modifiedOn masked and are identical."
       },
       {
         "kind": "write",
@@ -270,9 +272,10 @@
           "version-name": "UsrParity{run}{side}BpProc"
         },
         "known-differences": [
-          "$.executionlogmessages[1].value"
+          "$.executionlogmessages[1].value",
+          "$.executionlogmessages[3].value"
         ],
-        "why": "The activated schema's UId differs per side."
+        "why": "The activated schema's UId differs per side. These log lines carry the per-side process UIds and modifiedOn; in T23 they were compared with every GUID and modifiedOn masked and are identical."
       },
       {
         "kind": "read-back",

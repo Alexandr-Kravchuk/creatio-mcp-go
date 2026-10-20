@@ -59,7 +59,12 @@
         "args": {
           "package-name": "{pkg}",
           "descriptor": "{\"name\":\"UsrParity{run}{side}Proc\",\"caption\":\"Parity process {run}\",\"packageName\":\"{pkg}\",\"elements\":[{\"name\":\"Start1\",\"type\":\"startEvent\"},{\"name\":\"End1\",\"type\":\"endEvent\"}],\"flows\":[{\"source\":\"Start1\",\"target\":\"End1\"}],\"parameters\":[{\"name\":\"UsrParityText\",\"caption\":\"Parity text\",\"type\":\"Text\",\"direction\":\"In\"}],\"mappings\":[]}"
-        }
+        },
+        "known-differences": [
+          "$.executionlogmessages[1].value",
+          "$.executionlogmessages[2].value"
+        ],
+        "why": "These log lines carry the per-side process UIds and modifiedOn; in T23 they were compared with every GUID and modifiedOn masked and are identical."
       },
       {
         "kind": "cleanup",
