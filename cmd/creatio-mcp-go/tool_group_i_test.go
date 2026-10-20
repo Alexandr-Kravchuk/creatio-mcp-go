@@ -35,7 +35,7 @@ func TestGroupIToolsAnswerByRawNameAndThroughClioRun(t *testing.T) {
 		want string
 	}{
 		"describe-business-process": {map[string]any{"process-name": "P", "bogus": 1},
-			`{"exit-code":1,"execution-log-messages":[{"message-type":"Error","value":"Unknown args: 'bogus'. Valid: environment-name, process-name, process-uid, process-caption, culture."}]}`},
+			`{"exit-code":1,"execution-log-messages":[{"message-type":"Error","value":"Unknown args: 'bogus'. Valid: environment-name, process-name, process-uid, process-caption, culture, mode, element."}]}`},
 		"get-process-page-facts": {map[string]any{"pageName": "P", "zz": 1},
 			`{"success":false,"error":"Rename: 'pageName' -> 'schema-name'. Unknown args: 'zz'. Valid: schema-name, culture, environment-name, uri, login, password."}`},
 		"read-data-binding-db": {map[string]any{"package-name": "Nope", "binding-name": "B"},

@@ -48,3 +48,31 @@ func TestRunProcessVerificationArgumentsOfClio142(t *testing.T) {
 		t.Fatalf("%d requests reached Creatio", requests)
 	}
 }
+
+// clio 8.1.0.142's describe-business-process identity synonyms and its new mode/element arguments (T20).
+func TestDescribeProcessArgumentsOfClio142(t *testing.T) {
+	session := dataWriteTestSession(t, func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(500) })
+	for _, c := range []struct {
+		args map[string]any
+		want string
+	}{
+		{map[string]any{"environment-name": "parity-stand", "code": "UsrP", "process-name": "UsrP"},
+			"Ambiguous process identity: 'code' and 'process-name' all name the process. Send the identity once, as 'process-name'. Nothing was read."},
+		{map[string]any{"environment-name": "parity-stand", "process-name": "UsrP", "bogus": 1.0},
+			"Unknown args: 'bogus'. Valid: environment-name, process-name, process-uid, process-caption, culture, mode, element."},
+	} {
+		result, answer := dataWriteTestCall(t, session, "clio-run", "describe-business-process", c.args)
+		messages, _ := answer["execution-log-messages"].([]any)
+		if result.IsError || len(messages) == 0 || messages[len(messages)-1].(map[string]any)["value"] != c.want {
+			t.Fatalf("%v: %s", c.args, dataWriteTestText(result))
+		}
+	}
+	// An accepted synonym is reported ahead of the command's own output (here the mode refusal).
+	_, answer := dataWriteTestCall(t, session, "clio-run", "describe-business-process",
+		map[string]any{"environment-name": "parity-stand", "processName": "UsrP", "mode": "brief"})
+	messages := answer["execution-log-messages"].([]any)
+	if first := messages[0].(map[string]any); len(messages) < 2 || first["message-type"] != "Warning" ||
+		first["value"] != "Argument 'processName' was accepted as 'process-name'; use 'process-name' in future calls." {
+		t.Fatalf("warning %v", messages)
+	}
+}
