@@ -75,6 +75,7 @@ func updatePage(ctx context.Context, client *creatio.Client, failure error, requ
 	if response.Success && verify {
 		response.Page = client.VerifyPage(ctx, request.SchemaName, includeOperations)
 	}
+	creatio.AttachPageWriteDigest(request, &response)
 	if response.ContentValidationFailure && !strings.Contains(response.Error, creatio.PageWriteEscapeHatchHint) {
 		response.Error += creatio.PageWriteEscapeHatchHint
 	}

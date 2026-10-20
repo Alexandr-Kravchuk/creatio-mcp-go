@@ -78,6 +78,8 @@ type PageUpdateResponse struct {
 	NewChecksum            string                `json:"newChecksum,omitempty"`
 	NewModifiedOn          string                `json:"newModifiedOn,omitempty"`
 	SavedSchemaUID         string                `json:"savedSchemaUId,omitempty"`
+	// Digest is set by the MCP tool on a successful real save only (ENG-103023).
+	Digest *PageWriteDigest `json:"digest,omitempty"`
 
 	// ContentValidationFailure marks a failure of the skippable content rules (clio's flag of the same name).
 	ContentValidationFailure bool `json:"-"`
@@ -582,7 +584,20 @@ func (c *Client) pageWritePrepare(ctx context.Context, request *PageUpdateReques
 	body := request.Body
 	var projection *PageAppendProjection
 	if pageWriteIsAppend(request) {
-		if current := pageWriteTokenText(schema.get("body")); strings.TrimSpace(current) != "" {
+		current := pageWriteTokenText(schema.get("body"))
+		if strings.TrimSpace(current) == "" {
+			// GH-1839 (clio 8.1.0.142): an empty stored body (every page create-page makes without an entity) is
+			// merged as the empty page body; the fragment used to be saved verbatim as the whole body.
+			name := request.SchemaName
+			if node := schema.get("name"); node != nil && node.kind != jkNull {
+				name = pageWriteTokenText(node)
+			}
+			current = pageWriteEmptyReplacingBody(name, context_.mobile)
+			if !context_.mobile {
+				current = pageWriteAdoptSchemaHeader(current, request.Body)
+			}
+		}
+		{
 			merged, mergedProjection, message, fullConfig := pageWriteMergeBodies(current, request.Body)
 			if message != "" {
 				text := "Append merge failed: " + message + " [hint: the body must contain valid marker pairs with new viewConfigDiff/handlers operations. See docs://mcp/guides/page-modification.]"

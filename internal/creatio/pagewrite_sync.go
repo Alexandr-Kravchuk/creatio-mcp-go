@@ -47,6 +47,7 @@ type PageSyncPageResult struct {
 	ResourcesRegistered int                     `json:"resources-registered,omitempty"`
 	Page                *PageMetadata           `json:"page,omitempty"`
 	VerifiedBodyFile    string                  `json:"verified-body-file,omitempty"`
+	Digest              *PageWriteDigest        `json:"digest,omitempty"`
 	Conflict            bool                    `json:"conflict,omitempty"`
 	ConflictDetails     *PageConflictDetails    `json:"conflict-details,omitempty"`
 }
@@ -192,7 +193,7 @@ func (c *Client) syncPage(ctx context.Context, request PageSyncRequest, page Pag
 	}
 	validation = pageWriteSyncWarnings(validation, response.Warnings...)
 	if request.Verify {
-		return c.syncVerify(ctx, request, page, response, validation)
+		return c.syncVerify(ctx, request, page, response, validation, syncSavedBody(update, page))
 	}
 	if refresh || update.conditionalApplied {
 		validation = pageWriteSyncWarnings(validation, pageWriteRefreshOrDrop(metaPath, update, &response))
@@ -201,13 +202,23 @@ func (c *Client) syncPage(ctx context.Context, request PageSyncRequest, page Pag
 		validation = pageWriteSyncWarnings(validation, PageWriteValidationGapWarning)
 	}
 	return PageSyncPageResult{SchemaName: page.SchemaName, Success: true, BodyLength: response.BodyLength, Validation: validation,
-		ResourcesRegistered: response.ResourcesRegistered}
+		ResourcesRegistered: response.ResourcesRegistered,
+		Digest:              BuildPageWriteDigest(syncSavedBody(update, page), false, request.Validate, nil, response.NewChecksum)}
+}
+
+// syncSavedBody is clio's `updateOptions.Body ?? page.Body`: the body as saved, after the before-save
+// preprocessing, which is what the ENG-103023 digest describes.
+func syncSavedBody(update *PageUpdateRequest, page PageSyncPageInput) string {
+	if update.Body != "" {
+		return update.Body
+	}
+	return page.Body
 }
 
 // syncVerify is VerifySavedPage: the page is read back, its body written to .clio-pages/{schema}/body.js and
 // meta.json rewritten from the read-back.
 func (c *Client) syncVerify(ctx context.Context, request PageSyncRequest, page PageSyncPageInput, response PageUpdateResponse,
-	validation *PageValidationOutcomes) PageSyncPageResult {
+	validation *PageValidationOutcomes, savedBody string) PageSyncPageResult {
 	read := c.GetPage(ctx, PageGetRequest{SchemaName: page.SchemaName})
 	if !read.Success {
 		return PageSyncPageResult{SchemaName: page.SchemaName, BodyLength: response.BodyLength, Validation: validation,
@@ -219,7 +230,8 @@ func (c *Client) syncVerify(ctx context.Context, request PageSyncRequest, page P
 		validation = pageWriteSyncWarnings(validation, PageWriteValidationGapWarning)
 	}
 	return PageSyncPageResult{SchemaName: page.SchemaName, Success: true, BodyLength: response.BodyLength, Validation: validation,
-		ResourcesRegistered: response.ResourcesRegistered, Page: read.fullPage, VerifiedBodyFile: bodyFile}
+		ResourcesRegistered: response.ResourcesRegistered, Page: read.fullPage, VerifiedBodyFile: bodyFile,
+		Digest: BuildPageWriteDigest(savedBody, false, request.Validate, nil, response.NewChecksum)}
 }
 
 func (c *Client) syncPublishReadBack(schemaName string, request PageSyncRequest, read PageGetResult) (string, string) {

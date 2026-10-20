@@ -41,6 +41,8 @@ type PageCreateResponse struct {
 	Caption                            string `json:"caption,omitempty"`
 	EntitySchemaName                   string `json:"entitySchemaName,omitempty"`
 	EntitySchemaUID                    string `json:"entitySchemaUId,omitempty"`
+	DataSourceName                     string `json:"dataSourceName,omitempty"`
+	PrimaryDataSourceName              string `json:"primaryDataSourceName,omitempty"`
 	SchemaType                         int    `json:"schemaType"`
 	Error                              string `json:"error,omitempty"`
 	DesignPackageUID                   string `json:"designPackageUId,omitempty"`
@@ -140,6 +142,7 @@ func (c *Client) CreatePage(ctx context.Context, input PageCreateRequest) PageCr
 	if problem != "" {
 		return fail(problem)
 	}
+	body, seed := c.pageWriteEntityBoundBody(ctx, input, *template, packageUID)
 	culture, problem := pageWriteCaptionCulture(input.CaptionCulture)
 	if problem != "" {
 		return fail(problem)
@@ -154,15 +157,32 @@ func (c *Client) CreatePage(ctx context.Context, input PageCreateRequest) PageCr
 		return fail(err.Error())
 	}
 	payload := pageWriteCreatePayload(uid, input.SchemaName, caption, input.Description, *template, packageUID,
-		input.PackageName, entitySchemaUID, strings_, culture, optionalProperties)
+		input.PackageName, entitySchemaUID, strings_, culture, optionalProperties, body)
 	if problem := c.pageWriteSaveNew(ctx, payload); problem != "" {
 		return fail(problem)
 	}
 	response := PageCreateResponse{Success: true, SchemaName: input.SchemaName, SchemaUID: uid, PackageName: input.PackageName,
 		PackageUID: packageUID, TemplateName: template.Name, TemplateUID: template.UID, SchemaType: template.SchemaType,
 		Caption: caption, EntitySchemaName: input.EntitySchemaName, EntitySchemaUID: entitySchemaUID}
+	pageWriteApplySeed(&response, input.EntitySchemaName, seed)
 	c.pageWriteWarnIfNotDesignPackage(ctx, &response)
 	return response
+}
+
+// pageWriteApplySeed is the GH-1839 part of clio's BuildSuccessResponse: the bound data source, the seed's
+// warning as the note, and the mobile note when the seeder was not consulted.
+func pageWriteApplySeed(response *PageCreateResponse, entitySchemaName string, seed *pageEntityDataSourceSeed) {
+	if seed != nil {
+		response.DataSourceName = seed.dataSourceName
+		if seed.isPrimary {
+			response.PrimaryDataSourceName = seed.dataSourceName
+		}
+		response.Note = seed.warning
+	}
+	if strings.TrimSpace(entitySchemaName) != "" && seed == nil {
+		response.Note = "Mobile page: the entity is recorded in the page dependencies only; no data source " +
+			"was added. Bind it with update-page."
+	}
 }
 
 // pageWriteFindTemplate is clio's SchemaTemplateCatalog.FindTemplate: web catalog, then mobile, by name or UId.
@@ -267,7 +287,7 @@ func pageWriteNewtonsoftParseError(payload []byte, err error) string {
 
 // pageWriteCreatePayload is clio's BuildSaveSchemaPayload, member for member and in clio's order.
 func pageWriteCreatePayload(uid, schemaName, caption, description string, template PageTemplateItem, packageUID, packageName,
-	entitySchemaUID string, localizableStrings *jnode, culture string, optionalProperties *jnode) *jnode {
+	entitySchemaUID string, localizableStrings *jnode, culture string, optionalProperties *jnode, body string) *jnode {
 	if strings.TrimSpace(culture) == "" {
 		culture = schemaWriteDefaultCulture
 	}
@@ -297,7 +317,7 @@ func pageWriteCreatePayload(uid, schemaName, caption, description string, templa
 	schema.set("userLevelSchema", newBool(false))
 	schema.set("addonTypes", addonTypes)
 	schema.set("package", reference(packageUID, packageName))
-	schema.set("body", newString(""))
+	schema.set("body", newString(body))
 	schema.set("extendParent", newBool(false))
 	schema.set("caption", localized(caption))
 	if strings.TrimSpace(description) == "" {
@@ -394,7 +414,7 @@ func (c *Client) pageWriteWarnIfNotDesignPackage(ctx context.Context, response *
 		mobile = " (an empty mobile page crashes the Creatio Mobile app)"
 	}
 	note := fmt.Sprintf("Chosen package '%s' is not the app's design package (uId=%s). A subsequent update-page WITHOUT "+
-		"target-schema-uid would create a replacing schema in the design package and leave this schema empty%s. "+
+		"target-schema-uid would create a replacing schema in the design package and write the body there instead of into this schema%s. "+
 		"Pass target-schema-uid=%s on update-page to write into this schema.", response.PackageName, design, mobile, response.SchemaUID)
 	if strings.TrimSpace(response.Note) == "" {
 		response.Note = note

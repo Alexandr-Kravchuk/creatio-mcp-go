@@ -7,6 +7,7 @@ package creatio
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"regexp"
 	"runtime"
@@ -104,7 +105,11 @@ type PageAppendProjection struct {
 	DroppedOperationCount           int      `json:"droppedOperationCount"`
 	CollapsedIncomingOperations     []string `json:"collapsedIncomingOperations"`
 	CollapsedIncomingOperationCount int      `json:"collapsedIncomingOperationCount"`
-	ViewConfigDiffApplied           bool     `json:"viewConfigDiffApplied"`
+	// GH-1839 (clio 8.1.0.142): the counts above cover viewConfigDiff only, so a config-diff-only fragment
+	// would read as writing nothing.
+	IncomingViewModelConfigDiffOperationCount int  `json:"incomingViewModelConfigDiffOperationCount"`
+	IncomingModelConfigDiffOperationCount     int  `json:"incomingModelConfigDiffOperationCount"`
+	ViewConfigDiffApplied                     bool `json:"viewConfigDiffApplied"`
 
 	supersededDropWarnings []string
 }
@@ -206,22 +211,80 @@ func pageWriteRawSectionOr(body, marker, fallback string) string {
 	return fallback
 }
 
-func pageWriteMergeWeb(current, incoming string, projection *PageAppendProjection) (string, error) {
-	currentDiff, err := pageWriteReadJSONArray(current, "SCHEMA_VIEW_CONFIG_DIFF")
-	if err != nil {
-		return "", err
+// pageWriteNothingToAppendMessage is clio's PageBodyMerger.NothingToAppendMessage (GH-1839).
+const pageWriteNothingToAppendMessage = "The append fragment contributes no operation: every section append merges (viewConfigDiff, viewModelConfigDiff, " +
+	"modelConfigDiff, handlers, converters, validators) is empty or missing, so the merge would save the page " +
+	"unchanged. Put the new operations INSIDE their marker pairs, for example " +
+	"modelConfigDiff: /**SCHEMA_MODEL_CONFIG_DIFF*/[ ... ]/**SCHEMA_MODEL_CONFIG_DIFF*/."
+
+// pageWriteIsEmptyRawSection is clio's IsEmptyRawSection: nothing, [] or {} once whitespace is removed.
+func pageWriteIsEmptyRawSection(raw string) bool {
+	compact := strings.Map(func(r rune) rune {
+		if unicode.IsSpace(r) {
+			return -1
+		}
+		return r
+	}, raw)
+	return compact == "" || compact == "[]" || compact == "{}"
+}
+
+// pageWriteReplaceSectionOrFail is clio's ReplaceSectionOrThrow (GH-1839): fragment content for a section the
+// stored body has no marker pair for is refused instead of being dropped behind success: true.
+func pageWriteReplaceSectionOrFail(body, marker, content string, incomingHasContent bool) (string, error) {
+	result, replaced := pageWriteReplaceSection(body, marker, content)
+	if !replaced && incomingHasContent {
+		return "", fmt.Errorf("The page's stored body has no /**%s*/ marker pair, so the %s content of the fragment "+
+			"has nowhere to go and would be silently discarded. Read the body with get-page and save it with "+
+			"mode 'replace', including the new content inside that marker pair.", marker, marker)
 	}
+	return result, nil
+}
+
+// pageWriteAdoptSchemaHeader is clio's PageBodyMerger.AdoptSchemaHeader (GH-1839): the fragment's non-empty
+// SCHEMA_DEPS and SCHEMA_ARGS pairs are copied into the empty web scaffold an append merges into.
+func pageWriteAdoptSchemaHeader(scaffold, incoming string) string {
+	if strings.TrimSpace(incoming) == "" {
+		return scaffold
+	}
+	result := scaffold
+	for _, marker := range []string{"SCHEMA_DEPS", "SCHEMA_ARGS"} {
+		if section, ok := pageWriteRawSection(incoming, marker); ok && strings.TrimSpace(section) != "" {
+			result, _ = pageWriteReplaceSection(result, marker, section)
+		}
+	}
+	return result
+}
+
+func pageWriteMergeWeb(current, incoming string, projection *PageAppendProjection) (string, error) {
 	incomingDiff, err := pageWriteReadJSONArray(incoming, "SCHEMA_VIEW_CONFIG_DIFF")
 	if err != nil {
 		return "", err
 	}
+	incomingViewModel, err := pageWriteReadJSONArray(incoming, "SCHEMA_VIEW_MODEL_CONFIG_DIFF")
+	if err != nil {
+		return "", err
+	}
+	incomingModel, err := pageWriteReadJSONArray(incoming, "SCHEMA_MODEL_CONFIG_DIFF")
+	if err != nil {
+		return "", err
+	}
+	incomingHandlers := pageWriteRawSectionOr(incoming, "SCHEMA_HANDLERS", "[]")
+	incomingConverters := pageWriteRawSectionOr(incoming, "SCHEMA_CONVERTERS", "{}")
+	incomingValidators := pageWriteRawSectionOr(incoming, "SCHEMA_VALIDATORS", "{}")
+	if len(incomingDiff.items) == 0 && len(incomingViewModel.items) == 0 && len(incomingModel.items) == 0 &&
+		pageWriteIsEmptyRawSection(incomingHandlers) && pageWriteIsEmptyRawSection(incomingConverters) &&
+		pageWriteIsEmptyRawSection(incomingValidators) {
+		return "", errors.New(pageWriteNothingToAppendMessage)
+	}
+	projection.IncomingViewModelConfigDiffOperationCount = len(incomingViewModel.items)
+	projection.IncomingModelConfigDiffOperationCount = len(incomingModel.items)
+	currentDiff, err := pageWriteReadJSONArray(current, "SCHEMA_VIEW_CONFIG_DIFF")
+	if err != nil {
+		return "", err
+	}
 	mergedViewConfig := pageWriteMergeOperations(currentDiff, incomingDiff, projection)
-	appendSection := func(marker string) (*jnode, error) {
+	appendSection := func(marker string, right *jnode) (*jnode, error) {
 		left, err := pageWriteReadJSONArray(current, marker)
-		if err != nil {
-			return nil, err
-		}
-		right, err := pageWriteReadJSONArray(incoming, marker)
 		if err != nil {
 			return nil, err
 		}
@@ -229,30 +292,40 @@ func pageWriteMergeWeb(current, incoming string, projection *PageAppendProjectio
 		merged.items = append(append(merged.items, left.items...), right.items...)
 		return merged, nil
 	}
-	mergedViewModel, err := appendSection("SCHEMA_VIEW_MODEL_CONFIG_DIFF")
+	mergedViewModel, err := appendSection("SCHEMA_VIEW_MODEL_CONFIG_DIFF", incomingViewModel)
 	if err != nil {
 		return "", err
 	}
-	mergedModel, err := appendSection("SCHEMA_MODEL_CONFIG_DIFF")
+	mergedModel, err := appendSection("SCHEMA_MODEL_CONFIG_DIFF", incomingModel)
 	if err != nil {
 		return "", err
 	}
-	handlers := pageWriteMergeHandlers(pageWriteRawSectionOr(current, "SCHEMA_HANDLERS", "[]"), pageWriteRawSectionOr(incoming, "SCHEMA_HANDLERS", "[]"))
-	converters, err := pageWriteMergeKeyedObject(pageWriteRawSectionOr(current, "SCHEMA_CONVERTERS", "{}"), pageWriteRawSectionOr(incoming, "SCHEMA_CONVERTERS", "{}"))
+	handlers := pageWriteMergeHandlers(pageWriteRawSectionOr(current, "SCHEMA_HANDLERS", "[]"), incomingHandlers)
+	converters, err := pageWriteMergeKeyedObject(pageWriteRawSectionOr(current, "SCHEMA_CONVERTERS", "{}"), incomingConverters)
 	if err != nil {
 		return "", err
 	}
-	validators, err := pageWriteMergeKeyedObject(pageWriteRawSectionOr(current, "SCHEMA_VALIDATORS", "{}"), pageWriteRawSectionOr(incoming, "SCHEMA_VALIDATORS", "{}"))
+	validators, err := pageWriteMergeKeyedObject(pageWriteRawSectionOr(current, "SCHEMA_VALIDATORS", "{}"), incomingValidators)
 	if err != nil {
 		return "", err
 	}
 	result, applied := pageWriteReplaceSection(current, "SCHEMA_VIEW_CONFIG_DIFF", newtonsoftIndented(mergedViewConfig))
 	projection.ViewConfigDiffApplied = applied
-	result, _ = pageWriteReplaceSection(result, "SCHEMA_VIEW_MODEL_CONFIG_DIFF", newtonsoftIndented(mergedViewModel))
-	result, _ = pageWriteReplaceSection(result, "SCHEMA_MODEL_CONFIG_DIFF", newtonsoftIndented(mergedModel))
-	result, _ = pageWriteReplaceSection(result, "SCHEMA_HANDLERS", handlers)
-	result, _ = pageWriteReplaceSection(result, "SCHEMA_CONVERTERS", converters)
-	result, _ = pageWriteReplaceSection(result, "SCHEMA_VALIDATORS", validators)
+	sections := []struct {
+		marker, content string
+		hasContent      bool
+	}{
+		{"SCHEMA_VIEW_MODEL_CONFIG_DIFF", newtonsoftIndented(mergedViewModel), len(incomingViewModel.items) > 0},
+		{"SCHEMA_MODEL_CONFIG_DIFF", newtonsoftIndented(mergedModel), len(incomingModel.items) > 0},
+		{"SCHEMA_HANDLERS", handlers, !pageWriteIsEmptyRawSection(incomingHandlers)},
+		{"SCHEMA_CONVERTERS", converters, !pageWriteIsEmptyRawSection(incomingConverters)},
+		{"SCHEMA_VALIDATORS", validators, !pageWriteIsEmptyRawSection(incomingValidators)},
+	}
+	for _, section := range sections {
+		if result, err = pageWriteReplaceSectionOrFail(result, section.marker, section.content, section.hasContent); err != nil {
+			return "", err
+		}
+	}
 	return result, nil
 }
 
@@ -272,7 +345,15 @@ func pageWriteMergeMobile(current, incoming string, projection *PageAppendProjec
 		}
 		return newArray()
 	}
-	mergedView := pageWriteMergeOperations(arrayOf(currentNode, "viewConfigDiff"), arrayOf(incomingNode, "viewConfigDiff"), projection)
+	incomingView := arrayOf(incomingNode, "viewConfigDiff")
+	incomingViewModel := arrayOf(incomingNode, "viewModelConfigDiff")
+	incomingModel := arrayOf(incomingNode, "modelConfigDiff")
+	if len(incomingView.items) == 0 && len(incomingViewModel.items) == 0 && len(incomingModel.items) == 0 {
+		return "", errors.New(pageWriteNothingToAppendMessage)
+	}
+	projection.IncomingViewModelConfigDiffOperationCount = len(incomingViewModel.items)
+	projection.IncomingModelConfigDiffOperationCount = len(incomingModel.items)
+	mergedView := pageWriteMergeOperations(arrayOf(currentNode, "viewConfigDiff"), incomingView, projection)
 	appendArrays := func(key string) *jnode {
 		merged := newArray()
 		merged.items = append(append(merged.items, arrayOf(currentNode, key).items...), arrayOf(incomingNode, key).items...)

@@ -454,7 +454,24 @@ func ownBodySummary(schema pageLayer) (*PageOwnBodyStats, error) {
 		return nil, err
 	}
 	count, requests := handlerInfo(strings.TrimSpace(parsed.handlers))
-	ops := make([]PageOperation, 0, len(parsed.viewConfigDiff.items))
+	ops := pageViewConfigOps(parsed)
+	return &PageOwnBodyStats{
+		BodyLength:                    len(utf16.Encode([]rune(body))),
+		ViewConfigDiffOperations:      countItems(parsed.viewConfigDiff),
+		ViewModelConfigDiffOperations: countItems(parsed.viewModelConfigDiff),
+		ModelConfigDiffOperations:     countItems(parsed.modelConfigDiff),
+		HandlerEntries:                count,
+		ViewConfigDiffOps:             ops,
+		HandlerRequests:               requests,
+	}, nil
+}
+
+// pageViewConfigOps is clio's PageGetCommand.ExtractViewConfigOps: one entry per viewConfigDiff object.
+func pageViewConfigOps(parsed parsedPageBody) []PageOperation {
+	ops := []PageOperation{}
+	if !parsed.viewConfigDiff.isArray() {
+		return ops
+	}
 	for _, item := range parsed.viewConfigDiff.items {
 		if !item.isObject() {
 			continue
@@ -466,15 +483,7 @@ func ownBodySummary(schema pageLayer) (*PageOwnBodyStats, error) {
 		}
 		ops = append(ops, operation)
 	}
-	return &PageOwnBodyStats{
-		BodyLength:                    len(utf16.Encode([]rune(body))),
-		ViewConfigDiffOperations:      countItems(parsed.viewConfigDiff),
-		ViewModelConfigDiffOperations: countItems(parsed.viewModelConfigDiff),
-		ModelConfigDiffOperations:     countItems(parsed.modelConfigDiff),
-		HandlerEntries:                count,
-		ViewConfigDiffOps:             ops,
-		HandlerRequests:               requests,
-	}, nil
+	return ops
 }
 
 func countItems(n *jnode) int {

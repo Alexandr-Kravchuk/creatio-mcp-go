@@ -56,6 +56,14 @@ func TestCreatePageSavesTemplateChildAndReportsSaveFailure(t *testing.T) {
 					return http.StatusOK, `{"success":true}`
 				case "/0/ServiceModel/ApplicationPackagesService.svc/GetDesignPackageUId":
 					return http.StatusOK, `{"success":true,"uId":"design"}`
+				case "/0/ServiceModel/ClientUnitSchemaDesignerService.svc/GetParentSchemas":
+					// GH-1839: the seeder reads the template hierarchy in the target package.
+					if body["schemaUId"] != "tpl" || body["packageUId"] != "pkg" {
+						t.Errorf("hierarchy read %#v", body)
+					}
+					template, _ := json.Marshal(pageWriteTestPage(`[]`))
+					return http.StatusOK, `{"success":true,"values":[{"uId":"tpl","name":"BlankPageTemplate","schemaType":9,"package":{"uId":"base"},"body":` +
+						string(template) + `}]}`
 				}
 				t.Errorf("unexpected %s", path)
 				return http.StatusNotFound, ""
@@ -80,6 +88,17 @@ func TestCreatePageSavesTemplateChildAndReportsSaveFailure(t *testing.T) {
 				caption["value"] != "UsrP" || len(saved["localizableStrings"].([]any)) != 1 || len(saved["optionalProperties"].([]any)) != 1 ||
 				saved["dependsOn"].([]any)[0].(map[string]any)["uId"] != "entity" || saved["extendParent"] != false {
 				t.Fatalf("payload %#v", saved)
+			}
+			// GH-1839 (clio 8.1.0.142): a template without dataSources gets a page-scoped primary PDS from one root merge.
+			if result.DataSourceName != "PDS" || result.PrimaryDataSourceName != "PDS" {
+				t.Fatalf("data source %#v", result)
+			}
+			wantModel := "/**SCHEMA_MODEL_CONFIG_DIFF*/[\n  {\n    \"operation\": \"merge\",\n    \"path\": [],\n    \"values\": {\n" +
+				"      \"primaryDataSourceName\": \"PDS\",\n      \"dataSources\": {\n        \"PDS\": {\n          \"type\": \"crt.EntityDataSource\",\n" +
+				"          \"scope\": \"page\",\n          \"config\": {\n            \"entitySchemaName\": \"UsrEntity\"\n          }\n        }\n      }\n" +
+				"    }\n  }\n]/**SCHEMA_MODEL_CONFIG_DIFF*/"
+			if body, _ := saved["body"].(string); !strings.HasPrefix(body, `define("UsrP", /**SCHEMA_DEPS*/[]`) || !strings.Contains(body, wantModel) {
+				t.Fatalf("body %q", saved["body"])
 			}
 		})
 	}

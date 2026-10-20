@@ -146,9 +146,10 @@
           "$.newchecksum",
           "$.newmodifiedon",
           "$.bodylength",
-          "$.warnings"
+          "$.warnings",
+          "$.digest.checksum"
         ],
-        "why": "Body lengths differ by the side name inside the body. Go adds a warning naming clio's page checks it does not run (PageWriteValidationGapWarning). Checksums differ per page."
+        "why": "Body lengths differ by the side name inside the body. Go adds a warning naming clio's page checks it does not run (PageWriteValidationGapWarning). Checksums differ per page. The digest's checksum is the post-save checksum, which differs per page."
       },
       {
         "kind": "read-back",
@@ -203,9 +204,10 @@
           "$.newchecksum",
           "$.newmodifiedon",
           "$.bodylength",
-          "$.warnings"
+          "$.warnings",
+          "$.digest.checksum"
         ],
-        "why": "Body lengths differ by the side name inside the body. Go adds a warning naming clio's page checks it does not run (PageWriteValidationGapWarning). Checksums differ per page."
+        "why": "Body lengths differ by the side name inside the body. Go adds a warning naming clio's page checks it does not run (PageWriteValidationGapWarning). Checksums differ per page. The digest's checksum is the post-save checksum, which differs per page."
       },
       {
         "kind": "read-back",
@@ -242,9 +244,10 @@
         "known-differences": [
           "$.newchecksum",
           "$.newmodifiedon",
-          "$.bodylength"
+          "$.bodylength",
+          "$.digest.checksum"
         ],
-        "why": "Checksums differ per page."
+        "why": "Checksums differ per page. The digest's checksum is the post-save checksum, which differs per page."
       },
       {
         "kind": "write",
@@ -264,9 +267,10 @@
         "known-differences": [
           "$.pages[0].validation.warnings",
           "$.pages[0].bodylength",
-          "$.pages[0].page.ownbodysummary.bodylength"
+          "$.pages[0].page.ownbodysummary.bodylength",
+          "$.pages[0].digest.checksum"
         ],
-        "why": "Body lengths differ by the side name inside the body. Go adds a warning naming clio's page checks it does not run (PageWriteValidationGapWarning)."
+        "why": "Body lengths differ by the side name inside the body. Go adds a warning naming clio's page checks it does not run (PageWriteValidationGapWarning). The digest's checksum is the post-save checksum, which differs per page."
       },
       {
         "kind": "read-back",
