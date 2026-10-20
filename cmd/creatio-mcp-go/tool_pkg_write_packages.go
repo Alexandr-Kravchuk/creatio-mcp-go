@@ -177,7 +177,8 @@ func init() {
 		func(args map[string]any) error { _, _, err := removeDependency(args); return err })
 
 	// clio: unlock-for-hotfix [McpServerTool(ReadOnly = false, Destructive = true, Idempotent = true)] on master;
-	// 8.1.0.134's index (the contract this server follows) publishes destructive: false.
+	// 8.1.0.134's index published destructive: false; 8.1.0.142's (the inventory this server follows)
+	// publishes true, and annotationsOf takes the destructive flag from that index.
 	// finish-hotfix: [McpServerTool(ReadOnly = false, Destructive = false, Idempotent = false)].
 	for _, hotfix := range []struct {
 		name        string

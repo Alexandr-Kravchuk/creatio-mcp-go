@@ -47,7 +47,7 @@ func TestBundledArchiveLocatorPicksTheNewestClio(t *testing.T) {
 }
 
 func TestInstallGateAndDashboardsMigratorRefusals(t *testing.T) {
-	pkgWriteFakeClioTool(t, "8.1.0.134", nil)
+	pkgWriteFakeClioTool(t, creatio.ClioVersion, nil)
 	fake := newPkgWriteFake(t, nil)
 	session := pkgWriteSession(t, fake, nil)
 	for _, tool := range []string{"install-gate", "install-dashboards-migrator"} {
@@ -77,7 +77,7 @@ func TestInstallGateAndDashboardsMigratorRefusals(t *testing.T) {
 }
 
 func TestInstallGateThroughClioRun(t *testing.T) {
-	pkgWriteFakeClioTool(t, "8.1.0.134", map[string]string{"cliogate/cliogate.gz": "not a gzip archive, uploaded as is"})
+	pkgWriteFakeClioTool(t, creatio.ClioVersion, map[string]string{"cliogate/cliogate.gz": "not a gzip archive, uploaded as is"})
 	fake := newPkgWriteFake(t, map[string]func(string) (int, string){
 		"/UploadPackage":   func(string) (int, string) { return 200, `{"success":true}` },
 		"/CreateBackup":    func(string) (int, string) { return 200, `{"success":true}` },

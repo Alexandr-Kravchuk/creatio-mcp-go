@@ -86,7 +86,7 @@ func (c *Client) ExportSchema(ctx context.Context, input SchemaTransferRequest) 
 		return fail(err)
 	}
 	schema := node.get("schema")
-	descriptor := map[string]any{"schemaName": schema.get("schemaName").str(), "schemaUId": schema.get("schemaUId").str(), "caption": schema.get("caption").str(), "managerName": schema.get("managerName").str(), "sourcePackageName": schema.get("packageName").str(), "sourceEnvironmentUrl": c.config.BaseURL, "exportedOnUtc": time.Now().UTC(), "clioVersion": "8.1.0.134"}
+	descriptor := map[string]any{"schemaName": schema.get("schemaName").str(), "schemaUId": schema.get("schemaUId").str(), "caption": schema.get("caption").str(), "managerName": schema.get("managerName").str(), "sourcePackageName": schema.get("packageName").str(), "sourceEnvironmentUrl": c.config.BaseURL, "exportedOnUtc": time.Now().UTC(), "clioVersion": ClioVersion}
 	raw, _ := json.MarshalIndent(descriptor, "", "  ")
 	if err = os.WriteFile(filepath.Join(directory, "descriptor.json"), raw, 0600); err == nil {
 		err = os.WriteFile(filepath.Join(directory, "schema-data.json"), []byte(data), 0600)

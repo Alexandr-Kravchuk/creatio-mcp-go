@@ -51,6 +51,10 @@ func TestSchemaTransferExportPreservesPayloadAndNeverOverwrites(t *testing.T) {
 			if err != nil || string(raw) != data {
 				t.Fatalf("payload changed: %s %v", raw, err)
 			}
+			var descriptor map[string]any
+			if raw, err = os.ReadFile(filepath.Join(dir, "descriptor.json")); err != nil || json.Unmarshal(raw, &descriptor) != nil || descriptor["clioVersion"] != "8.1.0.142" {
+				t.Fatalf("descriptor: %s %v", raw, err)
+			}
 			for _, file := range []string{"descriptor.json", "metadata.json", "properties.json", "resources/resource.en-US.json"} {
 				if _, err = os.Stat(filepath.Join(dir, file)); err != nil {
 					t.Error(file, err)
