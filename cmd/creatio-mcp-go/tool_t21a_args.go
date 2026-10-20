@@ -12,6 +12,7 @@ import (
 
 	"github.com/Alexandr-Kravchuk/creatio-mcp-go/internal/creatio"
 	"github.com/Alexandr-Kravchuk/creatio-mcp-go/internal/redact"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
 // t21aBinder reads one tool's arguments the way clio's System.Text.Json binder does.
@@ -163,6 +164,16 @@ func t21aWithAliases(extra map[string]string) map[string]string {
 		merged[key] = value
 	}
 	return merged
+}
+
+// t21aResult is structuredToolResult with clio's System.Text.Json text, so the failure redaction of the
+// dispatcher sees the same characters clio's does.
+func t21aResult(value any) *mcp.CallToolResult {
+	text, err := creatio.ClioJSONText(value)
+	if err != nil {
+		return structuredToolResult(value)
+	}
+	return &mcp.CallToolResult{Content: []mcp.Content{&mcp.TextContent{Text: text}}, StructuredContent: value}
 }
 
 // t21aResolve resolves the environment the way a typed-response clio tool sees it: a binding failure and the

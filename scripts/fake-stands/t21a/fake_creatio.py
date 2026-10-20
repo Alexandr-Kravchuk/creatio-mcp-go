@@ -26,7 +26,53 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 CRT_BASE = "11111111-0000-0000-0000-000000000001"
 CRT_UI = "11111111-0000-0000-0000-000000000002"
 USR_EXISTING = "11111111-0000-0000-0000-000000000003"
+USR_PKG = "11111111-0000-0000-0000-000000000004"
+CRT_OTHER = "11111111-0000-0000-0000-000000000005"
+USR_LOCKED = "11111111-0000-0000-0000-000000000006"
 APP_ID = "22222222-0000-0000-0000-000000000001"
+
+# place-section-in-workplace fixtures
+WEB = "195785b4-f55a-4e72-ace3-6480b54c8fa5"
+MOBILE = "be8ab9ee-344e-4a56-8c97-41c84f22bd88"
+ALL_EMPLOYEES = "a29a3ba5-4b0d-de11-9a51-005056c00008"
+SALES_ROLE = "33333333-0000-0000-0000-000000000001"
+DUP_ROLE_1 = "33333333-0000-0000-0000-000000000002"
+DUP_ROLE_2 = "33333333-0000-0000-0000-000000000003"
+WP_TYPE = "44444444-0000-0000-0000-000000000001"
+WP_LOADER = "44444444-0000-0000-0000-000000000002"
+MY_APPS = "55555555-0000-0000-0000-000000000001"
+SALES_WP = "55555555-0000-0000-0000-000000000002"
+FOREIGN_WP = "55555555-0000-0000-0000-000000000003"
+MOBILE_MY_APPS = "55555555-0000-0000-0000-000000000004"
+M_ORDERS = "66666666-0000-0000-0000-000000000001"
+M_DUP_PLACED = "66666666-0000-0000-0000-000000000002"
+M_DUP_FREE = "66666666-0000-0000-0000-000000000003"
+M_LONELY = "66666666-0000-0000-0000-000000000004"
+M_FOREIGN = "66666666-0000-0000-0000-000000000005"
+M_TWICE = "66666666-0000-0000-0000-000000000006"
+P_ORDERS = "77777777-0000-0000-0000-000000000001"
+P_DUP = "77777777-0000-0000-0000-000000000002"
+P_FOREIGN = "77777777-0000-0000-0000-000000000005"
+P_TWICE_1 = "77777777-0000-0000-0000-000000000006"
+P_TWICE_2 = "77777777-0000-0000-0000-000000000007"
+G_ALL = "88888888-0000-0000-0000-000000000001"
+B_FOREIGN_WP = "99999999-0000-0000-0000-000000000001"
+B_FOREIGN_P = "99999999-0000-0000-0000-000000000002"
+ID_COLUMN = "ae0e45ca-c495-4fe7-a39d-3ab7278e1617"
+LOOKUPS = {"SysApplicationClientType", "Type", "SysWorkplace", "SysModule", "SysAdminUnit"}
+SCHEMAS = {
+    "SysWorkplace": [("Id", ID_COLUMN, 0), ("Name", "a0000000-0000-0000-0000-000000000001", 1),
+                     ("Position", "a0000000-0000-0000-0000-000000000002", 4),
+                     ("SysApplicationClientType", "a0000000-0000-0000-0000-000000000003", 10),
+                     ("Type", "a0000000-0000-0000-0000-000000000004", 10), ("LoaderId", "a0000000-0000-0000-0000-000000000005", 0)],
+    "SysModuleInWorkplace": [("Id", ID_COLUMN, 0), ("SysWorkplace", "a0000000-0000-0000-0000-000000000011", 10),
+                             ("SysModule", "a0000000-0000-0000-0000-000000000012", 10),
+                             ("Position", "a0000000-0000-0000-0000-000000000013", 4)],
+    "SysAdminUnitInWorkplace": [("Id", ID_COLUMN, 0), ("SysWorkplace", "a0000000-0000-0000-0000-000000000021", 10),
+                                ("SysAdminUnit", "a0000000-0000-0000-0000-000000000022", 10)],
+}
+SCHEMA_UIDS = {"SysWorkplace": "b0000000-0000-0000-0000-000000000001", "SysModuleInWorkplace": "b0000000-0000-0000-0000-000000000002",
+               "SysAdminUnitInWorkplace": "b0000000-0000-0000-0000-000000000003"}
 
 
 def package(uid, name, description="", maintainer="Creatio", install_type=1, deps=None):
@@ -34,11 +80,152 @@ def package(uid, name, description="", maintainer="Creatio", install_type=1, dep
             "installType": install_type, "version": "8.0.0", "type": 0, "dependsOnPackages": deps or []}
 
 
+def workplace(uid, name, client, created, position=1):
+    return {"Id": uid, "Name": name, "Position": position, "SysApplicationClientType.Id": client, "Type.Id": WP_TYPE,
+            "LoaderId": WP_LOADER, "CreatedOn": created}
+
+
+def binding(uid, name, package_uid, schema, ids):
+    return {"UId": uid, "Name": name, "SysPackage.UId": package_uid, "SysSchema.Name": schema, "ids": list(ids)}
+
+
+class Tables:
+    """A tiny table store answering the SelectQuery, InsertQuery and UpdateQuery shapes the workplace tools send."""
+
+    def __init__(self, packages):
+        self.packages = packages
+        self.clock = 0
+        self.tables = {
+            "SysApplicationClientType": [{"Id": WEB, "Name": "Web"}, {"Id": MOBILE, "Name": "Mobile"}],
+            "SysAdminUnit": [{"Id": ALL_EMPLOYEES, "Name": "All employees"}, {"Id": SALES_ROLE, "Name": "Sales"},
+                             {"Id": DUP_ROLE_1, "Name": "Dup"}, {"Id": DUP_ROLE_2, "Name": "Dup"}],
+            "SysModule": [{"Id": M_ORDERS, "Code": "UsrOrders"}, {"Id": M_DUP_PLACED, "Code": "UsrDup"},
+                          {"Id": M_DUP_FREE, "Code": "UsrDup"}, {"Id": M_LONELY, "Code": "UsrLonely"},
+                          {"Id": M_FOREIGN, "Code": "UsrForeign"}, {"Id": M_TWICE, "Code": "UsrTwice"}],
+            "SysWorkplace": [workplace(MY_APPS, "My applications", WEB, 1), workplace(SALES_WP, "Sales", WEB, 2, 2),
+                             workplace(FOREIGN_WP, "Foreign WP", WEB, 3, 3),
+                             workplace(MOBILE_MY_APPS, "My applications", MOBILE, 4)],
+            "SysModuleInWorkplace": [
+                {"Id": P_ORDERS, "SysWorkplace.Id": MY_APPS, "SysModule.Id": M_ORDERS},
+                {"Id": P_DUP, "SysWorkplace.Id": MY_APPS, "SysModule.Id": M_DUP_PLACED},
+                {"Id": P_FOREIGN, "SysWorkplace.Id": MY_APPS, "SysModule.Id": M_FOREIGN},
+                {"Id": P_TWICE_1, "SysWorkplace.Id": MY_APPS, "SysModule.Id": M_TWICE},
+                {"Id": P_TWICE_2, "SysWorkplace.Id": MY_APPS, "SysModule.Id": M_TWICE}],
+            "SysAdminUnitInWorkplace": [{"Id": G_ALL, "SysWorkplace.Id": MY_APPS, "SysAdminUnit.Id": ALL_EMPLOYEES}],
+            "SysPackageSchemaData": [binding(B_FOREIGN_WP, "SysWorkplace_ForeignWP", CRT_OTHER, "SysWorkplace", [FOREIGN_WP]),
+                                     binding(B_FOREIGN_P, "SysModuleInWorkplace_UsrForeign", CRT_OTHER, "SysModuleInWorkplace",
+                                             [P_FOREIGN])],
+        }
+
+    def owns(self, root):
+        return root in self.tables
+
+    def row_by_id(self, table, uid):
+        return next((r for r in self.tables.get(table, []) if str(r.get("Id", "")).lower() == str(uid).lower()), None)
+
+    def resolve(self, root, row, path):
+        if root == "SysPackageSchemaData":
+            if path == "SysPackage.Name":
+                pkg = self.packages.get(row["SysPackage.UId"])
+                return pkg["name"] if pkg else None
+            if path == "Data":
+                return json.dumps({"PackageData": [{"Row": [{"SchemaColumnUId": ID_COLUMN, "Value": i}]} for i in row["ids"]]})
+        if path in row:
+            return row[path]
+        if "." in path:
+            head, tail = path.split(".", 1)
+            target = self.row_by_id(head, row.get(head + ".Id"))
+            return target.get(tail) if target else None
+        return None
+
+    def select(self, body):
+        root = body.get("rootSchemaName")
+        columns = (body.get("columns") or {}).get("items", {})
+        rows = []
+        for row in self.tables[root]:
+            ok = True
+            for item in (body.get("filters") or {}).get("items", {}).values():
+                path = item.get("leftExpression", {}).get("columnPath")
+                value = item.get("rightExpression", {}).get("parameter", {}).get("value")
+                if str(self.resolve(root, row, path) or "").lower() != str(value or "").lower():
+                    ok = False
+            if ok:
+                rows.append(row)
+        order = [c["expression"]["columnPath"] for c in columns.values()
+                 if c.get("orderPosition", -1) is not None and c.get("orderPosition", -1) >= 0]
+        for path in order:
+            rows = sorted(rows, key=lambda r: self.resolve(root, r, path) or 0)
+        return {"success": True, "rows": [{alias: self.resolve(root, r, c["expression"]["columnPath"]) for alias, c in columns.items()}
+                                          for r in rows]}
+
+    @staticmethod
+    def values_of(body):
+        result = {}
+        for name, item in ((body.get("columnValues") or {}).get("items") or {}).items():
+            value = (item.get("parameter") or {}).get("value")
+            result[name + ".Id" if name in LOOKUPS else name] = value
+        return result
+
+    def insert(self, body):
+        root = body.get("rootSchemaName")
+        values = self.values_of(body)
+        if self.row_by_id(root, values.get("Id")):
+            return {"success": False, "errorInfo": {"message": "Duplicate key"}}
+        if root == "SysWorkplace":
+            self.clock += 1
+            row = {"Position": len(self.tables[root]) + 1, "Type.Id": WP_TYPE, "LoaderId": WP_LOADER, "CreatedOn": 100 + self.clock}
+            row.update(values)
+            row["Position"] = int(row["Position"])
+            values = row
+        self.tables[root].append(values)
+        return {"success": True, "rowsAffected": 1}
+
+    def update(self, body):
+        root = body.get("rootSchemaName")
+        items = ((body.get("filters") or {}).get("items") or {})
+        uid = next(iter(items.values()), {}).get("rightExpression", {}).get("parameter", {}).get("value")
+        row = self.row_by_id(root, uid)
+        if row is None:
+            return {"success": True, "rowsAffected": 0}
+        for key, value in self.values_of(body).items():
+            row[key] = int(value) if key == "Position" else value
+        return {"success": True, "rowsAffected": 1}
+
+    def runtime_schema(self, name):
+        columns = SCHEMAS.get(name)
+        if columns is None:
+            return {"success": False, "errorInfo": {"message": f"Schema {name} not found"}}
+        return {"success": True, "schema": {"uId": SCHEMA_UIDS[name], "name": name, "primaryColumnUId": ID_COLUMN,
+                                            "columns": {"items": {uid: {"uId": uid, "name": col, "dataValueType": t}
+                                                                  for col, uid, t in columns}}}}
+
+    def save_binding(self, body):
+        name = body.get("name", "")
+        if "FailHub" in name and body.get("entitySchemaName") == "SysAdminUnitInWorkplace":
+            return {"success": False, "errorInfo": {"message": "Binding save denied"}}
+        rows = self.tables["SysPackageSchemaData"]
+        existing = next((r for r in rows if r["UId"] == body.get("uId")), None)
+        ids = list(body.get("boundRecordIds") or [])
+        if existing:
+            existing["ids"] = ids
+        else:
+            rows.append(binding(body.get("uId"), name, (body.get("package") or {}).get("uId"), body.get("entitySchemaName"), ids))
+        return {"success": True}
+
+    def bound_data(self, body):
+        found = next((r for r in self.tables["SysPackageSchemaData"] if r["UId"] == body.get("uId")), None)
+        items = [{"Id": i} for i in (found["ids"] if found else [])]
+        return {"success": True, "items": items}
+
+
 class State:
     def __init__(self):
         self.packages = {CRT_BASE: package(CRT_BASE, "CrtBase"), CRT_UI: package(CRT_UI, "CrtUIv2"),
-                         USR_EXISTING: package(USR_EXISTING, "UsrExisting", maintainer="Customer", install_type=0)}
+                         USR_EXISTING: package(USR_EXISTING, "UsrExisting", maintainer="Customer", install_type=0),
+                         USR_PKG: package(USR_PKG, "UsrPkg", install_type=0), CRT_OTHER: package(CRT_OTHER, "CrtOther"),
+                         USR_LOCKED: package(USR_LOCKED, "UsrLocked")}
         self.app_packages = {}
+        self.tables = Tables(self.packages)
 
     def by_name(self, name):
         return next((p for p in self.packages.values() if p["name"].lower() == (name or "").lower()), None)
@@ -89,9 +276,12 @@ def filters_of(body):
 def select(state, body):
     root = body.get("rootSchemaName")
     values = filters_of(body)
+    if state.tables.owns(root):
+        return state.tables.select(body)
     if root == "SysPackage":
+        rows = [p for p in state.packages.values() if "UId" not in values or p["uId"] == str(values["UId"]).lower()]
         return {"success": True, "rows": [{"Name": p["name"], "UId": p["uId"], "Maintainer": p["maintainer"],
-                                           "Version": p["version"]} for p in state.packages.values()]}
+                                           "Version": p["version"], "InstallType": p.get("installType")} for p in rows]}
     if root == "SysInstalledApp":
         rows = [{"Id": APP_ID, "Code": "UsrApp", "Name": "My app", "Version": "1.0.0"}] if values.get("Code") == "UsrApp" else []
         return {"success": True, "rows": rows}
@@ -105,10 +295,25 @@ def answer(state, path, body):
         # clio's ATF provider writes SysSettingsNameCollection, this server sysSettingsNameCollection; Creatio
         # reads both.
         names = body.get("sysSettingsNameCollection") or body.get("SysSettingsNameCollection") or []
-        return 200, {"success": True, "values": {name: {"dataValueType": 1, "value": "Usr"} for name in names
-                                                 if name == "SchemaNamePrefix"}}
+        settings = {"SchemaNamePrefix": "Usr", "CurrentPackageId": USR_PKG}
+        return 200, {"success": True, "values": {name: {"dataValueType": 1, "value": settings[name]} for name in names
+                                                 if name in settings}}
     if path.endswith("/DataService/json/SyncReply/SelectQuery"):
         return 200, select(state, body)
+    if path.endswith("/DataService/json/SyncReply/InsertQuery"):
+        return 200, state.tables.insert(body)
+    if path.endswith("/DataService/json/SyncReply/UpdateQuery"):
+        return 200, state.tables.update(body)
+    if path.endswith("/DataService/json/SyncReply/RuntimeEntitySchemaRequest"):
+        return 200, state.tables.runtime_schema(body.get("Name") or body.get("name"))
+    if path.endswith("/SchemaDataDesignerService.svc/SaveSchema"):
+        return 200, state.tables.save_binding(body)
+    if path.endswith("/SchemaDataDesignerService.svc/GetBoundSchemaData"):
+        return 200, state.tables.bound_data(body)
+    if path.endswith("/WorkspaceExplorerService.svc/GetIsFileDesignMode"):
+        return 200, {"success": True, "value": False}
+    if path.endswith("/rest/ConfigurationDataService/GetData"):
+        return 200, {"success": True}
     if path.endswith("/PackageService.svc/CreatePackage"):
         return 200, state.create(body)
     if path.endswith("/ApplicationPackagesService.svc/CreatePackageInApp"):
@@ -192,7 +397,8 @@ def serve(port, directory):
 
 
 GUID = re.compile(r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")
-KNOWN_GUIDS = {CRT_BASE, CRT_UI, USR_EXISTING, APP_ID}
+KNOWN_GUIDS = {value for value in list(globals().values()) if isinstance(value, str) and GUID.fullmatch(value)}
+KNOWN_GUIDS |= {uid for columns in SCHEMAS.values() for _, uid, _ in columns} | set(SCHEMA_UIDS.values())
 
 
 def canonical(value):

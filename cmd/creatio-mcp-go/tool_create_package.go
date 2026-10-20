@@ -45,25 +45,25 @@ func invokeCreatePackage(ctx context.Context, envs *environments, args map[strin
 	}
 	if message := t21aAliasError(args, createPackageArguments, createPackageAliases, false, ".",
 		"Valid: environment-name, package-name, description, dependencies, application-code."); message != "" {
-		return structuredToolResult(creatio.CreatePackageFailure(message)), nil
+		return t21aResult(creatio.CreatePackageFailure(message)), nil
 	}
 	if strings.TrimSpace(environmentName) == "" {
-		return structuredToolResult(creatio.CreatePackageFailure("environment-name is required and cannot be empty.")), nil
+		return t21aResult(creatio.CreatePackageFailure("environment-name is required and cannot be empty.")), nil
 	}
 	if strings.TrimSpace(input.PackageName) == "" {
-		return structuredToolResult(creatio.CreatePackageFailure("package-name is required and cannot be empty.")), nil
+		return t21aResult(creatio.CreatePackageFailure("package-name is required and cannot be empty.")), nil
 	}
 	client, failure, err := t21aResolve(envs, bind.tool, args, scopeName)
 	if err != nil {
 		return nil, err
 	}
 	if failure != "" {
-		return structuredToolResult(creatio.CreatePackageFailure(failure)), nil
+		return t21aResult(creatio.CreatePackageFailure(failure)), nil
 	}
 	response := client.CreatePackage(ctx, input)
 	if response.Error != nil {
 		text := redact.Text(*response.Error)
 		response.Error = &text
 	}
-	return structuredToolResult(response), nil
+	return t21aResult(response), nil
 }

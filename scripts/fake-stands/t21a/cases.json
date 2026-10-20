@@ -192,5 +192,287 @@
   "args": {
    "package-name": "UsrExisting"
   }
+ },
+ {
+  "label": "ps mode none",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "UsrOrders",
+   "mode": "none"
+  }
+ },
+ {
+  "label": "ps unknown section",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "UsrMissing",
+   "mode": "none"
+  }
+ },
+ {
+  "label": "ps duplicate code one placed",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "UsrDup",
+   "mode": "none"
+  }
+ },
+ {
+  "label": "ps unknown package",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "UsrOrders",
+   "workplace-name": "Hub",
+   "package-name": "NoPkg"
+  }
+ },
+ {
+  "label": "ps locked package",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "UsrOrders",
+   "workplace-name": "Hub",
+   "package-name": "UsrLocked"
+  }
+ },
+ {
+  "label": "ps unknown role",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "UsrOrders",
+   "workplace-name": "Hub",
+   "package-name": "UsrPkg",
+   "roles": [
+    "Nobody"
+   ]
+  }
+ },
+ {
+  "label": "ps ambiguous role",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "UsrOrders",
+   "workplace-name": "Hub",
+   "package-name": "UsrPkg",
+   "roles": [
+    "Dup"
+   ]
+  }
+ },
+ {
+  "label": "ps unknown role id",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "UsrOrders",
+   "workplace-name": "Hub",
+   "package-name": "UsrPkg",
+   "roles": [
+    "33333333-0000-0000-0000-0000000000ff"
+   ]
+  }
+ },
+ {
+  "label": "ps mode existing missing",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "UsrOrders",
+   "workplace-name": "Hub",
+   "package-name": "UsrPkg",
+   "mode": "existing"
+  }
+ },
+ {
+  "label": "ps mode new taken",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "UsrOrders",
+   "workplace-name": "Sales",
+   "package-name": "UsrPkg",
+   "mode": "new"
+  }
+ },
+ {
+  "label": "ps move hides app",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "UsrOrders",
+   "workplace-name": "Hub",
+   "package-name": "UsrPkg"
+  }
+ },
+ {
+  "label": "ps foreign placement",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "UsrForeign",
+   "workplace-name": "Hub",
+   "package-name": "UsrPkg",
+   "roles": [
+    "Sales"
+   ]
+  }
+ },
+ {
+  "label": "ps foreign workplace position",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "UsrLonely",
+   "workplace-name": "Foreign WP",
+   "package-name": "UsrPkg",
+   "position": 9,
+   "remove-from-my-applications": false
+  }
+ },
+ {
+  "label": "ps create and move",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "UsrOrders",
+   "workplace-name": "Orders Hub",
+   "package-name": "UsrPkg",
+   "roles": [
+    "All employees",
+    "a29a3ba5-4b0d-de11-9a51-005056c00008",
+    "Sales"
+   ],
+   "mode": "new"
+  },
+  "known-differences": [
+   "$.workplace.id",
+   "$.roles[0].grantid",
+   "$.roles[1].grantid",
+   "$.sectionworkplaces[0].id"
+  ]
+ },
+ {
+  "label": "ps rerun converges",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "UsrOrders",
+   "workplace-name": "Orders Hub",
+   "package-name": "UsrPkg",
+   "roles": [
+    "All employees",
+    "Sales"
+   ],
+   "mode": "new"
+  },
+  "known-differences": [
+   "$.workplace.id",
+   "$.roles[0].grantid",
+   "$.roles[1].grantid",
+   "$.sectionworkplaces[0].id"
+  ]
+ },
+ {
+  "label": "ps after move none",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "UsrOrders",
+   "mode": "none"
+  },
+  "known-differences": [
+   "$.sectionworkplaces[0].id"
+  ]
+ },
+ {
+  "label": "ps existing unbound default package",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "UsrLonely",
+   "workplace-name": "Sales",
+   "position": 7,
+   "remove-from-my-applications": false
+  },
+  "known-differences": [
+   "$.section.placementid"
+  ]
+ },
+ {
+  "label": "ps foreign workplace used",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "UsrLonely",
+   "workplace-name": "Foreign WP",
+   "package-name": "UsrPkg",
+   "remove-from-my-applications": false
+  },
+  "known-differences": [
+   "$.section.placementid"
+  ]
+ },
+ {
+  "label": "ps mobile hub",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "UsrTwice",
+   "workplace-name": "Mobile hub",
+   "client-type": "MOBILE",
+   "package-name": "UsrPkg",
+   "roles": [
+    "Sales"
+   ]
+  },
+  "known-differences": [
+   "$.workplace.id",
+   "$.roles[0].grantid",
+   "$.section.placementid",
+   "$.sectionworkplaces[1].id"
+  ]
+ },
+ {
+  "label": "ps twice in my apps",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "UsrTwice",
+   "workplace-name": "Twice Hub",
+   "package-name": "UsrPkg",
+   "roles": [
+    "Sales"
+   ]
+  },
+  "known-differences": [
+   "$.workplace.id",
+   "$.roles[0].grantid",
+   "$.sectionworkplaces[0].id",
+   "$.sectionworkplaces[2].id"
+  ]
+ },
+ {
+  "label": "ps partial failure",
+  "tool": "place-section-in-workplace",
+  "clio-run": true,
+  "args": {
+   "section-code": "UsrDup",
+   "workplace-name": "Fail Hub",
+   "package-name": "UsrPkg",
+   "roles": [
+    "Sales"
+   ]
+  },
+  "known-differences": [
+   "$.written[1].id",
+   "$.written[2].id"
+  ]
  }
 ]
