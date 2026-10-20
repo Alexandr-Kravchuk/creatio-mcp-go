@@ -20,7 +20,9 @@
           "description": "Created by scripts/compare-mcp-writes.py; safe to delete"
         },
         "capture": {
-          "pkg": "$.packagename"
+          "pkg": "$.packagename",
+          "pkguid": "$.packageuid",
+          "appuid": "$.applicationid"
         },
         "known-differences": [
           "$.applicationname",
@@ -58,6 +60,9 @@
         "args": {
           "schema-name": "UsrParity{run}{side}Source",
           "package-name": "{pkg}"
+        },
+        "capture": {
+          "schemauid": "$.schemauid"
         }
       },
       {
@@ -91,7 +96,9 @@
         "tool": "get-schema",
         "args": {
           "schema-name": "UsrParity{run}{side}Source"
-        }
+        },
+        "clio-run": true,
+        "why": "get-schema and get-sql-schema are write-capable in clio 8.1.0.142 (a direct call answers confirmation-required), so the read goes through clio-run on both sides."
       },
       {
         "kind": "expect",
@@ -122,7 +129,9 @@
           "description": "Created by scripts/compare-mcp-writes.py; safe to delete"
         },
         "capture": {
-          "pkg": "$.packagename"
+          "pkg": "$.packagename",
+          "pkguid": "$.packageuid",
+          "appuid": "$.applicationid"
         },
         "known-differences": [
           "$.applicationname",
@@ -160,6 +169,9 @@
         "args": {
           "schema-name": "UsrParity{run}{side}Sql",
           "package-name": "{pkg}"
+        },
+        "capture": {
+          "schemauid": "$.schemauid"
         }
       },
       {
@@ -193,7 +205,9 @@
         "tool": "get-sql-schema",
         "args": {
           "schema-name": "UsrParity{run}{side}Sql"
-        }
+        },
+        "clio-run": true,
+        "why": "get-schema and get-sql-schema are write-capable in clio 8.1.0.142 (a direct call answers confirmation-required), so the read goes through clio-run on both sides."
       },
       {
         "kind": "expect",

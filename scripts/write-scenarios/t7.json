@@ -23,8 +23,6 @@
           "pkguid": "$.packageuid"
         },
         "known-differences": [
-          "$.warnings",
-          "$.nextstep",
           "$.dataforge.health.correlationid",
           "$.entities[0].uid",
           "$.entities[1].uid",
@@ -34,7 +32,7 @@
           "$.pages[2].uid",
           "$.pages[3].uid"
         ],
-        "why": "warnings/next-step come from master's navigation cache reset (ENG-101680), which clio 8.1.0.134 does not have; the GUIDs of pages and entities are created per side.",
+        "why": "The GUIDs of pages and entities are created per side.",
         "retry-while": "rebuilding the OData library",
         "retry-attempts": 6,
         "retry-delay-seconds": 30

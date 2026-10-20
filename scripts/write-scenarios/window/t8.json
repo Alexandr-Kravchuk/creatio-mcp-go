@@ -20,7 +20,9 @@
           "description": "Created by scripts/compare-mcp-writes.py; safe to delete"
         },
         "capture": {
-          "pkg": "$.packagename"
+          "pkg": "$.packagename",
+          "pkguid": "$.packageuid",
+          "appuid": "$.applicationid"
         },
         "known-differences": [
           "$.applicationname",
@@ -300,7 +302,9 @@
           "description": "Created by scripts/compare-mcp-writes.py; safe to delete"
         },
         "capture": {
-          "pkg": "$.packagename"
+          "pkg": "$.packagename",
+          "pkguid": "$.packageuid",
+          "appuid": "$.applicationid"
         },
         "known-differences": [
           "$.applicationname",
@@ -467,7 +471,9 @@
           "description": "Created by scripts/compare-mcp-writes.py; safe to delete"
         },
         "capture": {
-          "pkg": "$.packagename"
+          "pkg": "$.packagename",
+          "pkguid": "$.packageuid",
+          "appuid": "$.applicationid"
         },
         "known-differences": [
           "$.applicationname",

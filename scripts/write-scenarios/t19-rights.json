@@ -18,7 +18,17 @@
         },
         "capture": {
           "pkg": "$.package-name"
-        }
+        },
+        "retry-while": "rebuilding the OData library",
+        "retry-attempts": 6,
+        "retry-delay-seconds": 30,
+        "known-differences": [
+          "$.entities[0].uid",
+          "$.pages[0].uid",
+          "$.pages[1].uid",
+          "$.pages[2].uid"
+        ],
+        "why": "The lookup needs a package of its own. The previous scenario's application write starts an OData rebuild that refuses the next one, hence the retry; page and entity GUIDs are created per side."
       },
       {
         "kind": "cleanup",
@@ -170,7 +180,9 @@
         "args": {
           "entity-schema-name": "UsrParity{run}{side}Rts",
           "package-name": "{pkg}",
-          "connections": ["CreatedBy"]
+          "connections": [
+            "CreatedBy"
+          ]
         }
       },
       {
