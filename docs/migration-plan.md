@@ -3,14 +3,16 @@
 Goal: an agent (Claude Code, Codex, the CAADT skills) does every Creatio task it does today through
 `clio mcp-server`, but through this server, with the same tool names, arguments and answers.
 
-Measured on 2026-10-03 against clio master `914dab286`:
+Baseline clio **8.1.0.142** (`docs/clio-inventory.json`, generated 2026-10-20); this server measured at
+`fdc3aa4` (2026-10-20, after the first wave of 8.1.0.142 work: contracts, T19, T20, T6 write side):
 
-| | clio | this server |
+| | clio 8.1.0.142 | this server |
 |---|---|---|
-| MCP tools | 219 in clio 8.1.0.134 (218 in the get-tool-contract index plus `get-tool-contract`), 19 resident; exact list in [clio-inventory.md](clio-inventory.md) (T5) | see the appendix; clio's resident tools that are served here are listed with clio's contracts (T5) |
-| MCP prompts and resources | 74 prompts, 170 resources, 5 resource templates (clio 8.1.0.134 with its installed knowledge bundles) | 74 prompts, 5 resource templates, the knowledge catalog (T6) |
+| MCP tools | 236: 235 in the get-tool-contract index plus `get-tool-contract`, 19 resident; exact list in [clio-inventory.md](clio-inventory.md) | 191 of the 235 indexed tools plus `get-tool-contract`; all 19 resident tools in tools/list, with clio's contracts (T5). Not served: 33 T16 tools (D3) and 11 new 8.1.0.142 tools of the second wave |
+| Contract comparison | — | `scripts/compare-contracts.py` against 8.1.0.142: 980 match, 0 unexplained; known: the 44 not-served tools (each on two surfaces) and one multi-name batch clio shortens ([comparison report](status/clio-comparison-2026-10-20.md)) |
+| MCP prompts and resources | 74 prompts, 195 resources, 5 resource templates (with its installed knowledge bundles) | 74 prompts (generated from 8.1.0.142), 5 resource templates, the knowledge catalog (T6) |
 | Environments per process | any, per call (`environment-name`) | any, per call, from clio's `appsettings.json` (T1); `CREATIO_*` as the default |
-| Live parity | — | 302 calls, 0 data differences (clio 8.1.0.134); after T1 302 cases per stand, and 632 calls with both stands served by one process (incl. 14 environment cases), 0 mismatches |
+| Live parity | — | last measured against clio 8.1.0.134 (2026-10-03): 706 calls on two stands served by one process, 0 mismatches (T4). No live stand run against 8.1.0.142 yet: the 142 work is compared without a stand, on fake stands and canned Creatio answers (T17) |
 
 ## What "done" means
 
@@ -95,14 +97,15 @@ Done (T2): `scripts/compare-mcp-writes.py`, scenarios in `scripts/write-scenario
 `tools/list`, `get-tool-contract` descriptions and input schemas must match clio, because agents call
 `get-tool-contract` before acting. Generate a diff from clio's live answers and close it.
 
-**Done (T5, 2026-10-03), against clio 8.1.0.134.** `scripts/clio-inventory.py` records clio's live
+**Done (T5, 2026-10-03, against clio 8.1.0.134; moved to 8.1.0.142 on 2026-10-20, `0bb560b`).** `scripts/clio-inventory.py` records clio's live
 tools/list, prompts, resources, resource templates, get-tool-contract index and every tool's contract in
 `docs/clio-inventory.json` (summary: [clio-inventory.md](clio-inventory.md), which also lists how a build of
 clio master `914dab286` differs). `go generate ./internal/cliocontract` embeds the tool part; tools/list and
 get-tool-contract answer from it, so every served tool carries clio's description, input schema,
 annotations, index entry and contract (how it works: [implementation.md](implementation.md#tool-contracts-t5)).
-`scripts/compare-contracts.py` compares both servers live: 0 unexplained differences; known are the
-not-ported tools (4 resident, 148 indexed) and the suggestions for an unknown name. The read parity run on
+`scripts/compare-contracts.py` compares both servers live: 0 unexplained differences; known were the
+not-ported tools (4 resident, 148 indexed on 2026-10-03; 0 resident, 44 indexed against 8.1.0.142 on
+2026-10-20) and the suggestions for an unknown name. The read parity run on
 `s16123120` stays at 0 mismatches (353 cases with the T6 knowledge cases, incl. 4 that call Go with `{"args": {...}}`). Changes in passing:
 - tools/list now lists the 15 resident tools served here, in clio's order (before: 4, sorted by name), and
   every tool accepts clio's published `{"args": {...}}` shape besides the flat one;
@@ -114,8 +117,8 @@ not-ported tools (4 resident, 148 indexed) and the suggestions for an unknown na
 Not matched on purpose or left for later:
 - the contract texts describe clio's behaviour; where a Go tool still differs (for example
   `get-entity-schema-properties` refuses `package-name`), the contract is the target, not the description;
-- clio master changes 45 tools' contracts (10 of them served here) and adds 8 tools compared with 8.1.0.134 (listed in clio-inventory.md);
-  rerun the inventory after the next clio release;
+- the inventory was rerun on clio 8.1.0.142 (2026-10-20); both scripts read its new `get-tool-contract`
+  shape (`tool-index` with `legend` by default, `detail=index-entries`, `full`, `short`);
 - the inventory records clio's prompts and resources for reference only; T6 serves them from the
   clio-knowledge bundles, and its `knowledgeClioToolCatalog` is a separate copy of the same tool index.
 
@@ -148,11 +151,11 @@ redacted with clio's rules before they are fenced.
 Remaining, in clio only for now:
 - Installing or updating a `git`-type knowledge source (clio's Git CLI transport; the runtime does not read
   checkouts), clio's `mcp-server` startup bootstrap of the curated library and its hourly autoupdate.
-- `get-component-info(-to-file)` variants, `get-request-info(-to-file)`, `merge-creatio-artifact`,
-  `get-mobile-page-conversion-guide` belong with the Creatio-side tasks.
+- `get-component-info`, `get-request-info` and `merge-creatio-artifact` are served (T9, T11); their
+  `-to-file` variants and `get-mobile-page-conversion-guide` are in the second wave (T21).
 
 Known differences, each with its reason:
-- clio 8.1.0.134 run as `dotnet clio.dll` answers every `docs://help/command/*` with its no-documentation
+- clio 8.1.0.134 run as `dotnet clio.dll` answered every `docs://help/command/*` with its no-documentation
   fallback and `docs://help/restart|flushdb` with an exception text; this server serves the help text of
   the installed clio tool.
 - `git`-type knowledge sources are not read, installed or updated (see above).
@@ -164,9 +167,10 @@ Known differences, each with its reason:
   defect); it is reproduced for parity.
 - clio binds a bool prompt argument only from a JSON boolean, which the Go SDK's string-typed prompt
   arguments cannot carry, so `restart-by-credentials` (required `isNetCore`) cannot be rendered here.
-- This server answers bundle compatibility as clio `8.1.0` and declares clio's 218-tool catalog as its
-  capability set (`knowledge_tool_catalog.go`), because that catalog is what the migration targets; both
-  follow the clio release used as the parity baseline.
+- This server answers bundle compatibility as clio `8.1.0` and declares clio's tool catalog as its
+  capability set (`knowledge_tool_catalog.go` reads the inventory's index: 235 tools of clio 8.1.0.142),
+  because that catalog is what the migration targets; both follow the clio release used as the parity
+  baseline.
 
 ### W6. Write tools by area (after W1–W3)
 | Area | Tools |
@@ -200,7 +204,41 @@ for live checks; several may be deliberately left to clio.
 - Exit criteria per release: parity run on two stands (on-premises .NET Framework, cloud with OAuth), and
   one .NET Core stand once available.
 
+## Checkpoint (2026-10-20)
+
+Code at `fdc3aa4`, after the first wave of the clio 8.1.0.142 work was merged:
+
+- **Contracts on 8.1.0.142** (`0bb560b`): `docs/clio-inventory.json` and the embedded contracts regenerated
+  from clio 8.1.0.142; the prompt table too (`674b18d`). See W4.
+- **T19** (`4ad5ac6` and following): `get-object-rights`, `set-object-rights`, `set-default-record-rights`,
+  `apply-default-record-rights`, `get-entity-connections`, `update-entity-connections`
+  ([status](status/t19-rights-connections-status.md)).
+- **T20** (`ee3692d`, `017d22f`, `019616a`): the arguments 8.1.0.142 added to `odata-create`, `odata-update`,
+  `odata-delete`, `run-process`, `describe-business-process`, plus binding checks for `get-page`,
+  `update-page`, `validate-page`, `update-app-section`, `compile-creatio`
+  ([status](status/t20-new-args-status.md)).
+- **T6 write side** (`fdc3aa4`): the 15 knowledge, toolkit and telemetry tools that were clio-only
+  ([status](status/t6-write-status.md)).
+
+Served: 191 of clio 8.1.0.142's 235 indexed tools plus `get-tool-contract`, all 19 resident tools.
+`scripts/compare-contracts.py` against 8.1.0.142: 980 match, 0 unexplained (details in
+[the comparison report](status/clio-comparison-2026-10-20.md)). Not served: the 33 T16 tools (D3) and 11
+new 8.1.0.142 tools in the second wave (T21): `localize-page`, `page-smoke`, `trigger-smoke`,
+`place-section-in-workplace`, `create-package`, `get-mobile-page-conversion-guide`, `execute-esq-to-file`,
+`odata-read-to-file`, `get-component-info-to-file`, `get-request-info-to-file`,
+`list-entity-client-schemas-to-file`.
+
+No live stand was called for the 8.1.0.142 work; it was compared with clio 8.1.0.142's own MCP server
+without a stand, on fake stands (`scripts/fake-stands/`) and on local fixtures. The live write window run
+and the two-stand parity run remain for T17.
+
+The appendix below is generated and was last generated before T6's write side and T19 were merged: it
+still lists those 21 tools under "T6" and "T19 new in clio 8.1.0.142" although they are served now. It is
+regenerated with `scripts/clio-inventory.py` after the second wave.
+
 ## Recovery checkpoint (2026-10-03)
+
+Historical: the state on 2026-10-03, kept as recorded. The current state is the checkpoint above.
 
 Claude session `ba9331a3-c45a-44dd-aaab-caa021018c34` stopped on its weekly API
 limit during Stage 3. Work resumed in the original
@@ -258,10 +296,13 @@ this checkpoint table and linked reports describe current implementation status.
 | T3 | CI on GitHub and release automation (W8, first half) — **done**, see [releasing.md](releasing.md) | — | 1 |
 | T4 | Shared infrastructure: redaction, envelope type, write safety, long-running operations, `rest/` helper (W2) — **done** 2026-10-03, see W2 | T1 | 2 |
 | T5 | Contract and resident-list parity (W4) — **done** 2026-10-03, see W4 | T1 | 2 |
-| T6 | Guidance, prompts, resources, knowledge tools from clio-knowledge bundles (W5, D2) — **done** except `git`-type sources, see W5 and [t6-write-status.md](status/t6-write-status.md) | — (rebase after T1) | 2, started early |
-| T7–T15 | Write tools, one task per W6 area — **partial**, 30 tools added in the recovery checkpoint. T7 applications **done** in the second round (all 6 tools); create/section update/delete and app delete passed a live paired scenario; `install-application` waits for the window run, see [T7/T8 status](status/t7-t8-t10-status.md) | T1, T2, T4, decision D1 | 3 (in parallel) |
-| T16 | Local machine, infrastructure and workspace tools (W7) — deferred (D3) | T1, T4 | later |
-| T17 | Full parity run, docs, release `v0.2.0` | T5–T16 | 4 |
+| T6 | Guidance, prompts, resources, knowledge tools from clio-knowledge bundles (W5, D2) — **done** 2026-10-20 except the Git transport of `git`-type sources, see W5 and [t6-write-status.md](status/t6-write-status.md) | — (rebase after T1) | 2, started early |
+| T7–T15 | Write tools, one task per W6 area — **done**: every tool of each area is registered (third round, 2026-10-10); the live writes listed as "window run" in each area report are still pending, see the area reports in [status/](status/) | T1, T2, T4, decision D1 | 3 (in parallel) |
+| T16 | Local machine, infrastructure and workspace tools (W7) — deferred (D3), not in `v0.2.0` | T1, T4 | later |
+| T19 | Object rights, default record rights, entity connections (new in clio 8.1.0.142) — **done** 2026-10-20, see [t19-rights-connections-status.md](status/t19-rights-connections-status.md) | T5 on 8.1.0.142 | 3b |
+| T20 | Arguments clio 8.1.0.142 added to served tools — **done** 2026-10-20, see [t20-new-args-status.md](status/t20-new-args-status.md) | T5 on 8.1.0.142 | 3b |
+| T21 | The other 11 tools new in clio 8.1.0.142 (second wave, streams a and b) — in progress | T5 on 8.1.0.142 | 3b |
+| T17 | Full parity run (window run and two stands), docs, release `v0.2.0` | T5–T15, T19–T21 (not T16) | 4 |
 | T18 | CAADT plugin switch, pilot, default switch (W8, second half) | T17 | 5 |
 
 Stage 1 runs in parallel because T1 changes Go code, T2 only the comparison scripts and T3 only CI files.

@@ -7,21 +7,32 @@ The server uses the official [`github.com/modelcontextprotocol/go-sdk`](https://
 
 ## Tool contracts (T5)
 
-tools/list and `get-tool-contract` answer with clio's own data, not hand-written text:
+tools/list and `get-tool-contract` answer with clio's own data, not hand-written text. The baseline is clio
+**8.1.0.142** since `0bb560b` (2026-10-20; before that 8.1.0.134):
 
 1. `scripts/clio-inventory.py --clio-dll <clio.dll> --go-bin <creatio-mcp-go>` asks a live `clio mcp-server`
    for tools/list, prompts, resources, the get-tool-contract index and every tool's contract, and writes
-   `docs/clio-inventory.json`, `docs/clio-inventory.md` and the appendix of `docs/migration-plan.md`.
+   `docs/clio-inventory.json`, `docs/clio-inventory.md` and the appendix of `docs/migration-plan.md`. It reads
+   8.1.0.142's `get-tool-contract` shape: the default one-line `tool-index` with its `legend`, the object index
+   from `detail=index-entries`, and each contract in its default, `full` and `short` detail.
 2. `go generate ./internal/cliocontract` copies the tool part of that file into
-   `internal/cliocontract/contracts.json`, which is embedded in the binary. `TestEmbeddedContractsMatchTheInventory`
-   fails when the two differ.
-3. At run time the server lists clio's resident tools that it implements, in clio's order, with clio's
-   description, input schema and annotations, and `get-tool-contract` serves clio's index entries and
-   contracts for the tools it implements (`cmd/creatio-mcp-go/contracts.go`). A tool registered with
-   `registerTool` gets its contract from the inventory by name; the contract map passed to `registerTool`
-   is used only for a tool clio does not have, and `TestEveryServedToolHasClioContract` keeps that set
-   empty.
-4. `scripts/compare-contracts.py` diffs both servers live; see [parity.md](parity.md).
+   `internal/cliocontract/contracts.json`, which is embedded in the binary: tools/list (19 entries), `legend`,
+   `toolIndex` and `index` (235 tools each), and the default, short and full contracts.
+   `TestEmbeddedContractsMatchTheInventory` fails when the two differ.
+3. At run time the server lists clio's resident tools that it implements — all 19 of 8.1.0.142's — in clio's
+   order, with clio's description, input schema and annotations, and `get-tool-contract` answers in clio
+   8.1.0.142's shape (`tool-index` and `legend` without arguments; `detail=index-entries`, `full`, `short`;
+   `tool-names` for contracts, `not-found` for unknown names) with the entries of the tools it implements
+   only (`cmd/creatio-mcp-go/contracts.go`). A tool registered with `registerTool` gets its contract from
+   the inventory by name; the contract map passed to `registerTool` is a fallback used only for a tool the
+   inventory does not have, and `TestEveryServedToolHasClioContract` keeps that set empty. The generated
+   `tool_object_rights_contract.go`, `tool_default_record_rights_contract.go` and
+   `tool_entity_connections_contract.go` (T19, written before the inventory moved to 8.1.0.142) are such
+   fallbacks; the inventory has those tools, so their answers come from it. `knowledge_tool_catalog.go`
+   reads the same index (235 tools) as the capability set a knowledge bundle is checked against.
+4. `scripts/compare-contracts.py` diffs both servers live; see [parity.md](parity.md). Last run against
+   8.1.0.142 at `fdc3aa4`: 980 match, 0 unexplained; known are the tools not served yet and one multi-name
+   batch clio shortens ([comparison report](status/clio-comparison-2026-10-20.md)).
 
 clio publishes its resident schemas wrapped in `args`, so every tool here also accepts `{"args": {...}}`
 (a wrapper next to other top-level keys is refused with clio's "ambiguous argument shape" text); the
