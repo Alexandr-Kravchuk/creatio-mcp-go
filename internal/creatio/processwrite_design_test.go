@@ -8,17 +8,19 @@ import (
 
 func TestCreateBusinessProcessBuildsAndReportsTheSchema(t *testing.T) {
 	processWriteNoArchive(t)
-	client, calls := processWriteServer(t, "1.6.6.77", func(call processWriteCall) (int, string) {
+	client, calls := processWriteServer(t, "1.6.6.103", func(call processWriteCall) (int, string) {
 		return 200, `{"BuildProcessResult":{"success":true,"schemaName":"UsrOrder","schemaUId":"aaaaaaaa-0000-0000-0000-000000000001","warnings":["Lane added."]}}`
 	})
 	result := client.CreateBusinessProcess(context.Background(), ProcessWriteBuildRequest{Environment: "dev",
 		Descriptor: `{"name":"UsrOrder","packageName":"Old","elements":[{"name":"s","type":"startEvent"}],"n":1.50}`, PackageName: "UsrPkg"})
 	got := processWriteMessages(result)
-	want := []string{"Info: Building process 'UsrOrder' on 'dev'...", "Info: Process 'UsrOrder' created (UId: aaaaaaaa-0000-0000-0000-000000000001).", "Warning: Lane added."}
+	want := []string{"Info: Building process 'UsrOrder' on 'dev'...", "Info: Process 'UsrOrder' created (UId: aaaaaaaa-0000-0000-0000-000000000001).", "Warning: Lane added.",
+		"Warning: The write landed, but reading the process back for its summary failed: unexpected server response shape. describe-business-process mode=summary confirms the saved state."}
 	if result.ExitCode != 0 || result.Note != processWriteCompileNote || strings.Join(got, "\n") != strings.Join(want, "\n") {
 		t.Fatalf("%+v", result)
 	}
-	last := (*calls)[len(*calls)-1]
+	builds := processWriteTaskCalls(*calls, "/BuildProcess")
+	last := builds[len(builds)-1]
 	if last.Path != "/0/rest/ProcessDesignService/BuildProcess" ||
 		last.Body != `{"request":{"name":"UsrOrder","packageName":"UsrPkg","elements":[{"name":"s","type":"startEvent"}],"n":1.5}}` {
 		t.Fatalf("request = %+v", last)
@@ -34,7 +36,7 @@ func TestCreateBusinessProcessFailures(t *testing.T) {
 		{`[1]`, ``, "Process descriptor must be a JSON object."},
 	}
 	for _, item := range cases {
-		client, calls := processWriteServer(t, "1.6.6.77", func(call processWriteCall) (int, string) { return 200, item.response })
+		client, calls := processWriteServer(t, "1.6.6.103", func(call processWriteCall) (int, string) { return 200, item.response })
 		result := client.CreateBusinessProcess(context.Background(), ProcessWriteBuildRequest{Environment: "dev", Descriptor: item.descriptor})
 		last := result.Messages[len(result.Messages)-1]
 		if result.ExitCode != 1 || last.MessageType != "Error" || last.Value != item.want || result.Note != "" {
@@ -44,7 +46,7 @@ func TestCreateBusinessProcessFailures(t *testing.T) {
 			t.Errorf("a refused descriptor reached the service: %+v", *calls)
 		}
 	}
-	client, _ := processWriteServer(t, "1.6.6.77", func(processWriteCall) (int, string) { return 200, "" })
+	client, _ := processWriteServer(t, "1.6.6.103", func(processWriteCall) (int, string) { return 200, "" })
 	result := client.CreateBusinessProcess(context.Background(), ProcessWriteBuildRequest{Environment: "dev", Descriptor: `{"name":`})
 	if result.ExitCode != 1 || !strings.HasPrefix(result.Messages[0].Value, "Process descriptor is not valid JSON: ") {
 		t.Fatalf("%+v", result)
@@ -62,7 +64,8 @@ func TestModifyBusinessProcessSendsOperationsAndRelaysALayoutChange(t *testing.T
 	if result.ExitCode != 1 || len(got) != 2 || got[0] != "Info: Editing process 'u1' on 'dev'..." || got[1] != "Error: "+want {
 		t.Fatalf("%q", got)
 	}
-	last := (*calls)[len(*calls)-1]
+	edits := processWriteTaskCalls(*calls, "/ModifyProcess")
+	last := edits[len(edits)-1]
 	if last.Path != "/0/rest/ProcessDesignService/ModifyProcess" || last.Body != `{"request":{"uid":"u1","operations":[{"op":"removeElement","elementName":"A"}],"confirmLayoutChange":false}}` {
 		t.Fatalf("request = %+v", last)
 	}
@@ -84,7 +87,7 @@ func TestModifyBusinessProcessSendsOperationsAndRelaysALayoutChange(t *testing.T
 
 func TestModifyBusinessProcessAsNewVersionReportsTheVersion(t *testing.T) {
 	processWriteNoArchive(t)
-	client, calls := processWriteServer(t, "1.6.6.77", func(call processWriteCall) (int, string) {
+	client, calls := processWriteServer(t, "1.6.6.103", func(call processWriteCall) (int, string) {
 		return 200, `{"ModifyProcessAsNewVersionResult":{"success":true,"versionName":"UsrP_v3","versionSchemaUId":"v3","version":3,"isActiveVersion":false,"versionRootSchemaUId":"root","appliedOperations":0,"layoutChange":{"elements":["A"]},"warnings":["w"]}}`
 	})
 	result := client.ModifyBusinessProcessAsNewVersion(context.Background(), ProcessWriteModifyRequest{Environment: "dev", ProcessName: "UsrP", PackageName: "UsrPkg"})
@@ -95,14 +98,16 @@ func TestModifyBusinessProcessAsNewVersionReportsTheVersion(t *testing.T) {
 		"Info: The source version is still the actual one and keeps running. ASK THE USER to open this version and say whether to make it actual; call set-active-business-process-version only once they have. Do not chain the two - a version is created inactive precisely so they get to look first.",
 		"Warning: The diagram of this version is laid out afresh. Affected elements: A.",
 		"Warning: w",
+		"Warning: The write landed, but reading the process back for its summary failed: unexpected server response shape. describe-business-process mode=summary confirms the saved state.",
 	}
 	if result.ExitCode != 0 || result.Note != processWriteCompileNote || strings.Join(got, "\n") != strings.Join(want, "\n") {
 		t.Fatalf("%q", got)
 	}
-	if body := (*calls)[len(*calls)-1].Body; body != `{"request":{"name":"UsrP","packageName":"UsrPkg","operations":[]}}` {
+	versions := processWriteTaskCalls(*calls, "/ModifyProcessAsNewVersion")
+	if body := versions[len(versions)-1].Body; body != `{"request":{"name":"UsrP","packageName":"UsrPkg","operations":[]}}` {
 		t.Fatalf("body = %s", body)
 	}
-	client, _ = processWriteServer(t, "1.6.6.77", func(call processWriteCall) (int, string) {
+	client, _ = processWriteServer(t, "1.6.6.103", func(call processWriteCall) (int, string) {
 		return 200, `{"ModifyProcessAsNewVersionResult":{"success":false,"errorMessage":"Bad op.","failedOperationIndex":1,"appliedOperations":1,"layoutChange":{"elements":["A"]},"versionName":"UsrP_v4","versionSchemaUId":"v4","warnings":["x","y"]}}`
 	})
 	result = client.ModifyBusinessProcessAsNewVersion(context.Background(), ProcessWriteModifyRequest{Environment: "dev", ProcessName: "UsrP", Operations: `[{},{}]`})
@@ -114,7 +119,7 @@ func TestModifyBusinessProcessAsNewVersionReportsTheVersion(t *testing.T) {
 		`{"ModifyProcessAsNewVersionResult":{"success":true,"versionName":"v","isActiveVersion":true}}`: "Info: This version is reported ACTIVE — unexpected for a create; verify with describe-business-process.",
 		`{"ModifyProcessAsNewVersionResult":{"success":true,"versionName":"v"}}`:                        "Info: The environment did not report which version is actual — verify with describe-business-process before reporting what runs.",
 	} {
-		client, _ = processWriteServer(t, "1.6.6.77", func(call processWriteCall) (int, string) { return 200, body })
+		client, _ = processWriteServer(t, "1.6.6.103", func(call processWriteCall) (int, string) { return 200, body })
 		result = client.ModifyBusinessProcessAsNewVersion(context.Background(), ProcessWriteModifyRequest{Environment: "dev", ProcessName: "UsrP"})
 		got = processWriteMessages(result)
 		if result.ExitCode != 0 || got[1] != "Info: A new version 'v' created (0 operation(s) applied; UId: ; family root: )." || got[2] != want {
@@ -155,7 +160,7 @@ func TestProcessWritePageCheckRefusesUnknownNamesAndWarnsOnNonCandidates(t *test
 
 func TestProcessWritePageCheckSkipsAPageThatCannotBeRead(t *testing.T) {
 	processWriteNoArchive(t)
-	client, calls := processWriteServer(t, "1.6.6.77", func(call processWriteCall) (int, string) {
+	client, calls := processWriteServer(t, "1.6.6.103", func(call processWriteCall) (int, string) {
 		if strings.Contains(call.Path, "BuildProcess") {
 			return 200, `{"BuildProcessResult":{"success":true,"schemaName":"UsrP","schemaUId":"u"}}`
 		}
@@ -163,7 +168,7 @@ func TestProcessWritePageCheckSkipsAPageThatCannotBeRead(t *testing.T) {
 	})
 	result := client.CreateBusinessProcess(context.Background(), ProcessWriteBuildRequest{Environment: "dev",
 		Descriptor: `{"name":"UsrP","elements":[{"preconfiguredPage":{"page":"UsrMissing_FormPage","buttons":[{"name":"Save"}]}}]}`})
-	if result.ExitCode != 0 || len(result.Messages) != 2 {
+	if result.ExitCode != 0 || len(result.Messages) != 3 || !strings.HasPrefix(result.Messages[2].Value, "The write landed, but reading the process back for its summary failed:") {
 		t.Fatalf("%+v", result)
 	}
 	read := false

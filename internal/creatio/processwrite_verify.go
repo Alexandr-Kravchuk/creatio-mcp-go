@@ -443,6 +443,28 @@ type processWriteDescribed struct {
 // processWriteDescribe is ServerProcessDescriber.Describe with bestEffort and no version facts: one
 // DescribeProcess read; an error is the description clio reports.
 func (c *Client) processWriteDescribe(ctx context.Context, name, uid string) (processWriteDescribed, error) {
+	result, err := c.processWriteDescribeRaw(ctx, name, uid)
+	if err != nil {
+		return processWriteDescribed{}, err
+	}
+	return processWriteDescribedOf(result), nil
+}
+
+// processWriteDescribedOf is the part of a DescribeProcess result the expectations read.
+func processWriteDescribedOf(result *jnode) processWriteDescribed {
+	described := processWriteDescribed{}
+	if elements := processWriteProperty(result, "elements"); elements.isArray() {
+		described.elements, described.hasElements = elements.items, true
+	}
+	if flows := processWriteProperty(result, "flows"); flows.isArray() {
+		described.flows, described.hasFlows = flows.items, true
+	}
+	return described
+}
+
+// processWriteDescribeRaw is the DescribeProcess read of ServerProcessDescriber.Describe with bestEffort (one
+// attempt at 5 s, no culture, so the server resolves text in the profile culture): the server's result object.
+func (c *Client) processWriteDescribeRaw(ctx context.Context, name, uid string) (*jnode, error) {
 	identity := newObject()
 	if strings.TrimSpace(uid) != "" {
 		identity.set("uid", newString(strings.TrimSpace(uid)))
@@ -454,39 +476,32 @@ func (c *Client) processWriteDescribe(ctx context.Context, name, uid string) (pr
 	payload, err := c.processWritePost(ctx, serviceCall{Route: processDescribeRoute, Body: body.stjJSON(), Timeout: 5 * time.Second,
 		Limit: maxResponseBytes, Label: "ProcessDesignService"})
 	if err != nil {
-		return processWriteDescribed{}, err
+		return nil, err
 	}
 	if strings.TrimSpace(string(payload)) == "" {
-		return processWriteDescribed{}, errors.New("empty response from the server")
+		return nil, errors.New("empty response from the server")
 	}
 	envelope, err := parseJNode(payload)
 	if err != nil {
-		return processWriteDescribed{}, fmt.Errorf("could not parse server response: %s", processWriteDeserializeError(payload, err))
+		return nil, fmt.Errorf("could not parse server response: %s", processWriteDeserializeError(payload, err))
 	}
 	if envelope.kind != jkObject && envelope.kind != jkNull {
-		return processWriteDescribed{}, errors.New("could not parse server response: The JSON value could not be converted to the describe result.")
+		return nil, errors.New("could not parse server response: The JSON value could not be converted to the describe result.")
 	}
 	result := processWriteProperty(envelope, "DescribeProcessResult")
 	if result == nil || result.kind == jkNull {
-		return processWriteDescribed{}, errors.New("unexpected server response shape")
+		return nil, errors.New("unexpected server response shape")
 	}
 	if !result.isObject() {
-		return processWriteDescribed{}, errors.New("could not parse server response: The JSON value could not be converted to the describe result.")
+		return nil, errors.New("could not parse server response: The JSON value could not be converted to the describe result.")
 	}
 	if success := processWriteProperty(result, "success"); success == nil || success.kind != jkBool || !success.flag {
 		if message := processWriteProperty(result, "errorMessage"); message != nil && message.kind == jkString {
-			return processWriteDescribed{}, errors.New(message.text)
+			return nil, errors.New(message.text)
 		}
-		return processWriteDescribed{}, errors.New("describe-business-process failed on the server")
+		return nil, errors.New("describe-business-process failed on the server")
 	}
-	described := processWriteDescribed{}
-	if elements := processWriteProperty(result, "elements"); elements.isArray() {
-		described.elements, described.hasElements = elements.items, true
-	}
-	if flows := processWriteProperty(result, "flows"); flows.isArray() {
-		described.flows, described.hasFlows = flows.items, true
-	}
-	return described, nil
+	return result, nil
 }
 
 func processWriteText(node *jnode, key string) string {
@@ -684,7 +699,7 @@ func processWriteRightsWarning(missing []string) string {
 		"of rejecting it and still answers success. The element is therefore UNCONFIGURED and will grant and "+
 		"revoke NOTHING when it runs, silently — it has no output parameters to report that. If you asked for "+
 		"a REVOKE, treat those permissions as still in place and do not report the change as applied. Install "+
-		"a package that supports the element (clio install-process-builder) and re-apply the block, or "+
+		"a package that supports the element (install-process-builder after user approval - it "+processWriteInstallCost+") and re-apply the block, or "+
 		"configure the element in the designer. If re-applying reproduces this same warning, the archive "+
 		"bundled with THIS clio does not carry the element either — and note that its VERSION cannot tell "+
 		"you that: the bundled package satisfies this command's [RequiresPackage] floor while still "+
@@ -776,7 +791,7 @@ func processWriteUnverifiedRights(names []string, reason string) string {
 	return fmt.Sprintf("Could not verify that the 'accessRights' configuration for the %s '%s' landed: "+
 		"%s. The operation itself succeeded, but this check is the only signal that the permissions "+
 		"were actually written — the element has no output parameters. Re-read the process with "+
-		"describe-business-process before reporting a grant or revoke as applied.",
+		"describe-business-process mode=full before reporting a grant or revoke as applied.",
 		processWriteNoun(len(names)), strings.Join(names, "', '"), reason)
 }
 
@@ -787,7 +802,8 @@ func processWriteUnverifiedFilter(names []string, reason string) string {
 	return fmt.Sprintf("Could not read back the record filter this edit changed on the %s '%s': "+
 		"%s. The operation itself succeeded. If any of those is a Change access rights element, "+
 		"note that CLEARING its record filter makes it apply the permission change to EVERY record of "+
-		"its object — re-read the process with describe-business-process before reporting the change as "+
+		"its object — re-read the process with describe-business-process mode=full (or element=<name>) before "+
+		"reporting the change as "+
 		"applied.", processWriteNoun(len(names)), strings.Join(names, "', '"), reason)
 }
 
@@ -824,7 +840,7 @@ func processWriteEmailWarning(missing []string) string {
 		"implement IExtensibleDataObject, so it discards the block instead of rejecting it and still answers "+
 		"success. Either way the element is UNCONFIGURED (no sender, no recipients, no subject or body), so do "+
 		"not report it as configured. Check the package version, install one that supports sendEmail "+
-		"(clio install-process-builder) and re-apply the email block, or configure the element in the designer.",
+		"(install-process-builder after user approval - it "+processWriteInstallCost+") and re-apply the email block, or configure the element in the designer.",
 		processWriteNoun(len(missing)), strings.Join(missing, "', '"))
 }
 
@@ -855,7 +871,7 @@ func processWriteTemplateWarning(unlanded []string) string {
 		"discards the field while answering success. The element is then in the WRONG mode — no mode at all, which "+
 		"the platform runs as template mode with no template and fails with 'Localizable template not found', or a "+
 		"custom message with no body when a subject travelled with the template. Do not report it as configured: "+
-		"install a package that supports template mode (clio install-process-builder) and re-apply the email block, "+
+		"install a package that supports template mode (install-process-builder after user approval - it "+processWriteInstallCost+") and re-apply the email block, "+
 		"or pick the template in the designer.", processWriteNoun(len(unlanded)), strings.Join(unlanded, "', '"))
 }
 
@@ -890,7 +906,7 @@ func processWriteMacroWarning(unresolved []string) string {
 		"(the element reports a body but describe returned none). The usual cause is a deployed CrtProcessBuilder "+
 		"that predates the body-macro feature: it stores the HTML verbatim, so the literal placeholder text "+
 		"would be emailed to the recipient. Install a package that supports body macros "+
-		"(clio install-process-builder) and re-apply the body, or insert the process data through the "+
+		"(install-process-builder after user approval - it "+processWriteInstallCost+") and re-apply the body, or insert the process data through the "+
 		"designer's Content designer.", processWriteNoun(len(unresolved)), strings.Join(unresolved, "', '"))
 }
 
@@ -1011,7 +1027,7 @@ func processWriteApprovalWarning(missing []processWriteApprovalDrop) string {
 	for _, drop := range missing {
 		if drop.kind != processWriteDropShaped {
 			parts = append(parts, "Check the package version, install one that supports what you sent "+
-				"(clio install-process-builder) and re-apply the approval block, or configure the element in the "+
+				"(install-process-builder after user approval - it "+processWriteInstallCost+") and re-apply the approval block, or configure the element in the "+
 				"designer.")
 			break
 		}
@@ -1117,7 +1133,7 @@ func processWriteUIDAddressedWarning(addressed []processWriteFlowLabel) string {
 		"read-back reports a flow's endpoints as element NAMES, so there is nothing to compare. A "+
 		"CrtProcessBuilder that PREDATES the flow label discards it silently, and this read-back "+
 		"is the only signal that it did. Re-send the same operation naming the SOURCE and TARGET "+
-		"elements, or re-read the process with describe-business-process, before reporting the label "+
+		"elements, or re-read the process with describe-business-process mode=full, before reporting the label "+
 		"as applied.", processWriteFlowSubject(len(addressed)), processWriteDescribeFlows(addressed))
 }
 
@@ -1148,7 +1164,7 @@ func processWriteLabelsWarning(missing []processWriteLabelMiss) string {
 			"silently. This is USUALLY a CAPABILITY gap rather than an old version number: clio normally "+
 			"refuses an environment running a package older than the one it ships, so what is missing is "+
 			"the member rather than a higher number. Reinstall the package clio ships "+
-			"(clio install-process-builder) and "+
+			"(install-process-builder after user approval - it "+processWriteInstallCost+") and "+
 			"re-apply the labels, or "+
 			"label the connectors in the process designer. Until then a decision with two branches "+
 			"renders as two identical unlabelled arrows.", processWriteFlowSubject(len(absent)), processWriteDescribeFlows(wanted)))
@@ -1158,7 +1174,7 @@ func processWriteLabelsWarning(missing []processWriteLabelMiss) string {
 			"%s. The package version is NOT the cause here - one that "+
 			"discards the field leaves nothing rather than something else - so the label reached the "+
 			"server and came back changed: the process was edited elsewhere between the write and this "+
-			"read, or the text was normalised on the way in. Re-read it with describe-business-process "+
+			"read, or the text was normalised on the way in. Re-read it with describe-business-process mode=full "+
 			"and re-apply only if the drawn text is not what the diagram should say.", processWriteFlowSubject(len(different)),
 			processWriteJoinFlows(len(different), func(index int) string {
 				miss := different[index]
@@ -1186,7 +1202,7 @@ func processWriteUnverifiedLabels(expected []processWriteFlowLabel, reason strin
 		"%s landed: "+
 		"%s. The operation itself succeeded. A CrtProcessBuilder that PREDATES the flow label "+
 		"discards the field silently, and this read-back is the only signal that it did — re-read the "+
-		"process with describe-business-process before reporting the labels as applied.",
+		"process with describe-business-process mode=full before reporting the labels as applied.",
 		processWriteFlowSubject(len(expected)), processWriteDescribeFlows(expected), reason)
 }
 
@@ -1222,10 +1238,13 @@ func processWriteSanitize(text string) string {
 
 // ------------------------------------------------------------------------------------------ flows
 
-func (l *processWriteLog) warnIf(text string) {
-	if text != "" {
-		l.warning(text)
+// warnIf is BlockExpectationReporter.Warn: it writes a non-empty warning and says whether it did.
+func (l *processWriteLog) warnIf(text string) bool {
+	if text == "" {
+		return false
 	}
+	l.warning(text)
+	return true
 }
 
 // processWriteReportDescribed is BlockExpectationReporter.ReportDescribed.
@@ -1245,38 +1264,53 @@ func processWriteReportLabels(log *processWriteLog, d processWriteDescribed, lab
 	log.warnIf(processWriteLabelsWarning(processWriteLabelsMissing(d, labels)))
 }
 
-func processWriteWarnUnverified(log *processWriteLog, intent processWriteIntent, labels []processWriteFlowLabel, reason string) {
-	log.warnIf(processWriteUnverifiedRights(intent.configuredRights, reason))
-	log.warnIf(processWriteUnverifiedFilter(intent.refilteredOnly(), reason))
-	log.warnIf(processWriteUnverifiedLabels(labels, reason))
+// processWriteWarnUnverified is WarnAccessRightsUnverified plus WarnFlowLabelsUnverified: whether either wrote.
+func processWriteWarnUnverified(log *processWriteLog, intent processWriteIntent, labels []processWriteFlowLabel, reason string) bool {
+	rights := log.warnIf(processWriteUnverifiedRights(intent.configuredRights, reason))
+	filters := log.warnIf(processWriteUnverifiedFilter(intent.refilteredOnly(), reason))
+	flowLabels := log.warnIf(processWriteUnverifiedLabels(labels, reason))
+	return rights || filters || flowLabels
 }
 
-// processWriteVerifyCreate is CreateBusinessProcessCommand.WarnOnDiscardedConfigurationBlocks.
-func (c *Client) processWriteVerifyCreate(ctx context.Context, descriptorText, schemaName string, log *processWriteLog) {
+// processWriteVerifyCreate is CreateBusinessProcessCommand.WarnOnDiscardedConfigurationBlocks (8.1.0.142): the
+// read-back always runs, since it is also the post-write digest (ENG-103023), and it is handed to *saved as
+// soon as it is taken; the guards still run only when the descriptor asked for them. A caller that no guard
+// needs read back is not read back (ENG-103165). The result says whether the reply already explains why there
+// is no read-back, so the digest does not say it twice.
+func (c *Client) processWriteVerifyCreate(ctx context.Context, descriptorText, schemaName string, log *processWriteLog,
+	saved **processWriteRead) bool {
 	descriptor := processWriteParseBlocks(descriptorText)
 	intent := processWriteIntentFromDescriptor(descriptor)
 	approval := processWriteApprovalFromDescriptor(descriptor)
 	labels := processWriteFlowLabelsFromDescriptor(descriptor)
-	if intent.isEmpty() && len(approval) == 0 && len(labels) == 0 {
-		return
-	}
+	guarded := !(intent.isEmpty() && len(approval) == 0 && len(labels) == 0)
 	if strings.TrimSpace(schemaName) == "" {
-		processWriteWarnUnverified(log, intent, labels, "the operation returned no process name to read back")
-		return
+		return processWriteWarnUnverified(log, intent, labels, "the operation returned no process name to read back")
 	}
-	described, err := c.processWriteDescribe(ctx, schemaName, "")
-	if err != nil {
-		processWriteWarnUnverified(log, intent, labels, err.Error())
-		return
+	if !guarded && len(processWriteElementsCarrying(descriptor, processWriteSubProcessKey)) > 0 {
+		log.info(processWriteCallerNotReadBack)
+		return true
 	}
+	read := c.processWriteDigestRead(ctx, schemaName, "", true)
+	*saved = &read
+	if !guarded {
+		return false
+	}
+	if read.err != nil {
+		return processWriteWarnUnverified(log, intent, labels, read.err.Error())
+	}
+	described := processWriteDescribedOf(read.raw)
 	processWriteReportDescribed(log, described, intent)
 	log.warnIf(processWriteApprovalWarning(processWriteApprovalMissing(described, approval)))
 	log.warnIf(processWriteMacroWarning(processWriteUnresolvedMacros(described, processWriteMacroBodyElements(descriptor))))
 	processWriteReportLabels(log, described, labels)
+	return false
 }
 
-// processWriteVerifyModify is ModifyBusinessProcessCommand.WarnOnDiscardedConfigurationBlocks.
-func (c *Client) processWriteVerifyModify(ctx context.Context, request ProcessWriteModifyRequest, schemaName string, log *processWriteLog) {
+// processWriteVerifyModify is ModifyBusinessProcessCommand.WarnOnDiscardedConfigurationBlocks (8.1.0.142), with
+// the same read-back hand-out and result as processWriteVerifyCreate; before is the read taken before the edit.
+func (c *Client) processWriteVerifyModify(ctx context.Context, request ProcessWriteModifyRequest, schemaName string, log *processWriteLog,
+	before processWriteRead, saved **processWriteRead) bool {
 	operations := processWriteParseBlocks(request.Operations)
 	intent := processWriteIntentFromOperations(operations)
 	approval := processWriteApprovalFromOperations(operations)
@@ -1288,23 +1322,31 @@ func (c *Client) processWriteVerifyModify(ctx context.Context, request ProcessWr
 		}
 	}
 	log.warnIf(processWriteAddElementWarning(ignored))
-	if intent.isEmpty() && len(approval) == 0 && len(labels) == 0 {
-		return
-	}
+	guarded := !(intent.isEmpty() && len(approval) == 0 && len(labels) == 0)
 	code := schemaName
 	if strings.TrimSpace(code) == "" {
 		code = request.ProcessName
 	}
 	if strings.TrimSpace(code) == "" && strings.TrimSpace(request.ProcessUID) == "" {
-		processWriteWarnUnverified(log, intent, labels, "the edit returned no process identity to read back")
-		return
+		return processWriteWarnUnverified(log, intent, labels, "the edit returned no process identity to read back")
 	}
-	described, err := c.processWriteDescribe(ctx, code, request.ProcessUID)
-	if err != nil {
-		processWriteWarnUnverified(log, intent, labels, err.Error())
-		return
+	if !guarded {
+		if reason := processWriteWhyAnEditIsNotReadBack(operations, before); reason != "" {
+			log.info(reason)
+			return true
+		}
 	}
+	read := c.processWriteDigestRead(ctx, code, request.ProcessUID, true)
+	*saved = &read
+	if !guarded {
+		return false
+	}
+	if read.err != nil {
+		return processWriteWarnUnverified(log, intent, labels, read.err.Error())
+	}
+	described := processWriteDescribedOf(read.raw)
 	processWriteReportDescribed(log, described, intent)
 	log.warnIf(processWriteApprovalWarning(processWriteApprovalMissing(described, approval)))
 	processWriteReportLabels(log, described, labels)
+	return false
 }

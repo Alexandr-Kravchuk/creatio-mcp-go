@@ -2,7 +2,7 @@ package creatio
 
 // create-business-process, modify-business-process and modify-business-process-as-new-version: clio's
 // CreateBusinessProcessCommand, ModifyBusinessProcessCommand and ModifyProcessAsNewVersionCommand with their
-// services, behind the CrtProcessBuilder gate (1.6.6.77).
+// services, behind the CrtProcessBuilder gate (1.6.6.103).
 
 import (
 	"context"
@@ -41,13 +41,13 @@ const (
 		"helps a developer reading a stack trace and is noise to the caller reading this."
 	processWriteVersionUnknown = "ModifyProcessAsNewVersion returned a response clio could not read, so whether a version was " +
 		"created is UNKNOWN - and a version that DID persist cannot be deleted. Re-read the process " +
-		"with describe-business-process and check its versions[] before retrying, because a retry " +
+		"with describe-business-process mode=versions and check its versions[] before retrying, because a retry " +
 		"would allocate a second version rather than replace the first. The parser detail is on the " +
 		"inner exception; it names a .NET type and a byte offset, which helps a developer reading a " +
 		"stack trace and is noise to the caller reading this."
 )
 
-// processWriteGated runs a command body behind the 1.6.6.77 gate; a body error is the command's catch: the
+// processWriteGated runs a command body behind the 1.6.6.103 gate; a body error is the command's catch: the
 // message as an Error line and exit code 1.
 func (c *Client) processWriteGated(ctx context.Context, body func(log *processWriteLog) error) ProcessWriteResult {
 	refusal, err := c.processWriteGate(ctx, processWriteDesignMinVersion)
@@ -100,17 +100,40 @@ func (c *Client) CreateBusinessProcess(ctx context.Context, request ProcessWrite
 			return errors.New(processWriteBuildUnknown)
 		}
 		if !success {
+			text := "BuildProcess failed."
 			if message != nil {
-				return errors.New(*message)
+				text = *message
 			}
-			return errors.New("BuildProcess failed.")
+			// A failure that still names the schema came after the save (a tracing switch, ENG-102111): the
+			// process exists, so the build's warnings still apply.
+			if strings.TrimSpace(processWriteDeref(schemaUID)) != "" && len(warnings) > 0 {
+				text += " " + strings.Join(warnings, " ")
+			}
+			return errors.New(text)
 		}
 		log.info(fmt.Sprintf("Process '%s' created (UId: %s).", processWriteDeref(schemaName), processWriteDeref(schemaUID)))
 		for _, warning := range warnings {
 			log.warning(warning)
 		}
-		processWriteGuardVerification(log, "The process was created, but verifying its configuration failed: %s. Re-read it with describe-business-process before reporting a grant or revoke as applied.",
-			func() { c.processWriteVerifyCreate(ctx, request.Descriptor, processWriteDeref(schemaName), log) })
+		// The digest rides the same read-back as the guards (ENG-103023), handed out before they run.
+		var saved *processWriteRead
+		readFailureReported := false
+		processWriteGuardVerification(log, "The process was created, but verifying its configuration failed: %s. Re-read it with describe-business-process mode=full before reporting a grant or revoke as applied.",
+			func() {
+				readFailureReported = c.processWriteVerifyCreate(ctx, request.Descriptor, processWriteDeref(schemaName), log, &saved)
+			})
+		switch {
+		case saved != nil:
+			processWriteReportDigest(log, *saved, nil, true, "", readFailureReported)
+		case readFailureReported:
+			// A guard already said why nothing could be read back.
+		case strings.TrimSpace(processWriteDeref(schemaName)) == "":
+			log.warning("The process was created, but the environment named no process to summarize. " +
+				"describe-business-process mode=summary confirms the saved state.")
+		default:
+			log.warning("The process was created, but no summary of it is returned. " +
+				"describe-business-process mode=summary confirms the saved state.")
+		}
 		return nil
 	})
 }
@@ -125,6 +148,9 @@ func (c *Client) ModifyBusinessProcess(ctx context.Context, request ProcessWrite
 		if strings.TrimSpace(request.Operations) == "" {
 			return errors.New("An operations array is required.")
 		}
+		// Read before the write so the digest can say what the edit changed (ENG-103023); a failed read only
+		// costs the change list.
+		before := c.processWriteDigestRead(ctx, request.ProcessName, request.ProcessUID, false)
 		target := processWriteIdentity(request)
 		operations, err := processWriteParseOperations(request.Operations)
 		if err != nil {
@@ -160,8 +186,18 @@ func (c *Client) ModifyBusinessProcess(ctx context.Context, request ProcessWrite
 			if failedIndex != nil {
 				text += fmt.Sprintf(" The operation at index %d is the one that refused.", *failedIndex)
 			}
+			// A failure that still names the schema came after the save (ENG-102111): the layout report is a
+			// description rather than a re-send offer, and the edit's warnings still apply.
+			savedEdit := strings.TrimSpace(processWriteDeref(schemaUID)) != ""
 			if layout.present {
-				text += layout.relaySentence()
+				if savedEdit {
+					text += layout.elementsClause()
+				} else {
+					text += layout.relaySentence()
+				}
+			}
+			if savedEdit && len(warnings) > 0 {
+				text += " " + strings.Join(warnings, " ")
 			}
 			return errors.New(text)
 		}
@@ -169,8 +205,18 @@ func (c *Client) ModifyBusinessProcess(ctx context.Context, request ProcessWrite
 		for _, warning := range warnings {
 			log.warning(warning)
 		}
-		processWriteGuardVerification(log, "The edit was applied, but verifying its configuration failed: %s. Re-read the process with describe-business-process before reporting a grant or revoke as applied.",
-			func() { c.processWriteVerifyModify(ctx, request, processWriteDeref(schemaName), log) })
+		var saved *processWriteRead
+		readFailureReported := false
+		processWriteGuardVerification(log, "The edit was applied, but verifying its configuration failed: %s. Re-read the process with describe-business-process mode=full before reporting a grant or revoke as applied.",
+			func() {
+				readFailureReported = c.processWriteVerifyModify(ctx, request, processWriteDeref(schemaName), log, before, &saved)
+			})
+		if saved != nil {
+			processWriteReportDigest(log, *saved, &before, true, "", readFailureReported)
+		} else if !readFailureReported {
+			log.warning("The edit was applied, but no summary of it is returned. " +
+				"describe-business-process mode=summary confirms the saved state.")
+		}
 		return nil
 	})
 }
@@ -182,6 +228,8 @@ func (c *Client) ModifyBusinessProcessAsNewVersion(ctx context.Context, request 
 		if err := processWriteCommandIdentity(request); err != nil {
 			return err
 		}
+		// The source, read before the write, is what the digest compares the new version with (ENG-103023).
+		source := c.processWriteDigestRead(ctx, request.ProcessName, request.ProcessUID, false)
 		target := processWriteIdentity(request)
 		if strings.TrimSpace(request.PackageName) != "" {
 			target.set("packageName", newString(request.PackageName))
@@ -264,8 +312,41 @@ func (c *Client) ModifyBusinessProcessAsNewVersion(ctx context.Context, request 
 		for _, warning := range warnings {
 			log.warning(warning)
 		}
+		c.processWriteReportVersionDigest(ctx, request, processWriteDeref(versionUID), processWriteDeref(versionName), source, log)
 		return nil
 	})
+}
+
+// processWriteReportVersionDigest is ModifyProcessAsNewVersionCommand.ReportDigest: the new version's summary and
+// what it changed against its source.
+func (c *Client) processWriteReportVersionDigest(ctx context.Context, request ProcessWriteModifyRequest, versionUID, versionName string,
+	source processWriteRead, log *processWriteLog) {
+	hasUID := processWriteParseGUID(versionUID) != ""
+	if !hasUID && strings.TrimSpace(versionName) == "" {
+		log.warning("The version was saved, but the environment named no version to summarize. " +
+			"describe-business-process mode=summary confirms the saved state.")
+		return
+	}
+	var saved processWriteRead
+	if hasUID {
+		saved = c.processWriteDigestRead(ctx, "", versionUID, true)
+	} else {
+		saved = c.processWriteDigestRead(ctx, versionName, "", true)
+	}
+	// The new version has no earlier state of its own: the change list is relative to the version it was cut from.
+	sourceName := ""
+	if source.err == nil {
+		if name := source.graph.get("name"); name != nil && name.kind == jkString {
+			sourceName = name.text
+		}
+	}
+	if sourceName == "" {
+		sourceName = request.ProcessName
+	}
+	if sourceName == "" {
+		sourceName = request.ProcessUID
+	}
+	processWriteReportDigest(log, saved, &source, true, fmt.Sprintf("the source version '%s'", sourceName), false)
 }
 
 // processWriteGuardVerification runs the post-write check the way the commands do: a failure inside it is

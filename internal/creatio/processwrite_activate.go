@@ -16,7 +16,7 @@ type ProcessWriteActivateRequest struct {
 
 const processWriteActivateUnknown = "SetActiveProcessVersion returned a response clio could not read, so WHICH version the " +
 	"environment now runs is UNKNOWN - the write may have taken effect. Read the family back with " +
-	"describe-business-process and check isActiveVersion before retrying or reporting this. The " +
+	"describe-business-process mode=versions and check isActiveVersion before retrying or reporting this. The " +
 	"parser detail is on the inner exception; it names a .NET type and a byte offset, which helps " +
 	"a developer reading a stack trace and is noise to the caller reading this."
 
@@ -54,6 +54,15 @@ func (c *Client) processWriteActivate(ctx context.Context, request ProcessWriteA
 		target.set("uid", newString(request.VersionUID))
 		identity = request.VersionUID
 	}
+	// Read before the write for which version runs now - the version standing only - so the digest can compare
+	// the activated version with it (ENG-103023); a failed read only costs the change list.
+	targetName, targetUID := "", ""
+	if hasName {
+		targetName = request.VersionName
+	} else {
+		targetUID = request.VersionUID
+	}
+	before := c.processWriteReadVersionStanding(ctx, targetName, targetUID)
 	log.info(fmt.Sprintf("Activating version '%s' on '%s'...", identity, request.Environment))
 	result, err := c.processWriteDesign(ctx, "SetActiveProcessVersion", target, processWriteActivateUnknown)
 	if err != nil {
@@ -96,7 +105,7 @@ func (c *Client) processWriteActivate(ctx context.Context, request ProcessWriteA
 	if !processWriteActivationEstablished(request, activeName, activeUID) {
 		log.warning("The activation was accepted, but the environment did not report which version is actual, so " +
 			"clio could NOT confirm the change took effect. Read the family back with " +
-			"describe-business-process and check isActiveVersion before reporting this as done.")
+			"describe-business-process mode=versions and check isActiveVersion before reporting this as done.")
 	} else if !processWriteActivationMatches(request, activeName, activeUID) {
 		log.warning(fmt.Sprintf("The environment reports '%s' (UId: %s) as "+
 			"the actual version, which is NOT the version this call asked for. The activation was accepted "+
@@ -105,7 +114,39 @@ func (c *Client) processWriteActivate(ctx context.Context, request ProcessWriteA
 	for _, warning := range warnings {
 		log.warning(warning)
 	}
+	c.processWriteReportActivationDigest(ctx, targetName, targetUID, before, log)
 	return nil
+}
+
+// processWriteReportActivationDigest is SetActiveProcessVersionCommand.ReportDigest: the activated version's
+// summary, read with its version standing, and what it changes against the version that ran before.
+func (c *Client) processWriteReportActivationDigest(ctx context.Context, name, uid string, before processWriteRead, log *processWriteLog) {
+	after := c.processWriteDigestRead(ctx, name, uid, true)
+	if before.err != nil || after.err != nil {
+		var previous *processWriteRead
+		if before.err != nil {
+			previous = &before
+		}
+		processWriteReportDigest(log, after, previous, true, "", false)
+		return
+	}
+	previousUID := processDescribeText(before.graph, "activeVersionSchemaUId")
+	if strings.TrimSpace(previousUID) == "" {
+		unknown := processWriteRead{err: fmt.Errorf("the version that was active before could not be established")}
+		processWriteReportDigest(log, after, &unknown, true, "", false)
+		return
+	}
+	previous, activated := processWriteParseGUID(previousUID), processWriteParseGUID(processDescribeText(after.graph, "schemaUId"))
+	if previous != "" && activated != "" && previous == activated {
+		processWriteReportDigest(log, after, &after, true, "itself: this version was already the active one", false)
+		return
+	}
+	previousGraph := c.processWriteDigestRead(ctx, "", previousUID, false)
+	label := processDescribeText(before.graph, "activeVersionName")
+	if label == "" {
+		label = previousUID
+	}
+	processWriteReportDigest(log, after, &previousGraph, true, fmt.Sprintf("the previously active version '%s'", label), false)
 }
 
 // processWriteActivationEstablished is ReadBackEstablished: a name request needs a reported name, a uid

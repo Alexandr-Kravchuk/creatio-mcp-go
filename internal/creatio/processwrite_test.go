@@ -145,11 +145,13 @@ func TestSetActiveBusinessProcessVersionReportsTheActivatedVersion(t *testing.T)
 		"Info: New process instances will start on this version. Instances already running stay on the version they started with — activation never migrates them.",
 		"Warning: 1 sibling(s) are ALSO still flagged active, so which one runs is decided by package order rather than by this call. Read the family back with describe-business-process before reporting the rollback as done.",
 		"Warning: w1",
+		"Warning: The write landed, but reading the process back for its summary failed: unexpected server response shape. describe-business-process mode=summary confirms the saved state.",
 	}
 	if result.ExitCode != 0 || result.Note != processWriteCompileNote || strings.Join(got, "\n") != strings.Join(want, "\n") {
 		t.Fatalf("%d %q\n%s", result.ExitCode, result.Note, strings.Join(got, "\n"))
 	}
-	last := (*calls)[len(*calls)-1]
+	activations := processWriteTaskCalls(*calls, "/SetActiveProcessVersion")
+	last := activations[len(activations)-1]
 	if last.Path != "/0/rest/ProcessDesignService/SetActiveProcessVersion" || last.Body != `{"request":{"name":"UsrP_v2"}}` {
 		t.Fatalf("request = %+v", last)
 	}
@@ -162,10 +164,12 @@ func TestSetActiveBusinessProcessVersionWarnsWhenTheReportedVersionDiffers(t *te
 	})
 	result := client.SetActiveBusinessProcessVersion(context.Background(), ProcessWriteActivateRequest{Environment: "dev", VersionUID: "aaaaaaaa-0000-0000-0000-000000000002"})
 	got := processWriteMessages(result)
-	if result.ExitCode != 0 || len(got) != 4 || !strings.HasPrefix(got[3], "Warning: The environment reports 'Other' (UId: bbbbbbbb-0000-0000-0000-000000000002) as the actual version, which is NOT") {
+	if result.ExitCode != 0 || len(got) != 5 || !strings.HasPrefix(got[3], "Warning: The environment reports 'Other' (UId: bbbbbbbb-0000-0000-0000-000000000002) as the actual version, which is NOT") ||
+		got[4] != "Warning: The write landed, but reading the process back for its summary failed: unexpected server response shape. describe-business-process mode=summary confirms the saved state." {
 		t.Fatalf("%+v", got)
 	}
-	if body := (*calls)[len(*calls)-1].Body; body != `{"request":{"uid":"aaaaaaaa-0000-0000-0000-000000000002"}}` {
+	activations := processWriteTaskCalls(*calls, "/SetActiveProcessVersion")
+	if body := activations[len(activations)-1].Body; body != `{"request":{"uid":"aaaaaaaa-0000-0000-0000-000000000002"}}` {
 		t.Fatalf("body = %s", body)
 	}
 	client, _ = processWriteServer(t, "1.6.6.80", func(call processWriteCall) (int, string) {

@@ -39,7 +39,7 @@ func TestGroupEToolsAnswerByRawNameAndThroughClioRun(t *testing.T) {
 	}{
 		"list-themes":     {map[string]any{}, `{"success":true,"themes":[]}`},
 		"list-printables": {map[string]any{"entity-name": "Contact"}, `{"success":true,"count":0,"printables":[]}`},
-		"list-user-tasks": {map[string]any{}, `{"exit-code":1,"execution-log-messages":[{"message-type":"Error","value":` + groupEJSON(t, "To use this command, you need to install the CrtProcessBuilder package. Install the package in the target environment and retry.\nRun 'clio install-process-builder -e <environment>' (or call the install-process-builder MCP tool) to install or update CrtProcessBuilder.") + `}]}`},
+		"list-user-tasks": {map[string]any{}, `{"exit-code":1,"execution-log-messages":[{"message-type":"Error","value":` + groupEJSON(t, "To use this command, you need to install the CrtProcessBuilder package. Install the package in the target environment and retry.\nInstalling or updating CrtProcessBuilder builds the environment's configuration and restarts the site for every connected user. This refusal is not the user's approval: ask them first, then run 'clio install-process-builder -e <environment>' (or call the install-process-builder MCP tool).") + `}]}`},
 		"list-page-templates": {map[string]any{"schema-type": "web"}, `{"success":true,"count":2,"items":[` +
 			`{"uId":"eb4d4a67-25d8-fcfa-7851-c4c91efb7b9c","name":"BaseDashboardTemplate","title":"Dashboard","groupName":"DashboardPage","schemaType":9},` +
 			`{"uId":"fbc98c89-0691-479c-bc25-59c11ac2365f","name":"CentralAreaDesktopTemplate","title":"Desktop","groupName":"Desktop","schemaType":9}]}`},

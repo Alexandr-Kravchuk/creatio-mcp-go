@@ -9,7 +9,7 @@ import (
 func processWriteVerifyServer(t *testing.T, build, describe string) (*Client, *[]processWriteCall) {
 	t.Helper()
 	processWriteNoArchive(t)
-	return processWriteServer(t, "1.6.6.77", func(call processWriteCall) (int, string) {
+	return processWriteServer(t, "1.6.6.103", func(call processWriteCall) (int, string) {
 		switch {
 		case strings.HasSuffix(call.Path, "/BuildProcess"):
 			return 200, build
@@ -32,17 +32,17 @@ func processWriteWarnings(result ProcessWriteResult) []string {
 	return warnings
 }
 
-func TestCreateBusinessProcessDoesNotReadBackWithoutBlocks(t *testing.T) {
+// Since 8.1.0.142 (ENG-103023) a build without blocks or labels is read back too: the read is the digest.
+func TestCreateBusinessProcessReadsBackWithoutBlocksForTheDigest(t *testing.T) {
 	client, calls := processWriteVerifyServer(t, `{"BuildProcessResult":{"success":true,"schemaName":"UsrP"}}`, `{}`)
 	result := client.CreateBusinessProcess(context.Background(), ProcessWriteBuildRequest{Environment: "dev",
 		Descriptor: `{"name":"UsrP","elements":[{"name":"s","type":"startEvent"}],"flows":[{"source":"s","target":"e"}]}`})
-	if result.ExitCode != 0 || len(processWriteWarnings(result)) != 0 {
+	warnings := processWriteWarnings(result)
+	if result.ExitCode != 0 || len(warnings) != 1 || !strings.HasPrefix(warnings[0], "The write landed, but reading the process back for its summary failed: unexpected server response shape.") {
 		t.Fatalf("%+v", result)
 	}
-	for _, call := range *calls {
-		if strings.HasSuffix(call.Path, "/DescribeProcess") {
-			t.Fatal("a build without blocks or labels must not be read back")
-		}
+	if describe := processWriteTaskCalls(*calls, "/DescribeProcess"); len(describe) != 1 || describe[0].Body != `{"request":{"name":"UsrP"}}` {
+		t.Fatalf("describe %+v", describe)
 	}
 }
 
@@ -93,7 +93,9 @@ func TestModifyBusinessProcessWarnsOnIgnoredAddElementRightsAndReadsBackByUID(t 
 		!strings.HasPrefix(warnings[1], "The record filter on the element 'Clear1' was changed, but this environment's CrtProcessBuilder does not report") {
 		t.Fatalf("%q", warnings)
 	}
-	if describe := processWriteTaskCalls(*calls, "/DescribeProcess"); len(describe) != 1 || describe[0].Body != `{"request":{"uid":"bbbbbbbb-0000-0000-0000-000000000001"}}` {
+	// One read before the edit (the digest's baseline), one after it.
+	if describe := processWriteTaskCalls(*calls, "/DescribeProcess"); len(describe) != 2 || describe[0].Body != `{"request":{"uid":"bbbbbbbb-0000-0000-0000-000000000001"}}` ||
+		describe[1].Body != describe[0].Body {
 		t.Fatalf("describe %+v", describe)
 	}
 }

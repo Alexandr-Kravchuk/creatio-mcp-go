@@ -15,13 +15,18 @@ import (
 )
 
 const (
-	// processWriteDesignMinVersion is the [RequiresPackage] version of the build and modify commands (clio
-	// master; clio 8.1.0.134 asks for 1.6.2.1).
-	processWriteDesignMinVersion = "1.6.6.77"
+	// processWriteDesignMinVersion is the [RequiresPackage] version of create-business-process,
+	// modify-business-process and modify-business-process-as-new-version in clio 8.1.0.142 (ENG-96505).
+	processWriteDesignMinVersion = "1.6.6.103"
 	// processWriteActivateMinVersion is set-active-business-process-version's [RequiresPackage] version.
 	processWriteActivateMinVersion = "1.6.1.0"
-	// processWriteInstallHint is BundledPackages.ProcessBuilderInstallHint.
-	processWriteInstallHint = "Run 'clio install-process-builder -e <environment>' (or call the install-process-builder MCP tool) to install or update CrtProcessBuilder."
+	// processWriteInstallHint is BundledPackages.ProcessBuilderInstallHint (clio 8.1.0.142, ENG-102116): the cost
+	// of the install and that the refusal is not the user's approval.
+	processWriteInstallHint = "Installing or updating CrtProcessBuilder " + processWriteInstallCost + ". This refusal " +
+		"is not the user's approval: ask them first, then run 'clio install-process-builder -e <environment>' " +
+		"(or call the install-process-builder MCP tool)."
+	// processWriteInstallCost is BundledPackages.ProcessBuilderInstallCost.
+	processWriteInstallCost = "builds the environment's configuration and restarts the site for every connected user"
 	// processWriteCompileNote is CommandExecutionResult.CompileNotRequiredNote.
 	processWriteCompileNote = "compile-creatio not required"
 	// processWriteCompileMarker is CommandExecutionResult.CompileRequiredWarningMarker.

@@ -431,24 +431,37 @@ func processDescribeObjects(node *jnode) []*jnode {
 
 // processDescribeSummaryReply is BuildSummaryReply: mode first, the summary, then fullChars and the pointer.
 func processDescribeSummaryReply(graph *jnode, checksum string, fullChars int) *jnode {
+	envelope := newObject()
+	envelope.set("fullChars", newInt(fullChars))
+	envelope.set("more", newString(fmt.Sprintf("mode=full returns the whole graph (%d chars); element=<name> returns one element "+
+		"in full (mappings, filters, formulas, its flows); mode=versions returns the version list.", fullChars)))
+	return processDescribeFitSummary(graph, checksum, envelope)
+}
+
+// processDescribeFitSummary is ProcessDigest.FitSummary: the summary (BuildSummary when envelope is nil, the
+// describe reply with mode first and the envelope's members last otherwise), fitted to 3,072 bytes.
+func processDescribeFitSummary(graph *jnode, checksum string, envelope *jnode) *jnode {
 	input := processDescribeSummaryInput{graph: graph, checksum: checksum, elements: processDescribeObjects(graph.get("elements")),
 		parameters: processDescribeObjects(graph.get("parameters"))}
 	for _, flow := range processDescribeObjects(graph.get("flows")) {
 		input.flows = append(input.flows, processDescribeFlowLine(flow))
 	}
-	envelope := func(summary *jnode) *jnode {
+	enveloped := func(summary *jnode) *jnode {
+		if envelope == nil {
+			return summary
+		}
 		reply := newObject()
 		reply.set("mode", newString("summary"))
 		for _, key := range summary.keys {
 			reply.set(key, summary.props[key])
 		}
-		reply.set("fullChars", newInt(fullChars))
-		reply.set("more", newString(fmt.Sprintf("mode=full returns the whole graph (%d chars); element=<name> returns one element "+
-			"in full (mappings, filters, formulas, its flows); mode=versions returns the version list.", fullChars)))
+		for _, key := range envelope.keys {
+			reply.set(key, envelope.props[key].clone())
+		}
 		return reply
 	}
 	build := func(elements []*jnode, flows []string, parameters []*jnode, withCaptions, compactHeader bool) *jnode {
-		return envelope(processDescribeComposeSummary(input, elements, flows, parameters, withCaptions, compactHeader))
+		return enveloped(processDescribeComposeSummary(input, elements, flows, parameters, withCaptions, compactHeader))
 	}
 	size := func(node *jnode) int { return len(processDescribeWrite(node)) }
 	summary := build(input.elements, input.flows, input.parameters, true, false)

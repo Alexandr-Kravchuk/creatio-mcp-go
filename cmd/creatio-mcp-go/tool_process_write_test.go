@@ -100,7 +100,9 @@ func TestSetActiveBusinessProcessVersionMCP(t *testing.T) {
 	})
 	answer, _ := processWriteCall(t, session, "set-active-business-process-version", map[string]any{"version-name": "UsrP_v2"})
 	code, messages, note := processWriteEnvelope(t, answer)
-	if code != 0 || note != "compile-creatio not required" || len(messages) != 3 || messages[1] != "Info: Version 'UsrP_v2' is now the actual one (UId: aaaaaaaa-0000-0000-0000-000000000002)." {
+	// The fourth line is the digest's: this fake answers no DescribeProcess, so the read-back failed.
+	if code != 0 || note != "compile-creatio not required" || len(messages) != 4 || messages[1] != "Info: Version 'UsrP_v2' is now the actual one (UId: aaaaaaaa-0000-0000-0000-000000000002)." ||
+		!strings.HasPrefix(messages[3], "Warning: The write landed, but reading the process back for its summary failed:") {
 		t.Fatalf("%d %q %q", code, note, messages)
 	}
 	if body := seen()["/0/rest/ProcessDesignService/SetActiveProcessVersion"]; body != `{"request":{"name":"UsrP_v2"}}` {
@@ -159,7 +161,8 @@ func TestProcessDesignWritesMCP(t *testing.T) {
 	for _, item := range successes {
 		answer, _ := processWriteCall(t, session, item.tool, item.args)
 		code, messages, note := processWriteEnvelope(t, answer)
-		if code != 0 || note != "compile-creatio not required" || messages[len(messages)-1] != item.last {
+		// The digest's line (here a failed read-back, the fake answers no DescribeProcess) follows item.last.
+		if code != 0 || note != "compile-creatio not required" || len(messages) < 2 || messages[len(messages)-2] != item.last {
 			t.Errorf("%s: %d %q %q", item.tool, code, note, messages)
 		}
 		if body := seen()["/0/rest/ProcessDesignService/"+item.route]; body != item.body {
@@ -206,7 +209,7 @@ func TestProcessDesignWritesRefuseWithoutCrtProcessBuilder(t *testing.T) {
 	} {
 		answer, _ := processWriteCall(t, session, tool, args)
 		code, messages, _ := processWriteEnvelope(t, answer)
-		if code != 1 || len(messages) != 1 || !strings.HasPrefix(messages[0], "Error: To use this command, you need to install the CrtProcessBuilder package version 1.6.6.77 or higher.") {
+		if code != 1 || len(messages) != 1 || !strings.HasPrefix(messages[0], "Error: To use this command, you need to install the CrtProcessBuilder package version 1.6.6.103 or higher.") {
 			t.Errorf("%s: %d %q", tool, code, messages)
 		}
 	}

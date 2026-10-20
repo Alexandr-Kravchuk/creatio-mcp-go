@@ -13,8 +13,7 @@ const processBuilderPackageName = "CrtProcessBuilder"
 
 // processBuilderMissingMessage is clio's [RequiresPackage] refusal for CrtProcessBuilder, hint line included.
 const processBuilderMissingMessage = "To use this command, you need to install the CrtProcessBuilder package. " +
-	"Install the package in the target environment and retry.\n" +
-	"Run 'clio install-process-builder -e <environment>' (or call the install-process-builder MCP tool) to install or update CrtProcessBuilder."
+	"Install the package in the target environment and retry.\n" + processWriteInstallHint
 
 // ListUserTasks reads the process designer palette through the CrtProcessBuilder ProcessDesignService. Like
 // clio it first refuses when that package is not installed. The result lists one "name<TAB>uid" Info line per
