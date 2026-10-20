@@ -3,7 +3,9 @@
 
 Both servers are started with the same working directory, a fresh directory under the OS temp root, so a
 relative output-file lands inside the workspace anchor on both sides. In a case's arguments `{side}`
-becomes `clio` or `go` and `{tmp}` becomes that working directory, so each server writes its own file.
+becomes `clio<n>` or `go<n>` (n = the case's index), `{who}` becomes `clio` or `go` (the same name in every
+case, to name one file from two cases) and `{tmp}` becomes that working directory, so each server writes its
+own file.
 
 For every case the answers are compared after the side's own path (the working directory, as given and
 symlink-resolved, and the `{side}` segment) is replaced by a placeholder; then every file named by a
@@ -89,14 +91,14 @@ def main():
             label = case.get("label", case["tool"])
             answers, files = {}, {}
             for side, server in (("clio", clio), ("go", go)):
-                mapping = {"{side}": f"{side}{index}", "{tmp}": str(workdir)}
+                mapping = {"{side}": f"{side}{index}", "{who}": side, "{tmp}": str(workdir)}
                 arguments = substitute(case.get("args", {}), mapping)
                 if case.get("environment", True):
                     arguments = {"environment-name": options.env, **arguments}
                 response, _ = server.call("clio-run", {"command": case["tool"], "args": arguments})
                 value = compare_mcp.payload(response)
                 replacements = sorted({(real_workdir, "{tmp}"), (str(workdir), "{tmp}"),
-                                       (f"{side}{index}", "{side}")}, key=lambda item: -len(item[0]))
+                                       (f"{side}{index}", "{side}"), (f"shared-{side}", "shared-{who}")}, key=lambda item: -len(item[0]))
                 answers[side] = unsubstitute(value, replacements)
                 files[side] = {key: digest(arguments[key]) for key in case.get("files", []) if isinstance(arguments.get(key), str)}
             # Strict: a refusal worded differently is a mismatch here, unlike compare-mcp.py's both-failed.
