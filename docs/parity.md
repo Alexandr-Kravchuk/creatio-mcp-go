@@ -63,11 +63,28 @@ python3 scripts/compare-contracts.py --clio-dll <path>/clio.dll --go-bin ./creat
 ```
 
 Starts both servers without a Creatio environment and compares tools/list (resident set, order,
-description, input schema, annotations), the get-tool-contract index, every served tool's full contract,
-`detail=full` and the answer for an unknown name. Verdicts: `match`, `known:<class>` (the reason is in
-`KNOWN_DIFFERENCES` in the script and in the evidence) and `unexplained`; the exit code is non-zero on any
-`unexplained`. `known:not-ported` rows carry the task that ports the tool, read from the `tasks` map of
+description, input schema, annotations), the default get-tool-contract answer (clio 8.1.0.142's `legend`
+and one `tool-index` line per tool, compared line by line for the served tools), the
+`detail=index-entries` objects, every served tool's contract three ways (by default, `detail=full`,
+`detail=short`), `detail=full` without names, the answer for an unknown name and one two-tool batch
+(`get-page` + `update-page`). Verdicts: `match`, `known:<class>` (the reason is in `KNOWN_DIFFERENCES` in
+the script and in the evidence) and `unexplained`; the exit code is non-zero on any `unexplained`.
+`known:not-ported` rows carry the task that ports the tool, read from the `tasks` map of
 `docs/clio-inventory.json`. Evidence goes to `evidence/contracts-latest.json`.
+
+Short contracts. Since 8.1.0.142 clio fits a named lookup to an 18 KB reply: when the reply is larger it
+replaces the largest contracts by their short form (`detail: "short"`, `full-contract-bytes`) and shares
+repeated error codes (`same-as`). The inventory records every contract complete (`contracts`, from
+`detail=full`) and short (`shortContracts`, from `detail=short`, with clio's own `full-contract-bytes`), and
+which tools clio answers short even when asked for alone (`defaultShort`: create-business-process,
+create-entity-business-rules, create-page-business-rules, describe-business-process, modify-business-process,
+update-entity-business-rules). This server serves those recorded forms as they are and does not measure
+contracts itself. A lookup naming several tools gets each one in its single-name form, so a batch clio has
+to shorten differs (`known:fit-multi-name`): clio measures with its own serializer, which counts the nulls
+the wire omits, so the sizes cannot be reproduced from the recorded answers.
+
+Measured on 2026-10-20 against clio 8.1.0.142: 875 `match`, 130 `known:not-ported` (T6, T16, T19), 1
+`known:fit-multi-name`, 0 `unexplained`.
 
 A clio upgrade shows up here as `unexplained`: rerun `scripts/clio-inventory.py` against the new clio, then
 `go generate ./internal/cliocontract`, then `go test ./...`.

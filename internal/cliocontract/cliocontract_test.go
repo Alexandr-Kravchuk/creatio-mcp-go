@@ -30,13 +30,31 @@ func TestInventoryIsComplete(t *testing.T) {
 	if inventory.Clio.Version == "" || len(inventory.ToolsList) == 0 {
 		t.Fatalf("inventory has no clio version or no tools/list: %+v", inventory.Clio)
 	}
-	for _, entry := range inventory.Index {
+	if inventory.Legend == "" || len(inventory.ToolIndex) != len(inventory.Index) {
+		t.Fatalf("inventory has %d tool-index lines for %d index entries, legend %q", len(inventory.ToolIndex), len(inventory.Index), inventory.Legend)
+	}
+	for position, entry := range inventory.Index {
 		name := EntryName(entry)
 		if name == "" {
 			t.Fatalf("index entry without a name: %s", entry)
 		}
+		if line := inventory.ToolIndex[position]; LineName(line) != name {
+			t.Errorf("tool-index line %d is %q, but index entry %d is %q", position, line, position, name)
+		}
 		if _, ok := inventory.Contracts[name]; !ok {
 			t.Errorf("index names %q, but the inventory has no contract for it", name)
+		}
+		var short struct {
+			Detail            string `json:"detail"`
+			FullContractBytes int    `json:"full-contract-bytes"`
+		}
+		if err := json.Unmarshal(inventory.ShortContracts[name], &short); err != nil || short.Detail != "short" || short.FullContractBytes <= 0 {
+			t.Errorf("%s: no short contract with detail and full-contract-bytes: %s", name, inventory.ShortContracts[name])
+		}
+	}
+	for _, name := range inventory.DefaultShort {
+		if _, ok := inventory.ShortContracts[name]; !ok {
+			t.Errorf("defaultShort names %q, but the inventory has no short contract for it", name)
 		}
 	}
 	for _, tool := range inventory.ToolsList {
