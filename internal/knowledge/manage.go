@@ -9,8 +9,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"path/filepath"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -26,8 +26,6 @@ const (
 	stateRejected             = "rejected"
 	stateUpToDate             = "up-to-date"
 	stateUnknown              = "unknown"
-	curatedAlias              = "creatio-curated"
-	curatedLibraryID          = "com.creatio.clio"
 	defaultKnowledgeDirectory = "knowledge"
 )
 
@@ -330,6 +328,12 @@ func (m *Manager) verify(data []byte, expectedVersion, libraryID string) (*Prepa
 func (m *Manager) installOrUpdate(ctx context.Context, store Store, item selectedSource, isUpdate bool, deadline time.Duration) SourceOperationResult {
 	alias, source := item.alias, item.source
 	if source.Type == SourceGit {
+		// clio's InstallOrUpdateRepositoryLocked refuses an update of a checkout that does not exist before it
+		// runs Git; that refusal is reproduced, the synchronization itself is left to clio.
+		repository := filepath.Join(store.SourceRoot(alias), "repository", ".git")
+		if _, err := os.Stat(repository); isUpdate && err != nil {
+			return failedOperation(alias, fmt.Sprintf("Knowledge source '%s' is not installed; use install-knowledge.", alias), "")
+		}
 		return failedOperation(alias, fmt.Sprintf("Git knowledge sources are not installed by creatio-mcp-go; run "+
 			"`clio %s --source %s`.", map[bool]string{false: "install-knowledge", true: "update-knowledge"}[isUpdate], alias), "")
 	}
@@ -601,7 +605,7 @@ func (m *Manager) Remove(alias string, confirmed bool) (CommandResult, error) {
 	if !ok {
 		return failedCommand(alias, fmt.Sprintf("Knowledge source '%s' is not configured.", alias)), nil
 	}
-	if strings.EqualFold(alias, curatedAlias) || strings.EqualFold(expected.LibraryID, curatedLibraryID) {
+	if strings.EqualFold(alias, CuratedAlias) || strings.EqualFold(expected.LibraryID, CuratedLibraryID) {
 		return failedCommand(alias, fmt.Sprintf("Built-in knowledge source '%s' cannot be removed. "+
 			"Use disable-knowledge-source --alias %s to stop serving it while retaining its cache.", alias, alias)), nil
 	}

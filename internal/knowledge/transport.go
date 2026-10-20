@@ -20,9 +20,11 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"runtime"
 	"sort"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/Alexandr-Kravchuk/creatio-mcp-go/internal/redact"
@@ -250,9 +252,38 @@ func transportErrorText(err error) string {
 	}
 	var urlError *url.Error
 	if errors.As(err, &urlError) {
+		if text := dotnetSocketText(urlError); text != "" {
+			return text
+		}
 		return urlError.Err.Error()
 	}
 	return err.Error()
+}
+
+// dotnetSocketText renders a connection failure as .NET's HttpRequestException does: the socket error
+// text followed by the endpoint in parentheses.
+func dotnetSocketText(urlError *url.Error) string {
+	parsed, err := url.Parse(urlError.URL)
+	if err != nil {
+		return ""
+	}
+	endpoint := net.JoinHostPort(parsed.Hostname(), effectivePort(parsed))
+	var dnsError *net.DNSError
+	switch {
+	case errors.Is(urlError.Err, syscall.ECONNREFUSED):
+		return "Connection refused (" + endpoint + ")"
+	case errors.As(urlError.Err, &dnsError):
+		if runtime.GOOS == "darwin" {
+			return "nodename nor servname provided, or not known (" + endpoint + ")"
+		}
+		if runtime.GOOS == "windows" {
+			return "No such host is known. (" + endpoint + ")"
+		}
+		return "Name or service not known (" + endpoint + ")"
+	case errors.Is(urlError.Err, syscall.ECONNRESET):
+		return "Connection reset by peer (" + endpoint + ")"
+	}
+	return ""
 }
 
 func (t GitHubReleaseTransport) retrieve(ctx context.Context, request TransportRequest) (TransportResult, error) {

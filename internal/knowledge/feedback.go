@@ -24,7 +24,7 @@ type FeedbackPolicy struct {
 	EffectiveMode       string  `json:"effectiveMode"`
 	Destination         string  `json:"destination"`
 	ReportingScope      string  `json:"reportingScope"`
-	ReportingPolicyHash *string `json:"reportingPolicyHash"`
+	ReportingPolicyHash *string `json:"reportingPolicyHash,omitempty"`
 	StandingApproval    *struct {
 		PolicyHash string `json:"policyHash"`
 	} `json:"standingApproval,omitempty"`

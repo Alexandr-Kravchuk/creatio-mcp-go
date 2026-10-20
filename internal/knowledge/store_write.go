@@ -253,10 +253,21 @@ func (s Store) resolveSourceRoot(alias string, create bool) (string, error) {
 		return sourceRoot, nil
 	}
 	if _, err := os.Stat(sourceRoot); errors.Is(err, os.ErrNotExist) {
-		if err := os.Mkdir(sourceRoot, 0o777); err != nil && !errors.Is(err, os.ErrExist) {
+		// clio creates the directory and then writes its marker, so a reader can meet a source directory
+		// without one. This server builds the directory with its marker beside it and renames it into
+		// place, so a source root it creates is never seen unowned.
+		building := filepath.Join(s.sourcesRoot(), ".clio-creating-"+SourceKey(alias)+"-"+newGUID())
+		if err := os.Mkdir(building, 0o777); err != nil {
 			return "", err
-		} else if err == nil {
-			return sourceRoot, writeAtomic(sourceRoot, sourceOwnerFileName, []byte(alias+"\n"))
+		}
+		if err := os.WriteFile(filepath.Join(building, sourceOwnerFileName), []byte(alias+"\n"), 0o666); err != nil {
+			_ = os.RemoveAll(building)
+			return "", err
+		}
+		renameErr := os.Rename(building, sourceRoot)
+		_ = os.RemoveAll(building)
+		if renameErr == nil {
+			return sourceRoot, nil
 		}
 	}
 	// Another writer may have created the directory a moment ago and not yet written its marker.
@@ -510,6 +521,11 @@ func (s Store) Publish(p Publication) (InstallationResult, error) {
 	}
 	var result InstallationResult
 	err = s.WithSourceLock(p.SourceAlias, func() error {
+		// A delete that held the lock while this call waited for it removed the source directory; make it
+		// again now that nobody else can, instead of failing the way clio does in that window.
+		if _, err := s.resolveSourceRoot(p.SourceAlias, true); err != nil {
+			return err
+		}
 		return s.withLibraryLock(p.LibraryID, func() error {
 			var innerErr error
 			result, innerErr = s.publishLocked(sourceRoot, p)
