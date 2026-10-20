@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"reflect"
+	"slices"
 	"strings"
 	"testing"
 
@@ -90,13 +91,30 @@ func TestToolsListMatchesClio(t *testing.T) {
 	}
 }
 
-// TestGetToolContractServesClioContracts pins the index and every per-tool contract to clio's answers.
+// TestGetToolContractServesClioContracts pins the index (lines and objects) and every per-tool contract,
+// in each form, to clio's answers.
 func TestGetToolContractServesClioContracts(t *testing.T) {
 	session := connectTestClient(t, newMCPServer(&creatio.Client{}), mcp.NewClient(&mcp.Implementation{Name: "probe-client", Version: "test"}, nil))
 	inventory := cliocontract.Load()
 
-	index := contractAnswer(t, session, nil)
-	if index["success"] != true {
+	bare := contractAnswer(t, session, nil)
+	var wantLines []any
+	for _, line := range inventory.ToolIndex {
+		if isServedTool(cliocontract.LineName(line)) {
+			wantLines = append(wantLines, line)
+		}
+	}
+	if len(bare) != 3 || bare["success"] != true || bare["legend"] != inventory.Legend || !reflect.DeepEqual(bare["tool-index"], wantLines) {
+		t.Fatalf("bare get-tool-contract is not clio's legend and tool-index for the served tools: %v", bare["legend"])
+	}
+	for _, detail := range []string{"index", " INDEX ", "short", "unknown"} {
+		if answer := contractAnswer(t, session, map[string]any{"args": map[string]any{"detail": detail}}); !reflect.DeepEqual(answer, bare) {
+			t.Errorf("detail=%q without names should answer the line index", detail)
+		}
+	}
+
+	index := contractAnswer(t, session, map[string]any{"args": map[string]any{"detail": "index-entries"}})
+	if len(index) != 2 || index["success"] != true {
 		t.Fatalf("index = %#v", index)
 	}
 	var wantIndex []any
@@ -114,14 +132,30 @@ func TestGetToolContractServesClioContracts(t *testing.T) {
 		t.Fatalf("index names = %v", names)
 	}
 
+	shortByDefault := 0
 	for _, name := range servedToolNames() {
-		answer := contractAnswer(t, session, map[string]any{"args": map[string]any{"tool-names": []any{name}}})
-		tools, _ := answer["tools"].([]any)
-		var want any
-		_ = json.Unmarshal(inventory.Contracts[name], &want)
-		if answer["success"] != true || len(tools) != 1 || !reflect.DeepEqual(tools[0], want) {
-			t.Errorf("%s: contract differs from clio's", name)
+		defaultForm := inventory.Contracts[name]
+		if slices.Contains(inventory.DefaultShort, name) {
+			defaultForm = inventory.ShortContracts[name]
+			shortByDefault++
 		}
+		for detail, raw := range map[string]json.RawMessage{"": defaultForm, "full": inventory.Contracts[name], "Short": inventory.ShortContracts[name]} {
+			args := map[string]any{"tool-names": []any{name}}
+			if detail != "" {
+				args["detail"] = detail
+			}
+			answer := contractAnswer(t, session, map[string]any{"args": args})
+			tools, _ := answer["tools"].([]any)
+			var want any
+			_ = json.Unmarshal(raw, &want)
+			if answer["success"] != true || len(tools) != 1 || !reflect.DeepEqual(tools[0], want) {
+				t.Errorf("%s detail=%q: contract differs from clio's", name, detail)
+			}
+		}
+	}
+	// clio 8.1.0.142 answers create-business-process and four others short even alone.
+	if shortByDefault == 0 {
+		t.Fatal("no served tool is short by default; the default-short path is untested")
 	}
 
 	full := contractAnswer(t, session, map[string]any{"detail": "full"})
@@ -155,7 +189,7 @@ func TestGetToolContractArgumentShapes(t *testing.T) {
 		}
 	}
 	for _, args := range []map[string]any{{}, {"args": nil}, {"args": map[string]any{}}, {"args": map[string]any{"tool-names": []any{}}}} {
-		if answer := contractAnswer(t, session, args); answer["index"] == nil {
+		if answer := contractAnswer(t, session, args); answer["tool-index"] == nil || answer["index"] != nil {
 			t.Errorf("%v did not answer the index", args)
 		}
 	}
@@ -196,7 +230,7 @@ func TestLegacyStdioClientGetsFullContractsInsteadOfTheIndex(t *testing.T) {
 	session := connectTestClient(t, newMCPServer(&creatio.Client{}), mcp.NewClient(&mcp.Implementation{Name: "mcp_client", Version: "1.0"}, nil))
 	answer := contractAnswer(t, session, nil)
 	tools, _ := answer["tools"].([]any)
-	if answer["index"] != nil || len(tools) != len(servedIndex()) {
+	if answer["index"] != nil || answer["tool-index"] != nil || len(tools) != len(servedIndex()) {
 		t.Fatalf("legacy client answer has %d tools, index has %d", len(tools), len(servedIndex()))
 	}
 }
@@ -264,8 +298,17 @@ func contractAnswer(t *testing.T, session *mcp.ClientSession, args map[string]an
 	return answer
 }
 
+// indexNames reads the tool names of either index shape: clio's default tool-index lines or the
+// detail=index-entries objects.
 func indexNames(t *testing.T, answer map[string]any) []string {
 	t.Helper()
+	if lines, ok := answer["tool-index"].([]any); ok {
+		names := make([]string, 0, len(lines))
+		for _, line := range lines {
+			names = append(names, cliocontract.LineName(line.(string)))
+		}
+		return names
+	}
 	entries, ok := answer["index"].([]any)
 	if !ok {
 		t.Fatalf("no index in %#v", answer)

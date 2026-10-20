@@ -1,6 +1,7 @@
 // Package cliocontract holds clio's MCP tool contracts as clio itself answers them: the resident
-// tools/list entries (description, input schema, annotations), the get-tool-contract index and every
-// tool's full get-tool-contract answer.
+// tools/list entries (description, input schema, annotations), the get-tool-contract index (its legend,
+// one tool-index line per tool and the detail=index-entries objects) and every tool's get-tool-contract
+// answer, complete and short.
 //
 // The source of truth is docs/clio-inventory.json, written by scripts/clio-inventory.py from a live
 // `clio mcp-server`. `go generate ./internal/cliocontract` copies the part this server serves into
@@ -13,6 +14,7 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"sync"
 )
 
@@ -30,12 +32,23 @@ type Inventory struct {
 	} `json:"clio"`
 	// ToolsList is clio's tools/list, in clio's order.
 	ToolsList []Tool `json:"toolsList"`
-	// Index is the get-tool-contract index, entry by entry as clio wrote it.
+	// Legend explains the markers of ToolIndex; clio sends it beside the lines.
+	Legend string `json:"legend"`
+	// ToolIndex is clio's default no-names answer: one line per tool, in the order of Index (the
+	// inventory script checks that line i is entry i's).
+	ToolIndex []string `json:"toolIndex"`
+	// Index is the get-tool-contract index as detail=index-entries objects, entry by entry as clio wrote it.
 	Index []json.RawMessage `json:"index"`
 	// FullDetail names the contracts get-tool-contract answers for detail=full, in clio's order.
 	FullDetail []string `json:"fullDetail"`
-	// Contracts is every tool's full contract, keyed by tool name.
+	// Contracts is every tool's complete contract (detail=full), keyed by tool name.
 	Contracts map[string]json.RawMessage `json:"contracts"`
+	// ShortContracts is every tool's short contract (detail=short), with clio's detail and
+	// full-contract-bytes, keyed by tool name.
+	ShortContracts map[string]json.RawMessage `json:"shortContracts"`
+	// DefaultShort names the tools clio answers short even when one is asked for alone without detail:
+	// their complete contract does not fit clio's 18 KB reply budget.
+	DefaultShort []string `json:"defaultShort"`
 }
 
 // Tool is one tools/list entry.
@@ -66,7 +79,8 @@ func Extract(inventory []byte) ([]byte, error) {
 	if err := json.Unmarshal(inventory, &subset); err != nil {
 		return nil, fmt.Errorf("read clio inventory: %w", err)
 	}
-	if len(subset.ToolsList) == 0 || len(subset.Index) == 0 || len(subset.Contracts) == 0 {
+	if len(subset.ToolsList) == 0 || len(subset.Index) == 0 || len(subset.Contracts) == 0 ||
+		len(subset.ShortContracts) == 0 || len(subset.ToolIndex) != len(subset.Index) {
 		return nil, fmt.Errorf("clio inventory has no tools; rerun scripts/clio-inventory.py")
 	}
 	var out bytes.Buffer
@@ -105,4 +119,11 @@ func EntryName(entry json.RawMessage) string {
 	var parsed IndexEntry
 	_ = json.Unmarshal(entry, &parsed)
 	return parsed.Name
+}
+
+// LineName reads the tool name a tool-index line starts with: `name (R)(D) [aka ...]: purpose`.
+func LineName(line string) string {
+	head, _, _ := strings.Cut(line, ":")
+	name, _, _ := strings.Cut(head, " ")
+	return name
 }

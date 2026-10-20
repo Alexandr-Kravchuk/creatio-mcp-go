@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"slices"
 	"sort"
 	"strings"
 
@@ -217,14 +218,18 @@ func contractNames(key string, value any) ([]string, error) {
 }
 
 // getToolContract answers get-tool-contract the way clio's ToolContractGetTool does, over the tools
-// served here: the compact index, detail=full, or named contracts with per-name misses.
+// served here. Without names: detail=full (every curated contract complete), detail=index-entries (the
+// index as objects), the legacy client's full contracts, or by default clio's line index with its legend.
+// With names: each contract complete (detail=full), short (detail=short) or, by default, in the form clio
+// answers it alone, with per-name misses.
 func getToolContract(args map[string]any, legacyClient bool) (*mcp.CallToolResult, error) {
 	args, err := unwrapArgs("get-tool-contract", args)
 	if err != nil {
 		return nil, err
 	}
-	detail, _ := args["detail"].(string)
-	if value, ok := args["detail"]; ok && value != nil && detail == "" {
+	rawDetail, _ := args["detail"].(string)
+	detail := strings.TrimSpace(rawDetail) // clio's IsDetail trims and ignores case
+	if value, ok := args["detail"]; ok && value != nil && rawDetail == "" {
 		if _, isString := value.(string); !isString {
 			return nil, errors.New("invalid-parameter-type: argument 'detail' for MCP tool 'get-tool-contract' must be a string. Received an incompatible JSON value.")
 		}
@@ -268,6 +273,9 @@ func getToolContract(args map[string]any, legacyClient bool) (*mcp.CallToolResul
 			return contractResult(map[string]any{"success": true, "tools": servedContracts(inventory.FullDetail)}), nil
 		}
 		entries := servedIndex()
+		if strings.EqualFold(detail, "index-entries") {
+			return contractResult(map[string]any{"success": true, "index": entries}), nil
+		}
 		if legacyClient {
 			indexNames := make([]string, len(entries))
 			for i, entry := range entries {
@@ -275,9 +283,40 @@ func getToolContract(args map[string]any, legacyClient bool) (*mcp.CallToolResul
 			}
 			return contractResult(map[string]any{"success": true, "tools": servedContracts(indexNames)}), nil
 		}
-		return contractResult(map[string]any{"success": true, "index": entries}), nil
+		return contractResult(map[string]any{"success": true, "legend": inventory.Legend, "tool-index": servedToolIndex()}), nil
 	}
-	return contractResult(namedContracts(names)), nil
+	return contractResult(namedContracts(names, contractFormOf(detail))), nil
+}
+
+// contractForm is the form a named lookup asks for: complete, short, or (any other detail) clio's default.
+type contractForm int
+
+const (
+	formDefault contractForm = iota
+	formFull
+	formShort
+)
+
+func contractFormOf(detail string) contractForm {
+	switch {
+	case strings.EqualFold(detail, "full"):
+		return formFull
+	case strings.EqualFold(detail, "short"):
+		return formShort
+	}
+	return formDefault
+}
+
+// servedToolIndex is clio's tool-index lines of the tools served here, in clio's order.
+func servedToolIndex() []string {
+	inventory := cliocontract.Load()
+	lines := []string{}
+	for _, line := range inventory.ToolIndex {
+		if isServedTool(cliocontract.LineName(line)) {
+			lines = append(lines, line)
+		}
+	}
+	return lines
 }
 
 // servedIndex is clio's index restricted to the tools served here; like clio's, it leaves
@@ -302,20 +341,34 @@ func servedContracts(names []string) []any {
 	return contracts
 }
 
-// contractFor is clio's contract of a served tool, or the hand-written one for a tool clio's
+// contractFor is clio's complete contract of a served tool, or the hand-written one for a tool clio's
 // inventory does not know (a test keeps that set empty).
 func contractFor(name string) (any, bool) {
+	return contractIn(name, formFull)
+}
+
+// contractIn is a served tool's contract in the asked form, as clio recorded it. The default form is the
+// one clio answers a single-name lookup with: complete, or short for the few contracts larger than clio's
+// reply budget. clio fits a lookup naming several tools by shortening the largest until the reply fits;
+// this server answers each named tool in its single-name form instead (scripts/compare-contracts.py,
+// known:fit-multi-name).
+func contractIn(name string, form contractForm) (any, bool) {
 	if !isServedTool(name) {
 		return nil, false
 	}
-	if contract, ok := cliocontract.Load().Contracts[name]; ok {
+	inventory := cliocontract.Load()
+	short := form == formShort || (form == formDefault && slices.Contains(inventory.DefaultShort, name))
+	if contract, ok := inventory.ShortContracts[name]; ok && short {
+		return contract, true
+	}
+	if contract, ok := inventory.Contracts[name]; ok {
 		return contract, true
 	}
 	contract, ok := toolContract(name)
 	return contract, ok
 }
 
-func namedContracts(requested []string) map[string]any {
+func namedContracts(requested []string, form contractForm) map[string]any {
 	seen := map[string]bool{}
 	found, missing := []any{}, []any{}
 	for index, name := range requested {
@@ -331,7 +384,7 @@ func namedContracts(requested []string) map[string]any {
 			continue
 		}
 		seen[strings.ToLower(name)] = true
-		if contract, ok := contractFor(canonicalToolName(name)); ok {
+		if contract, ok := contractIn(canonicalToolName(name), form); ok {
 			found = append(found, contract)
 			continue
 		}

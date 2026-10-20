@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Compare the tool contracts of clio's MCP server and this Go server.
 
-Asks both servers, live, for tools/list and get-tool-contract (the index, every tool's full contract,
-detail=full and one unknown name) and diffs the answers. Neither server needs a Creatio environment:
+Asks both servers, live, for tools/list and get-tool-contract (the default line index with its legend,
+detail=index-entries, every served tool's contract by default, with detail=full and with detail=short,
+detail=full without names, one unknown name and one two-tool batch) and diffs the answers. Neither server needs a Creatio environment:
 the Go server starts without CREATIO_* variables and nothing here contacts Creatio.
 
 Every difference is either explained by KNOWN_DIFFERENCES below (with the reason) or counted as
@@ -25,11 +26,19 @@ KNOWN_DIFFERENCES = {
     "not-ported": "clio has the tool and this server does not implement it yet; the task column says which task ports it",
     "suggestions": "an unknown name's suggestions are ranked over the tools each server has, so they differ while tools are unported",
     "server-info": "serverInfo names each server; it is not part of the tool contract",
+    "fit-multi-name": "clio fits a reply naming several tools to 18 KB, shortening the largest contracts first by "
+                      "its own serialized size (which counts the nulls the wire omits); this server serves each "
+                      "named tool in the form clio gives it alone, so a batch that clio has to shorten differs. "
+                      "Single-name answers, detail=full and detail=short are compared exactly",
 }
 
 # MCP defines an absent readOnlyHint/idempotentHint/destructiveHint/openWorldHint by its default; the Go
 # SDK omits a false bool hint, clio writes it. Compared after filling the defaults in.
 ANNOTATION_DEFAULTS = {"readOnlyHint": False, "idempotentHint": False, "destructiveHint": True, "openWorldHint": True}
+
+
+# A two-tool batch that clio fits by shortening both contracts.
+BATCH_PROBE = ["get-page", "update-page"]
 
 
 def annotations(tool):
@@ -87,9 +96,55 @@ def compare_index(clio_index, go_index, tasks):
     return rows
 
 
-def compare_contract(name, clio_answer, go_answer):
+def line_name(line):
+    """The tool name a tool-index line starts with: `name (R)(D) [aka ...]: purpose`."""
+    return line.split(":", 1)[0].split(" ", 1)[0]
+
+
+def compare_line_index(clio_answer, go_answer, tasks):
+    """The default no-names answer: the same keys, clio's legend, and clio's line for every served tool."""
+    rows = []
+    paths = differences(sorted(clio_answer), sorted(go_answer), "$.keys")
+    if clio_answer.get("success") != go_answer.get("success"):
+        paths.append("$.success: value differs")
+    if clio_answer.get("legend") != go_answer.get("legend"):
+        paths.append("$.legend: value differs")
+    rows.append(row("tool-index", "(legend)", "unexplained" if paths else "match", paths))
+    clio_lines = {line_name(line): line for line in clio_answer.get("tool-index") or []}
+    go_lines = {line_name(line): line for line in go_answer.get("tool-index") or []}
+    for name in clio_lines:
+        if name not in go_lines:
+            rows.append(row("tool-index", name, "known:not-ported", [], tasks.get(name, "")))
+    for name, line in go_lines.items():
+        if name not in clio_lines:
+            rows.append(row("tool-index", name, "unexplained", ["only in go"]))
+        else:
+            same = line == clio_lines[name]
+            rows.append(row("tool-index", name, "match" if same else "unexplained", [] if same else ["$: line differs"]))
+    common = [name for name in clio_lines if name in go_lines]
+    if [name for name in go_lines if name in clio_lines] != common:
+        rows.append(row("tool-index", "(order)", "unexplained", ["the common lines are in another order"]))
+    return rows
+
+
+def compare_contract(name, clio_answer, go_answer, surface="contract"):
     paths = differences(clio_answer, go_answer)
-    return row("contract", name, "unexplained" if paths else "match", paths)
+    return row(surface, name, "unexplained" if paths else "match", paths)
+
+
+def compare_batch(names, clio_answer, go_answer):
+    """A request naming several tools. clio may shorten some contracts to fit its reply budget (known); every
+    other difference, and a contract both answer in the same form that still differs, is unexplained."""
+    paths = differences(clio_answer, go_answer)
+    if not paths:
+        return row("contract", "(batch " + ",".join(names) + ")", "match", [])
+    clio_tools, go_tools = clio_answer.get("tools") or [], go_answer.get("tools") or []
+    fitted = [a.get("detail") != b.get("detail") or "same-as" in json.dumps(a.get("error-contract"))
+              for a, b in zip(clio_tools, go_tools)]
+    explained = len(clio_tools) == len(go_tools) and any(fitted) and all(
+        f or not differences(a, b) for f, a, b in zip(fitted, clio_tools, go_tools)) and not differences(
+        {k: v for k, v in clio_answer.items() if k != "tools"}, {k: v for k, v in go_answer.items() if k != "tools"})
+    return row("contract", "(batch " + ",".join(names) + ")", "known:fit-multi-name" if explained else "unexplained", paths)
 
 
 def compare_not_found(clio_answer, go_answer):
@@ -142,16 +197,28 @@ def main():
     try:
         lists = [compare_mcp.Server.request(s, "tools/list", {})["result"]["tools"] for s in (clio, go)]
         rows += compare_tools_list(lists[0], lists[1], tasks)
-        indexes = [contract_call(s, {})["index"] for s in (clio, go)]
+        bare = [contract_call(s, {}) for s in (clio, go)]
+        rows += compare_line_index(bare[0], bare[1], tasks)
+        entries = {"args": {"detail": "index-entries"}}
+        indexes = [contract_call(s, entries).get("index") or [] for s in (clio, go)]
         rows += compare_index(indexes[0], indexes[1], tasks)
         served = [entry["name"] for entry in indexes[1]] + ["get-tool-contract"]
         for name in served:
             arguments = {"args": {"tool-names": [name]}}
             rows.append(compare_contract(name, contract_call(clio, arguments), contract_call(go, arguments)))
+            for detail in ("full", "short"):
+                arguments = {"args": {"tool-names": [name], "detail": detail}}
+                rows.append(compare_contract(name, contract_call(clio, arguments), contract_call(go, arguments),
+                                             f"contract detail={detail}"))
         unknown = {"args": {"tool-names": ["get-pag"]}}
         rows.append(compare_not_found(contract_call(clio, unknown), contract_call(go, unknown)))
         full = {"args": {"detail": "full"}}
         rows.append(compare_full(contract_call(clio, full)["tools"], contract_call(go, full)["tools"], set(served)))
+        # Two contracts clio 8.1.0.142 returns short together and complete alone: the reply budget at work.
+        pair = [name for name in BATCH_PROBE if name in served]
+        if len(pair) == len(BATCH_PROBE):
+            arguments = {"args": {"tool-names": pair}}
+            rows.append(compare_batch(pair, contract_call(clio, arguments), contract_call(go, arguments)))
     finally:
         clio.close()
         go.close()

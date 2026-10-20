@@ -2,12 +2,13 @@
 """Record exactly what clio's MCP server offers: tools, prompts, resources and every tool contract.
 
 Asks a running `clio mcp-server` for tools/list, prompts/list, resources/list and
-resources/templates/list (following nextCursor), the get-tool-contract index, and the full
-get-tool-contract answer of every tool in that index, one tool per call (the same call an agent makes).
+resources/templates/list (following nextCursor), the get-tool-contract index (its legend and tool-index
+lines, and detail=index-entries objects), and every tool's contract, one tool per call (the call an agent
+makes): complete (detail=full), short (detail=short) and which of the two clio answers by default.
 
 Writes:
 - docs/clio-inventory.json: the raw answers, the source of truth for this server's contract data
-  (`go generate ./cmd/creatio-mcp-go` copies the part it serves into the binary);
+  (`go generate ./internal/cliocontract` copies the part it serves into the binary);
 - docs/clio-inventory.md: a summary, one row per tool, with the task that ports it;
 - the "Appendix" section of docs/migration-plan.md, regenerated from the same data.
 
@@ -28,16 +29,15 @@ _spec.loader.exec_module(compare_mcp)
 # Which migration task ports each clio tool (docs/migration-plan.md, "Tasks and dependencies").
 # A tool this server already serves is reported as done whatever its row here says; a clio tool that is
 # not listed lands in the "unassigned" bucket, so a new clio tool is never silently dropped. Rows may name
-# tools the inventoried clio does not answer: newer ones (clio master's *-to-file variants, create-package,
-# localize-page, ...) and ones behind clio's deploy-identity feature toggle (deploy-identity,
-# uninstall-identity, create-oauth-technical-user, watch-compilation).
+# tools the inventoried clio does not answer: ones behind clio's deploy-identity feature toggle
+# (deploy-identity, uninstall-identity, create-oauth-technical-user, watch-compilation). The tools clio
+# 8.1.0.142 added to the 8.1.0.134 index are grouped under T19 until a task takes them.
 TASKS = {
     "T4 shared infrastructure": ["clio-run-destructive"],
     "T6 guidance and knowledge": [
         "add-knowledge-source", "configure-knowledge-feedback-policy", "delete-knowledge", "delete-toolkit",
         "disable-knowledge-source", "enable-knowledge-source", "experimental", "export-component-registry",
-        "get-component-info", "get-component-info-to-file", "get-guidance", "get-request-info-to-file", "get-knowledge-feedback-policy", "get-mobile-page-conversion-guide",
-        "get-request-info", "get-telemetry-consent", "info-knowledge", "install-knowledge", "install-toolkit",
+        "get-component-info", "get-guidance", "get-knowledge-feedback-policy", "get-request-info", "get-telemetry-consent", "info-knowledge", "install-knowledge", "install-toolkit",
         "list-knowledge-examples", "list-knowledge-sources", "merge-creatio-artifact", "remove-knowledge-source",
         "send-telemetry", "update-knowledge", "update-toolkit", "withdraw-telemetry-consent",
     ],
@@ -45,19 +45,18 @@ TASKS = {
                         "install-application", "update-app-section"],
     "T8 schemas": [
         "create-entity-schema", "create-lookup", "create-schema", "create-sql-schema", "delete-schema",
-        "export-schema", "import-schema", "install-sql-schema", "list-entity-client-schemas-to-file",
-        "modify-entity-schema-column",
+        "export-schema", "import-schema", "install-sql-schema", "modify-entity-schema-column",
         "set-entity-schema-properties", "sync-schemas", "update-entity-schema", "update-schema",
         "update-sql-schema",
     ],
     "T9 pages": ["create-client-unit-schema", "create-page", "create-related-page-addon", "create-user-task-page",
-                 "localize-page", "sync-pages", "update-client-unit-schema", "update-page"],
+                 "sync-pages", "update-client-unit-schema", "update-page"],
     "T10 business rules": ["create-entity-business-rules", "update-entity-business-rules",
                            "delete-entity-business-rules", "create-page-business-rules",
                            "update-page-business-rules", "delete-page-business-rules"],
     "T11 data": [
         "add-data-binding-row", "create-data-binding", "create-data-binding-db", "execute-dataservice-batch",
-        "execute-esq-to-file", "execute-sql-script", "odata-create", "odata-read-to-file", "odata-delete", "odata-update", "remove-data-binding-row",
+        "execute-sql-script", "odata-create", "odata-delete", "odata-update", "remove-data-binding-row",
         "remove-data-binding-row-db", "run-process", "upsert-data-binding-row-db",
     ],
     "T12 settings, users, access": [
@@ -78,8 +77,7 @@ TASKS = {
         "upload-image",
     ],
     "T15 packages, compile, restart": [
-        "add-custom-logging", "add-package-dependency", "compile-creatio", "create-package",
-        "dataforge-initialize", "dataforge-update", "download-configuration-by-build",
+        "add-custom-logging", "add-package-dependency", "compile-creatio", "dataforge-initialize", "dataforge-update", "download-configuration-by-build",
         "download-configuration-by-environment", "finish-hotfix", "install-dashboards-migrator", "install-gate",
         "pkg-to-db", "pkg-to-file-system", "remove-package-dependency", "restart-by-credentials",
         "restart-by-environment-name", "unlock-for-hotfix", "watch-compilation",
@@ -95,6 +93,13 @@ TASKS = {
         "push-workspace", "reg-web-app", "restore-db-by-credentials", "restore-db-by-environment",
         "restore-db-to-local-server", "restore-workspace", "show-passing-infrastructure", "stop-all-creatio",
         "stop-creatio", "uninstall-creatio", "uninstall-identity",
+    ],
+    "T19 new in clio 8.1.0.142": [
+        "apply-default-record-rights", "create-package", "execute-esq-to-file", "get-component-info-to-file",
+        "get-entity-connections", "get-mobile-page-conversion-guide", "get-object-rights",
+        "get-request-info-to-file", "list-entity-client-schemas-to-file", "localize-page", "odata-read-to-file",
+        "page-smoke", "place-section-in-workplace", "set-default-record-rights", "set-object-rights",
+        "trigger-smoke", "update-entity-connections",
     ],
 }
 UNASSIGNED = "unassigned (no task yet; decide before T17)"
@@ -137,12 +142,48 @@ def tool_text(response, method):
     return json.loads(text)
 
 
+def contract_answer(server, arguments):
+    return tool_text(server.request("tools/call", {"name": "get-tool-contract", "arguments": arguments}),
+                     "get-tool-contract")
+
+
+def line_index(bare, entries):
+    """clio's default no-names answer: {success, legend, tool-index}, one line per index-entries object.
+
+    Since 8.1.0.142 a bare get-tool-contract returns one text line per tool and the objects moved to
+    detail=index-entries. The lines are recorded verbatim; the check that line i belongs to entry i
+    is what lets this server serve the lines of only the tools it implements.
+    """
+    if bare.get("success") is not True or not isinstance(bare.get("tool-index"), list) \
+            or not isinstance(bare.get("legend"), str):
+        raise RuntimeError("get-tool-contract returned no tool-index and legend")
+    if entries.get("success") is not True or not isinstance(entries.get("index"), list):
+        raise RuntimeError("get-tool-contract detail=index-entries returned no index")
+    lines, index = bare["tool-index"], entries["index"]
+    if len(lines) != len(index) or any(line_name(line) != entry["name"] for line, entry in zip(lines, index)):
+        raise RuntimeError("get-tool-contract tool-index lines do not follow the index-entries order")
+    return bare["legend"], lines, index
+
+
+def line_name(line):
+    """The tool name a tool-index line starts with: `name (R)(D) [aka ...]: purpose`."""
+    head = line.split(":", 1)[0]
+    return head.split(" ", 1)[0]
+
+
+def single_contract(answer, name):
+    tools = answer.get("tools") or []
+    if answer.get("success") is not True or len(tools) != 1 or tools[0].get("name") != name:
+        raise RuntimeError(f"get-tool-contract returned no single contract for {name}")
+    return tools[0]
+
+
 def read_clio(dll, label=None):
     server = InventoryServer(["dotnet", dll, "mcp-server"])
     try:
         info = getattr(server, "initialize_result", {}).get("serverInfo", {})
         inventory = {
-            "schema": 1,
+            "schema": 2,
             "clio": {"name": info.get("name", ""), "version": label or info.get("version", "")},
             "generatedOn": datetime.date.today().isoformat(),
             "toolsList": list_all(server, "tools/list", "tools"),
@@ -150,27 +191,34 @@ def read_clio(dll, label=None):
             "resources": list_all(server, "resources/list", "resources"),
             "resourceTemplates": list_all(server, "resources/templates/list", "resourceTemplates"),
         }
-        index = tool_text(server.request("tools/call", {"name": "get-tool-contract", "arguments": {}}),
-                          "get-tool-contract")
-        if index.get("success") is not True or not isinstance(index.get("index"), list):
-            raise RuntimeError("get-tool-contract returned no index")
-        inventory["index"] = index["index"]
-        # detail=full answers with the curated contracts only, a narrower set than the index.
-        full = tool_text(server.request("tools/call", {
-            "name": "get-tool-contract", "arguments": {"args": {"detail": "full"}}}), "get-tool-contract")
-        inventory["fullDetail"] = [tool["name"] for tool in full.get("tools") or []]
+        legend, lines, index = line_index(contract_answer(server, {}),
+                                          contract_answer(server, {"args": {"detail": "index-entries"}}))
+        inventory.update({"legend": legend, "toolIndex": lines, "index": index})
         # The index leaves get-tool-contract itself out, but its contract can be asked for by name.
-        names = [entry["name"] for entry in index["index"]]
+        names = [entry["name"] for entry in index]
         names += [tool["name"] for tool in inventory["toolsList"] if tool["name"] not in names]
-        contracts = {}
+        # Every contract three ways, one tool per call: detail=full (complete), detail=short (clio's short
+        # form, which carries detail and full-contract-bytes as clio measured them) and the default, which
+        # clio fits to one reply and so returns short for its largest contracts only.
+        contracts, short, default_short = {}, {}, []
         for name in names:
-            answer = tool_text(server.request("tools/call", {
-                "name": "get-tool-contract", "arguments": {"args": {"tool-names": [name]}}}), "get-tool-contract")
-            tools = answer.get("tools") or []
-            if answer.get("success") is not True or len(tools) != 1 or tools[0].get("name") != name:
-                raise RuntimeError(f"get-tool-contract returned no single contract for {name}")
-            contracts[name] = tools[0]
+            contracts[name] = single_contract(
+                contract_answer(server, {"args": {"tool-names": [name], "detail": "full"}}), name)
+            short[name] = single_contract(
+                contract_answer(server, {"args": {"tool-names": [name], "detail": "short"}}), name)
+            default = single_contract(contract_answer(server, {"args": {"tool-names": [name]}}), name)
+            if default == short[name]:
+                default_short.append(name)
+            elif default != contracts[name]:
+                raise RuntimeError(f"get-tool-contract answered {name} neither full nor short by default")
         inventory["contracts"] = contracts
+        inventory["shortContracts"] = short
+        inventory["defaultShort"] = default_short
+        # detail=full answers with the curated contracts only, a narrower set than the index.
+        full = contract_answer(server, {"args": {"detail": "full"}}).get("tools") or []
+        if any(tool != contracts.get(tool["name"]) for tool in full):
+            raise RuntimeError("get-tool-contract detail=full differs from the named full contracts")
+        inventory["fullDetail"] = [tool["name"] for tool in full]
         return inventory
     finally:
         server.close()
@@ -182,8 +230,8 @@ def go_tool_names(go_bin):
     server = compare_mcp.Server([go_bin], env=env)
     try:
         listed = {tool["name"] for tool in list_all(server, "tools/list", "tools")}
-        index = tool_text(server.request("tools/call", {"name": "get-tool-contract", "arguments": {}}),
-                          "get-tool-contract")
+        # A build that predates detail=index-entries ignores it and answers with the objects as well.
+        index = contract_answer(server, {"args": {"detail": "index-entries"}})
     finally:
         server.close()
     # Builds before T5 answered {"tools": [names]} instead of clio's {"index": [...]}.
@@ -259,11 +307,14 @@ def summary(inventory, served, gap, other_version):
         "| | Count |", "|---|---|",
         f"| Tools in the get-tool-contract index | {len(inventory['index'])} |",
         f"| Resident tools (tools/list) | {len(resident)} |",
+        f"| Contracts clio answers short even when asked for alone | {len(inventory.get('defaultShort', []))} |",
         f"| Prompts | {len(inventory['prompts'])} |",
         f"| Resources | {len(inventory['resources'])} |",
         f"| Resource templates | {len(inventory['resourceTemplates'])} |",
         f"| Served by creatio-mcp-go | {len([n for n in served if n in inventory['contracts']])} |", "",
         "Resident tools in clio's tools/list order: " + ", ".join(f"`{n}`" for n in resident) + ".", "",
+        "Short by default (clio fits a named reply to 18 KB): "
+        + (", ".join(f"`{n}`" for n in inventory.get("defaultShort", [])) or "none") + ".", "",
         "## Tools", "",
         "| Tool | Resident | Destructive | Task | Purpose |", "|---|---|---|---|---|",
     ]
