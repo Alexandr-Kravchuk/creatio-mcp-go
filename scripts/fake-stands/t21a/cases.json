@@ -1,0 +1,196 @@
+[
+ {
+  "label": "cp created with prefix",
+  "tool": "create-package",
+  "clio-run": true,
+  "args": {
+   "package-name": "Calls",
+   "description": "Calls package"
+  },
+  "known-differences": [
+   "$.packageuid"
+  ]
+ },
+ {
+  "label": "cp duplicate",
+  "tool": "create-package",
+  "clio-run": true,
+  "args": {
+   "package-name": "Calls"
+  }
+ },
+ {
+  "label": "cp duplicate other case",
+  "tool": "create-package",
+  "clio-run": true,
+  "args": {
+   "package-name": "usrcalls"
+  }
+ },
+ {
+  "label": "cp prefix kept",
+  "tool": "create-package",
+  "clio-run": true,
+  "args": {
+   "package-name": "usrLower"
+  },
+  "known-differences": [
+   "$.packageuid"
+  ]
+ },
+ {
+  "label": "cp dependencies",
+  "tool": "create-package",
+  "clio-run": true,
+  "args": {
+   "package-name": "WithDeps",
+   "dependencies": [
+    "CrtBase",
+    "crtbase",
+    " CrtUIv2 ",
+    null,
+    ""
+   ]
+  },
+  "known-differences": [
+   "$.packageuid"
+  ]
+ },
+ {
+  "label": "cp missing dependencies",
+  "tool": "create-package",
+  "clio-run": true,
+  "args": {
+   "package-name": "Missing",
+   "dependencies": [
+    "Nope",
+    "CrtBase",
+    "Gone"
+   ]
+  }
+ },
+ {
+  "label": "cp in application",
+  "tool": "create-package",
+  "clio-run": true,
+  "args": {
+   "package-name": "InApp",
+   "application-code": "UsrApp"
+  },
+  "known-differences": [
+   "$.packageuid"
+  ]
+ },
+ {
+  "label": "cp unknown application",
+  "tool": "create-package",
+  "clio-run": true,
+  "args": {
+   "package-name": "NoApp",
+   "application-code": "NoSuchApp"
+  }
+ },
+ {
+  "label": "cp refused by server",
+  "tool": "create-package",
+  "clio-run": true,
+  "args": {
+   "package-name": "RefuseMe"
+  }
+ },
+ {
+  "label": "cp refused no details",
+  "tool": "create-package",
+  "clio-run": true,
+  "args": {
+   "package-name": "NoDetails"
+  }
+ },
+ {
+  "label": "cp dependencies fail",
+  "tool": "create-package",
+  "clio-run": true,
+  "args": {
+   "package-name": "DepsFail",
+   "dependencies": [
+    "CrtBase"
+   ]
+  },
+  "known-differences": [
+   "$.packageuid"
+  ]
+ },
+ {
+  "label": "cp readback fails",
+  "tool": "create-package",
+  "clio-run": true,
+  "args": {
+   "package-name": "ReadbackFail",
+   "description": "d"
+  },
+  "known-differences": [
+   "$.packageuid"
+  ]
+ },
+ {
+  "label": "cp null description",
+  "tool": "create-package",
+  "clio-run": true,
+  "args": {
+   "package-name": "NullDescription"
+  },
+  "known-differences": [
+   "$.packageuid"
+  ]
+ },
+ {
+  "label": "cp no install type",
+  "tool": "create-package",
+  "clio-run": true,
+  "args": {
+   "package-name": "NoInstallType"
+  },
+  "known-differences": [
+   "$.packageuid"
+  ]
+ },
+ {
+  "label": "cp blank application",
+  "tool": "create-package",
+  "clio-run": true,
+  "args": {
+   "package-name": "BlankApp",
+   "application-code": "  "
+  },
+  "known-differences": [
+   "$.packageuid"
+  ]
+ },
+ {
+  "label": "cp drop stored",
+  "tool": "create-package",
+  "clio-run": true,
+  "args": {
+   "package-name": "DropStored"
+  },
+  "known-differences": [
+   "$.packageuid"
+  ]
+ },
+ {
+  "label": "cp drop lost",
+  "tool": "create-package",
+  "clio-run": true,
+  "args": {
+   "package-name": "DropLost"
+  }
+ },
+ {
+  "label": "cp existing package",
+  "tool": "create-package",
+  "clio-run": true,
+  "args": {
+   "package-name": "UsrExisting"
+  }
+ }
+]
