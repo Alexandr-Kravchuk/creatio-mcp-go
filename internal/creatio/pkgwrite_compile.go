@@ -113,9 +113,13 @@ func pkgWriteHistoryQuery(after string, rowCount int) map[string]any {
 	}
 	filters := map[string]any{}
 	if after != "" {
+		// DataService reads a DateTime parameter only as a quoted JSON date ("\"2026-10-21T02:00:00.000\""), as
+		// DataService returned it; the bare text answers HTTP 500 (ArgumentNullException), so every polling
+		// round of a package compile failed on the live stand (T23) while clio's succeeded.
+		quoted, _ := json.Marshal(after)
 		filters["CreatedAfter"] = map[string]any{"filterType": 1, "comparisonType": 7, "isEnabled": true,
 			"leftExpression":  map[string]any{"expressionType": 0, "columnPath": "CreatedOn"},
-			"rightExpression": map[string]any{"expressionType": 2, "parameter": map[string]any{"dataValueType": 7, "value": after}}}
+			"rightExpression": map[string]any{"expressionType": 2, "parameter": map[string]any{"dataValueType": 7, "value": string(quoted)}}}
 	}
 	return map[string]any{"rootSchemaName": "CompilationHistory", "operationType": 0, "rowCount": rowCount,
 		"columns": map[string]any{"items": map[string]any{

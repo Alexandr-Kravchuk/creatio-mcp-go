@@ -2,6 +2,7 @@ package creatio
 
 import (
 	"context"
+	"encoding/json"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -296,5 +297,22 @@ func TestPkgWriteProcessCompile(t *testing.T) {
 		if result.ExitCode != 1 || len(result.Messages) != 2 || !strings.HasPrefix(result.Messages[1].Value, want) {
 			t.Fatalf("%q = %q", body, pkgWriteValues(result))
 		}
+	}
+}
+
+// The live write run (T23): the history filter sent the baseline date unquoted, which DataService refuses with
+// HTTP 500, so a package compile's polling failed for its whole tolerance window. The value must be the quoted
+// JSON date, as DataService returned it.
+func TestPkgWriteHistoryQueryQuotesTheDate(t *testing.T) {
+	query := pkgWriteHistoryQuery("2026-10-10T10:00:00.000", -1)
+	encoded, err := json.Marshal(query)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := `"value":"\"2026-10-10T10:00:00.000\""`; !strings.Contains(string(encoded), want) {
+		t.Fatalf("query %s does not carry %s", encoded, want)
+	}
+	if strings.Contains(string(encoded), `"value":"2026-10-10T10:00:00.000"`) {
+		t.Fatalf("query %s carries the bare date", encoded)
 	}
 }
