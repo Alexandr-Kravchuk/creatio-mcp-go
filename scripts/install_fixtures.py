@@ -124,7 +124,7 @@ class FakeClients:
         stub.write_text(STUB)
         for client in ("claude", "codex"):
             if os.name == "nt":
-                (self.folder / f"{client}.cmd").write_text(f'@"{sys.executable}" -I "{stub}" {client} %*\r\n')
+                (self.folder / f"{client}.cmd").write_text(f'@"{sys.executable}" -I "{stub}" {client} %*\n')  # text mode writes CRLF on Windows
             else:
                 path = self.folder / client
                 path.write_text(f'#!/bin/sh\nexec "{sys.executable}" -I "{stub}" {client} "$@"\n')

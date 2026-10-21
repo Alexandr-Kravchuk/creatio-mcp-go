@@ -119,7 +119,7 @@ target="$install_dir/creatio-mcp-go"
 staged="$install_dir/.creatio-mcp-go.new.$$"
 cp "$tmp/$asset/creatio-mcp-go" "$staged" || fail "cannot write to $install_dir"
 chmod 755 "$staged"
-installed_version=$("$staged" --version 2>/dev/null) ||
+installed_version=$("$staged" --version 2>/dev/null </dev/null) ||
   fail "the downloaded binary does not start on this machine ($os/$arch). Nothing was replaced."
 mv -f "$staged" "$target" || fail "cannot replace $target"
 staged=""
@@ -132,9 +132,10 @@ case ":${PATH:-}:" in
      say "  export PATH=\"$install_dir:\$PATH\"" ;;
 esac
 
+# Client commands get </dev/null: under `curl | sh` stdin is the rest of this script.
 # Each client is registered once per name: the same path is left alone, another path is replaced.
 register_claude() {
-  current=$(claude mcp get "$name" 2>/dev/null) || current=""
+  current=$(claude mcp get "$name" 2>/dev/null </dev/null) || current=""
   current_command=$(printf '%s\n' "$current" | sed -n 's/^[[:space:]]*Command:[[:space:]]*//p' | head -n 1)
   if [ -n "$current" ] && [ "$current_command" = "$target" ] &&
     printf '%s\n' "$current" | grep -q 'Scope:.*User'; then
@@ -144,9 +145,9 @@ register_claude() {
   if [ -n "$current" ]; then
     say "Claude Code: $name points at ${current_command:-another command}; registering it again with $target"
     say "  (any --env values of the old entry are not carried over; add them again if you used them)"
-    claude mcp remove "$name" --scope user >/dev/null 2>&1 || true
+    claude mcp remove "$name" --scope user >/dev/null 2>&1 </dev/null || true
   fi
-  if claude mcp add --scope user "$name" -- "$target" >/dev/null; then
+  if claude mcp add --scope user "$name" -- "$target" >/dev/null </dev/null; then
     say "Claude Code: registered $name -> $target (user scope)"
   else
     say "Claude Code: registration failed; run: claude mcp add --scope user $name -- $target" >&2
@@ -154,7 +155,7 @@ register_claude() {
 }
 
 register_codex() {
-  current=$(codex mcp get "$name" 2>/dev/null) || current=""
+  current=$(codex mcp get "$name" 2>/dev/null </dev/null) || current=""
   current_command=$(printf '%s\n' "$current" | sed -n 's/^[[:space:]]*command:[[:space:]]*//p' | head -n 1)
   if [ -n "$current" ] && [ "$current_command" = "$target" ]; then
     say "Codex: $name is already registered with $target; left as is"
@@ -163,9 +164,9 @@ register_codex() {
   if [ -n "$current" ]; then
     say "Codex: $name points at ${current_command:-another command}; registering it again with $target"
     say "  (any env values of the old entry are not carried over; add them again if you used them)"
-    codex mcp remove "$name" >/dev/null 2>&1 || true
+    codex mcp remove "$name" >/dev/null 2>&1 </dev/null || true
   fi
-  if codex mcp add "$name" -- "$target" >/dev/null; then
+  if codex mcp add "$name" -- "$target" >/dev/null </dev/null; then
     say "Codex: registered $name -> $target"
   else
     say "Codex: registration failed; run: codex mcp add $name -- $target" >&2
