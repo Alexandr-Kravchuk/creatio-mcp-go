@@ -131,10 +131,6 @@ Known differences that are server differences, not stand values:
 Not ported, found while porting the digests (no live scenario reaches them): the process-parameter mapping warnings
 of create/modify (ENG-103081) and the refusal of keys the server does not declare (ENG-103085).
 
-Hypothesis, not reproduced: `set-fsm-mode off` probes `GetApplicationInfo` with this server's 45 s client timeout;
-sent right after the other side's toggle it timed out while the application pool recycled. clio's timeout for that
-call is the Creatio client default, which was not established.
-
 ## Not verified live
 
 - `modify-business-process`, `-as-new-version` and `set-active-business-process-version` digests: verified in the
@@ -142,6 +138,14 @@ call is the Creatio client default, which was not established.
 - The OAuth server-to-server success path, `execute-sql-script` results, entity connections, FSM `on` / `off`
   with packages actually exported and imported in both directions by this server first (it always ran second).
 - `install-application` of a real application archive (the scenario installs an empty package folder).
+- `set-fsm-mode off` right after an application-pool recycle: this server probes `GetApplicationInfo` with its 45 s
+  client timeout and timed out once while the pool recycled; clio's timeout for that call (the Creatio client
+  default) was not established. The scenario now waits 120 s, so the final run does not exercise this path.
+
+Hand interventions outside the scenarios: two `Lookups` rows of the first T19 runs and one t14 application that a
+`delete-app` reported removed but that was still installed were deleted through clio; seven ledger records (the
+`Proc` and t10 objects whose application `delete-app` had already removed) were marked removed with
+`"note": "verified absent on the stand; removed with its application"` after the stand read showed no such rows.
 
 ## Left on the stand
 
