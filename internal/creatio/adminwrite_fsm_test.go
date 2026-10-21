@@ -39,6 +39,7 @@ func TestSetFsmModeOnTogglesRemotelyThenExports(t *testing.T) {
 		{"None", "FSM toggled remotely via cliogate on environment 'dev': false → true. IIS will auto-recycle the AppPool to pick up the new Web.config."},
 		{"None", "Start load packages to file system on a web application"},
 		{"Info", "Load packages to file system on a web application completed"},
+		{"None", ""}, // LoadPackagesToFileSystemCommand.Load's WriteLine (seen live in T23)
 	}
 	if result.ExitCode != 0 || !reflect.DeepEqual(result.Messages, want) {
 		t.Fatalf("result = %#v", result)
@@ -59,9 +60,10 @@ func TestSetFsmModeOffImportsFirstAndStopsWhenTheImportFails(t *testing.T) {
 			`{"success":false,"errors":[{"workspaceItem":{"name":"UsrPkg"},"errorInfo":{"message":"locked","errorCode":"E1"}}]}`},
 	})
 	result := client.SetFsmMode(context.Background(), AdminWriteFsmTarget{Name: "dev"}, "off")
-	if result.ExitCode != 1 || len(result.Messages) != 3 ||
+	if result.ExitCode != 1 || len(result.Messages) != 4 ||
 		result.Messages[1].Value != "Load packages to database on a web application ended with error: Synchronization rejected item 'UsrPkg': locked (error code: E1)" ||
-		!strings.HasPrefix(result.Messages[2].Value, "Packages were not imported into the database, so the file system mode configuration was left unchanged.") {
+		result.Messages[2] != (LogMessage{"None", ""}) ||
+		!strings.HasPrefix(result.Messages[3].Value, "Packages were not imported into the database, so the file system mode configuration was left unchanged.") {
 		t.Fatalf("result = %#v", result)
 	}
 	if strings.Contains(stand.routes(), "SetFileDesignMode") || strings.Contains(stand.routes(), applicationInfoRoute) {
@@ -81,9 +83,10 @@ func TestSetFsmModeOffEditsTheLocalConfigOfANetCoreSite(t *testing.T) {
 		"ServiceModel/WorkspaceExplorerService.svc/GetIsFileDesignMode": {`{"success":true,"value":false}`},
 	})
 	result := client.SetFsmMode(context.Background(), AdminWriteFsmTarget{Name: "dev", IsNetCore: true, EnvironmentPath: directory}, "off")
-	if result.ExitCode != 0 || len(result.Messages) != 2 || result.Messages[0].MessageType != "Warning" ||
-		!strings.Contains(result.Messages[1].Value, "fileDesignMode           true          false") ||
-		!strings.Contains(result.Messages[1].Value, "UseStaticFileContent     false         true") {
+	if result.ExitCode != 0 || len(result.Messages) != 3 || result.Messages[0] != (LogMessage{"None", ""}) ||
+		result.Messages[1].MessageType != "Warning" ||
+		!strings.Contains(result.Messages[2].Value, "fileDesignMode           true          false") ||
+		!strings.Contains(result.Messages[2].Value, "UseStaticFileContent     false         true") {
 		t.Fatalf("result = %#v", result)
 	}
 	data, _ := os.ReadFile(config)

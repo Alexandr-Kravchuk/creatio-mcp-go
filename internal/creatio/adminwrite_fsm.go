@@ -135,6 +135,9 @@ func (c *Client) adminWriteLoadPackages(ctx context.Context, endpoint, storage s
 		log.add("Error", err.Error())
 		return adminWriteLoadRefused
 	}
+	// Load writes an empty line after the loader returns, whatever it returned (live run T23: set-fsm-mode
+	// on/off lacked the line clio prints, as pkg-to-file-system already has it).
+	log.add("None", "")
 	return result
 }
 
