@@ -189,7 +189,11 @@ func watchSettings(ctx context.Context, h *concurrencyHome, seen *violations, re
 	for ctx.Err() == nil {
 		data, err := os.ReadFile(h.settings)
 		if err != nil {
-			seen.add("settings reader: %v", err)
+			// On Windows the open can meet the writer's replace of the file; the server's settings reader
+			// keeps the previously loaded settings then (environments.go), so this is a retry, not a tear.
+			if !windowsContention(err.Error()) {
+				seen.add("settings reader: %v", err)
+			}
 			continue
 		}
 		root, err := ParseJSONObject(data)

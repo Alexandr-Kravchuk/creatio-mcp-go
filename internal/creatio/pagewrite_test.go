@@ -97,6 +97,7 @@ func TestCreatePageSavesTemplateChildAndReportsSaveFailure(t *testing.T) {
 				"      \"primaryDataSourceName\": \"PDS\",\n      \"dataSources\": {\n        \"PDS\": {\n          \"type\": \"crt.EntityDataSource\",\n" +
 				"          \"scope\": \"page\",\n          \"config\": {\n            \"entitySchemaName\": \"UsrEntity\"\n          }\n        }\n      }\n" +
 				"    }\n  }\n]/**SCHEMA_MODEL_CONFIG_DIFF*/"
+			wantModel = strings.ReplaceAll(wantModel, "\n", pageWriteNewLine)
 			if body, _ := saved["body"].(string); !strings.HasPrefix(body, `define("UsrP", /**SCHEMA_DEPS*/[]`) || !strings.Contains(body, wantModel) {
 				t.Fatalf("body %q", saved["body"])
 			}
