@@ -129,8 +129,17 @@ the ledger records for it; the `{guidN}` values are compared as their template.
 |---|---|---|
 | `write` | `tool`, `args`, `creates`, `label`, `known-differences`, `why`, `clio-run`, `clio-environment-key`, `go-tool-missing`, `capture`, `server` | Calls the tool on both servers with each side's names; `server: clio` makes both sides' objects through clio (a setup step, for a tool this server does not have yet); `retry-while` (text of a transient refusal) with `retry-seconds` retries the call every 10 s while it fails with that text. `creates` is the template of the object it makes and must contain `{run}` and `{side}`. The answers are compared too. If either side fails, the remaining steps are skipped and cleanup runs. |
 | `read-back` | `tool`, `args`, `label`, `known-differences`, `why`, `capture`, `server` | Calls a read tool on both servers for their own objects. Each side's concrete names and captured ids are replaced with their template (case-insensitive) before comparison. |
-| `expect` | `step` (label of an earlier step), `path` (for example `$.value`), `equals`, `side` (`both`, `clio`, `go`) | Checks one field of the step's answer on each side. Paths use normalized keys (lowercase, no `-`/`_`); write names in `equals` as templates. |
+| `expect` | `step` (label of an earlier step), `path` (for example `$.value`), `equals`, `side` (`both`, `clio`, `go`) | Checks one field of the step's answer on each side. Paths use normalized keys (lowercase, no `-`/`_`); write names in `equals` as templates. Free text that is not an object name (a caption such as `Parity {run} updated`) reads back concrete; `equals` matches the template or its per-side substitution. |
 | `cleanup` | `for` (a `creates` template of an earlier write), `server` (`own` or `clio`), `calls` (`tool`, `args`, `capture`, `clio-run`) | Always runs, also after a failure, for every object whose write was attempted. Cleanup steps run in reverse order (last created, first removed); the calls inside one step run in order, so a lookup can precede the delete that uses its result. `server: clio` removes both sides' objects through clio, for when this server has no delete tool yet. A `capture` that finds nothing means the object is already gone. |
+
+A path in `known-differences` covers itself and every path under it (`$.executionlogmessages` covers
+`$.executionlogmessages[3].value`), so list the narrowest path that differs: a whole-log entry also hides a
+line this server leaves out. The harness replaces per-call durations (`published in 2.8s`) with `<seconds>` before
+comparing; other per-side values (GUIDs the stand creates, process ids) are listed per path with a `why`.
+
+The Go child gets `MCPGO_CLIO_TOOLS_DIR`, the tool path that holds `--clio-dll` (the directory above `.store`),
+so it reads the bundled archives (CrtProcessBuilder, cliogate, dashboards migrator) and help of the clio it is
+compared with instead of the newest clio in `~/.dotnet/tools`. Without a tool store above the dll nothing is set.
 
 `settle-seconds: N` on a write or read-back step (or on one call of a cleanup step) waits N seconds before each
 side's call. Use it after a write that starts background work on the stand: an application or section write
