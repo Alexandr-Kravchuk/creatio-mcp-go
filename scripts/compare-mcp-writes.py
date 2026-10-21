@@ -302,11 +302,20 @@ class Harness:
                     steps.append({"step": step_label(step, index), "kind": step["kind"], "verdict": "skipped",
                                   "differences": []})
                     continue
-                result = self.run_step(scenario, step, index, state)
-                steps.append(result)
-                if step["kind"] == "write" and result.get("stop"):
-                    stopped = True
-                result.pop("stop", None)
+                if step.get("right-after-write"):
+                    continue  # ran together with the write before it
+                # The next call step (cleanup and expect steps between do not count) may ask to run with this write.
+                following = next(((later, at) for at, later in enumerate(scenario["steps"]) if at > index
+                                  and later["kind"] in ("write", "read-back")), None)
+                if step["kind"] == "write" and following and following[0].get("right-after-write"):
+                    results = self.run_pair(scenario, (step, index), following, state)
+                else:
+                    results = [self.run_step(scenario, step, index, state)]
+                for result in results:
+                    steps.append(result)
+                    if result.get("stop") and result["kind"] == "write":
+                        stopped = True
+                    result.pop("stop", None)
         except Exception as error:  # a server died or a refusal: report it, then clean up regardless
             steps.append({"step": "harness", "kind": "error", "verdict": "mismatch",
                           "differences": [f"$: {type(error).__name__}: {error}" if isinstance(error, Refused)
@@ -321,48 +330,76 @@ class Harness:
                 print(f"{'':12}     {path}")
         return {"scenario": label, "verdict": outcome, "steps": steps}
 
+    def run_pair(self, scenario, write, read, state):
+        """A read-back with `right-after-write` runs on each side directly after that side's write, so a status
+        the write leaves in its server's session (compile-status, restart-status) is read before the other side's
+        write and its settle time pass. Each step is compared as usual."""
+        (write_step, write_index), (read_step, read_index) = write, read
+        write_label, read_label = step_label(write_step, write_index), step_label(read_step, read_index)
+        write_answers, write_seconds, read_answers, read_seconds = {}, {}, {}, {}
+        for side in SIDES:
+            write_answers[side], write_seconds[side] = self.run_side(scenario, write_step, write_label, side, state)
+            if failed(write_answers[side]):
+                read_answers[side], read_seconds[side] = {}, 0.0
+                continue
+            read_answers[side], read_seconds[side] = self.run_side(scenario, read_step, read_label, side, state)
+        results = [self.finish_step(write_step, write_label, write_answers, write_seconds, state)]
+        if any(failed(write_answers[side]) for side in SIDES):
+            results.append({"step": read_label, "kind": read_step["kind"], "verdict": "skipped", "differences": []})
+        else:
+            results.append(self.finish_step(read_step, read_label, read_answers, read_seconds, state))
+        return results
+
     def run_step(self, scenario, step, index, state):
         label = step_label(step, index)
         if step["kind"] == "expect":
             return self.expect(step, label, state)
         answers, seconds = {}, {}
         for side in SIDES:
-            side_state = state[side]
-            arguments = substitute(step.get("args", {}), side_state["variables"])
-            if step["kind"] == "write" and step.get("creates"):
-                name = substitute(step["creates"], side_state["variables"])
-                ledger_append({"event": "create", "environment": self.environment, "run": self.run_id,
-                               "side": side, "name": name, "scenario": scenario["label"],
-                               "cleanup": [substitute(c, side_state["variables"]) for c in scenario["steps"]
-                                           if c["kind"] == "cleanup" and c["for"] == step["creates"]]})
-                side_state["created"].add(name)
-                side_state["attempted"].append(step["creates"])
-                side_state["replacements"][name] = step["creates"]
-            self.guard(step, arguments, side_state, None)
-            if step.get("settle-seconds"):
-                # Background work the previous call started (an OData rebuild after an application or section
-                # write) refuses the next write on the shared stand; let it finish first.
-                time.sleep(step["settle-seconds"])
-            # server: clio makes both sides' objects through clio, for a setup this server has no tool for yet.
-            server_side = side if step.get("server", "own") == "own" else "clio"
-            response, seconds[side] = self.call(server_side, step, arguments)
-            # retry-while: a refusal the stand words as transient (its own background work, e.g. an OData rebuild after
-            # the previous side's create) is retried on either side alike; the answer that counts is the last one.
-            # retry-attempts / retry-delay-seconds bound it by count, retry-seconds by time (every 10 s).
-            transient = step.get("retry-while")
-            for _ in range(step.get("retry-attempts", 0)):
-                if not transient or transient not in json.dumps(payload(response), ensure_ascii=False):
-                    break
-                time.sleep(step.get("retry-delay-seconds", 30))
-                response, seconds[side] = self.call(server_side, step, arguments)
-            deadline = time.monotonic() + step.get("retry-seconds", 0)
-            while (transient and failed(normalize(payload(response)))
-                   and transient in json.dumps(payload(response)) and time.monotonic() < deadline):
-                time.sleep(10)
-                response, seconds[side] = self.call(server_side, step, arguments)
-            answers[side] = normalize(payload(response))
-            self.capture(step, answers[side], arguments, side_state)
-            side_state["answers"][label] = answers[side]
+            answers[side], seconds[side] = self.run_side(scenario, step, label, side, state)
+        return self.finish_step(step, label, answers, seconds, state)
+
+    def run_side(self, scenario, step, label, side, state):
+        """One side's call of a write or read-back step (ledger, guard, settle, retries, capture)."""
+        side_state = state[side]
+        arguments = substitute(step.get("args", {}), side_state["variables"])
+        if step["kind"] == "write" and step.get("creates"):
+            name = substitute(step["creates"], side_state["variables"])
+            ledger_append({"event": "create", "environment": self.environment, "run": self.run_id,
+                           "side": side, "name": name, "scenario": scenario["label"],
+                           "cleanup": [substitute(c, side_state["variables"]) for c in scenario["steps"]
+                                       if c["kind"] == "cleanup" and c["for"] == step["creates"]]})
+            side_state["created"].add(name)
+            side_state["attempted"].append(step["creates"])
+            side_state["replacements"][name] = step["creates"]
+        self.guard(step, arguments, side_state, None)
+        if step.get("settle-seconds"):
+            # Background work the previous call started (an OData rebuild after an application or section
+            # write) refuses the next write on the shared stand; let it finish first.
+            time.sleep(step["settle-seconds"])
+        # server: clio makes both sides' objects through clio, for a setup this server has no tool for yet.
+        server_side = side if step.get("server", "own") == "own" else "clio"
+        response, seconds = self.call(server_side, step, arguments)
+        # retry-while: a refusal the stand words as transient (its own background work, e.g. an OData rebuild after
+        # the previous side's create) is retried on either side alike; the answer that counts is the last one.
+        # retry-attempts / retry-delay-seconds bound it by count, retry-seconds by time (every 10 s).
+        transient = step.get("retry-while")
+        for _ in range(step.get("retry-attempts", 0)):
+            if not transient or transient not in json.dumps(payload(response), ensure_ascii=False):
+                break
+            time.sleep(step.get("retry-delay-seconds", 30))
+            response, seconds = self.call(server_side, step, arguments)
+        deadline = time.monotonic() + step.get("retry-seconds", 0)
+        while (transient and failed(normalize(payload(response)))
+               and transient in json.dumps(payload(response)) and time.monotonic() < deadline):
+            time.sleep(10)
+            response, seconds = self.call(server_side, step, arguments)
+        answer = normalize(payload(response))
+        self.capture(step, answer, arguments, side_state)
+        side_state["answers"][label] = answer
+        return answer, seconds
+
+    def finish_step(self, step, label, answers, seconds, state):
         compared = {side: neutralize(answers[side], state[side]["replacements"]) for side in SIDES}
         outcome, paths = verdict(compared["clio"], compared["go"])
         known = set(step.get("known-differences", []))

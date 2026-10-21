@@ -82,7 +82,9 @@
           "$.finishedutc",
           "$.messagetail"
         ],
-        "why": "Each server reports its own operation; ids, times and the history lines differ."
+        "why": "Each server reports its own operation; ids, times and the history lines differ. Read right after this side's own write (right-after-write): the status lives in the server's session for 5 idle minutes, and the other side's write with its settle time takes longer, so a read after both writes found clio's record gone (T23). The 420 s settle lets the compile that answered in-progress at the response deadline finish first.",
+        "right-after-write": true,
+        "settle-seconds": 420
       },
       {
         "kind": "expect",
@@ -105,7 +107,9 @@
         "known-differences": [
           "$.executionlogmessages",
           "$.correlationid"
-        ]
+        ],
+        "settle-seconds": 900,
+        "why": "The 900 s settle before each side keeps the second side's full compile from starting while the first still builds (in T23 it was sent 45 s after the first and the stand reset the connection)."
       },
       {
         "kind": "expect",
@@ -126,7 +130,10 @@
           "$.startedutc",
           "$.finishedutc",
           "$.messagetail"
-        ]
+        ],
+        "right-after-write": true,
+        "settle-seconds": 420,
+        "why": "Read right after this side's own write (right-after-write): the status lives in the server's session for 5 idle minutes, and the other side's write with its settle time takes longer, so a read after both writes found clio's record gone (T23). The 420 s settle lets the compile that answered in-progress at the response deadline finish first."
       },
       {
         "kind": "expect",
@@ -173,7 +180,9 @@
           "$.operationid",
           "$.startedutc",
           "$.finishedutc"
-        ]
+        ],
+        "right-after-write": true,
+        "why": "Read right after this side's own write (right-after-write): the status lives in the server's session for 5 idle minutes, and the other side's write with its settle time takes longer, so a read after both writes found clio's record gone (T23)."
       },
       {
         "kind": "expect",

@@ -109,6 +109,18 @@ class WriteHarnessTest(unittest.TestCase):
         self.assertEqual(calls.count("clio:create-sys-setting"), 2)
         self.assertEqual(self.stand()["settings"], {})
 
+    def test_right_after_write_reads_each_side_before_the_other_side_writes(self):
+        scenario = json.loads(json.dumps(SCENARIO))
+        self.assertEqual([s["kind"] for s in scenario[0]["steps"][:3]], ["write", "cleanup", "read-back"])
+        scenario[0]["steps"][2]["right-after-write"] = True  # the next call step after the create write
+        result = self.run_harness(scenarios=scenario)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        calls = [c for c in self.stand()["_calls"] if c.split(":")[1] in ("create-sys-setting", "get-sys-setting")]
+        self.assertEqual(calls[:4], ["clio:create-sys-setting", "clio:get-sys-setting",
+                                     "go:create-sys-setting", "go:get-sys-setting"])
+        data = self.evidence_data()
+        self.assertEqual([s["verdict"] for s in data["scenarios"][0]["steps"][:4]], ["match"] * 4)
+
     def test_retry_while_retries_a_transient_refusal(self):
         scenario = json.loads(json.dumps(SCENARIO))
         scenario[0]["steps"][0].update({"retry-while": "never matches", "retry-seconds": 30})
