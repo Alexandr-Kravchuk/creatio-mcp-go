@@ -2,7 +2,62 @@
 
 The short version is in the [README](../README.md). This page covers each step in full.
 
-## 1. Download
+## 1. Install
+
+### One command
+
+macOS and Linux:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Alexandr-Kravchuk/creatio-mcp-go/main/scripts/install.sh | sh
+```
+
+Windows (PowerShell 5.1 or 7):
+
+```powershell
+irm https://raw.githubusercontent.com/Alexandr-Kravchuk/creatio-mcp-go/main/scripts/install.ps1 | iex
+```
+
+The installer:
+
+1. takes the newest release, pre-releases included (or the one you name), for your OS and CPU;
+2. downloads the archive and `SHA256SUMS` and refuses to install when the hash does not match;
+3. puts the binary into `~/.local/bin/creatio-mcp-go` (Windows:
+   `%LOCALAPPDATA%\creatio-mcp-go\bin\creatio-mcp-go.exe`, added to the user PATH when missing; on
+   macOS/Linux it only tells you when the directory is not on PATH);
+4. registers it as `creatio-go` in Claude Code (`claude mcp add --scope user`) and in Codex
+   (`codex mcp add`), for each of them that is installed. An entry that already points at the same
+   file is left as is; one that points elsewhere is replaced, without its `--env` values;
+5. prints the installed version (`creatio-mcp-go --version`).
+
+Running it again updates the binary. The new file is written next to the old one and renamed over it
+(on Windows the old file is first renamed aside, since a running `.exe` cannot be overwritten), so a
+server that is already running keeps working and the next start takes the new build. A failed download
+or hash check leaves the installed binary untouched. No administrator rights are needed.
+
+Options:
+
+| install.sh (`sh -s -- …`) | install.ps1 | Environment variable | Meaning |
+|---|---|---|---|
+| `--version v0.2.0` | `-Version v0.2.0` | `CREATIO_MCP_GO_VERSION` | install this release instead of the newest |
+| `--dir <path>` | `-Dir <path>` | `CREATIO_MCP_GO_INSTALL_DIR` | install directory |
+| `--name <name>` | `-Name <name>` | `CREATIO_MCP_GO_NAME` | MCP server name, default `creatio-go` |
+| `--no-register` | `-NoRegister` | `CREATIO_MCP_GO_NO_REGISTER=1` | do not change the Claude Code / Codex configuration |
+| — | — | `CREATIO_MCP_GO_NO_PATH_UPDATE=1` | Windows: do not change the user PATH |
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Alexandr-Kravchuk/creatio-mcp-go/main/scripts/install.sh | sh -s -- --version v0.2.0 --no-register
+```
+
+```powershell
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/Alexandr-Kravchuk/creatio-mcp-go/main/scripts/install.ps1))) -Version v0.2.0 -NoRegister
+```
+
+The registration has no environment variables, so the server uses the environments registered in clio
+(section 2). For a default environment set by `CREATIO_*` variables, register it yourself as in
+sections 3 and 4, with the path the installer printed.
+
+### Manual download
 
 Take the archive for your platform from [Releases](https://github.com/Alexandr-Kravchuk/creatio-mcp-go/releases):
 macOS (arm64, amd64), Linux (amd64, arm64) or Windows (amd64). Check it against `SHA256SUMS` from the
@@ -20,7 +75,8 @@ On Windows, compare `(Get-FileHash .\creatio-mcp-go_0.2.0_windows_amd64.zip).Has
 
 The macOS binaries are signed with a Developer ID certificate and notarized by Apple, so they start
 as downloaded; macOS checks the notarization online on the first launch. The Windows binary is not
-signed: if Windows marks it as blocked, run `Unblock-File .\creatio-mcp-go.exe` in PowerShell.
+signed: if Windows marks it as blocked, run `Unblock-File .\creatio-mcp-go.exe` in PowerShell (the
+installer does this itself).
 
 ## 2. Pick the connection settings
 
