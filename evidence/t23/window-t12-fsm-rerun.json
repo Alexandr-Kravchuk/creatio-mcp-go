@@ -1,0 +1,87 @@
+{
+  "schema": 1,
+  "clio_startup_seconds": 0.68,
+  "go_startup_seconds": 0.5,
+  "counts": {
+    "skipped": 0,
+    "match": 0,
+    "both-failed": 0,
+    "error-text": 0,
+    "known-diff": 1,
+    "mismatch": 0
+  },
+  "scenarios": [
+    {
+      "scenario": "set-fsm-mode on, then off",
+      "verdict": "known-diff",
+      "steps": [
+        {
+          "step": "mode before",
+          "kind": "read-back",
+          "verdict": "match",
+          "clio_seconds": 0.36,
+          "go_seconds": 0.25,
+          "differences": []
+        },
+        {
+          "step": "2:expect",
+          "kind": "expect",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "on",
+          "kind": "write",
+          "verdict": "known-diff",
+          "clio_seconds": 18.4,
+          "go_seconds": 3.61,
+          "differences": [
+            "$.executionlogmessages[0].value: value differs"
+          ]
+        },
+        {
+          "step": "mode on",
+          "kind": "read-back",
+          "verdict": "match",
+          "clio_seconds": 4.02,
+          "go_seconds": 0.05,
+          "differences": []
+        },
+        {
+          "step": "5:expect",
+          "kind": "expect",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "off",
+          "kind": "write",
+          "verdict": "known-diff",
+          "clio_seconds": 4.64,
+          "go_seconds": 14.76,
+          "differences": [
+            "$.executionlogmessages: 4 items in clio, 3 in go",
+            "$.executionlogmessages[0].value: only in clio",
+            "$.executionlogmessages[1].messagetype: value differs",
+            "$.executionlogmessages[1].value: value differs",
+            "$.executionlogmessages[2].value: only in go"
+          ]
+        },
+        {
+          "step": "mode after",
+          "kind": "read-back",
+          "verdict": "match",
+          "clio_seconds": 4.2,
+          "go_seconds": 0.17,
+          "differences": []
+        },
+        {
+          "step": "8:expect",
+          "kind": "expect",
+          "verdict": "match",
+          "differences": []
+        }
+      ]
+    }
+  ]
+}

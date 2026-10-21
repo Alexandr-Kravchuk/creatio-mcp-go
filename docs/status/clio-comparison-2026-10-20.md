@@ -29,8 +29,9 @@ not-served tools, each counted on two surfaces; the one `fit-multi-name` is the 
 Of the next steps at the end of this report, 1-4 are done: both scripts read the new `get-tool-contract`
 shape, the inventory and contracts are on 8.1.0.142, the four tools that refused the new arguments accept
 them (T20), and the 17 new tools are handled (6 ported in T19, 9 ported in T21, 2 not ported in T21a).
-Step 5 is decided: the 15 T6 tools are ported, T16 stays deferred. Step 6 (the window run and the parity run
-on two stands) is still open; no stand was called for any of the 8.1.0.142 work.
+Step 5 is decided: the 15 T6 tools are ported, T16 stays deferred. Step 6: the window run and the full write
+run on `s16123120` are done in T23 ([status](t23-live-write-parity.md)); the parity run on a second stand is
+still open.
 
 Still different from clio, each with its reason in the area report: a call without `environment-name`
 goes to this server's default target, where clio 8.1.0.142 refuses it; `git`-type knowledge sources are not

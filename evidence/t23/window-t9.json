@@ -1,0 +1,79 @@
+{
+  "schema": 1,
+  "clio_startup_seconds": 0.66,
+  "go_startup_seconds": 0.01,
+  "counts": {
+    "skipped": 0,
+    "match": 0,
+    "both-failed": 0,
+    "error-text": 0,
+    "known-diff": 1,
+    "mismatch": 0
+  },
+  "scenarios": [
+    {
+      "scenario": "Own app related-page add-on: bind the app's form page, read back, clear",
+      "verdict": "known-diff",
+      "steps": [
+        {
+          "step": "create app",
+          "kind": "write",
+          "verdict": "known-diff",
+          "clio_seconds": 13.39,
+          "go_seconds": 10.65,
+          "differences": [
+            "$.applicationname: value differs",
+            "$.dataforge.warnings[0]: value differs",
+            "$.dataforge.warnings[1]: value differs",
+            "$.entities[0].caption: value differs",
+            "$.entities[0].uid: value differs",
+            "$.pages[0].uid: value differs",
+            "$.pages[2].uid: value differs"
+          ]
+        },
+        {
+          "step": "bind the form page",
+          "kind": "write",
+          "verdict": "match",
+          "clio_seconds": 2.4,
+          "go_seconds": 2.36,
+          "differences": []
+        },
+        {
+          "step": "read the binding",
+          "kind": "read-back",
+          "verdict": "match",
+          "clio_seconds": 0.31,
+          "go_seconds": 0.54,
+          "differences": []
+        },
+        {
+          "step": "5:expect",
+          "kind": "expect",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "clear the binding",
+          "kind": "write",
+          "verdict": "match",
+          "clio_seconds": 2.01,
+          "go_seconds": 1.64,
+          "differences": []
+        },
+        {
+          "step": "2:cleanup (clio)",
+          "kind": "cleanup",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "2:cleanup (go)",
+          "kind": "cleanup",
+          "verdict": "match",
+          "differences": []
+        }
+      ]
+    }
+  ]
+}

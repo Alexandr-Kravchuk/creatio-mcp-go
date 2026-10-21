@@ -1,0 +1,197 @@
+{
+  "schema": 1,
+  "clio_startup_seconds": 0.66,
+  "go_startup_seconds": 0.01,
+  "counts": {
+    "skipped": 0,
+    "match": 0,
+    "both-failed": 2,
+    "error-text": 0,
+    "known-diff": 1,
+    "mismatch": 1
+  },
+  "scenarios": [
+    {
+      "scenario": "compile-creatio of a run-named application package, then compile-status",
+      "verdict": "mismatch",
+      "steps": [
+        {
+          "step": "create-app",
+          "kind": "write",
+          "verdict": "known-diff",
+          "clio_seconds": 40.14,
+          "go_seconds": 11.53,
+          "differences": [
+            "$.entities[0].uid: value differs",
+            "$.pages[0].uid: value differs",
+            "$.pages[1].uid: value differs",
+            "$.pages[2].uid: value differs"
+          ]
+        },
+        {
+          "step": "compile-creatio package-name",
+          "kind": "write",
+          "verdict": "known-diff",
+          "clio_seconds": 45.77,
+          "go_seconds": 45.0,
+          "differences": [
+            "$.executionlogmessages[0].value: value differs"
+          ]
+        },
+        {
+          "step": "compile-status",
+          "kind": "read-back",
+          "verdict": "mismatch",
+          "clio_seconds": 0.03,
+          "go_seconds": 0.0,
+          "differences": [
+            "$.exitcode: value differs",
+            "$.finishedutc: value differs",
+            "$.messagetail: 4 items in clio, 22 in go",
+            "$.messagetail[1]: value differs",
+            "$.messagetail[2]: value differs",
+            "$.messagetail[3]: value differs",
+            "$.operationid: value differs",
+            "$.startedutc: value differs",
+            "$.status: value differs"
+          ]
+        },
+        {
+          "step": "4:expect",
+          "kind": "expect",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "6:expect",
+          "kind": "expect",
+          "verdict": "mismatch",
+          "differences": [
+            "$.status: expectation failed in go"
+          ]
+        },
+        {
+          "step": "2:cleanup (clio)",
+          "kind": "cleanup",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "2:cleanup (go)",
+          "kind": "cleanup",
+          "verdict": "match",
+          "differences": []
+        }
+      ]
+    },
+    {
+      "scenario": "compile-creatio full compilation, then compile-status",
+      "verdict": "known-diff",
+      "steps": [
+        {
+          "step": "compile-creatio full",
+          "kind": "write",
+          "verdict": "known-diff",
+          "clio_seconds": 45.77,
+          "go_seconds": 45.01,
+          "differences": [
+            "$.executionlogmessages[0].value: value differs"
+          ]
+        },
+        {
+          "step": "compile-status",
+          "kind": "read-back",
+          "verdict": "known-diff",
+          "clio_seconds": 0.02,
+          "go_seconds": 0.0,
+          "differences": [
+            "$.finishedutc: value differs",
+            "$.messagetail: 50 items in clio, 6 in go",
+            "$.messagetail[0]: value differs",
+            "$.messagetail[1]: value differs",
+            "$.messagetail[2]: value differs",
+            "$.messagetail[3]: value differs",
+            "$.messagetail[4]: value differs",
+            "$.messagetail[5]: value differs",
+            "$.operationid: value differs",
+            "$.startedutc: value differs"
+          ]
+        },
+        {
+          "step": "2:expect",
+          "kind": "expect",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "4:expect",
+          "kind": "expect",
+          "verdict": "match",
+          "differences": []
+        }
+      ]
+    },
+    {
+      "scenario": "restart-by-environment-name with the readiness wait, then restart-status",
+      "verdict": "both-failed",
+      "steps": [
+        {
+          "step": "restart-by-environment-name",
+          "kind": "write",
+          "verdict": "both-failed",
+          "clio_seconds": 0.94,
+          "go_seconds": 2.49,
+          "differences": [
+            "$.executionlogmessages[0].value: value differs"
+          ]
+        },
+        {
+          "step": "restart-status",
+          "kind": "read-back",
+          "verdict": "skipped",
+          "differences": []
+        },
+        {
+          "step": "2:expect",
+          "kind": "expect",
+          "verdict": "skipped",
+          "differences": []
+        },
+        {
+          "step": "restart-status",
+          "kind": "read-back",
+          "verdict": "skipped",
+          "differences": []
+        },
+        {
+          "step": "4:expect",
+          "kind": "expect",
+          "verdict": "skipped",
+          "differences": []
+        }
+      ]
+    },
+    {
+      "scenario": "restart-by-environment-name without waiting",
+      "verdict": "both-failed",
+      "steps": [
+        {
+          "step": "restart-by-environment-name waitReady false",
+          "kind": "write",
+          "verdict": "both-failed",
+          "clio_seconds": 0.77,
+          "go_seconds": 2.06,
+          "differences": [
+            "$.executionlogmessages[0].value: value differs"
+          ]
+        },
+        {
+          "step": "2:expect",
+          "kind": "expect",
+          "verdict": "skipped",
+          "differences": []
+        }
+      ]
+    }
+  ]
+}

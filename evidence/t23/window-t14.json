@@ -1,0 +1,139 @@
+{
+  "schema": 1,
+  "clio_startup_seconds": 0.69,
+  "go_startup_seconds": 0.01,
+  "counts": {
+    "skipped": 0,
+    "match": 0,
+    "both-failed": 0,
+    "error-text": 0,
+    "known-diff": 2,
+    "mismatch": 0
+  },
+  "scenarios": [
+    {
+      "scenario": "set-logo into an own app package, read the binding back, delete the app",
+      "verdict": "known-diff",
+      "steps": [
+        {
+          "step": "create-app",
+          "kind": "write",
+          "verdict": "known-diff",
+          "clio_seconds": 14.01,
+          "go_seconds": 10.9,
+          "differences": [
+            "$.applicationid: value differs",
+            "$.entities[0].uid: value differs",
+            "$.packageuid: value differs",
+            "$.pages[0].uid: value differs",
+            "$.pages[1].uid: value differs",
+            "$.pages[2].uid: value differs"
+          ]
+        },
+        {
+          "step": "set-logo",
+          "kind": "write",
+          "verdict": "match",
+          "clio_seconds": 5.48,
+          "go_seconds": 3.22,
+          "differences": []
+        },
+        {
+          "step": "3:expect",
+          "kind": "expect",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "read-data-binding-db SysSettingsValue_LogoImage",
+          "kind": "read-back",
+          "verdict": "known-diff",
+          "clio_seconds": 0.2,
+          "go_seconds": 0.2,
+          "differences": [
+            "$.executionlogmessages[2].value: value differs"
+          ]
+        },
+        {
+          "step": "5:cleanup (clio)",
+          "kind": "cleanup",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "5:cleanup (go)",
+          "kind": "cleanup",
+          "verdict": "match",
+          "differences": []
+        }
+      ]
+    },
+    {
+      "scenario": "set-background-image from a file into an own app package, read the bindings back, delete the app",
+      "verdict": "known-diff",
+      "steps": [
+        {
+          "step": "create-app",
+          "kind": "write",
+          "verdict": "known-diff",
+          "clio_seconds": 13.26,
+          "go_seconds": 9.72,
+          "differences": [
+            "$.applicationid: value differs",
+            "$.entities[0].uid: value differs",
+            "$.packageuid: value differs",
+            "$.pages[0].uid: value differs",
+            "$.pages[1].uid: value differs",
+            "$.pages[2].uid: value differs"
+          ]
+        },
+        {
+          "step": "set-background-image",
+          "kind": "write",
+          "verdict": "match",
+          "clio_seconds": 8.01,
+          "go_seconds": 5.33,
+          "differences": []
+        },
+        {
+          "step": "3:expect",
+          "kind": "expect",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "read-data-binding-db SysImage_ShellBackground",
+          "kind": "read-back",
+          "verdict": "known-diff",
+          "clio_seconds": 0.14,
+          "go_seconds": 0.17,
+          "differences": [
+            "$.executionlogmessages[2].value: value differs"
+          ]
+        },
+        {
+          "step": "read-data-binding-db SysSettingsValue_CrtBackgroundConfig",
+          "kind": "read-back",
+          "verdict": "known-diff",
+          "clio_seconds": 0.18,
+          "go_seconds": 0.13,
+          "differences": [
+            "$.executionlogmessages[2].value: value differs"
+          ]
+        },
+        {
+          "step": "6:cleanup (clio)",
+          "kind": "cleanup",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "6:cleanup (go)",
+          "kind": "cleanup",
+          "verdict": "match",
+          "differences": []
+        }
+      ]
+    }
+  ]
+}

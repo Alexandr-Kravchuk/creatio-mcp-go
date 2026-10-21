@@ -1,0 +1,153 @@
+{
+  "schema": 1,
+  "clio_startup_seconds": 0.74,
+  "go_startup_seconds": 0.02,
+  "counts": {
+    "skipped": 0,
+    "match": 0,
+    "both-failed": 0,
+    "error-text": 0,
+    "known-diff": 1,
+    "mismatch": 1
+  },
+  "scenarios": [
+    {
+      "scenario": "Install CrtProcessBuilder",
+      "verdict": "known-diff",
+      "steps": [
+        {
+          "step": "install through clio",
+          "kind": "write",
+          "verdict": "match",
+          "clio_seconds": 45.06,
+          "go_seconds": 45.01,
+          "differences": []
+        },
+        {
+          "step": "reinstall through each server",
+          "kind": "write",
+          "verdict": "known-diff",
+          "clio_seconds": 45.02,
+          "go_seconds": 48.63,
+          "differences": [
+            "$.executionlogmessages: 1 items in clio, 13 in go",
+            "$.executionlogmessages[0].messagetype: value differs",
+            "$.executionlogmessages[0].value: value differs"
+          ]
+        },
+        {
+          "step": "3:expect",
+          "kind": "expect",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "the package gate passes",
+          "kind": "read-back",
+          "verdict": "match",
+          "clio_seconds": 0.67,
+          "go_seconds": 0.16,
+          "differences": []
+        },
+        {
+          "step": "5:expect",
+          "kind": "expect",
+          "verdict": "match",
+          "differences": []
+        }
+      ]
+    },
+    {
+      "scenario": "Process designer chain in an own app: build, edit, version, activate",
+      "verdict": "mismatch",
+      "steps": [
+        {
+          "step": "create app",
+          "kind": "write",
+          "verdict": "mismatch",
+          "clio_seconds": 15.43,
+          "go_seconds": 38.56,
+          "differences": [
+            "$.applicationid: value differs",
+            "$.applicationname: value differs",
+            "$.dataforge.warnings[0]: value differs",
+            "$.dataforge.warnings[1]: value differs",
+            "$.entities[0].caption: value differs",
+            "$.entities[0].uid: value differs",
+            "$.packageuid: value differs",
+            "$.pages[0].uid: value differs",
+            "$.pages[1].uid: value differs",
+            "$.pages[2].uid: value differs"
+          ]
+        },
+        {
+          "step": "validate the planned graph",
+          "kind": "write",
+          "verdict": "match",
+          "clio_seconds": 0.04,
+          "go_seconds": 0.15,
+          "differences": []
+        },
+        {
+          "step": "build the process",
+          "kind": "write",
+          "verdict": "mismatch",
+          "clio_seconds": 1.72,
+          "go_seconds": 1.14,
+          "differences": [
+            "$.executionlogmessages[1].value: value differs",
+            "$.executionlogmessages[2].value: value differs"
+          ]
+        },
+        {
+          "step": "describe the built process",
+          "kind": "read-back",
+          "verdict": "known-diff",
+          "clio_seconds": 0.55,
+          "go_seconds": 0.2,
+          "differences": [
+            "$.executionlogmessages[0].value: value differs"
+          ]
+        },
+        {
+          "step": "add an element",
+          "kind": "write",
+          "verdict": "both-failed",
+          "clio_seconds": 0.69,
+          "go_seconds": 0.21,
+          "differences": []
+        },
+        {
+          "step": "save a new version",
+          "kind": "write",
+          "verdict": "skipped",
+          "differences": []
+        },
+        {
+          "step": "make the original actual again",
+          "kind": "write",
+          "verdict": "skipped",
+          "differences": []
+        },
+        {
+          "step": "describe after activation",
+          "kind": "read-back",
+          "verdict": "skipped",
+          "differences": []
+        },
+        {
+          "step": "2:cleanup (clio)",
+          "kind": "cleanup",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "2:cleanup (go)",
+          "kind": "cleanup",
+          "verdict": "match",
+          "differences": []
+        }
+      ]
+    }
+  ]
+}

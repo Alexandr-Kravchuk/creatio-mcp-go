@@ -1,0 +1,143 @@
+{
+  "schema": 1,
+  "clio_startup_seconds": 0.66,
+  "go_startup_seconds": 0.01,
+  "counts": {
+    "skipped": 0,
+    "match": 0,
+    "both-failed": 1,
+    "error-text": 0,
+    "known-diff": 1,
+    "mismatch": 0
+  },
+  "scenarios": [
+    {
+      "scenario": "run-process on an own empty process",
+      "verdict": "known-diff",
+      "steps": [
+        {
+          "step": "create app",
+          "kind": "write",
+          "verdict": "known-diff",
+          "clio_seconds": 13.23,
+          "go_seconds": 10.88,
+          "differences": [
+            "$.applicationname: value differs",
+            "$.dataforge.warnings[0]: value differs",
+            "$.dataforge.warnings[1]: value differs",
+            "$.entities[0].caption: value differs",
+            "$.entities[0].uid: value differs",
+            "$.pages[0].uid: value differs",
+            "$.pages[1].uid: value differs",
+            "$.pages[2].uid: value differs"
+          ]
+        },
+        {
+          "step": "create process",
+          "kind": "write",
+          "verdict": "known-diff",
+          "clio_seconds": 1.95,
+          "go_seconds": 1.16,
+          "differences": [
+            "$.executionlogmessages[1].value: value differs",
+            "$.executionlogmessages[2].value: value differs"
+          ]
+        },
+        {
+          "step": "run own process",
+          "kind": "write",
+          "verdict": "known-diff",
+          "clio_seconds": 1.21,
+          "go_seconds": 1.11,
+          "differences": [
+            "$.processid: value differs"
+          ]
+        },
+        {
+          "step": "6:expect",
+          "kind": "expect",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "run own process with a wrong-case parameter",
+          "kind": "write",
+          "verdict": "match",
+          "clio_seconds": 0.53,
+          "go_seconds": 0.3,
+          "differences": []
+        },
+        {
+          "step": "4:cleanup (clio)",
+          "kind": "cleanup",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "4:cleanup (go)",
+          "kind": "cleanup",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "2:cleanup (clio)",
+          "kind": "cleanup",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "2:cleanup (go)",
+          "kind": "cleanup",
+          "verdict": "match",
+          "differences": []
+        }
+      ]
+    },
+    {
+      "scenario": "execute-sql-script on own rows",
+      "verdict": "both-failed",
+      "steps": [
+        {
+          "step": "setup contact",
+          "kind": "write",
+          "verdict": "match",
+          "clio_seconds": 3.62,
+          "go_seconds": 0.05,
+          "differences": []
+        },
+        {
+          "step": "sql update own row",
+          "kind": "write",
+          "verdict": "both-failed",
+          "clio_seconds": 0.08,
+          "go_seconds": 0.06,
+          "differences": []
+        },
+        {
+          "step": "sql select own row as table",
+          "kind": "read-back",
+          "verdict": "skipped",
+          "differences": []
+        },
+        {
+          "step": "sql select own row as json",
+          "kind": "read-back",
+          "verdict": "skipped",
+          "differences": []
+        },
+        {
+          "step": "2:cleanup (clio)",
+          "kind": "cleanup",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "2:cleanup (go)",
+          "kind": "cleanup",
+          "verdict": "match",
+          "differences": []
+        }
+      ]
+    }
+  ]
+}

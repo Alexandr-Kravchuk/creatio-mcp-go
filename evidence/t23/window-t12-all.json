@@ -1,0 +1,189 @@
+{
+  "schema": 1,
+  "clio_startup_seconds": 0.63,
+  "go_startup_seconds": 0.01,
+  "counts": {
+    "skipped": 0,
+    "match": 1,
+    "both-failed": 0,
+    "error-text": 0,
+    "known-diff": 1,
+    "mismatch": 1
+  },
+  "scenarios": [
+    {
+      "scenario": "set-fsm-mode on, then off",
+      "verdict": "mismatch",
+      "steps": [
+        {
+          "step": "mode before",
+          "kind": "read-back",
+          "verdict": "match",
+          "clio_seconds": 0.41,
+          "go_seconds": 0.25,
+          "differences": []
+        },
+        {
+          "step": "2:expect",
+          "kind": "expect",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "on",
+          "kind": "write",
+          "verdict": "known-diff",
+          "clio_seconds": 50.46,
+          "go_seconds": 3.56,
+          "differences": [
+            "$.executionlogmessages: 4 items in clio, 3 in go",
+            "$.executionlogmessages[0].value: value differs"
+          ]
+        },
+        {
+          "step": "mode on",
+          "kind": "read-back",
+          "verdict": "match",
+          "clio_seconds": 4.06,
+          "go_seconds": 0.04,
+          "differences": []
+        },
+        {
+          "step": "5:expect",
+          "kind": "expect",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "off",
+          "kind": "write",
+          "verdict": "mismatch",
+          "clio_seconds": 4.58,
+          "go_seconds": 59.51,
+          "differences": [
+            "$.executionlogmessages: 4 items in clio, 2 in go",
+            "$.executionlogmessages[0].messagetype: value differs",
+            "$.executionlogmessages[0].value: value differs",
+            "$.executionlogmessages[1].messagetype: value differs",
+            "$.executionlogmessages[1].value: value differs",
+            "$.exitcode: value differs"
+          ]
+        },
+        {
+          "step": "mode after",
+          "kind": "read-back",
+          "verdict": "skipped",
+          "differences": []
+        },
+        {
+          "step": "8:expect",
+          "kind": "expect",
+          "verdict": "skipped",
+          "differences": []
+        }
+      ]
+    },
+    {
+      "scenario": "regenerate-identity-signing-key, then read the public JWK",
+      "verdict": "match",
+      "steps": [
+        {
+          "step": "regenerate",
+          "kind": "write",
+          "verdict": "match",
+          "clio_seconds": 6.78,
+          "go_seconds": 0.12,
+          "differences": []
+        },
+        {
+          "step": "public jwk",
+          "kind": "read-back",
+          "verdict": "match",
+          "clio_seconds": 0.06,
+          "go_seconds": 0.04,
+          "differences": []
+        }
+      ]
+    },
+    {
+      "scenario": "manage-access operation-position on a grant of a role this run creates",
+      "verdict": "known-diff",
+      "steps": [
+        {
+          "step": "create role",
+          "kind": "write",
+          "verdict": "match",
+          "clio_seconds": 0.7,
+          "go_seconds": 0.24,
+          "differences": []
+        },
+        {
+          "step": "grant operation",
+          "kind": "write",
+          "verdict": "known-diff",
+          "clio_seconds": 0.21,
+          "go_seconds": 0.15,
+          "differences": [
+            "$.executionlogmessages[0].value: value differs"
+          ]
+        },
+        {
+          "step": "find grant",
+          "kind": "read-back",
+          "verdict": "match",
+          "clio_seconds": 5.45,
+          "go_seconds": 0.04,
+          "differences": []
+        },
+        {
+          "step": "position",
+          "kind": "write",
+          "verdict": "match",
+          "clio_seconds": 0.26,
+          "go_seconds": 0.3,
+          "differences": []
+        },
+        {
+          "step": "revoke operation",
+          "kind": "write",
+          "verdict": "match",
+          "clio_seconds": 0.16,
+          "go_seconds": 0.14,
+          "differences": []
+        },
+        {
+          "step": "delete role",
+          "kind": "write",
+          "verdict": "match",
+          "clio_seconds": 19.12,
+          "go_seconds": 1.21,
+          "differences": []
+        },
+        {
+          "step": "4:cleanup (clio)",
+          "kind": "cleanup",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "4:cleanup (go)",
+          "kind": "cleanup",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "2:cleanup (clio)",
+          "kind": "cleanup",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "2:cleanup (go)",
+          "kind": "cleanup",
+          "verdict": "match",
+          "differences": []
+        }
+      ]
+    }
+  ]
+}

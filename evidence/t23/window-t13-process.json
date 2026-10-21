@@ -1,0 +1,121 @@
+{
+  "schema": 1,
+  "clio_startup_seconds": 0.65,
+  "go_startup_seconds": 0.02,
+  "counts": {
+    "skipped": 0,
+    "match": 0,
+    "both-failed": 0,
+    "error-text": 0,
+    "known-diff": 1,
+    "mismatch": 0
+  },
+  "scenarios": [
+    {
+      "scenario": "Process designer chain in an own app: build, edit, version, activate",
+      "verdict": "known-diff",
+      "steps": [
+        {
+          "step": "create app",
+          "kind": "write",
+          "verdict": "known-diff",
+          "clio_seconds": 13.5,
+          "go_seconds": 10.89,
+          "differences": [
+            "$.applicationname: value differs",
+            "$.dataforge.warnings[0]: value differs",
+            "$.dataforge.warnings[1]: value differs",
+            "$.entities[0].caption: value differs",
+            "$.entities[0].uid: value differs",
+            "$.pages[0].uid: value differs",
+            "$.pages[1].uid: value differs",
+            "$.pages[2].uid: value differs"
+          ]
+        },
+        {
+          "step": "validate the planned graph",
+          "kind": "write",
+          "verdict": "match",
+          "clio_seconds": 0.08,
+          "go_seconds": 0.29,
+          "differences": []
+        },
+        {
+          "step": "build the process",
+          "kind": "write",
+          "verdict": "known-diff",
+          "clio_seconds": 1.55,
+          "go_seconds": 0.79,
+          "differences": [
+            "$.executionlogmessages[1].value: value differs",
+            "$.executionlogmessages[2].value: value differs"
+          ]
+        },
+        {
+          "step": "describe the built process",
+          "kind": "read-back",
+          "verdict": "known-diff",
+          "clio_seconds": 0.58,
+          "go_seconds": 0.18,
+          "differences": [
+            "$.executionlogmessages[0].value: value differs"
+          ]
+        },
+        {
+          "step": "add an element",
+          "kind": "write",
+          "verdict": "known-diff",
+          "clio_seconds": 2.35,
+          "go_seconds": 0.61,
+          "differences": [
+            "$.executionlogmessages[1].value: value differs",
+            "$.executionlogmessages[2].value: value differs"
+          ]
+        },
+        {
+          "step": "save a new version",
+          "kind": "write",
+          "verdict": "known-diff",
+          "clio_seconds": 1.5,
+          "go_seconds": 0.63,
+          "differences": [
+            "$.executionlogmessages[4].value: value differs"
+          ]
+        },
+        {
+          "step": "make the original actual again",
+          "kind": "write",
+          "verdict": "known-diff",
+          "clio_seconds": 1.07,
+          "go_seconds": 0.43,
+          "differences": [
+            "$.executionlogmessages[1].value: value differs",
+            "$.executionlogmessages[3].value: value differs"
+          ]
+        },
+        {
+          "step": "describe after activation",
+          "kind": "read-back",
+          "verdict": "known-diff",
+          "clio_seconds": 0.58,
+          "go_seconds": 0.16,
+          "differences": [
+            "$.executionlogmessages[0].value: value differs"
+          ]
+        },
+        {
+          "step": "2:cleanup (clio)",
+          "kind": "cleanup",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "2:cleanup (go)",
+          "kind": "cleanup",
+          "verdict": "match",
+          "differences": []
+        }
+      ]
+    }
+  ]
+}

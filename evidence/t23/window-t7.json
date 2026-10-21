@@ -1,0 +1,65 @@
+{
+  "schema": 1,
+  "clio_startup_seconds": 0.66,
+  "go_startup_seconds": 0.01,
+  "counts": {
+    "skipped": 0,
+    "match": 0,
+    "both-failed": 0,
+    "error-text": 0,
+    "known-diff": 1,
+    "mismatch": 0
+  },
+  "scenarios": [
+    {
+      "scenario": "install-application of a run-named package folder, read back, uninstall",
+      "verdict": "known-diff",
+      "steps": [
+        {
+          "step": "install-application",
+          "kind": "write",
+          "verdict": "known-diff",
+          "clio_seconds": 6.56,
+          "go_seconds": 5.24,
+          "differences": [
+            "$.executionlogmessages: 13 items in clio, 14 in go",
+            "$.executionlogmessages[1].value: value differs",
+            "$.executionlogmessages[2].value: value differs",
+            "$.executionlogmessages[10].value: value differs",
+            "$.executionlogmessages[11].value: only in go",
+            "$.executionlogmessages[12].messagetype: value differs",
+            "$.executionlogmessages[12].value: value differs"
+          ]
+        },
+        {
+          "step": "3:expect",
+          "kind": "expect",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "list-packages",
+          "kind": "read-back",
+          "verdict": "known-diff",
+          "clio_seconds": 0.38,
+          "go_seconds": 0.05,
+          "differences": [
+            "$.packages[0].uid: value differs"
+          ]
+        },
+        {
+          "step": "2:cleanup (clio)",
+          "kind": "cleanup",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "2:cleanup (go)",
+          "kind": "cleanup",
+          "verdict": "match",
+          "differences": []
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,354 @@
+{
+  "schema": 1,
+  "clio_startup_seconds": 0.66,
+  "go_startup_seconds": 0.01,
+  "counts": {
+    "skipped": 0,
+    "match": 0,
+    "both-failed": 0,
+    "error-text": 0,
+    "known-diff": 3,
+    "mismatch": 0
+  },
+  "scenarios": [
+    {
+      "scenario": "entity business rules: create, read back, update, read back, delete, read back",
+      "verdict": "known-diff",
+      "steps": [
+        {
+          "step": "app",
+          "kind": "write",
+          "verdict": "known-diff",
+          "clio_seconds": 14.32,
+          "go_seconds": 10.7,
+          "differences": [
+            "$.applicationname: value differs",
+            "$.dataforge.warnings[0]: value differs",
+            "$.dataforge.warnings[1]: value differs",
+            "$.entities[0].caption: value differs",
+            "$.entities[0].uid: value differs",
+            "$.pages[0].uid: value differs",
+            "$.pages[1].uid: value differs",
+            "$.pages[2].uid: value differs"
+          ]
+        },
+        {
+          "step": "entity",
+          "kind": "write",
+          "verdict": "match",
+          "clio_seconds": 8.36,
+          "go_seconds": 8.29,
+          "differences": []
+        },
+        {
+          "step": "create-rules",
+          "kind": "write",
+          "verdict": "match",
+          "clio_seconds": 1.96,
+          "go_seconds": 1.54,
+          "differences": []
+        },
+        {
+          "step": "read-created",
+          "kind": "read-back",
+          "verdict": "match",
+          "clio_seconds": 0.26,
+          "go_seconds": 0.24,
+          "differences": []
+        },
+        {
+          "step": "8:expect",
+          "kind": "expect",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "9:expect",
+          "kind": "expect",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "update-rules",
+          "kind": "write",
+          "verdict": "match",
+          "clio_seconds": 1.69,
+          "go_seconds": 1.74,
+          "differences": []
+        },
+        {
+          "step": "read-updated",
+          "kind": "read-back",
+          "verdict": "match",
+          "clio_seconds": 0.24,
+          "go_seconds": 0.21,
+          "differences": []
+        },
+        {
+          "step": "12:expect",
+          "kind": "expect",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "13:expect",
+          "kind": "expect",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "delete-rules",
+          "kind": "write",
+          "verdict": "match",
+          "clio_seconds": 1.7,
+          "go_seconds": 1.74,
+          "differences": []
+        },
+        {
+          "step": "read-deleted",
+          "kind": "read-back",
+          "verdict": "match",
+          "clio_seconds": 0.22,
+          "go_seconds": 0.21,
+          "differences": []
+        },
+        {
+          "step": "6:cleanup (clio)",
+          "kind": "cleanup",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "6:cleanup (go)",
+          "kind": "cleanup",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "4:cleanup (clio)",
+          "kind": "cleanup",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "4:cleanup (go)",
+          "kind": "cleanup",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "2:cleanup (clio)",
+          "kind": "cleanup",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "2:cleanup (go)",
+          "kind": "cleanup",
+          "verdict": "match",
+          "differences": []
+        }
+      ]
+    },
+    {
+      "scenario": "entity business rules: apply-filter with child rules and apply-static-filter",
+      "verdict": "known-diff",
+      "steps": [
+        {
+          "step": "app",
+          "kind": "write",
+          "verdict": "known-diff",
+          "clio_seconds": 13.56,
+          "go_seconds": 11.66,
+          "differences": [
+            "$.applicationname: value differs",
+            "$.dataforge.warnings[0]: value differs",
+            "$.dataforge.warnings[1]: value differs",
+            "$.entities[0].caption: value differs",
+            "$.entities[0].uid: value differs",
+            "$.pages[0].uid: value differs",
+            "$.pages[1].uid: value differs",
+            "$.pages[2].uid: value differs"
+          ]
+        },
+        {
+          "step": "entity",
+          "kind": "write",
+          "verdict": "match",
+          "clio_seconds": 7.71,
+          "go_seconds": 7.99,
+          "differences": []
+        },
+        {
+          "step": "create-rules",
+          "kind": "write",
+          "verdict": "match",
+          "clio_seconds": 2.96,
+          "go_seconds": 1.94,
+          "differences": []
+        },
+        {
+          "step": "read-created",
+          "kind": "read-back",
+          "verdict": "match",
+          "clio_seconds": 0.24,
+          "go_seconds": 0.29,
+          "differences": []
+        },
+        {
+          "step": "8:expect",
+          "kind": "expect",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "6:cleanup (clio)",
+          "kind": "cleanup",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "6:cleanup (go)",
+          "kind": "cleanup",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "4:cleanup (clio)",
+          "kind": "cleanup",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "4:cleanup (go)",
+          "kind": "cleanup",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "2:cleanup (clio)",
+          "kind": "cleanup",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "2:cleanup (go)",
+          "kind": "cleanup",
+          "verdict": "match",
+          "differences": []
+        }
+      ]
+    },
+    {
+      "scenario": "page business rules: create, read back, update, read back",
+      "verdict": "known-diff",
+      "steps": [
+        {
+          "step": "app",
+          "kind": "write",
+          "verdict": "known-diff",
+          "clio_seconds": 14.66,
+          "go_seconds": 11.35,
+          "differences": [
+            "$.applicationname: value differs",
+            "$.dataforge.warnings[0]: value differs",
+            "$.dataforge.warnings[1]: value differs",
+            "$.entities[0].caption: value differs",
+            "$.entities[0].uid: value differs",
+            "$.pages[0].uid: value differs",
+            "$.pages[1].uid: value differs",
+            "$.pages[2].uid: value differs"
+          ]
+        },
+        {
+          "step": "page",
+          "kind": "write",
+          "verdict": "match",
+          "clio_seconds": 3.63,
+          "go_seconds": 2.49,
+          "differences": []
+        },
+        {
+          "step": "create-rules",
+          "kind": "write",
+          "verdict": "match",
+          "clio_seconds": 1.91,
+          "go_seconds": 1.79,
+          "differences": []
+        },
+        {
+          "step": "read-created",
+          "kind": "read-back",
+          "verdict": "match",
+          "clio_seconds": 0.27,
+          "go_seconds": 0.24,
+          "differences": []
+        },
+        {
+          "step": "8:expect",
+          "kind": "expect",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "update-rules",
+          "kind": "write",
+          "verdict": "match",
+          "clio_seconds": 1.69,
+          "go_seconds": 1.84,
+          "differences": []
+        },
+        {
+          "step": "read-updated",
+          "kind": "read-back",
+          "verdict": "match",
+          "clio_seconds": 0.26,
+          "go_seconds": 0.32,
+          "differences": []
+        },
+        {
+          "step": "11:expect",
+          "kind": "expect",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "6:cleanup (clio)",
+          "kind": "cleanup",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "6:cleanup (go)",
+          "kind": "cleanup",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "4:cleanup (clio)",
+          "kind": "cleanup",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "4:cleanup (go)",
+          "kind": "cleanup",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "2:cleanup (clio)",
+          "kind": "cleanup",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "2:cleanup (go)",
+          "kind": "cleanup",
+          "verdict": "match",
+          "differences": []
+        }
+      ]
+    }
+  ]
+}
