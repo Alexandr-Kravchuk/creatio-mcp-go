@@ -189,9 +189,11 @@ func watchSettings(ctx context.Context, h *concurrencyHome, seen *violations, re
 	for ctx.Err() == nil {
 		data, err := os.ReadFile(h.settings)
 		if err != nil {
-			// On Windows the open can meet the writer's replace of the file; the server's settings reader
+			// On Windows the open can meet the writer's ReplaceFileW, which holds the file open or has it
+			// renamed aside for a moment (clio's File.Replace does the same); the server's settings reader
 			// keeps the previously loaded settings then (environments.go), so this is a retry, not a tear.
-			if !windowsContention(err.Error()) {
+			if !windowsContention(err.Error()) &&
+				(runtime.GOOS != "windows" || !strings.Contains(err.Error(), "cannot find the file specified")) {
 				seen.add("settings reader: %v", err)
 			}
 			continue
