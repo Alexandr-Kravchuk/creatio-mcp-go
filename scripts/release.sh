@@ -59,7 +59,7 @@ if gh release view "$tag" >/dev/null 2>&1; then fail "a GitHub release for $tag 
 echo "tag $tag at $(git rev-parse --short HEAD) on $branch"
 
 step "gofmt, go vet, go test, public-safety check"
-unformatted=$(gofmt -l .)
+unformatted=$(git ls-files -z -- '*.go' | xargs -0 gofmt -l)
 [[ -z $unformatted ]] || fail "these files need gofmt: $unformatted"
 go vet ./...
 go test ./...
