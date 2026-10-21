@@ -28,9 +28,9 @@
         },
         "settle-seconds": 30,
         "known-differences": [
-          "$.executionlogmessages"
+          "$.executionlogmessages[0].value"
         ],
-        "why": "The side that runs second finds FSM already on ('no config edit needed') and only exports."
+        "why": "The side that runs second finds FSM already on ('no config edit needed') and only exports; only that first line differs, the export lines are compared."
       },
       {
         "kind": "read-back",
