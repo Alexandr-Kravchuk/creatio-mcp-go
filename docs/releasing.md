@@ -20,6 +20,10 @@ The Go version comes from `go.mod`; modules are cached by `actions/setup-go`.
 ## One-time setup on the release Mac
 
 - Go (the version in `go.mod`), `gh` logged in with write access to the repository, `rg` (ripgrep).
+- For the Homebrew tap step: `python3`, and `git push` rights to the tap repository over the URL the
+  script uses (`https://github.com/Alexandr-Kravchuk/homebrew-tap.git` by default). `gh auth status`
+  alone does not make `git push` over HTTPS work; run `gh auth setup-git` once, or set
+  `HOMEBREW_TAP_URL` to an SSH URL such as `git@github.com:Alexandr-Kravchuk/homebrew-tap.git`.
 - The signing secrets file `~/secrets/adac-release.env` (another path can be given in `RELEASE_ENV`). It
   exports `MAC_CERT_P12` (path to the Developer ID Application `.p12`), `MAC_CERT_PASSWORD`,
   `APPLE_API_KEY` (path to the App Store Connect `.p8` key), `APPLE_API_KEY_ID` and `APPLE_API_ISSUER`.
@@ -39,7 +43,8 @@ The Go version comes from `go.mod`; modules are cached by `actions/setup-go`.
    The dry run checks the tag, the notes file, `gh` login, a clean tree, gofmt, vet, tests and the
    public-safety check, builds all archives without signing, and verifies `dist/SHA256SUMS`. Off `main`
    or behind `origin/main` it only warns. With `DRY_RUN_SIGNED=1` it also signs and notarizes, which
-   needs the secrets file and takes a few minutes.
+   needs the secrets file and takes a few minutes. When the Homebrew tap is reachable, it also prints the
+   formula it would push (with the hashes of the local unsigned build, not of the published archives).
 4. Release:
 
    ```bash
@@ -56,7 +61,8 @@ The Go version comes from `go.mod`; modules are cached by `actions/setup-go`.
    - creates the GitHub release as a pre-release with the notes and uploads the archives and
      `SHA256SUMS`;
    - downloads the published release back, compares its `SHA256SUMS` with the local one byte for byte,
-     and repeats the hash and notarization checks on the downloaded files.
+     and repeats the hash and notarization checks on the downloaded files;
+   - updates the Homebrew tap (see below), unless it is skipped.
 
    If it stops after the push, fix the cause and finish by hand with `gh release create` (or
    `gh release upload --clobber`), then download and verify as above. Do not delete a pushed tag that
@@ -66,6 +72,43 @@ The Go version comes from `go.mod`; modules are cached by `actions/setup-go`.
 Why `spctl -a -t install`: for a bare command-line binary `spctl -a -t execute` always answers
 "does not seem to be an app", even when it is notarized. The install assessment reports the source, and
 only `source=Notarized Developer ID` proves notarization rather than just a valid signature.
+
+## Homebrew tap
+
+The tap [`Alexandr-Kravchuk/homebrew-tap`](https://github.com/Alexandr-Kravchuk/homebrew-tap) holds one
+formula, `Formula/creatio-mcp-go.rb`, installed with `brew install alexandr-kravchuk/tap/creatio-mcp-go`.
+The formula does not build from source: for macOS (arm, Intel) and Linux (arm64, x86_64) it points at the
+release archive and its sha256 from the release's `SHA256SUMS`, installs the binary, checks it with
+`creatio-mcp-go --version`, and prints the `claude mcp add` / `codex mcp add` commands with the `opt`
+path, which stays the same across upgrades.
+
+- `scripts/homebrew-formula.py --version <tag> [--sums <file or URL>] --out <dir> [--readme]` writes
+  `<dir>/Formula/creatio-mcp-go.rb` (and the tap `README.md`). Without `--sums` it reads `SHA256SUMS`
+  of the published release. It refuses a `SHA256SUMS` that lacks any of the four macOS and Linux
+  archives. The formula has no `version` line: Homebrew takes the version from the archive name,
+  pre-release suffixes included, and `brew audit --strict` rejects a repeated one.
+- `scripts/update-homebrew-tap.sh [--dry-run] <tag> <SHA256SUMS>` clones the tap, regenerates the
+  formula and README, commits `creatio-mcp-go <version>` and pushes. If the tap already has this
+  version it pushes nothing. Exit code 3 means the tap is not reachable or has no commits yet.
+- `scripts/release.sh` runs it as the last step, after the published release is verified, with
+  `dist/SHA256SUMS` (just compared byte for byte with the published one). The tap is checked in the
+  preconditions, before the tag: if it is not reachable, or `python3` is missing, the script warns and
+  the release goes on without the tap. If the tap update fails after the release is published, the
+  script fails with the retry command; run `scripts/update-homebrew-tap.sh <tag> dist/SHA256SUMS` once
+  the cause is fixed.
+- Options and variables of `scripts/release.sh`: `--no-homebrew` skips the tap.
+  `--homebrew-prerelease` (the default) updates the tap for a pre-release too, because the project
+  ships only pre-releases so far; `--no-homebrew-prerelease` leaves the tap to full releases, and since
+  `scripts/release.sh` always publishes a pre-release, it currently means the tap is not updated.
+  `HOMEBREW_TAP_REPO` (default `Alexandr-Kravchuk/homebrew-tap`) and `HOMEBREW_TAP_URL` (default
+  `https://github.com/$HOMEBREW_TAP_REPO.git`) choose the tap.
+- A release published another way (for example through the workflow below) does not update the tap:
+  run `scripts/update-homebrew-tap.sh <tag> <downloaded SHA256SUMS>` after it is published.
+
+To check a formula by hand, copy it into a local tap (`brew tap-new --no-git <user>/local-test`, then
+into `$(brew --repository <user>/local-test)/Formula/`) and run `brew style`,
+`brew audit --strict --online --formula`, `brew install`, `brew test`, then `brew uninstall` and
+`brew untap`.
 
 ## Rebuilding Linux and Windows archives on GitHub
 

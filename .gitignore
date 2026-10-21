@@ -14,3 +14,4 @@ evidence/contracts-latest.json
 
 # Local implementation journal.
 .ai_temp/
+dist-tap/

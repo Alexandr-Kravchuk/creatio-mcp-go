@@ -4,7 +4,7 @@ set -euo pipefail
 # Local end-to-end release: checks, signed build, annotated tag, GitHub pre-release, and a check of
 # what was actually published. The whole procedure is described in docs/releasing.md.
 #
-# Usage: scripts/release.sh [--dry-run] [--title <title>] <tag> <notes-file>
+# Usage: scripts/release.sh [--dry-run] [--title <title>] [--no-homebrew] [--[no-]homebrew-prerelease] <tag> <notes-file>
 #   scripts/release.sh v0.2.0 notes.md
 #   scripts/release.sh --title "v0.2.0 — multi-environment" v0.2.0 notes.md
 #   scripts/release.sh --dry-run v0.2.0 notes.md
@@ -13,14 +13,24 @@ set -euo pipefail
 # and the release. In dry-run the branch and up-to-date checks only warn, and the build is unsigned
 # (no signing secrets needed) unless DRY_RUN_SIGNED=1 is set.
 # A real run reads the signing secrets through scripts/build-release.sh and refuses UNSIGNED=1.
+#
+# Last step, after the published release is verified: scripts/update-homebrew-tap.sh regenerates
+# Formula/creatio-mcp-go.rb in the tap HOMEBREW_TAP_REPO (default Alexandr-Kravchuk/homebrew-tap),
+# commits "creatio-mcp-go <version>" and pushes. It is skipped with a warning when the tap is not
+# reachable, and with --no-homebrew. --homebrew-prerelease (the default) updates the tap for a
+# pre-release too; this script always publishes a pre-release, so --no-homebrew-prerelease currently
+# means the tap is not updated. A dry run prints the formula it would push.
 
 usage() { sed -n '7,10p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//' >&2; exit 2; }
 
-dry_run=0; title=""; positional=()
+dry_run=0; title=""; homebrew=1; homebrew_prerelease=1; positional=()
 while [[ $# -gt 0 ]]; do
   case $1 in
     --dry-run) dry_run=1; shift ;;
     --title) [[ $# -ge 2 ]] || usage; title=$2; shift 2 ;;
+    --no-homebrew) homebrew=0; shift ;;
+    --homebrew-prerelease) homebrew_prerelease=1; shift ;;
+    --no-homebrew-prerelease) homebrew_prerelease=0; shift ;;
     -h|--help) usage ;;
     -*) echo "unknown option: $1" >&2; usage ;;
     *) positional+=("$1"); shift ;;
@@ -57,6 +67,23 @@ if git rev-parse -q --verify "refs/tags/$tag" >/dev/null; then fail "tag $tag al
 if git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null 2>&1; then fail "tag $tag already exists on origin"; fi
 if gh release view "$tag" >/dev/null 2>&1; then fail "a GitHub release for $tag already exists"; fi
 echo "tag $tag at $(git rev-parse --short HEAD) on $branch"
+
+# The Homebrew tap is optional: an unreachable tap is reported here, before the tag, and skipped.
+# gh release create below always passes --prerelease.
+prerelease=1
+tap_repo=${HOMEBREW_TAP_REPO:-Alexandr-Kravchuk/homebrew-tap}
+tap_url=${HOMEBREW_TAP_URL:-"https://github.com/$tap_repo.git"}
+if [[ $homebrew == 0 ]]; then
+  echo "homebrew tap: skipped (--no-homebrew)"
+elif [[ $prerelease == 1 && $homebrew_prerelease == 0 ]]; then
+  homebrew=0; echo "homebrew tap: skipped for a pre-release (--no-homebrew-prerelease)"
+elif ! command -v python3 >/dev/null; then
+  homebrew=0; warn "python3 is not installed: the homebrew tap will not be updated"
+elif ! GIT_TERMINAL_PROMPT=0 git ls-remote --exit-code "$tap_url" HEAD >/dev/null 2>&1; then
+  homebrew=0; warn "homebrew tap $tap_url is not reachable (or empty): it will not be updated"
+else
+  echo "homebrew tap: $tap_repo will be updated after the release"
+fi
 
 step "gofmt, go vet, go test, public-safety check"
 unformatted=$(git ls-files -z -- '*.go' | xargs -0 gofmt -l)
@@ -117,6 +144,11 @@ if [[ $dry_run == 1 ]]; then
   echo "would run: git tag -a $tag -m 'creatio-mcp-go $tag'; git push origin $tag"
   echo "would run: gh release create $tag --prerelease --verify-tag --title '$title' --notes-file $notes_file <archives> SHA256SUMS"
   echo "then download the release back and verify SHA256SUMS and the notarization"
+  if [[ $homebrew == 1 ]]; then
+    echo "then update the homebrew tap (the sha256 below are of this local build, not of a published release):"
+    HOMEBREW_TAP_REPO=$tap_repo HOMEBREW_TAP_URL=$tap_url \
+      scripts/update-homebrew-tap.sh --dry-run "$tag" "$dist/SHA256SUMS"
+  fi
   exit 0
 fi
 
@@ -136,6 +168,14 @@ gh release download "$tag" --dir "$download"
 diff "$download/SHA256SUMS" "$dist/SHA256SUMS" || fail "published SHA256SUMS differs from the local one"
 verify_archives "$download"
 rm -rf "$download"
+
+if [[ $homebrew == 1 ]]; then
+  step "Update the Homebrew tap"
+  # dist/SHA256SUMS was just compared with the published one, so the formula carries the published hashes.
+  HOMEBREW_TAP_REPO=$tap_repo HOMEBREW_TAP_URL=$tap_url \
+    scripts/update-homebrew-tap.sh "$tag" "$dist/SHA256SUMS" ||
+    fail "$tag is published, but the tap update failed; retry: scripts/update-homebrew-tap.sh $tag dist/SHA256SUMS"
+fi
 
 step "Released $tag"
 gh release view "$tag" --json url --jq .url
