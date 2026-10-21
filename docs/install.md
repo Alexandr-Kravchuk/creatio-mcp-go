@@ -57,6 +57,24 @@ The registration has no environment variables, so the server uses the environmen
 (section 2). For a default environment set by `CREATIO_*` variables, register it yourself as in
 sections 3 and 4, with the path the installer printed.
 
+### Homebrew (macOS, Linux)
+
+```bash
+brew install alexandr-kravchuk/tap/creatio-mcp-go
+```
+
+The formula installs the release binaries (signed and notarized on macOS) for arm64 and x86_64; nothing
+is built from source. Register the server with the path Homebrew keeps across upgrades:
+
+```bash
+claude mcp add --scope user creatio-go -- "$(brew --prefix)/opt/creatio-mcp-go/bin/creatio-mcp-go"
+codex mcp add creatio-go -- "$(brew --prefix)/opt/creatio-mcp-go/bin/creatio-mcp-go"
+```
+
+`brew info creatio-mcp-go` prints the same commands. Environments come from clio's `appsettings.json`
+(section 2). Update with `brew upgrade creatio-mcp-go`; the registration keeps working because the
+`opt` path does not change. Releases are pre-releases for now, and the tap follows them.
+
 ### Manual download
 
 Take the archive for your platform from [Releases](https://github.com/Alexandr-Kravchuk/creatio-mcp-go/releases):

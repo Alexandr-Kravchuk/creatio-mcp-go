@@ -54,6 +54,9 @@ puts the binary into `~/.local/bin` (Windows: `%LOCALAPPDATA%\creatio-mcp-go\bin
 `creatio-go` in Claude Code and Codex, whichever is installed. Run it again to update. Options
 (`--version`, `--dir`, `--name`, `--no-register`) are in [docs/install.md](docs/install.md#1-install).
 
+Homebrew (macOS, Linux): `brew install alexandr-kravchuk/tap/creatio-mcp-go`, then register
+`$(brew --prefix)/opt/creatio-mcp-go/bin/creatio-mcp-go` (`brew info creatio-mcp-go` prints the commands).
+
 Manual install: download the archive for your platform from
 [Releases](https://github.com/Alexandr-Kravchuk/creatio-mcp-go/releases), unpack it, then:
 
