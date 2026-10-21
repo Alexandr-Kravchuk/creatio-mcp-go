@@ -37,18 +37,28 @@ from clio are listed per area in [docs/status](docs/status).
 
 ## Install
 
-Download the archive for your platform from
-[Releases](https://github.com/Alexandr-Kravchuk/creatio-mcp-go/releases) and unpack it.
+macOS and Linux:
 
-Claude Code:
+```bash
+curl -fsSL https://raw.githubusercontent.com/Alexandr-Kravchuk/creatio-mcp-go/main/scripts/install.sh | sh
+```
+
+Windows (PowerShell):
+
+```powershell
+irm https://raw.githubusercontent.com/Alexandr-Kravchuk/creatio-mcp-go/main/scripts/install.ps1 | iex
+```
+
+The installer downloads the newest release (pre-releases included), checks it against `SHA256SUMS`,
+puts the binary into `~/.local/bin` (Windows: `%LOCALAPPDATA%\creatio-mcp-go\bin`) and registers it as
+`creatio-go` in Claude Code and Codex, whichever is installed. Run it again to update. Options
+(`--version`, `--dir`, `--name`, `--no-register`) are in [docs/install.md](docs/install.md#1-install).
+
+Manual install: download the archive for your platform from
+[Releases](https://github.com/Alexandr-Kravchuk/creatio-mcp-go/releases), unpack it, then:
 
 ```bash
 claude mcp add creatio-go -- /path/to/creatio-mcp-go
-```
-
-Codex:
-
-```bash
 codex mcp add creatio-go -- /path/to/creatio-mcp-go
 ```
 
