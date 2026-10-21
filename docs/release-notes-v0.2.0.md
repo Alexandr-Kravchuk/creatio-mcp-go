@@ -1,7 +1,4 @@
-# creatio-mcp-go v0.2.0 — release notes (draft)
-
-> **Draft.** Not released yet. Numbers are as of `caa2eb0` (2026-10-20, after both waves of the clio
-> 8.1.0.142 work, streams a and b of the second wave merged).
+# creatio-mcp-go v0.2.0 — release notes
 
 v0.1.0 (2026-09-28) was a read-only preview: 14 tools, one Creatio site per process set by `CREATIO_*`
 variables. v0.2.0 is the first release that can stand in for `clio mcp-server` in everyday agent work —
@@ -90,7 +87,7 @@ prints the release tag.
 Both now share their code with the `-to-file` twins below. Details:
 [status/t21b-to-file-status.md](status/t21b-to-file-status.md).
 
-## Second wave (stream a/b)
+## More tools from clio 8.1.0.142
 
 The other 11 tools clio 8.1.0.142 added (T21). Nine are ported from the 8.1.0.142 source and compared with
 clio 8.1.0.142's own MCP server, without a Creatio stand: refusal paths against an unreachable environment
@@ -135,7 +132,7 @@ keys, each listed in the status file.
 configuration directory, never over an existing file); content is written as bytes, the same on Windows and
 Unix. Details: [status/t21b-to-file-status.md](status/t21b-to-file-status.md).
 
-### Second-wave differences from clio
+### Differences from clio in these tools
 
 - `create-package`, `place-section-in-workplace`, `localize-page`, `trigger-smoke`: the answer text is
   written in System.Text.Json's default spelling (`'`, `→`), clio writes it relaxed; the JSON values are
@@ -192,7 +189,7 @@ likely to notice:
 
 ## Not in this release
 
-- **`page-smoke` and `get-mobile-page-conversion-guide`** (see "Second wave" above): use clio for them.
+- **`page-smoke` and `get-mobile-page-conversion-guide`** (see "More tools from clio 8.1.0.142" above): use clio for them.
 - **33 local-machine, infrastructure and workspace tools** (T16: `deploy-creatio`, `uninstall-creatio`,
   `restore-db-*`, `clear-redis-*`, `create-/push-/restore-workspace`, `reg-web-app`, `stop-creatio`,
   browser-session tools, …). They stay in clio on purpose (decision D3 in
@@ -213,11 +210,17 @@ likely to notice:
   all clio 142 behaviour changes or stand data, none a regression; details in
   [t22 status](status/t22-live-parity-142-status.md). Earlier: clio 8.1.0.134, two stands, 706 calls,
   0 mismatches (2026-10-03).
-- The 8.1.0.142 work (T19, T20, T6 writes, T21a, T21b) was compared with clio 8.1.0.142 without a live Creatio: on
-  refusal paths, fake stands and local fixtures.
-- Several write success paths (compile, restart, package installs, `install-application`,
-  `install-process-builder`, `set-logo` / `set-background-image`, `run-process` launches, Data Forge
-  writes) wait for a live "window run" on a disposable stand before the final release (T17).
+- Writes: the first full live write parity run against clio 8.1.0.142 on one disposable on-premises stand
+  (2026-10-21), every scenario file including the stand-wide ones (compile, restart, package and
+  process-builder installs, FSM, logo and background image, identity key). Each scenario creates its object
+  through both servers, reads it back through both and removes it. Final runs: no mismatch except one
+  package compile whose answer depends on which side compiles first (clio answers the same for a package
+  with nothing new); no test object left on the stand. The run found and fixed three Go regressions and
+  ported clio 142's page and process write digests
+  ([t23 status](status/t23-live-write-parity.md)).
+- Not verified live yet: the OAuth app success path, `execute-sql-script` results and entity connections
+  (the stand refuses them), FSM switching with this server acting first, `install-application` with a
+  real archive, the GitHub/NuGet knowledge transports against the real publishers, Windows.
 
 ## Upgrading from v0.1.0
 

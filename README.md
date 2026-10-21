@@ -59,7 +59,7 @@ OAuth, .NET Core sites, Windows, knowledge bundles and write safety: [docs/insta
 ## Documentation
 
 - [Installation and usage](docs/install.md)
-- [Release notes v0.2.0 (draft)](docs/release-notes-v0.2.0.md)
+- [Release notes v0.2.0](docs/release-notes-v0.2.0.md)
 - [Comparison with clio 8.1.0.142](docs/status/clio-comparison-2026-10-20.md)
 - [Migration plan](docs/migration-plan.md) — tasks, decisions and status
 - [Research record](docs/research.md) — why this exists and how it compares with clio
