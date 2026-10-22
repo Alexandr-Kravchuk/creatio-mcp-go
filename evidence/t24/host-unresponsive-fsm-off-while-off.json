@@ -1,0 +1,267 @@
+{
+  "schema": 1,
+  "clio_startup_seconds": 0.72,
+  "go_startup_seconds": 0.61,
+  "counts": {
+    "skipped": 0,
+    "match": 0,
+    "both-failed": 0,
+    "error-text": 0,
+    "known-diff": 0,
+    "mismatch": 7
+  },
+  "scenarios": [
+    {
+      "scenario": "set-fsm-mode off while off round 0 (warm-up)",
+      "verdict": "mismatch",
+      "first": "clio",
+      "steps": [
+        {
+          "step": "mode before",
+          "kind": "read-back",
+          "verdict": "both-failed",
+          "clio_seconds": 100.08,
+          "go_seconds": 45.01,
+          "differences": [
+            "$.error: value differs"
+          ]
+        },
+        {
+          "step": "2:expect",
+          "kind": "expect",
+          "verdict": "mismatch",
+          "differences": [
+            "$.mode: missing in clio",
+            "$.mode: missing in go"
+          ]
+        },
+        {
+          "step": "off",
+          "kind": "write",
+          "verdict": "both-failed",
+          "clio_seconds": 100.08,
+          "go_seconds": 45.0,
+          "differences": [
+            "$.executionlogmessages[0].value: value differs"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": "set-fsm-mode off while off round 1",
+      "verdict": "mismatch",
+      "first": "go",
+      "steps": [
+        {
+          "step": "mode before",
+          "kind": "read-back",
+          "verdict": "both-failed",
+          "clio_seconds": 100.03,
+          "go_seconds": 45.0,
+          "differences": [
+            "$.error: value differs"
+          ]
+        },
+        {
+          "step": "2:expect",
+          "kind": "expect",
+          "verdict": "mismatch",
+          "differences": [
+            "$.mode: missing in clio",
+            "$.mode: missing in go"
+          ]
+        },
+        {
+          "step": "off",
+          "kind": "write",
+          "verdict": "both-failed",
+          "clio_seconds": 100.06,
+          "go_seconds": 45.0,
+          "differences": [
+            "$.executionlogmessages[0].value: value differs"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": "set-fsm-mode off while off round 2",
+      "verdict": "mismatch",
+      "first": "clio",
+      "steps": [
+        {
+          "step": "mode before",
+          "kind": "read-back",
+          "verdict": "both-failed",
+          "clio_seconds": 100.01,
+          "go_seconds": 45.01,
+          "differences": [
+            "$.error: value differs"
+          ]
+        },
+        {
+          "step": "2:expect",
+          "kind": "expect",
+          "verdict": "mismatch",
+          "differences": [
+            "$.mode: missing in clio",
+            "$.mode: missing in go"
+          ]
+        },
+        {
+          "step": "off",
+          "kind": "write",
+          "verdict": "both-failed",
+          "clio_seconds": 100.03,
+          "go_seconds": 45.0,
+          "differences": [
+            "$.executionlogmessages[0].value: value differs"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": "set-fsm-mode off while off round 3",
+      "verdict": "mismatch",
+      "first": "go",
+      "steps": [
+        {
+          "step": "mode before",
+          "kind": "read-back",
+          "verdict": "both-failed",
+          "clio_seconds": 100.0,
+          "go_seconds": 45.0,
+          "differences": [
+            "$.error: value differs"
+          ]
+        },
+        {
+          "step": "2:expect",
+          "kind": "expect",
+          "verdict": "mismatch",
+          "differences": [
+            "$.mode: missing in clio",
+            "$.mode: missing in go"
+          ]
+        },
+        {
+          "step": "off",
+          "kind": "write",
+          "verdict": "both-failed",
+          "clio_seconds": 100.01,
+          "go_seconds": 45.0,
+          "differences": [
+            "$.executionlogmessages[0].value: value differs"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": "set-fsm-mode off while off round 4",
+      "verdict": "mismatch",
+      "first": "clio",
+      "steps": [
+        {
+          "step": "mode before",
+          "kind": "read-back",
+          "verdict": "both-failed",
+          "clio_seconds": 100.01,
+          "go_seconds": 45.0,
+          "differences": [
+            "$.error: value differs"
+          ]
+        },
+        {
+          "step": "2:expect",
+          "kind": "expect",
+          "verdict": "mismatch",
+          "differences": [
+            "$.mode: missing in clio",
+            "$.mode: missing in go"
+          ]
+        },
+        {
+          "step": "off",
+          "kind": "write",
+          "verdict": "both-failed",
+          "clio_seconds": 100.01,
+          "go_seconds": 45.0,
+          "differences": [
+            "$.executionlogmessages[0].value: value differs"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": "set-fsm-mode off while off round 5",
+      "verdict": "mismatch",
+      "first": "go",
+      "steps": [
+        {
+          "step": "mode before",
+          "kind": "read-back",
+          "verdict": "both-failed",
+          "clio_seconds": 100.01,
+          "go_seconds": 45.0,
+          "differences": [
+            "$.error: value differs"
+          ]
+        },
+        {
+          "step": "2:expect",
+          "kind": "expect",
+          "verdict": "mismatch",
+          "differences": [
+            "$.mode: missing in clio",
+            "$.mode: missing in go"
+          ]
+        },
+        {
+          "step": "off",
+          "kind": "write",
+          "verdict": "both-failed",
+          "clio_seconds": 100.02,
+          "go_seconds": 45.0,
+          "differences": [
+            "$.executionlogmessages[0].value: value differs"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": "set-fsm-mode off while off round 6",
+      "verdict": "mismatch",
+      "first": "clio",
+      "steps": [
+        {
+          "step": "mode before",
+          "kind": "read-back",
+          "verdict": "both-failed",
+          "clio_seconds": 100.01,
+          "go_seconds": 45.0,
+          "differences": [
+            "$.error: value differs"
+          ]
+        },
+        {
+          "step": "2:expect",
+          "kind": "expect",
+          "verdict": "mismatch",
+          "differences": [
+            "$.mode: missing in clio",
+            "$.mode: missing in go"
+          ]
+        },
+        {
+          "step": "off",
+          "kind": "write",
+          "verdict": "both-failed",
+          "clio_seconds": 100.01,
+          "go_seconds": 45.0,
+          "differences": [
+            "$.executionlogmessages[0].value: value differs"
+          ]
+        }
+      ]
+    }
+  ]
+}
