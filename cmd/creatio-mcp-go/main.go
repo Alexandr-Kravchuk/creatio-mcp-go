@@ -351,7 +351,10 @@ func invokeHiddenTool(ctx context.Context, envs *environments, hostTools hiddenT
 		if failure != nil {
 			return structuredToolResult(creatio.AppSectionsResult{Error: redacted(failure)}), nil
 		}
-		return structuredToolResult(client.ListAppSections(ctx, input.ApplicationCode)), nil
+		// clio's ApplicationSectionGetListTool redacts every failure it reports.
+		result := client.ListAppSections(ctx, input.ApplicationCode)
+		result.Error = redact.Text(result.Error)
+		return structuredToolResult(result), nil
 	case "list-pages":
 		var input struct {
 			PackageName   string `json:"package-name,omitempty"`
@@ -575,8 +578,13 @@ func clioFailure(prefix string, err error) error {
 	if strings.HasPrefix(err.Error(), "invalid-parameter-type:") {
 		return err
 	}
-	// Redacted as clio's McpToolErrorFilter and clio-run catch blocks redact a raised failure.
-	return errors.New(prefix + redact.Text(err.Error()))
+	// Redacted as clio's McpToolErrorFilter and clio-run catch blocks redact a raised failure. A request that got
+	// no answer is reported by its innermost exception, the SocketException, as clio's filter reports it.
+	text := err.Error()
+	if socket, ok := creatio.SocketExceptionText(err); ok {
+		text = socket
+	}
+	return errors.New(prefix + redact.Text(text))
 }
 
 func toolError(err error) *mcp.CallToolResult {

@@ -101,11 +101,15 @@ func TestGetSysSettingClassifiesProviderAndNetworkFailures(t *testing.T) {
 	}
 
 	unreachable, _ := NewClient(Config{BaseURL: "http://127.0.0.1:1", Login: "u", Password: "p"})
+	unreachable.http.Transport = refusingTransport()
 	listed := unreachable.ListSysSettings(context.Background())
 	if listed.Success || listed.Settings == nil || len(listed.Settings) != 0 {
 		t.Fatalf("list failure must keep settings as [] = %#v", listed)
 	}
-	if listed.ErrorCategory != "Authentication" && listed.ErrorCategory != "Network" {
+	// clio 8.1.0.142 against a closed port: ATF's GetItems keeps the text, so the read is a ProviderFailure.
+	want := "Failed reading records from entity schema 'SysSettings': [untrusted-source-text begin] " +
+		"Connection refused ([redacted-uri])Connection refused ([redacted-uri]) [untrusted-source-text end]"
+	if listed.ErrorCategory != "ProviderFailure" || listed.Error != want {
 		t.Fatalf("unreachable environment category = %q (%s)", listed.ErrorCategory, listed.Error)
 	}
 }

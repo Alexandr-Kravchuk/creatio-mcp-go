@@ -370,6 +370,9 @@ func (c *Client) pageWriteSysSchemaRow(ctx context.Context, schemaName string) (
 		if strings.HasPrefix(err.Error(), "SelectQuery failed:") {
 			return nil, "Failed to query schema metadata"
 		}
+		if message, ok := c.metadataSelectFailure(err); ok {
+			return nil, message
+		}
 		return nil, err.Error()
 	}
 	if len(rows) == 0 {
@@ -395,6 +398,9 @@ func (c *Client) pageWriteSchemaRowByUID(ctx context.Context, schemaUID string) 
 	if err != nil {
 		if strings.HasPrefix(err.Error(), "SelectQuery failed:") {
 			return nil, "Failed to query schema metadata"
+		}
+		if message, ok := c.metadataSelectFailure(err); ok {
+			return nil, message
 		}
 		return nil, err.Error()
 	}

@@ -197,7 +197,7 @@ func (c *Client) processWriteGate(ctx context.Context, minVersion string) (strin
 // processWriteGateFailure is how BaseTool reports a gate that could not be evaluated (the package list could
 // not be read): CommandExecutionResult.FromException, exit -1.
 func processWriteGateFailure(err error) ProcessWriteResult {
-	return ProcessWriteError(err.Error())
+	return ProcessWriteError(CommandExceptionText(err))
 }
 
 // processWriteDesign posts {"request": request} to a ProcessDesignService method and returns the

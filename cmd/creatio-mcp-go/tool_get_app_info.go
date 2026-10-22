@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/Alexandr-Kravchuk/creatio-mcp-go/internal/creatio"
+	"github.com/Alexandr-Kravchuk/creatio-mcp-go/internal/redact"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
@@ -37,6 +38,9 @@ func init() {
 		if failure != nil {
 			return structuredToolResult(creatio.AppInfoResponse{Error: redacted(failure)}), nil
 		}
-		return structuredToolResult(client.GetAppInfo(ctx, creatio.AppInfoRequest{ID: id, Code: code})), nil
+		// clio's ApplicationGetInfoTool redacts every failure it reports.
+		result := client.GetAppInfo(ctx, creatio.AppInfoRequest{ID: id, Code: code})
+		result.Error = redact.Text(result.Error)
+		return structuredToolResult(result), nil
 	})
 }

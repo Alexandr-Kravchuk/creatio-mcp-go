@@ -74,7 +74,7 @@ func (c *Client) compileGetLastResult(ctx context.Context) ([]byte, error) {
 		return request, nil
 	})
 	if err != nil {
-		if isTransportError(err) {
+		if isRequestTransportError(err) {
 			return nil, fmt.Errorf("%s transport failure: %w", compileLastResultRoute, err)
 		}
 		return nil, err

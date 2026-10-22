@@ -51,7 +51,7 @@ type processDescribeLibRow struct {
 func (c *Client) DescribeBusinessProcess(ctx context.Context, request ProcessDescribeRequest) CommandResult {
 	installed, err := c.userTasksPackageInstalled(ctx, processBuilderPackageName)
 	if err != nil {
-		return NewCommandResult(-1, "Error", err.Error())
+		return NewCommandResult(-1, "Error", CommandExceptionText(err))
 	}
 	if !installed {
 		return NewCommandResult(1, "Error", processBuilderMissingMessage)

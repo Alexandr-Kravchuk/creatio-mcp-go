@@ -139,7 +139,7 @@ func (c *Client) queryProcessLib(ctx context.Context, column, value string, rowC
 func (c *Client) resolveProcess(ctx context.Context, nameOrCaption string) (processLibRow, bool, error) {
 	byName, err := c.queryProcessLib(ctx, "Name", nameOrCaption, 1)
 	if err != nil {
-		return processLibRow{}, false, fmt.Errorf("GetProcessIdFromName - Error at step: QueryCreatio. %v", err)
+		return processLibRow{}, false, fmt.Errorf("GetProcessIdFromName - Error at step: QueryCreatio. %v", atfReadFailure(err, "VwProcessLib"))
 	}
 	var resolved processLibRow
 	if len(byName) > 0 {
@@ -147,7 +147,7 @@ func (c *Client) resolveProcess(ctx context.Context, nameOrCaption string) (proc
 	} else {
 		byCaption, err := c.queryProcessLib(ctx, "Caption", nameOrCaption, -1)
 		if err != nil {
-			return processLibRow{}, false, fmt.Errorf("GetProcessIdFromName - Error at step: QueryCreatio. %v", err)
+			return processLibRow{}, false, fmt.Errorf("GetProcessIdFromName - Error at step: QueryCreatio. %v", atfReadFailure(err, "VwProcessLib"))
 		}
 		picked, err := resolveProcessByCaption(nameOrCaption, byCaption)
 		if err != nil {

@@ -206,6 +206,11 @@ func (c *Client) sequenceContextRows(ctx context.Context, schema string, columns
 	}
 	payload, err := c.postDataServiceJSON(ctx, "SelectQuery", body, 10*time.Second, maxResponseBytes)
 	if err != nil {
+		// clio fences the message of a read that got no answer as untrusted text (measured with a host that
+		// does not resolve and with a closed port).
+		if fenced := DataWriteUntrusted(err.Error()); isTransportError(err) && fenced != nil {
+			return sequenceContextFailure(*fenced), nil
+		}
 		return sequenceContextFailure(err.Error()), nil
 	}
 	if len(payload) > sequenceContextResponseBudget {

@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/Alexandr-Kravchuk/creatio-mcp-go/internal/redact"
 )
 
 // sysSettingToolAllEmployeesID is the SysAdminUnit row whose SysSettingsValue holds a setting's All-Users default.
@@ -82,7 +84,7 @@ func (c *Client) GetSysSetting(ctx context.Context, code string) SysSettingGetRe
 		"Id": "Id", "ValueTypeName": "ValueTypeName",
 	}, map[string]any{"Code": comparisonFilter("Code", code, 1, 3)}, 1))
 	if err != nil {
-		return SysSettingGetResult{Code: code, SysSettingFailure: sysSettingToolClassify(err, sysSettingToolReadLabel)}
+		return SysSettingGetResult{Code: code, SysSettingFailure: sysSettingToolClassify(atfReadFailure(err, "SysSettings"), sysSettingToolReadLabel)}
 	}
 	if len(settings) == 0 {
 		return SysSettingGetResult{Success: true, Code: code}
@@ -93,7 +95,7 @@ func (c *Client) GetSysSetting(ctx context.Context, code string) SysSettingGetRe
 		"SysAdminUnit": comparisonFilter("SysAdminUnit", sysSettingToolAllEmployeesID, 0, 3),
 	}, 1))
 	if err != nil {
-		return SysSettingGetResult{Code: code, SysSettingFailure: sysSettingToolClassify(err, sysSettingToolReadLabel)}
+		return SysSettingGetResult{Code: code, SysSettingFailure: sysSettingToolClassify(atfReadFailure(err, "SysSettingsValue"), sysSettingToolReadLabel)}
 	}
 	value := ""
 	if len(values) > 0 {
@@ -111,7 +113,7 @@ func (c *Client) ListSysSettings(ctx context.Context) SysSettingsListResult {
 		"IsCacheable": "IsCacheable", "IsPersonal": "IsPersonal",
 	}, nil, -1))
 	if err != nil {
-		return SysSettingsListResult{Settings: []SysSettingItem{}, SysSettingFailure: sysSettingToolClassify(err, sysSettingToolListLabel)}
+		return SysSettingsListResult{Settings: []SysSettingItem{}, SysSettingFailure: sysSettingToolClassify(atfReadFailure(err, "SysSettings"), sysSettingToolListLabel)}
 	}
 	columns := sysSettingToolValueColumns()
 	columns["SettingId"] = "SysSettings.Id"
@@ -119,7 +121,7 @@ func (c *Client) ListSysSettings(ctx context.Context) SysSettingsListResult {
 		"SysAdminUnit": comparisonFilter("SysAdminUnit", sysSettingToolAllEmployeesID, 0, 3),
 	}, -1))
 	if err != nil {
-		return SysSettingsListResult{Settings: []SysSettingItem{}, SysSettingFailure: sysSettingToolClassify(err, sysSettingToolListLabel)}
+		return SysSettingsListResult{Settings: []SysSettingItem{}, SysSettingFailure: sysSettingToolClassify(atfReadFailure(err, "SysSettingsValue"), sysSettingToolListLabel)}
 	}
 	bySetting := make(map[string]map[string]json.RawMessage, len(values))
 	for _, row := range values {
@@ -265,7 +267,13 @@ func SysSettingValidationFailure(message string) SysSettingFailure {
 // category does not depend on how a message happens to be worded.
 func sysSettingToolClassify(err error, label string) SysSettingFailure {
 	var syntaxErr *json.SyntaxError
+	var providerErr *providerReadFailure
 	switch {
+	case errors.As(err, &providerErr):
+		// A read through clio's ATF data provider that got no answer: DataProviderFailureException, whose
+		// message names the schema and fences what the provider kept (the arm before Network in clio).
+		detail := sysSettingToolClamp(redact.Text(providerErr.Error()), sysSettingToolMaxCause)
+		return SysSettingFailure{detail, "ProviderFailure", detail, sysSettingToolProviderRecovery}
 	case isAuthenticationError(err):
 		return SysSettingFailure{"Authentication error " + label + ".", "Authentication", sysSettingToolAuthenticationCause, sysSettingToolAuthenticationRecovery}
 	case isTransportError(err), errors.Is(err, context.DeadlineExceeded), errors.Is(err, context.Canceled):

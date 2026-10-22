@@ -56,7 +56,11 @@ func init() {
 		if resolution != nil {
 			return resolverFailureEnvelope(resolution), nil
 		}
-		if refusal := client.DataWriteSQLRequirement(ctx); refusal != "" {
+		refusal, err := client.DataWriteSQLRequirement(ctx)
+		if err != nil {
+			return structuredToolResult(creatio.NewCommandResult(-1, "Error", creatio.CommandExceptionText(err))), nil
+		}
+		if refusal != "" {
 			return failure(refusal)
 		}
 		request := creatio.DataWriteSQLRequest{View: view, Silent: silent}
