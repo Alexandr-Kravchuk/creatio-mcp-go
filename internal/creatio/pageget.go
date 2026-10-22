@@ -263,6 +263,9 @@ func (c *Client) pageSchemaRow(ctx context.Context, schemaName string) (map[stri
 	}, map[string]any{"filter0": eqFilter("Name", schemaName, 1), "filter1": eqFilter("ManagerName", "ClientUnitSchemaManager", 1)}, 1)
 	rows, err := c.selectRows(ctx, query)
 	if err != nil {
+		if message, ok := c.metadataSelectFailure(err); ok {
+			return nil, errors.New(message)
+		}
 		if isTransportError(err) || isAuthenticationError(err) {
 			return nil, err
 		}

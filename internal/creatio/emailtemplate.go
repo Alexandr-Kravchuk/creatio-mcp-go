@@ -303,7 +303,7 @@ func (c *Client) emailTemplateRead(ctx context.Context, entity, filter, selectCo
 		return request, nil
 	})
 	if err != nil {
-		if isTransportError(err) {
+		if isRequestTransportError(err) {
 			return nil, fmt.Errorf("OData transport failure: %w", err)
 		}
 		return nil, err

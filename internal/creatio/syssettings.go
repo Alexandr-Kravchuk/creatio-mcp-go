@@ -12,6 +12,7 @@ const (
 	schemaNamePrefixSettingCode = "SchemaNamePrefix"
 	currentPackageSettingCode   = "CurrentPackageId"
 	genericSchemaNamePrefixRead = "Failed to read SchemaNamePrefix."
+	schemaNamePrefixReadLabel   = "reading SchemaNamePrefix"
 )
 
 type SchemaNamePrefixResult struct {
@@ -35,12 +36,14 @@ func SchemaNamePrefixConfigurationFailure(cause string) SchemaNamePrefixResult {
 func (c *Client) GetSchemaNamePrefix(ctx context.Context) SchemaNamePrefixResult {
 	value, err := c.readSysSettingValue(ctx, schemaNamePrefixSettingCode)
 	if err != nil {
-		// clio promotes only authentication and network messages into error; anything else gets its generic label.
-		message := genericSchemaNamePrefixRead
+		// A rejected session or a request that got no answer is classified as clio's SchemaNamePrefixTool does
+		// (SysSettingFailureClassifier, label "reading SchemaNamePrefix"); anything else gets its generic label.
 		if isAuthenticationError(err) || isTransportError(err) {
-			message = err.Error()
+			failure := sysSettingToolClassify(err, schemaNamePrefixReadLabel)
+			return SchemaNamePrefixResult{Error: failure.Error, ErrorCategory: failure.ErrorCategory, Cause: failure.Cause,
+				RecoveryAction: failure.RecoveryAction}
 		}
-		return SchemaNamePrefixResult{Error: message}
+		return SchemaNamePrefixResult{Error: genericSchemaNamePrefixRead}
 	}
 	return SchemaNamePrefixResult{Success: true, SchemaNamePrefix: strings.TrimSpace(strings.Trim(strings.TrimSpace(value), `"`))}
 }

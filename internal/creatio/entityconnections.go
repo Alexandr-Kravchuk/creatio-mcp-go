@@ -432,9 +432,7 @@ func (c *Client) entityConnectionsSelect(ctx context.Context, query *jnode) ([]*
 				"health (healthcheck) and whether the target instance is still responding."
 		}
 		if rightsIsConnectionFailure(err) {
-			return nil, false, "SelectQuery could not be completed against the environment (URL: " + address + "). Transport error: " +
-				connectionsTransportDetail(fault) + ". This says nothing about the requested schema or package — verify that the environment " +
-				"is registered with valid credentials (reg-web-app, then healthcheck), that the site is running and reachable, and retry the request."
+			return nil, false, selectQueryTransportFailure(address, fault)
 		}
 		return nil, false, err.Error()
 	}
@@ -465,8 +463,32 @@ func (c *Client) entityConnectionsSelect(ctx context.Context, query *jnode) ([]*
 	return rows.items, true, ""
 }
 
-// connectionsTransportDetail is how Creatio.Client words a request it could not send.
+// metadataSelectFailure is PageSchemaMetadataHelper.ExecuteSelectQuery's text for a metadata SelectQuery whose
+// login got no answer (measured against clio 8.1.0.142 with get-page, get-related-page-addon and sync-pages);
+// ok is false for any other failure.
+func (c *Client) metadataSelectFailure(err error) (string, bool) {
+	fault, ok := asConnectFault(err)
+	if !ok {
+		return "", false
+	}
+	return selectQueryTransportFailure(c.serviceURL("DataService/json/SyncReply/SelectQuery"), fault), true
+}
+
+// selectQueryTransportFailure is PageSchemaMetadataHelper.ExecuteSelectQuery's text for a SelectQuery that could
+// not be sent.
+func selectQueryTransportFailure(address string, fault error) string {
+	return "SelectQuery could not be completed against the environment (URL: " + address + "). Transport error: " +
+		connectionsTransportDetail(fault) + ". This says nothing about the requested schema or package — verify that the environment " +
+		"is registered with valid credentials (reg-web-app, then healthcheck), that the site is running and reachable, and retry the request."
+}
+
+// connectionsTransportDetail is how Creatio.Client words a request it could not send. A login that got no
+// answer arrives with its endpoint redacted, as clio's helper reports it (measured with a host that does not
+// resolve and with a closed port).
 func connectionsTransportDetail(fault error) string {
+	if connect, ok := asConnectFault(fault); ok {
+		return "Cannot connect to the application: " + redact.Text(connect.Error()) + " (WebException: ConnectFailure). Make sure the site is running and accessible."
+	}
 	if strings.HasPrefix(fault.Error(), "Connection refused (") {
 		return "Cannot connect to the application: " + fault.Error() + " (WebException: ConnectFailure). Make sure the site is running and accessible."
 	}

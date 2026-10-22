@@ -188,7 +188,7 @@ func (c *Client) getSchemaTemplateJSON(ctx context.Context, route string, schema
 		if isAuthenticationError(err) {
 			return nil, err
 		}
-		if isTransportError(err) {
+		if isRequestTransportError(err) {
 			return nil, fmt.Errorf("Creatio service %s transport failure: %w", route, err)
 		}
 		return nil, err

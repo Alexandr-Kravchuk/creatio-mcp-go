@@ -126,7 +126,7 @@ func (c *Client) oauthCheckPostSelect(ctx context.Context, body []byte) ([]byte,
 		return request, nil
 	})
 	if err != nil {
-		if isTransportError(err) {
+		if isRequestTransportError(err) {
 			return nil, fmt.Errorf("Creatio service %s transport failure: %w", route, err)
 		}
 		return nil, err

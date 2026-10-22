@@ -362,7 +362,7 @@ func (c *Client) adminWriteAllUsersDefault(ctx context.Context, code string) (st
 		"Id": "Id", "ValueTypeName": "ValueTypeName",
 	}, map[string]any{"Code": comparisonFilter("Code", code, 1, 3)}, 1))
 	if err != nil {
-		return "", nil, err
+		return "", nil, atfReadFailure(err, "SysSettings")
 	}
 	if len(settings) == 0 {
 		return "", nil, nil

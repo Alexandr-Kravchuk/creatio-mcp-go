@@ -122,6 +122,9 @@ func (c *Client) relatedAddonPackageUID(ctx context.Context, packageName string)
 		if strings.HasPrefix(err.Error(), "SelectQuery failed:") {
 			return "", errors.New("Failed to query SysPackage")
 		}
+		if message, ok := c.metadataSelectFailure(err); ok {
+			return "", errors.New(message)
+		}
 		return "", err
 	}
 	if len(rows) == 0 {

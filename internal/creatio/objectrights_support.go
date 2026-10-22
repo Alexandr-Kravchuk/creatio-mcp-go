@@ -149,9 +149,11 @@ type rightsFault struct {
 	message  string
 	timeout  bool
 	noAnswer bool
+	cause    error // the connect fault the message words, when there is one
 }
 
 func (f *rightsFault) Error() string { return f.message }
+func (f *rightsFault) Unwrap() error { return f.cause }
 
 func rightsIsTimeout(err error) bool {
 	var fault *rightsFault
@@ -173,6 +175,10 @@ func (c *Client) rightsTransportFault(err error, timeout time.Duration) error {
 	var netErr net.Error
 	if errors.Is(err, context.DeadlineExceeded) || (errors.As(err, &netErr) && netErr.Timeout()) {
 		return &rightsFault{timeout: true, noAnswer: true, message: "A task was canceled."}
+	}
+	if fault, ok := asConnectFault(err); ok {
+		// A login that got no answer, already worded as .NET words it.
+		return &rightsFault{noAnswer: true, message: fault.Error(), cause: fault}
 	}
 	if errors.Is(err, syscall.ECONNREFUSED) {
 		return &rightsFault{noAnswer: true, message: "Connection refused (" + rightsHostPort(c.config.BaseURL) + ")"}

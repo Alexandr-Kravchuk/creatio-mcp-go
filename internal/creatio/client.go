@@ -84,7 +84,7 @@ func (c *Client) installedApps(ctx context.Context) ([]App, error) {
 		if isAuthenticationError(err) {
 			return nil, err
 		}
-		if isTransportError(err) {
+		if isRequestTransportError(err) {
 			return nil, fmt.Errorf("DataService SelectQuery transport failure: %w", err)
 		}
 		return nil, err
@@ -167,11 +167,11 @@ func (c *Client) formsLogin(ctx context.Context, client *http.Client) error {
 	req.Header.Set("Accept", "application/json")
 	response, err := client.Do(req)
 	if err != nil {
-		return fmt.Errorf("forms login transport failure: %w", err)
+		return loginTransportFailure("forms login transport failure", err)
 	}
 	payload, readErr := readResponse(response)
 	if readErr != nil {
-		return fmt.Errorf("forms login response: %w", readErr)
+		return loginReadFailure("forms login response", readErr)
 	}
 	if response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices {
 		return fmt.Errorf("forms login returned HTTP %d", response.StatusCode)
@@ -198,11 +198,11 @@ func (c *Client) acquireToken(ctx context.Context) (*authSession, error) {
 	req.SetBasicAuth(c.config.ClientID, c.config.Secret)
 	response, err := c.http.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("OAuth token transport failure: %w", err)
+		return nil, loginTransportFailure("OAuth token transport failure", err)
 	}
 	payload, readErr := readResponse(response)
 	if readErr != nil {
-		return nil, fmt.Errorf("OAuth token response: %w", readErr)
+		return nil, loginReadFailure("OAuth token response", readErr)
 	}
 	if response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices {
 		return nil, fmt.Errorf("OAuth token endpoint returned HTTP %d", response.StatusCode)
@@ -264,7 +264,7 @@ func (c *Client) requestClient() *http.Client {
 func (c *Client) doAuthenticated(ctx context.Context, client *http.Client, buildRequest func() (*http.Request, error)) (*http.Response, bool, error) {
 	session, err := c.currentSession(ctx)
 	if err != nil {
-		return nil, false, authenticationError{err: err}
+		return nil, false, classifyLoginFailure(err)
 	}
 	request, err := buildRequest()
 	if err != nil {
@@ -285,7 +285,7 @@ func (c *Client) doAuthenticated(ctx context.Context, client *http.Client, build
 	c.invalidateSession(session.generation)
 	refreshed, err := c.currentSession(ctx)
 	if err != nil {
-		return nil, false, authenticationError{err: err}
+		return nil, false, classifyLoginFailure(err)
 	}
 	response, err = c.sendWithSession(client, retryRequest, refreshed)
 	if err != nil {
@@ -306,7 +306,8 @@ func (c *Client) currentSession(ctx context.Context) (*authSession, error) {
 			c.authMu.Unlock()
 			select {
 			case <-ctx.Done():
-				return nil, ctx.Err()
+				// The caller's deadline ran out while another call was logging in: no answer came in time.
+				return nil, transportError{err: ctx.Err()}
 			case <-flight.done:
 				if flight.err != nil {
 					return nil, flight.err
@@ -329,7 +330,7 @@ func (c *Client) currentSession(ctx context.Context) (*authSession, error) {
 			session, err = c.formsSession(ctx)
 		}
 		if ctx.Err() != nil && err == nil {
-			err = ctx.Err()
+			err = transportError{err: ctx.Err()}
 		}
 
 		c.authMu.Lock()
@@ -466,6 +467,8 @@ func isAuthenticationError(err error) bool {
 	return errors.As(err, &target)
 }
 
+// transportError marks a request that got no usable answer: it could not be sent, or its answer could not
+// be read. A login request that failed this way carries it too, so the failure keeps its category.
 type transportError struct{ err error }
 
 func (e transportError) Error() string { return e.err.Error() }
@@ -474,6 +477,54 @@ func (e transportError) Unwrap() error { return e.err }
 func isTransportError(err error) bool {
 	var target transportError
 	return errors.As(err, &target)
+}
+
+// loginError marks a failure to establish the session (forms login, OAuth token, or the wait for either one).
+// It wraps a failure already classified as transportError or authenticationError.
+type loginError struct{ err error }
+
+func (e loginError) Error() string { return e.err.Error() }
+func (e loginError) Unwrap() error { return e.err }
+
+func isLoginError(err error) bool {
+	var target loginError
+	return errors.As(err, &target)
+}
+
+// isRequestTransportError is a transport failure of the endpoint request itself, after the session was
+// established. Helpers that prefix such a failure with their route leave a login failure's text alone: clio's
+// login step raises before any route is named.
+func isRequestTransportError(err error) bool {
+	return isTransportError(err) && !isLoginError(err)
+}
+
+// classifyLoginFailure keeps the category a session failure was given where it happened (a login request
+// that got no answer is a transport failure) and reports everything else - a rejected login, an unexpected
+// login answer - as an authentication failure.
+func classifyLoginFailure(err error) error {
+	if !isTransportError(err) && !isAuthenticationError(err) {
+		err = authenticationError{err: err}
+	}
+	return loginError{err: err}
+}
+
+// loginTransportFailure classifies a login request that got no answer as a transport failure, worded as .NET
+// words it when the fault has a known .NET sentence.
+func loginTransportFailure(label string, err error) error {
+	if fault := newConnectFault(err); fault != nil {
+		return transportError{err: fault}
+	}
+	return transportError{err: fmt.Errorf("%s: %w", label, err)}
+}
+
+// loginReadFailure classifies a login answer whose body could not be read: cut off in transit, it is a
+// transport failure; too large, it is an unexpected answer.
+func loginReadFailure(label string, err error) error {
+	err = fmt.Errorf("%s: %w", label, err)
+	if errors.Is(err, errResponseTooLarge) {
+		return err
+	}
+	return transportError{err: err}
 }
 
 // authURL is deliberately NOT built through serviceURL. The authentication route is the documented

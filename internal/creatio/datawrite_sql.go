@@ -43,15 +43,19 @@ type DataWriteSQLRequest struct {
 }
 
 // DataWriteSQLRequirement is the [RequiresPackage("cliogate", "2.0.0.41")] gate clio checks after resolving the
-// environment and before running the command; "" when it is met.
-func (c *Client) DataWriteSQLRequirement(ctx context.Context) string {
+// environment and before running the command; "" when it is met. A package list that could not be read is
+// not a refusal: clio's BaseTool lets that failure propagate to its exit -1 envelope, so it is returned as err.
+func (c *Client) DataWriteSQLRequirement(ctx context.Context) (string, error) {
 	version, found, err := c.lowestClioGateVersion(ctx)
-	if err == nil && found && describeCompareVersions(version, dataWriteSQLMinClioGate) >= 0 {
-		return ""
+	if err != nil {
+		return "", err
+	}
+	if found && describeCompareVersions(version, dataWriteSQLMinClioGate) >= 0 {
+		return "", nil
 	}
 	return "To use this command, you need to install the cliogate package version " + dataWriteSQLMinClioGate +
 		" or higher. Install or update the package in the target environment and retry.\n" +
-		"Run 'clio install-gate -e <environment>' (or call the install-gate MCP tool) to install/update cliogate."
+		"Run 'clio install-gate -e <environment>' (or call the install-gate MCP tool) to install/update cliogate.", nil
 }
 
 // ExecuteSQLScript is SqlScriptCommand.Execute.

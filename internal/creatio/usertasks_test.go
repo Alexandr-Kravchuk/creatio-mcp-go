@@ -3,8 +3,10 @@ package creatio
 import (
 	"context"
 	"io"
+	"net"
 	"net/http"
 	"net/http/httptest"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -38,8 +40,10 @@ func TestListUserTasksListsPaletteAfterPackageGate(t *testing.T) {
 	server := userTasksServer(t, `{"success":true,"rows":[{"Name":"CrtBase"},{"Name":"crtprocessbuilder"}]}`,
 		`{"ListUserTasksResult":{"success":true,"userTasks":[{"name":"ReadDataUserTask","uid":"u-1"},{"name":"ApprovalUserTask","uid":"u-2"}]}}`)
 	defer server.Close()
-	result := newFormsTestClient(t, server.URL).ListUserTasks(context.Background())
-	want := []LogMessage{{"Info", "ReadDataUserTask\tu-1"}, {"Info", "ApprovalUserTask\tu-2"}, {"Info", "Total user tasks: 2"}}
+	result := newFormsTestClient(t, server.URL).ListUserTasks(context.Background(), "dev")
+	// clio's log opens with the catalog read line, measured against clio 8.1.0.142 on a fake stand.
+	want := []LogMessage{{"Info", "Reading user task catalog from 'dev'..."}, {"Info", "ReadDataUserTask\tu-1"},
+		{"Info", "ApprovalUserTask\tu-2"}, {"Info", "Total user tasks: 2"}}
 	if result.ExitCode != 0 || len(result.Messages) != len(want) {
 		t.Fatalf("result = %#v", result)
 	}
@@ -53,7 +57,7 @@ func TestListUserTasksListsPaletteAfterPackageGate(t *testing.T) {
 func TestListUserTasksRefusesWithoutProcessBuilder(t *testing.T) {
 	server := userTasksServer(t, `{"success":true,"rows":[{"Name":"CrtBase"}]}`, `{}`)
 	defer server.Close()
-	result := newFormsTestClient(t, server.URL).ListUserTasks(context.Background())
+	result := newFormsTestClient(t, server.URL).ListUserTasks(context.Background(), "dev")
 	if result.ExitCode != 1 || len(result.Messages) != 1 || result.Messages[0].MessageType != "Error" || result.Messages[0].Value != processBuilderMissingMessage {
 		t.Fatalf("result = %#v", result)
 	}
@@ -63,8 +67,21 @@ func TestListUserTasksReportsServiceFailure(t *testing.T) {
 	server := userTasksServer(t, `{"success":true,"rows":[{"Name":"CrtProcessBuilder"}]}`,
 		`{"ListUserTasksResult":{"success":false,"errorMessage":"Palette unavailable"}}`)
 	defer server.Close()
-	result := newFormsTestClient(t, server.URL).ListUserTasks(context.Background())
-	if result.ExitCode != 1 || len(result.Messages) != 1 || result.Messages[0].Value != "Palette unavailable" {
+	result := newFormsTestClient(t, server.URL).ListUserTasks(context.Background(), "dev")
+	want := []LogMessage{{"Info", "Reading user task catalog from 'dev'..."}, {"Error", "Palette unavailable"}}
+	if result.ExitCode != 1 || len(result.Messages) != len(want) || result.Messages[0] != want[0] || result.Messages[1] != want[1] {
+		t.Fatalf("result = %#v", result)
+	}
+}
+
+func TestListUserTasksReportsAnUnresolvableHostAsClioExceptionChain(t *testing.T) {
+	client := newFormsTestClient(t, "http://nonexistent.invalid")
+	client.http.Transport = dnsFailingTransport()
+	result := client.ListUserTasks(context.Background(), "dev")
+	sentence := connectSentence(&net.DNSError{IsNotFound: true}, runtime.GOOS)
+	want := "[WebException] " + sentence + " (nonexistent.invalid:80) → [HttpRequestException] " + sentence +
+		" (nonexistent.invalid:80) → [SocketException] " + sentence
+	if result.ExitCode != -1 || len(result.Messages) != 1 || result.Messages[0] != (LogMessage{"Error", want}) {
 		t.Fatalf("result = %#v", result)
 	}
 }

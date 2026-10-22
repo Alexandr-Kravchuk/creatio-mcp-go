@@ -111,7 +111,7 @@ func (c *Client) serviceRequest(ctx context.Context, call serviceCall) (serviceR
 		return request, nil
 	})
 	if err != nil {
-		if isTransportError(err) {
+		if isRequestTransportError(err) {
 			return serviceResponse{}, fmt.Errorf("%s %s transport failure: %w", label, call.Route, err)
 		}
 		return serviceResponse{}, err

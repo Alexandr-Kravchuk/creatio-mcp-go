@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/Alexandr-Kravchuk/creatio-mcp-go/internal/creatio"
+	"github.com/Alexandr-Kravchuk/creatio-mcp-go/internal/redact"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
@@ -40,7 +41,10 @@ func init() {
 		if failure != nil {
 			return structuredToolResult(creatio.FindAppResponse{Error: redacted(failure)}), nil
 		}
-		return structuredToolResult(client.FindApp(ctx, input)), nil
+		// clio's FindAppTool redacts every failure it reports.
+		result := client.FindApp(ctx, input)
+		result.Error = redact.Text(result.Error)
+		return structuredToolResult(result), nil
 	})
 }
 
