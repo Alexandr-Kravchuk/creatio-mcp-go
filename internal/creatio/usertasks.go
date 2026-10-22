@@ -16,21 +16,24 @@ const processBuilderMissingMessage = "To use this command, you need to install t
 	"Install the package in the target environment and retry.\n" + processWriteInstallHint
 
 // ListUserTasks reads the process designer palette through the CrtProcessBuilder ProcessDesignService. Like
-// clio it first refuses when that package is not installed. The result lists one "name<TAB>uid" Info line per
-// task and a closing total, exactly as clio's command log does.
-func (c *Client) ListUserTasks(ctx context.Context) CommandResult {
+// clio it first refuses when that package is not installed. Past that gate the log opens with clio's
+// "Reading user task catalog from '<environment>'..." Info line, then lists one "name<TAB>uid" Info line per
+// task and a closing total, or the Error of a failed read, exactly as clio's command log does.
+func (c *Client) ListUserTasks(ctx context.Context, environmentName string) CommandResult {
 	installed, err := c.userTasksPackageInstalled(ctx, processBuilderPackageName)
 	if err != nil {
-		return NewCommandResult(-1, "Error", err.Error())
+		return NewCommandResult(-1, "Error", CommandExceptionText(err))
 	}
 	if !installed {
 		return NewCommandResult(1, "Error", processBuilderMissingMessage)
 	}
+	reading := LogMessage{MessageType: "Info", Value: fmt.Sprintf("Reading user task catalog from '%s'...", environmentName)}
 	tasks, err := c.readUserTasks(ctx)
 	if err != nil {
-		return NewCommandResult(1, "Error", err.Error())
+		return CommandResult{ExitCode: 1, Messages: []LogMessage{reading, {MessageType: "Error", Value: err.Error()}}}
 	}
-	messages := make([]LogMessage, 0, len(tasks)+1)
+	messages := make([]LogMessage, 0, len(tasks)+2)
+	messages = append(messages, reading)
 	for _, task := range tasks {
 		messages = append(messages, LogMessage{MessageType: "Info", Value: task.Name + "\t" + task.UID})
 	}
