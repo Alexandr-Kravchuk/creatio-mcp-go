@@ -230,9 +230,17 @@ class Refused(Exception):
     """A step the safety rules do not allow; it is reported and never sent."""
 
 
+ORDERS = ("clio-first", "go-first", "alternate")
+
+
 class Harness:
-    def __init__(self, servers, environment, run_id, go_env_mode="name"):
+    def __init__(self, servers, environment, run_id, go_env_mode="name", order="clio-first"):
         self.servers, self.environment, self.run_id, self.go_env_mode = servers, environment, run_id, go_env_mode
+        # Which side calls first in every step: clio-first, go-first, or alternate (clio first in the first scenario
+        # that runs, go first in the next, and so on), so a stand state the first side leaves behind is measured
+        # on both servers. Results are still keyed and compared as clio against go.
+        self.order, self.ran = order, 0
+        self.sides = ("go", "clio") if order == "go-first" else SIDES
 
     def call(self, server_side, call, arguments):
         server = self.servers[server_side]
@@ -285,8 +293,11 @@ class Harness:
         if pending:
             print(f"{'skipped':12} {label}")
             return {"scenario": label, "verdict": "skipped", "steps": []}
+        if self.order == "alternate":
+            self.sides = SIDES if self.ran % 2 == 0 else ("go", "clio")
+        self.ran += 1
         state = {side: {"variables": {"run": self.run_id, "side": side}, "created": set(), "attempted": [],
-                        "provenance": {}, "replacements": {}, "answers": {}} for side in SIDES}
+                        "provenance": {}, "replacements": {}, "answers": {}, "attempts": {}} for side in SIDES}
         for side in SIDES:
             # {guid1}..{guid3}: fresh ids per side, for tools whose caller chooses the new record's id.
             for index in range(1, 4):
@@ -323,12 +334,12 @@ class Harness:
         finally:
             steps.extend(self.cleanup(scenario, state))
         outcome = worst(s["verdict"] for s in steps)
-        print(f"{outcome:12} {label}")
+        print(f"{outcome:12} {label}  [{self.sides[0]} first]")
         for step in steps:
             print(f"{'':12}   {step['verdict']:12} {step['kind']:10} {step['step']}")
             for path in step["differences"]:
                 print(f"{'':12}     {path}")
-        return {"scenario": label, "verdict": outcome, "steps": steps}
+        return {"scenario": label, "verdict": outcome, "first": self.sides[0], "steps": steps}
 
     def run_pair(self, scenario, write, read, state):
         """A read-back with `right-after-write` runs on each side directly after that side's write, so a status
@@ -337,7 +348,7 @@ class Harness:
         (write_step, write_index), (read_step, read_index) = write, read
         write_label, read_label = step_label(write_step, write_index), step_label(read_step, read_index)
         write_answers, write_seconds, read_answers, read_seconds = {}, {}, {}, {}
-        for side in SIDES:
+        for side in self.sides:
             write_answers[side], write_seconds[side] = self.run_side(scenario, write_step, write_label, side, state)
             if failed(write_answers[side]):
                 read_answers[side], read_seconds[side] = {}, 0.0
@@ -355,7 +366,7 @@ class Harness:
         if step["kind"] == "expect":
             return self.expect(step, label, state)
         answers, seconds = {}, {}
-        for side in SIDES:
+        for side in self.sides:
             answers[side], seconds[side] = self.run_side(scenario, step, label, side, state)
         return self.finish_step(step, label, answers, seconds, state)
 
@@ -380,6 +391,7 @@ class Harness:
         # server: clio makes both sides' objects through clio, for a setup this server has no tool for yet.
         server_side = side if step.get("server", "own") == "own" else "clio"
         response, seconds = self.call(server_side, step, arguments)
+        attempts = 1
         # retry-while: a refusal the stand words as transient (its own background work, e.g. an OData rebuild after
         # the previous side's create) is retried on either side alike; the answer that counts is the last one.
         # retry-attempts / retry-delay-seconds bound it by count, retry-seconds by time (every 10 s).
@@ -389,11 +401,14 @@ class Harness:
                 break
             time.sleep(step.get("retry-delay-seconds", 30))
             response, seconds = self.call(server_side, step, arguments)
+            attempts += 1
         deadline = time.monotonic() + step.get("retry-seconds", 0)
         while (transient and failed(normalize(payload(response)))
                and transient in json.dumps(payload(response)) and time.monotonic() < deadline):
             time.sleep(10)
             response, seconds = self.call(server_side, step, arguments)
+            attempts += 1
+        side_state["attempts"][label] = attempts
         answer = normalize(payload(response))
         self.capture(step, answer, arguments, side_state)
         side_state["answers"][label] = answer
@@ -411,6 +426,10 @@ class Harness:
         result = {"step": label, "kind": step["kind"], "verdict": outcome,
                   "clio_seconds": round(seconds["clio"], 2), "go_seconds": round(seconds["go"], 2),
                   "differences": paths}
+        attempts = {side: state[side]["attempts"].get(label, 1) for side in SIDES}
+        if any(count > 1 for count in attempts.values()):
+            # The seconds above are the last attempt's; the earlier ones were refused and retried.
+            result["attempts"] = attempts
         if any(failed(answers[side]) for side in SIDES):
             result["stop"] = True
         return result
@@ -439,7 +458,7 @@ class Harness:
         results = []
         cleanups = [(index, step) for index, step in enumerate(scenario["steps"]) if step["kind"] == "cleanup"]
         for index, step in reversed(cleanups):
-            for side in SIDES:
+            for side in self.sides:
                 if step["for"] not in state[side]["attempted"]:
                     continue
                 problems = run_cleanup(self, step, side, state[side])
@@ -559,6 +578,9 @@ def main(argv=None):
     parser.add_argument("--scenarios", nargs="+",
                         default=sorted(str(p) for p in (REPO / "scripts/write-scenarios").glob("*.json")),
                         help="scenario files; default: scripts/write-scenarios/*.json")
+    parser.add_argument("--order", choices=ORDERS, default="clio-first",
+                        help="which side calls first in each step: clio-first (default), go-first, or alternate "
+                             "(flips with every scenario that runs; each scenario's evidence records 'first')")
     parser.add_argument("--evidence", default=str(REPO / "evidence/mcp-writes-latest.json"))
     parser.add_argument("--run-id", default=None, help="alphanumeric run id for {run}; default: derived from the time")
     parser.add_argument("--plan-only", action="store_true", help="validate the scenarios and print the plan; start nothing")
@@ -585,7 +607,7 @@ def main(argv=None):
     results = []
     servers = start_servers(options) if runnable else None
     try:
-        harness = Harness(servers, options.clio_env, run_id, options.go_env_mode)
+        harness = Harness(servers, options.clio_env, run_id, options.go_env_mode, options.order)
         for scenario in scenarios:
             results.append(harness.run_scenario(scenario))
     finally:

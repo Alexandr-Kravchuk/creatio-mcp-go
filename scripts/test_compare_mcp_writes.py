@@ -121,6 +121,45 @@ class WriteHarnessTest(unittest.TestCase):
         data = self.evidence_data()
         self.assertEqual([s["verdict"] for s in data["scenarios"][0]["steps"][:4]], ["match"] * 4)
 
+    def test_go_first_calls_this_server_first_in_every_step(self):
+        result = self.run_harness("--order", "go-first")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        calls = [c for c in self.stand()["_calls"] if c.split(":")[1] in ("create-sys-setting", "get-sys-setting")]
+        self.assertEqual(calls, ["go:create-sys-setting", "clio:create-sys-setting",
+                                 "go:get-sys-setting", "clio:get-sys-setting"])
+        data = self.evidence_data()
+        self.assertEqual(data["scenarios"][0]["first"], "go")
+        self.assertEqual([s["verdict"] for s in data["scenarios"][0]["steps"]], ["match"] * 6)
+        # Cleanup follows the same order; both objects are gone either way.
+        cleanups = [s["step"] for s in data["scenarios"][0]["steps"] if s["kind"] == "cleanup"]
+        self.assertTrue(cleanups[0].endswith("(go)"), cleanups)
+        self.assertEqual(self.stand()["settings"], {})
+
+    def test_alternate_order_flips_with_every_scenario(self):
+        second = json.loads(json.dumps(SCENARIO).replace("Setting", "Other").replace("sys-setting round trip", "again"))
+        result = self.run_harness("--order", "alternate", scenarios=SCENARIO + second)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual([s["first"] for s in self.evidence_data()["scenarios"]], ["clio", "go"])
+        creates = [c for c in self.stand()["_calls"] if c.endswith(":create-sys-setting")]
+        self.assertEqual(creates, ["clio:create-sys-setting", "go:create-sys-setting",
+                                   "go:create-sys-setting", "clio:create-sys-setting"])
+        self.assertEqual(self.stand()["settings"], {})
+
+    def test_default_order_is_clio_first(self):
+        result = self.run_harness()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(self.evidence_data()["scenarios"][0]["first"], "clio")
+        self.assertEqual(self.stand()["_calls"][0], "clio:create-sys-setting")
+
+    def test_retried_step_records_the_attempts(self):
+        scenario = json.loads(json.dumps(SCENARIO))
+        # Only go's answer carries the text the step retries on: its seconds are those of the third attempt.
+        scenario[0]["steps"][2].update({"retry-while": "-changed", "retry-attempts": 2, "retry-delay-seconds": 0})
+        result = self.run_harness(scenarios=scenario, go_faults=("mangle-read",))
+        steps = {s["step"]: s for s in self.evidence_data()["scenarios"][0]["steps"]}
+        self.assertEqual(steps["read"]["attempts"], {"clio": 1, "go": 3}, result.stdout + result.stderr)
+        self.assertNotIn("attempts", steps["create"])
+
     def test_retry_while_retries_a_transient_refusal(self):
         scenario = json.loads(json.dumps(SCENARIO))
         scenario[0]["steps"][0].update({"retry-while": "never matches", "retry-seconds": 30})
@@ -240,8 +279,10 @@ class WriteHarnessTest(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
 
     def test_repository_scenarios_are_valid(self):
-        scenarios = sorted(str(p) for p in (SCRIPTS / "write-scenarios").glob("*.json"))
+        # Every file, including the window-only and timing ones that a default run leaves out.
+        scenarios = sorted(str(p) for p in (SCRIPTS / "write-scenarios").rglob("*.json"))
         self.assertTrue(scenarios)
+        self.assertTrue(any("/timing/" in path.replace("\\", "/") for path in scenarios))
         result = subprocess.run([sys.executable, str(HARNESS), "--clio-env", "none", "--plan-only",
                                  "--run-id", "plan", "--scenarios", *scenarios],
                                 capture_output=True, text=True, env={**os.environ, "HOME": str(self.home)}, timeout=60)

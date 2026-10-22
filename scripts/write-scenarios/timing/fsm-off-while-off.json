@@ -1,0 +1,219 @@
+[
+ {
+  "label": "set-fsm-mode off while off round 0 (warm-up)",
+  "why": "T24 timing, window-only: with FSM already off, set-fsm-mode off reads GetIsFileDesignMode (disabled), probes GetApplicationInfo (off) and writes nothing, so no recycle follows. Both servers read the mode first. Run with --order alternate while the stand is in FSM off.",
+  "steps": [
+   {
+    "kind": "read-back",
+    "tool": "get-fsm-mode",
+    "clio-environment-key": "environmentName",
+    "args": {},
+    "clio-run": true,
+    "why": "clio's tool takes flat arguments (environmentName), so the read goes through clio-run on both sides, as in window/t12.json. It is an authenticated GetApplicationInfo call: it also brings each server's session and the stand's application up before the timed step.",
+    "label": "mode before"
+   },
+   {
+    "kind": "expect",
+    "step": "mode before",
+    "path": "$.mode",
+    "equals": "off"
+   },
+   {
+    "kind": "write",
+    "label": "off",
+    "tool": "set-fsm-mode",
+    "clio-run": true,
+    "args": {
+     "mode": "off"
+    },
+    "why": "Measured: the path with nothing to import and nothing to write."
+   }
+  ]
+ },
+ {
+  "label": "set-fsm-mode off while off round 1",
+  "why": "T24 timing, window-only: with FSM already off, set-fsm-mode off reads GetIsFileDesignMode (disabled), probes GetApplicationInfo (off) and writes nothing, so no recycle follows. Both servers read the mode first. Run with --order alternate while the stand is in FSM off.",
+  "steps": [
+   {
+    "kind": "read-back",
+    "tool": "get-fsm-mode",
+    "clio-environment-key": "environmentName",
+    "args": {},
+    "clio-run": true,
+    "why": "clio's tool takes flat arguments (environmentName), so the read goes through clio-run on both sides, as in window/t12.json. It is an authenticated GetApplicationInfo call: it also brings each server's session and the stand's application up before the timed step.",
+    "label": "mode before"
+   },
+   {
+    "kind": "expect",
+    "step": "mode before",
+    "path": "$.mode",
+    "equals": "off"
+   },
+   {
+    "kind": "write",
+    "label": "off",
+    "tool": "set-fsm-mode",
+    "clio-run": true,
+    "args": {
+     "mode": "off"
+    },
+    "why": "Measured: the path with nothing to import and nothing to write."
+   }
+  ]
+ },
+ {
+  "label": "set-fsm-mode off while off round 2",
+  "why": "T24 timing, window-only: with FSM already off, set-fsm-mode off reads GetIsFileDesignMode (disabled), probes GetApplicationInfo (off) and writes nothing, so no recycle follows. Both servers read the mode first. Run with --order alternate while the stand is in FSM off.",
+  "steps": [
+   {
+    "kind": "read-back",
+    "tool": "get-fsm-mode",
+    "clio-environment-key": "environmentName",
+    "args": {},
+    "clio-run": true,
+    "why": "clio's tool takes flat arguments (environmentName), so the read goes through clio-run on both sides, as in window/t12.json. It is an authenticated GetApplicationInfo call: it also brings each server's session and the stand's application up before the timed step.",
+    "label": "mode before"
+   },
+   {
+    "kind": "expect",
+    "step": "mode before",
+    "path": "$.mode",
+    "equals": "off"
+   },
+   {
+    "kind": "write",
+    "label": "off",
+    "tool": "set-fsm-mode",
+    "clio-run": true,
+    "args": {
+     "mode": "off"
+    },
+    "why": "Measured: the path with nothing to import and nothing to write."
+   }
+  ]
+ },
+ {
+  "label": "set-fsm-mode off while off round 3",
+  "why": "T24 timing, window-only: with FSM already off, set-fsm-mode off reads GetIsFileDesignMode (disabled), probes GetApplicationInfo (off) and writes nothing, so no recycle follows. Both servers read the mode first. Run with --order alternate while the stand is in FSM off.",
+  "steps": [
+   {
+    "kind": "read-back",
+    "tool": "get-fsm-mode",
+    "clio-environment-key": "environmentName",
+    "args": {},
+    "clio-run": true,
+    "why": "clio's tool takes flat arguments (environmentName), so the read goes through clio-run on both sides, as in window/t12.json. It is an authenticated GetApplicationInfo call: it also brings each server's session and the stand's application up before the timed step.",
+    "label": "mode before"
+   },
+   {
+    "kind": "expect",
+    "step": "mode before",
+    "path": "$.mode",
+    "equals": "off"
+   },
+   {
+    "kind": "write",
+    "label": "off",
+    "tool": "set-fsm-mode",
+    "clio-run": true,
+    "args": {
+     "mode": "off"
+    },
+    "why": "Measured: the path with nothing to import and nothing to write."
+   }
+  ]
+ },
+ {
+  "label": "set-fsm-mode off while off round 4",
+  "why": "T24 timing, window-only: with FSM already off, set-fsm-mode off reads GetIsFileDesignMode (disabled), probes GetApplicationInfo (off) and writes nothing, so no recycle follows. Both servers read the mode first. Run with --order alternate while the stand is in FSM off.",
+  "steps": [
+   {
+    "kind": "read-back",
+    "tool": "get-fsm-mode",
+    "clio-environment-key": "environmentName",
+    "args": {},
+    "clio-run": true,
+    "why": "clio's tool takes flat arguments (environmentName), so the read goes through clio-run on both sides, as in window/t12.json. It is an authenticated GetApplicationInfo call: it also brings each server's session and the stand's application up before the timed step.",
+    "label": "mode before"
+   },
+   {
+    "kind": "expect",
+    "step": "mode before",
+    "path": "$.mode",
+    "equals": "off"
+   },
+   {
+    "kind": "write",
+    "label": "off",
+    "tool": "set-fsm-mode",
+    "clio-run": true,
+    "args": {
+     "mode": "off"
+    },
+    "why": "Measured: the path with nothing to import and nothing to write."
+   }
+  ]
+ },
+ {
+  "label": "set-fsm-mode off while off round 5",
+  "why": "T24 timing, window-only: with FSM already off, set-fsm-mode off reads GetIsFileDesignMode (disabled), probes GetApplicationInfo (off) and writes nothing, so no recycle follows. Both servers read the mode first. Run with --order alternate while the stand is in FSM off.",
+  "steps": [
+   {
+    "kind": "read-back",
+    "tool": "get-fsm-mode",
+    "clio-environment-key": "environmentName",
+    "args": {},
+    "clio-run": true,
+    "why": "clio's tool takes flat arguments (environmentName), so the read goes through clio-run on both sides, as in window/t12.json. It is an authenticated GetApplicationInfo call: it also brings each server's session and the stand's application up before the timed step.",
+    "label": "mode before"
+   },
+   {
+    "kind": "expect",
+    "step": "mode before",
+    "path": "$.mode",
+    "equals": "off"
+   },
+   {
+    "kind": "write",
+    "label": "off",
+    "tool": "set-fsm-mode",
+    "clio-run": true,
+    "args": {
+     "mode": "off"
+    },
+    "why": "Measured: the path with nothing to import and nothing to write."
+   }
+  ]
+ },
+ {
+  "label": "set-fsm-mode off while off round 6",
+  "why": "T24 timing, window-only: with FSM already off, set-fsm-mode off reads GetIsFileDesignMode (disabled), probes GetApplicationInfo (off) and writes nothing, so no recycle follows. Both servers read the mode first. Run with --order alternate while the stand is in FSM off.",
+  "steps": [
+   {
+    "kind": "read-back",
+    "tool": "get-fsm-mode",
+    "clio-environment-key": "environmentName",
+    "args": {},
+    "clio-run": true,
+    "why": "clio's tool takes flat arguments (environmentName), so the read goes through clio-run on both sides, as in window/t12.json. It is an authenticated GetApplicationInfo call: it also brings each server's session and the stand's application up before the timed step.",
+    "label": "mode before"
+   },
+   {
+    "kind": "expect",
+    "step": "mode before",
+    "path": "$.mode",
+    "equals": "off"
+   },
+   {
+    "kind": "write",
+    "label": "off",
+    "tool": "set-fsm-mode",
+    "clio-run": true,
+    "args": {
+     "mode": "off"
+    },
+    "why": "Measured: the path with nothing to import and nothing to write."
+   }
+  ]
+ }
+]
