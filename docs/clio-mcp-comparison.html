@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>creatio-mcp-go vs clio MCP</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+* { margin: 0; box-sizing: border-box; }
+body { background: #e1e6ee; font-family: 'IBM Plex Sans', Arial, sans-serif; padding: 24px 16px 48px; }
+main { max-width: 1280px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+.frame { position: relative; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(18, 22, 29, 0.12); margin-top: 24px; }
+.stage { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; }
+.slide { position: relative; width: 1920px; height: 1080px; overflow: hidden; }
+.slide ul { padding-left: 1.2em; }
+.slide table { width: 100%; border-collapse: collapse; }
+.slide th, .slide td { padding: 0.35em 0.6em; border: 1px solid #c8d0dc; text-align: left; vertical-align: top; }
+.slide a { color: inherit; }
+.notes { font-size: 14px; line-height: 1.5; color: #363e4d; }
+</style>
+</head>
+<body>
+<main>
+<div class="frame" id="cover">
+<div class="stage">
+<section class="slide" id="cover" data-transition="fade" style="background:#0a2c74;color:#eef3ff;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:space-between">
+<div style="display:flex;flex-direction:column;gap:40px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;letter-spacing:2px;text-transform:uppercase;color:#8fb0ff">MCP servers for Creatio · comparison</p>
+<h1 style="font-size:120px;font-weight:600;line-height:1.05;color:#fbfcfe">creatio-mcp-go<br>or clio MCP</h1>
+<p style="width:1400px;font-size:40px;line-height:1.3;color:#dbe6ff">Pros, cons and measured figures for choosing the server an agent uses with Creatio</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#bccfff">creatio-mcp-go v0.2.1 · pre-release of 2026-10-23</p>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#bccfff">clio 8.1.0.142 · clio mcp-server mode</p>
+</div>
+
+</section>
+</div>
+</div>
+<p class="notes">Two MCP servers for Creatio: clio MCP (clio mcp-server, clio 8.1.0.142) and creatio-mcp-go v0.2.1. Every figure comes from a file in the creatio-mcp-go repository; the sources are on the last slide.</p>
+<div class="frame" id="what">
+<div class="stage">
+<section class="slide" id="what" data-transition="fade" style="background:#f6f8fb;color:#12161d;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;letter-spacing:2px;text-transform:uppercase;color:#0644c0">What it is</p>
+<h2 style="font-size:64px;font-weight:600;line-height:1.15;color:#12161d">Same tools, different implementation</h2>
+</div>
+<div style="display:flex;gap:32px">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#fbfcfe;padding:40px;border:1px solid #e1e6ee;border-radius:14px">
+<h3 style="font-size:40px;font-weight:600;line-height:1.2;color:#12161d">clio MCP</h3>
+<ul style="font-size:28px;line-height:1.4;color:#363e4d">
+<li>the mcp-server mode of clio, the .NET CLI for Creatio</li>
+<li>235 tools in clio 8.1.0.142</li>
+<li>needs .NET; installed as a .NET tool</li>
+<li>registers environments (reg-web-app), deploys and restores stands, installs the knowledge library and updates it hourly</li>
+</ul>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#fbfcfe;padding:40px;border:2px solid #0644c0;border-radius:14px">
+<h3 style="font-size:40px;font-weight:600;line-height:1.2;color:#0644c0">creatio-mcp-go</h3>
+<ul style="font-size:28px;line-height:1.4;color:#363e4d">
+<li>a separate MCP server written in Go, MIT, public repository</li>
+<li>200 of clio’s 235 tools: same names, arguments, contracts and answer shapes</li>
+<li>one file, no .NET; install.sh, install.ps1 or Homebrew</li>
+<li>reads environments from clio’s appsettings.json; one process serves them all</li>
+<li>v0.2.1, pre-release of 2026-10-23</li>
+</ul>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1300px;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#5d6779">creatio-mcp-go v0.2.1 · clio 8.1.0.142</p>
+<p style="position:absolute;right:128px;bottom:64px;width:200px;text-align:right;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#5d6779">2 / 12</p>
+
+</section>
+</div>
+</div>
+<p class="notes">creatio-mcp-go answers clio’s tools with the same names, arguments, contracts and answer shapes as clio 8.1.0.142. It does not register environments itself: it reads clio’s appsettings.json, so registration stays with clio reg-web-app. Without clio, one environment can be set with CREATIO_URL, CREATIO_LOGIN and CREATIO_PASSWORD. Sources: README.md, docs/install.md.</p>
+<div class="frame" id="pros">
+<div class="stage">
+<section class="slide" id="pros" data-transition="fade" style="background:#f6f8fb;color:#12161d;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;letter-spacing:2px;text-transform:uppercase;color:#05603a">creatio-mcp-go: pros</p>
+<h2 style="font-size:64px;font-weight:600;line-height:1.15;color:#12161d">What switching to creatio-mcp-go gives</h2>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+<div style="display:flex;flex-direction:column;gap:8px;background:#fbfcfe;padding:28px 32px;border:1px solid #e1e6ee;border-radius:14px">
+<h3 style="font-size:28px;font-weight:600;line-height:1.25;color:#12161d">Faster where clio spends time on itself</h3>
+<p style="font-size:24px;line-height:1.4;color:#4d5768">Start 0.04–0.06 s vs 3.2–3.9 s; list-pages 0.14 s vs 4.74 s; reads overall 2.7 times faster.</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px;background:#fbfcfe;padding:28px 32px;border:1px solid #e1e6ee;border-radius:14px">
+<h3 style="font-size:28px;font-weight:600;line-height:1.25;color:#12161d">Short write steps take under a second</h3>
+<p style="font-size:24px;line-height:1.4;color:#4d5768">It reuses its login session, clio logs in before every call: restart without waiting 0.6 s vs 2.5–3.1 s.</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px;background:#fbfcfe;padding:28px 32px;border:1px solid #e1e6ee;border-radius:14px">
+<h3 style="font-size:28px;font-weight:600;line-height:1.25;color:#12161d">One file, no .NET</h3>
+<p style="font-size:24px;line-height:1.4;color:#4d5768">23 MB on disk and 24–28 MB of memory; clio takes 504 MB plus .NET and 136–170 MB.</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px;background:#fbfcfe;padding:28px 32px;border:1px solid #e1e6ee;border-radius:14px">
+<h3 style="font-size:28px;font-weight:600;line-height:1.25;color:#12161d">Agents and skills work unchanged</h3>
+<p style="font-size:24px;line-height:1.4;color:#4d5768">1025 contracts match clio 8.1.0.142, 0 unexplained differences; the same 74 prompts and guidance.</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px;background:#fbfcfe;padding:28px 32px;border:1px solid #e1e6ee;border-radius:14px">
+<h3 style="font-size:28px;font-weight:600;line-height:1.25;color:#12161d">Updates without stopping the server</h3>
+<p style="font-size:24px;line-height:1.4;color:#4d5768">A running server keeps working. On Windows a clio update fails while clio mcp-server runs.</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px;background:#fbfcfe;padding:28px 32px;border:1px solid #e1e6ee;border-radius:14px">
+<h3 style="font-size:28px;font-weight:600;line-height:1.25;color:#12161d">One-command install</h3>
+<p style="font-size:24px;line-height:1.4;color:#4d5768">install.sh and install.ps1 check SHA256 and register the server in Claude Code and Codex.</p>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1300px;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#5d6779">creatio-mcp-go v0.2.1 · clio 8.1.0.142</p>
+<p style="position:absolute;right:128px;bottom:64px;width:200px;text-align:right;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#5d6779">3 / 12</p>
+
+</section>
+</div>
+</div>
+<p class="notes">Speed, memory, disk and start: docs/status/compare-2026-10-22.md (live stand, clio 8.1.0.142; the footprint was re-checked on 2026-10-23 with the same order of magnitude). Restart without waiting: T24 (docs/status/t24-write-timing.md), medians with the order alternated, 0.56 and 0.60 s vs 3.08 and 2.51 s. Contracts: docs/status/clio-comparison-2026-10-20.md. Updates without stopping: docs/install.md; that dotnet tool update clio fails on Windows while mcp-server runs: docs/research.md, prototype 1.</p>
+<div class="frame" id="cons-missing">
+<div class="stage">
+<section class="slide" id="cons-missing" data-transition="fade" style="background:#f6f8fb;color:#12161d;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;letter-spacing:2px;text-transform:uppercase;color:#b54708">Cons · 1 of 3</p>
+<h2 style="font-size:64px;font-weight:600;line-height:1.15;color:#12161d">What creatio-mcp-go does not have</h2>
+</div>
+<table style="font-size:24px;line-height:1.35;color:#12161d;background:#fbfcfe">
+<tr style="background:#e1e6ee"><th style="width:40%;font-weight:600">Con</th><th style="width:60%;font-weight:600">What it means for you</th></tr>
+<tr><td>35 clio tools are not served: deploying and restoring stands, Redis, workspaces, reg-web-app, page-smoke, the mobile page guide</td><td>You still need clio: environments are registered and infrastructure work is done through it. Calling such a tool here returns the “unknown tool” refusal.</td></tr>
+<tr><td>Does not install or update the knowledge library itself; clio does it when mcp-server starts and every hour</td><td>Until clio install-knowledge has run, get-guidance answers guidance-unavailable and the agent works without core-rules and routing. Git knowledge sources: clio only.</td></tr>
+<tr><td>Contracts are recorded from clio 8.1.0.142 and built into the binary</td><td>Tools and arguments of later clio versions arrive here only with a new creatio-mcp-go release; until then the agent may get a refusal.</td></tr>
+<tr><td>validate-page runs a declared subset of clio’s rules (not known-containers)</td><td>A page defect clio would catch can pass here; the answer warns about it.</td></tr>
+</table>
+<p style="position:absolute;left:128px;bottom:64px;width:1300px;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#5d6779">creatio-mcp-go v0.2.1 · clio 8.1.0.142</p>
+<p style="position:absolute;right:128px;bottom:64px;width:200px;text-align:right;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#5d6779">4 / 12</p>
+
+</section>
+</div>
+</div>
+<p class="notes">Of the 35 tools not served, 33 local, infrastructure and workspace tools are left to clio on purpose; page-smoke needs a headless Chromium, get-mobile-page-conversion-guide clio’s ~15,800-line analysis engine. What a lag in contracts looks like: between clio 8.1.0.134 and 8.1.0.142 four tools here refused the new arguments until they were ported. Sources: README.md, docs/install.md (section 8), docs/release-notes-v0.2.0.md, docs/status/clio-comparison-2026-10-20.md.</p>
+<div class="frame" id="cons-behavior">
+<div class="stage">
+<section class="slide" id="cons-behavior" data-transition="fade" style="background:#f6f8fb;color:#12161d;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;letter-spacing:2px;text-transform:uppercase;color:#b54708">Cons · 2 of 3</p>
+<h2 style="font-size:64px;font-weight:600;line-height:1.15;color:#12161d">Where it behaves differently from clio</h2>
+</div>
+<table style="font-size:24px;line-height:1.35;color:#12161d;background:#fbfcfe">
+<tr style="background:#e1e6ee"><th style="width:40%;font-weight:600">Con</th><th style="width:60%;font-weight:600">What it means for you</th></tr>
+<tr><td>A call without environment-name goes to the default environment; clio refuses such a call</td><td>A missing environment name gives no error: a write can land on the wrong stand.</td></tr>
+<tr><td>set-fsm-mode: clio retries the mode check and the package loads up to 30 times, 3 s apart; this server tries once</td><td>A dropped connection while FSM switches fails the command where clio would have waited.</td></tr>
+<tr><td>Host does not answer: login waits 45 s, clio 100 s. Host disappears mid-session: Go’s error text, not clio’s</td><td>A slow stand is refused sooner; an agent that recognizes errors by clio’s texts will not recognize this one.</td></tr>
+<tr><td>odata-read returns at most 4 MiB inline; clio has no limit</td><td>A large result fails as a transport error; use odata-read-to-file for it.</td></tr>
+</table>
+<p style="position:absolute;left:128px;bottom:64px;width:1300px;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#5d6779">creatio-mcp-go v0.2.1 · clio 8.1.0.142</p>
+<p style="position:absolute;right:128px;bottom:64px;width:200px;text-align:right;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#5d6779">5 / 12</p>
+
+</section>
+</div>
+</div>
+<p class="notes">The default environment comes from the CREATIO_* variables, otherwise clio’s active environment; this keeps older registrations with variables working. set-fsm-mode retries: no Go call in the live runs needed them, clio needed one once. The 4 MiB limit of odata-read is documented, not measured. Sources: docs/release-notes-v0.2.0.md, docs/release-notes-v0.2.1.md, docs/status/t24-write-timing.md, docs/install.md.</p>
+<div class="frame" id="cons-maturity">
+<div class="stage">
+<section class="slide" id="cons-maturity" data-transition="fade" style="background:#f6f8fb;color:#12161d;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;letter-spacing:2px;text-transform:uppercase;color:#b54708">Cons · 3 of 3</p>
+<h2 style="font-size:64px;font-weight:600;line-height:1.15;color:#12161d">Project maturity</h2>
+</div>
+<table style="font-size:24px;line-height:1.35;color:#12161d;background:#fbfcfe">
+<tr style="background:#e1e6ee"><th style="width:40%;font-weight:600">Con</th><th style="width:60%;font-weight:600">What it means for you</th></tr>
+<tr><td>Pre-release, one author and maintainer</td><td>Answers may change between releases (v0.2.0 changed the answer of odata-read); fixes depend on one person.</td></tr>
+<tr><td>Not yet checked on a live stand: creating an OAuth app, execute-sql-script results, entity connections, install-application with a real archive, Windows</td><td>These paths may differ from clio in ways nobody has seen yet.</td></tr>
+<tr><td>The Windows binary is not signed</td><td>Windows may block it; the installer unblocks it, a manual install needs Unblock-File.</td></tr>
+<tr><td>Telemetry sends clio_version = creatio-mcp-go/&lt;build&gt;</td><td>clio’s statistics show these calls apart from clio; served-content attributes are not sent.</td></tr>
+</table>
+<p style="position:absolute;left:128px;bottom:64px;width:1300px;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#5d6779">creatio-mcp-go v0.2.1 · clio 8.1.0.142</p>
+<p style="position:absolute;right:128px;bottom:64px;width:200px;text-align:right;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#5d6779">6 / 12</p>
+
+</section>
+</div>
+</div>
+<p class="notes">v0.2.1 was published on GitHub on 2026-10-23 as a pre-release; the repository has one commit author. Paths not checked live: “Verification status” in docs/release-notes-v0.2.0.md and “Not verified live” in docs/status/t23-live-write-parity.md; on the test stand both servers refused these calls alike. Windows signing and Unblock-File: docs/install.md. Telemetry: docs/install.md, section 8.</p>
+<div class="frame" id="parity">
+<div class="stage">
+<section class="slide" id="parity" data-transition="fade" style="background:#f6f8fb;color:#12161d;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;letter-spacing:2px;text-transform:uppercase;color:#0644c0">Numbers</p>
+<h2 style="font-size:64px;font-weight:600;line-height:1.15;color:#12161d">Coverage and matching answers</h2>
+</div>
+<div style="display:flex;flex-direction:column">
+<div style="display:flex;gap:48px;align-items:center;padding:24px 0;border-top:1px solid #c8d0dc">
+<p style="width:380px;white-space:nowrap;font-size:64px;font-weight:600;line-height:1.1;color:#0644c0">200 of 235</p>
+<p style="flex:1;font-size:28px;line-height:1.4;color:#363e4d">clio 8.1.0.142 tools served by creatio-mcp-go, plus get-tool-contract; all 19 resident tools are in tools/list, in clio’s order.</p>
+</div>
+<div style="display:flex;gap:48px;align-items:center;padding:24px 0;border-top:1px solid #c8d0dc">
+<p style="width:380px;white-space:nowrap;font-size:64px;font-weight:600;line-height:1.1;color:#0644c0">1025 / 0</p>
+<p style="flex:1;font-size:28px;line-height:1.4;color:#363e4d">tool contracts that match clio 8.1.0.142 / unexplained differences; the other comparison rows are the tools not served here.</p>
+</div>
+<div style="display:flex;gap:48px;align-items:center;padding:24px 0;border-top:1px solid #c8d0dc">
+<p style="width:380px;white-space:nowrap;font-size:64px;font-weight:600;line-height:1.1;color:#0644c0">823 of 883</p>
+<p style="flex:1;font-size:28px;line-height:1.4;color:#363e4d">read answers matched on a live stand (2026-10-22). Another 41 are known differences, 17 identical refusals, 2 mismatches: one fixed in v0.2.1, the other matched on a repeat.</p>
+</div>
+<div style="display:flex;gap:48px;align-items:center;padding:24px 0;border-top:1px solid #c8d0dc;border-bottom:1px solid #c8d0dc">
+<p style="width:380px;white-space:nowrap;font-size:64px;font-weight:600;line-height:1.1;color:#0644c0">0</p>
+<p style="flex:1;font-size:28px;line-height:1.4;color:#363e4d">mismatches in the write scenarios on a live stand (T23, 2026-10-20…21), except a package compile whose answer depends on who compiles first.</p>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1300px;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#5d6779">creatio-mcp-go v0.2.1 · clio 8.1.0.142</p>
+<p style="position:absolute;right:128px;bottom:64px;width:200px;text-align:right;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#5d6779">7 / 12</p>
+
+</section>
+</div>
+</div>
+<p class="notes">Coverage and contracts: docs/status/clio-comparison-2026-10-20.md (1025 match; 70 rows are the 35 tools not served, each on two surfaces; 1 known batch answer; 0 unexplained). 823 of 883: docs/status/compare-2026-10-22.md and evidence/compare-2026-10-22/read-live.json. The two mismatches: list-user-tasks without clio’s log line, fixed in v0.2.1; list-pages search, where the stand returns pages with equal sort keys in varying order and a repeat matched. The same run found the false “Authentication error” for an unreachable host, fixed in v0.2.1. Writes: docs/status/t23-live-write-parity.md; clio gives the same answer for a package with nothing new to compile.</p>
+<div class="frame" id="speed-read">
+<div class="stage">
+<section class="slide" id="speed-read" data-transition="fade" style="background:#f6f8fb;color:#12161d;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;letter-spacing:2px;text-transform:uppercase;color:#0644c0">Numbers · reads, run of 2026-10-22</p>
+<h2 style="font-size:64px;font-weight:600;line-height:1.15;color:#12161d">Reads: 2.7 times faster overall</h2>
+</div>
+<table style="font-size:28px;line-height:1.35;color:#12161d;background:#fbfcfe">
+<tr style="background:#e1e6ee"><th style="width:50%;font-weight:600">What was measured</th><th style="width:25%;font-weight:600;text-align:right">clio</th><th style="width:25%;font-weight:600;text-align:right">creatio-mcp-go</th></tr>
+<tr><td>Process start to first answer</td><td style="text-align:right">3.2–3.9 s</td><td style="text-align:right">0.04–0.06 s</td></tr>
+<tr><td>Process memory</td><td style="text-align:right">136–170 MB</td><td style="text-align:right">24–28 MB</td></tr>
+<tr><td>Size on disk</td><td style="text-align:right">504 MB + .NET</td><td style="text-align:right">23 MB, one file</td></tr>
+<tr><td>Call without a stand (list-environments)</td><td style="text-align:right">5.4–6.6 ms</td><td style="text-align:right">0.7–1.0 ms</td></tr>
+<tr><td>864 read calls on a stand, total</td><td style="text-align:right">365 s</td><td style="text-align:right">135 s</td></tr>
+<tr><td>Reads on a stand, 90th percentile</td><td style="text-align:right">0.60 s</td><td style="text-align:right">0.21 s</td></tr>
+</table>
+<p style="font-size:24px;line-height:1.4;color:#4d5768">In this run clio was always called first, so the second server may have met a stand the first call had warmed. The heavy reads were therefore timed again with the order alternated: next slide.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1300px;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#5d6779">creatio-mcp-go v0.2.1 · clio 8.1.0.142</p>
+<p style="position:absolute;right:128px;bottom:64px;width:200px;text-align:right;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#5d6779">8 / 12</p>
+
+</section>
+</div>
+</div>
+<p class="notes">Source: docs/status/compare-2026-10-22.md and evidence/compare-2026-10-22/read-live.json (clio 8.1.0.142 against creatio-mcp-go at e45af4d). 365.1 / 134.7 = 2.71. Footprint re-checked on 2026-10-23 without a stand: clio 1.8–4.7 s and 129–140 MB, creatio-mcp-go 0.06–0.72 s and 24–29 MB (0.72 s was the first start of a freshly built file). Also from the run: get-tool-contract for three tools, 145–157 ms in clio and 1–2 ms here. The v0.2.1 release archives are 6.3–7.3 MB.</p>
+<div class="frame" id="speed-where">
+<div class="stage">
+<section class="slide" id="speed-where" data-transition="fade" style="background:#f6f8fb;color:#12161d;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;letter-spacing:2px;text-transform:uppercase;color:#0644c0">Numbers · reads with the order alternated</p>
+<h2 style="font-size:64px;font-weight:600;line-height:1.15;color:#12161d">The gap is where clio spends time on itself</h2>
+</div>
+<table style="font-size:28px;line-height:1.35;color:#12161d;background:#fbfcfe">
+<tr style="background:#e1e6ee"><th style="width:50%;font-weight:600">Tool, median of calls 2–4</th><th style="width:25%;font-weight:600;text-align:right">clio</th><th style="width:25%;font-weight:600;text-align:right">creatio-mcp-go</th></tr>
+<tr><td>list-pages</td><td style="text-align:right">4.74 s</td><td style="text-align:right">0.14 s</td></tr>
+<tr><td>list-apps</td><td style="text-align:right">0.30 s</td><td style="text-align:right">0.03 s</td></tr>
+<tr><td>get-page</td><td style="text-align:right">2.64 s</td><td style="text-align:right">2.35 s</td></tr>
+<tr><td>get-page-hierarchy</td><td style="text-align:right">1.93 s</td><td style="text-align:right">1.82 s</td></tr>
+<tr><td>get-entity-schema-properties</td><td style="text-align:right">0.04 s</td><td style="text-align:right">0.03 s</td></tr>
+</table>
+<p style="font-size:28px;line-height:1.4;color:#363e4d">Where the stand does the work (get-page, get-page-hierarchy), the difference is 6–11%. The large gaps are process start, the first call, list-pages, list-apps and compile-status.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1300px;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#5d6779">creatio-mcp-go v0.2.1 · clio 8.1.0.142</p>
+<p style="position:absolute;right:128px;bottom:64px;width:200px;text-align:right;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#5d6779">9 / 12</p>
+
+</section>
+</div>
+</div>
+<p class="notes">Source: docs/status/compare-2026-10-22.md, “Heavy reads with the order alternated”: each tool called 4 times on each server, Go first in calls 1 and 3; the median is over calls 2–4, the first call is listed apart there. Not re-measured since: the stand is no longer used for timing. For choosing: an agent notices the difference on short reads, not on operations where the stand does the work.</p>
+<div class="frame" id="speed-write">
+<div class="stage">
+<section class="slide" id="speed-write" data-transition="fade" style="background:#f6f8fb;color:#12161d;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;letter-spacing:2px;text-transform:uppercase;color:#0644c0">Numbers · writes, T24 of 2026-10-23, medians</p>
+<h2 style="font-size:64px;font-weight:600;line-height:1.15;color:#12161d">Writes: faster on short steps</h2>
+</div>
+<table style="font-size:26px;line-height:1.35;color:#12161d;background:#fbfcfe">
+<tr style="background:#e1e6ee"><th style="width:46%;font-weight:600">Step</th><th style="width:27%;font-weight:600;text-align:right">Go first: clio / Go, s</th><th style="width:27%;font-weight:600;text-align:right">clio first: clio / Go, s</th></tr>
+<tr><td>set-fsm-mode off, FSM already off</td><td style="text-align:right">0.63 / 0.10</td><td style="text-align:right">0.60 / 0.10</td></tr>
+<tr><td>restart without waiting</td><td style="text-align:right">3.08 / 0.56</td><td style="text-align:right">2.51 / 0.60</td></tr>
+<tr><td>set-fsm-mode off from on, first side</td><td style="text-align:right">Go 14.91</td><td style="text-align:right">clio 14.56</td></tr>
+<tr><td>create-app</td><td style="text-align:right">53.45 / 55.76</td><td style="text-align:right">62.86 / 64.95</td></tr>
+</table>
+<div style="display:flex;gap:32px">
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#fbfcfe;padding:28px 32px;border:2px solid #0644c0;border-radius:14px">
+<h3 style="font-size:28px;font-weight:600;line-height:1.25;color:#0644c0">Median of short write steps: 0.62 s → 0.20 s</h3>
+<p style="font-size:24px;line-height:1.4;color:#4d5768">239 write steps under 30 s in the T23 run; clio was always called first there.</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#fbfcfe;padding:28px 32px;border:1px solid #e1e6ee;border-radius:14px">
+<h3 style="font-size:28px;font-weight:600;line-height:1.25;color:#12161d">Why Go used to look slower</h3>
+<p style="font-size:24px;line-height:1.4;color:#4d5768">In T23 it always went second and waited for the stand to recover from clio’s step. With the order alternated there is no difference; the FSM probe timeout is fixed in v0.2.1.</p>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1300px;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#5d6779">creatio-mcp-go v0.2.1 · clio 8.1.0.142</p>
+<p style="position:absolute;right:128px;bottom:64px;width:200px;text-align:right;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#5d6779">10 / 12</p>
+
+</section>
+</div>
+</div>
+<p class="notes">Table: docs/status/t24-write-timing.md and docs/release-notes-v0.2.1.md; 3 rounds per order after a warm-up round, on a separate stand. The long steps are the stand’s own work: the package import when FSM is switched off, creating the application. After an FSM switch the second side waits for the site restart alike: Go 66.13 s, clio 70.45 s. Median 0.62 / 0.20 s: docs/status/compare-2026-10-22.md, computed from evidence/t23. In T23 Go looked slower on set-fsm-mode (up to 60 s), restart (14 s) and create-app (32 s); T24 showed that was call order and stand state. v0.2.1 also fixed delete-app and get-fsm-mode, which gave up after 45 s on a slow stand.</p>
+<div class="frame" id="choose">
+<div class="stage">
+<section class="slide" id="choose" data-transition="fade" style="background:#f6f8fb;color:#12161d;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:32px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;letter-spacing:2px;text-transform:uppercase;color:#0644c0">Choosing</p>
+<h2 style="font-size:64px;font-weight:600;line-height:1.15;color:#12161d">When to use which</h2>
+</div>
+<div style="display:flex;gap:32px">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#fbfcfe;padding:32px 40px;border:2px solid #0644c0;border-radius:14px">
+<h3 style="font-size:40px;font-weight:600;line-height:1.2;color:#0644c0">creatio-mcp-go</h3>
+<ul style="font-size:26px;line-height:1.4;color:#363e4d">
+<li>everyday agent work with pages, schemas, data, applications and processes</li>
+<li>many short calls where response time matters</li>
+<li>a machine without .NET</li>
+<li>updates without stopping the server</li>
+</ul>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#fbfcfe;padding:32px 40px;border:1px solid #e1e6ee;border-radius:14px">
+<h3 style="font-size:40px;font-weight:600;line-height:1.2;color:#12161d">clio MCP</h3>
+<ul style="font-size:26px;line-height:1.4;color:#363e4d">
+<li>deploying, restoring and stopping stands, registering environments, Redis, workspaces</li>
+<li>page-smoke and the mobile page guide</li>
+<li>installing and updating the knowledge library, Git knowledge sources</li>
+<li>a clio newer than 8.1.0.142 and its new tools</li>
+<li>an unstable stand where clio’s retries during an FSM switch are needed</li>
+</ul>
+</div>
+</div>
+<p style="font-size:26px;line-height:1.4;color:#eef3ff;background:#0a2c74;padding:24px 40px;border-radius:14px">Together: keep clio installed for environments, knowledge and infrastructure, and route the agent’s everyday calls through creatio-mcp-go.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1300px;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#5d6779">creatio-mcp-go v0.2.1 · clio 8.1.0.142</p>
+<p style="position:absolute;right:128px;bottom:64px;width:200px;text-align:right;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#5d6779">11 / 12</p>
+
+</section>
+</div>
+</div>
+<p class="notes">creatio-mcp-go reads the environments from clio’s appsettings.json and the knowledge library from clio’s store, so clio is needed even when every agent call goes through creatio-mcp-go. Both servers can run at the same time on one clio home: writes to the knowledge store and appsettings.json take the same file locks as clio 8.1.0.142.</p>
+<div class="frame" id="sources">
+<div class="stage">
+<section class="slide" id="sources" data-transition="fade" style="background:#f6f8fb;color:#12161d;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;letter-spacing:2px;text-transform:uppercase;color:#0644c0">Sources</p>
+<h2 style="font-size:64px;font-weight:600;line-height:1.15;color:#12161d">Where the numbers come from</h2>
+</div>
+<table style="font-size:24px;line-height:1.35;color:#12161d;background:#fbfcfe">
+<tr style="background:#e1e6ee"><th style="width:45%;font-weight:600">Figure or fact</th><th style="width:55%;font-weight:600">Source in the repository</th></tr>
+<tr><td>Coverage 200 of 235, contracts 1025 / 0</td><td>docs/status/clio-comparison-2026-10-20.md, docs/release-notes-v0.2.0.md</td></tr>
+<tr><td>Writes on a live stand (T23)</td><td>docs/status/t23-live-write-parity.md, evidence/t23/</td></tr>
+<tr><td>Writes with the order alternated (T24), v0.2.1 fixes</td><td>docs/status/t24-write-timing.md, docs/release-notes-v0.2.1.md</td></tr>
+<tr><td>823 of 883, 2.7 times, p90, start, memory, disk, per-tool medians, write median 0.62 / 0.20 s</td><td>docs/status/compare-2026-10-22.md, evidence/compare-2026-10-22/read-live.json</td></tr>
+<tr><td>Install, updates, knowledge, known differences</td><td>docs/install.md, docs/research.md, docs/release-notes-v0.2.0.md</td></tr>
+<tr><td>Pre-release, one author</td><td>docs/install.md; the v0.2.1 release and the contributors list on GitHub</td></tr>
+</table>
+<p style="position:absolute;left:128px;bottom:64px;width:1300px;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#5d6779"><a href="https://github.com/Alexandr-Kravchuk/creatio-mcp-go">github.com/Alexandr-Kravchuk/creatio-mcp-go</a></p>
+<p style="position:absolute;right:128px;bottom:64px;width:200px;text-align:right;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#5d6779">12 / 12</p>
+
+</section>
+</div>
+</div>
+<p class="notes">Every docs/ and evidence/ path is in github.com/Alexandr-Kravchuk/creatio-mcp-go on main. This deck is also there: docs/clio-mcp-comparison.md (text) and docs/clio-mcp-comparison.html (slides).</p>
+</main>
+<script>
+function fit() {
+  document.querySelectorAll('.frame').forEach(function (frame) {
+    frame.querySelector('.stage').style.transform = 'scale(' + frame.clientWidth / 1920 + ')';
+  });
+}
+window.addEventListener('resize', fit);
+fit();
+</script>
+</body>
+</html>

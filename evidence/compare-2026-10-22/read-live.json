@@ -1,0 +1,7259 @@
+{
+  "schema": 1,
+  "clio_startup_seconds": 3.91,
+  "go_startup_seconds": 0.06,
+  "counts": {
+    "match": 823,
+    "both-failed": 17,
+    "error-text": 0,
+    "known-diff": 41,
+    "mismatch": 2
+  },
+  "cases": [
+    {
+      "tool": "list-apps",
+      "case": "list-apps",
+      "verdict": "match",
+      "clio_seconds": 37.79,
+      "go_seconds": 0.35,
+      "differences": []
+    },
+    {
+      "tool": "list-packages",
+      "case": "list-packages default",
+      "verdict": "match",
+      "clio_seconds": 0.41,
+      "go_seconds": 0.13,
+      "differences": []
+    },
+    {
+      "tool": "list-packages",
+      "case": "list-packages filter+paging",
+      "verdict": "match",
+      "clio_seconds": 0.24,
+      "go_seconds": 0.05,
+      "differences": []
+    },
+    {
+      "tool": "list-packages",
+      "case": "list-packages no match",
+      "verdict": "match",
+      "clio_seconds": 0.05,
+      "go_seconds": 0.11,
+      "differences": []
+    },
+    {
+      "tool": "list-app-sections",
+      "case": "list-app-sections Customer 360",
+      "verdict": "match",
+      "clio_seconds": 4.72,
+      "go_seconds": 0.09,
+      "differences": []
+    },
+    {
+      "tool": "list-app-sections",
+      "case": "list-app-sections unknown app",
+      "verdict": "both-failed",
+      "clio_seconds": 4.58,
+      "go_seconds": 0.08,
+      "differences": [
+        "$.error: value differs"
+      ]
+    },
+    {
+      "tool": "list-pages",
+      "case": "list-pages search",
+      "verdict": "mismatch",
+      "clio_seconds": 4.51,
+      "go_seconds": 0.09,
+      "differences": [
+        "$.pages[0].packagename: value differs",
+        "$.pages[0].parentschemaname: only in go",
+        "$.pages[0].schemaname: value differs",
+        "$.pages[0].uid: value differs",
+        "$.pages[1].packagename: value differs",
+        "$.pages[1].parentschemaname: value differs",
+        "$.pages[1].schemaname: value differs",
+        "$.pages[1].uid: value differs",
+        "$.pages[2].packagename: value differs",
+        "$.pages[2].schemaname: value differs",
+        "$.pages[2].uid: value differs",
+        "$.pages[3].packagename: value differs",
+        "$.pages[3].parentschemaname: only in go",
+        "$.pages[3].schemaname: value differs",
+        "$.pages[3].uid: value differs",
+        "$.pages[4].packagename: value differs",
+        "$.pages[4].parentschemaname: value differs",
+        "$.pages[4].schemaname: value differs",
+        "$.pages[4].uid: value differs",
+        "$.pages[5].packagename: value differs"
+      ]
+    },
+    {
+      "tool": "list-pages",
+      "case": "list-pages by app code",
+      "verdict": "match",
+      "clio_seconds": 4.95,
+      "go_seconds": 0.1,
+      "differences": []
+    },
+    {
+      "tool": "list-pages",
+      "case": "list-pages by package",
+      "verdict": "match",
+      "clio_seconds": 4.01,
+      "go_seconds": 0.04,
+      "differences": []
+    },
+    {
+      "tool": "get-entity-schema-properties",
+      "case": "entity schema Contact",
+      "verdict": "match",
+      "clio_seconds": 0.46,
+      "go_seconds": 0.04,
+      "differences": []
+    },
+    {
+      "tool": "get-entity-schema-properties",
+      "case": "entity schema Account required",
+      "verdict": "match",
+      "clio_seconds": 0.09,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "get-entity-schema-properties",
+      "case": "entity schema unknown",
+      "verdict": "both-failed",
+      "clio_seconds": 0.08,
+      "go_seconds": 0.03,
+      "differences": [
+        "$.error: value differs"
+      ]
+    },
+    {
+      "tool": "get-sql-schema",
+      "case": "sql schema ambiguous name",
+      "verdict": "both-failed",
+      "clio_seconds": 0.12,
+      "go_seconds": 0.09,
+      "differences": [
+        "$.error: value differs"
+      ]
+    },
+    {
+      "tool": "get-sql-schema",
+      "case": "sql schema unknown",
+      "verdict": "both-failed",
+      "clio_seconds": 0.04,
+      "go_seconds": 0.03,
+      "differences": [
+        "$.error: value differs"
+      ]
+    },
+    {
+      "tool": "list-package-files",
+      "case": "list-package-files cliogate",
+      "verdict": "match",
+      "clio_seconds": 0.16,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "list-package-files",
+      "case": "list-package-files unknown",
+      "verdict": "match",
+      "clio_seconds": 0.15,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "get-package-file",
+      "case": "get-package-file source file",
+      "verdict": "match",
+      "clio_seconds": 0.2,
+      "go_seconds": 0.07,
+      "differences": []
+    },
+    {
+      "tool": "get-package-file",
+      "case": "get-package-file path traversal",
+      "verdict": "both-failed",
+      "clio_seconds": 0.05,
+      "go_seconds": 0.0,
+      "differences": [
+        "$.error: value differs"
+      ]
+    },
+    {
+      "tool": "execute-esq",
+      "case": "execute-esq Contact top 5",
+      "verdict": "match",
+      "clio_seconds": 4.54,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "list-environments",
+      "case": "list-environments",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "list-environments",
+      "case": "list-environments through clio-run",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "list-apps",
+      "case": "list-apps unknown environment",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.01,
+      "differences": []
+    },
+    {
+      "tool": "get-app-info",
+      "case": "get-app-info unknown environment",
+      "verdict": "match",
+      "clio_seconds": 0.02,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "find-app",
+      "case": "find-app unknown environment",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "list-pages",
+      "case": "list-pages unknown environment",
+      "verdict": "match",
+      "clio_seconds": 3.25,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "get-sys-setting",
+      "case": "get-sys-setting unknown environment",
+      "verdict": "match",
+      "clio_seconds": 0.02,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "get-schema-name-prefix",
+      "case": "get-schema-name-prefix unknown environment",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "describe-environment",
+      "case": "describe-environment unknown environment",
+      "verdict": "match",
+      "clio_seconds": 0.04,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "get-record-rights",
+      "case": "get-record-rights unknown environment",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.01,
+      "differences": []
+    },
+    {
+      "tool": "dataforge-status",
+      "case": "dataforge-status unknown environment",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.01,
+      "differences": []
+    },
+    {
+      "tool": "get-fsm-mode",
+      "case": "get-fsm-mode unknown environment",
+      "verdict": "match",
+      "clio_seconds": 0.06,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "compile-status",
+      "case": "compile-status echoes an unknown environment",
+      "verdict": "match",
+      "clio_seconds": 3.46,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "list-themes",
+      "case": "list-themes legacy environmentName spelling",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "get-app-info",
+      "case": "get-app-info by code",
+      "verdict": "match",
+      "clio_seconds": 6.99,
+      "go_seconds": 0.7,
+      "differences": []
+    },
+    {
+      "tool": "get-app-info",
+      "case": "get-app-info unknown code",
+      "verdict": "match",
+      "clio_seconds": 0.3,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "get-app-info",
+      "case": "get-app-info no identifier",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "find-app",
+      "case": "find-app pattern",
+      "verdict": "match",
+      "clio_seconds": 0.22,
+      "go_seconds": 0.15,
+      "differences": []
+    },
+    {
+      "tool": "find-app",
+      "case": "find-app all",
+      "verdict": "match",
+      "clio_seconds": 0.14,
+      "go_seconds": 0.21,
+      "differences": []
+    },
+    {
+      "tool": "find-app",
+      "case": "find-app code any case",
+      "verdict": "match",
+      "clio_seconds": 0.07,
+      "go_seconds": 0.07,
+      "differences": []
+    },
+    {
+      "tool": "find-app",
+      "case": "find-app no match",
+      "verdict": "match",
+      "clio_seconds": 0.14,
+      "go_seconds": 0.14,
+      "differences": []
+    },
+    {
+      "tool": "find-app",
+      "case": "find-app alias name",
+      "verdict": "match",
+      "clio_seconds": 0.14,
+      "go_seconds": 0.16,
+      "differences": []
+    },
+    {
+      "tool": "find-app",
+      "case": "find-app unknown arg",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "find-entity-schema",
+      "case": "find-entity-schema exact",
+      "verdict": "match",
+      "clio_seconds": 0.04,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "find-entity-schema",
+      "case": "find-entity-schema pattern",
+      "verdict": "match",
+      "clio_seconds": 0.05,
+      "go_seconds": 0.1,
+      "differences": []
+    },
+    {
+      "tool": "find-entity-schema",
+      "case": "find-entity-schema no match",
+      "verdict": "match",
+      "clio_seconds": 0.15,
+      "go_seconds": 0.15,
+      "differences": []
+    },
+    {
+      "tool": "find-entity-schema",
+      "case": "find-entity-schema bad uid",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "find-entity-schema",
+      "case": "find-entity-schema no criteria",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "get-entity-schema-column-properties",
+      "case": "column SystemValue lookup",
+      "verdict": "match",
+      "clio_seconds": 0.12,
+      "go_seconds": 0.13,
+      "differences": []
+    },
+    {
+      "tool": "get-entity-schema-column-properties",
+      "case": "column Const lookup",
+      "verdict": "match",
+      "clio_seconds": 0.33,
+      "go_seconds": 0.17,
+      "differences": []
+    },
+    {
+      "tool": "get-entity-schema-column-properties",
+      "case": "column Const boolean",
+      "verdict": "match",
+      "clio_seconds": 0.04,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "get-entity-schema-column-properties",
+      "case": "column Settings default",
+      "verdict": "match",
+      "clio_seconds": 0.04,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "get-entity-schema-column-properties",
+      "case": "column SystemValue datetime",
+      "verdict": "match",
+      "clio_seconds": 0.07,
+      "go_seconds": 0.06,
+      "differences": []
+    },
+    {
+      "tool": "get-entity-schema-column-properties",
+      "case": "column package layer",
+      "verdict": "match",
+      "clio_seconds": 0.47,
+      "go_seconds": 0.32,
+      "differences": []
+    },
+    {
+      "tool": "get-entity-schema-column-properties",
+      "case": "column package layer default",
+      "verdict": "match",
+      "clio_seconds": 0.4,
+      "go_seconds": 0.43,
+      "differences": []
+    },
+    {
+      "tool": "get-entity-schema-column-properties",
+      "case": "column unknown",
+      "verdict": "match",
+      "clio_seconds": 0.04,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "get-entity-schema-column-properties",
+      "case": "column unknown package",
+      "verdict": "match",
+      "clio_seconds": 0.04,
+      "go_seconds": 0.09,
+      "differences": []
+    },
+    {
+      "tool": "get-sys-setting",
+      "case": "get-sys-setting SchemaNamePrefix",
+      "verdict": "match",
+      "clio_seconds": 0.73,
+      "go_seconds": 0.08,
+      "differences": []
+    },
+    {
+      "tool": "get-sys-setting",
+      "case": "get-sys-setting boolean",
+      "verdict": "match",
+      "clio_seconds": 0.38,
+      "go_seconds": 0.06,
+      "differences": []
+    },
+    {
+      "tool": "get-sys-setting",
+      "case": "get-sys-setting lookup",
+      "verdict": "match",
+      "clio_seconds": 0.37,
+      "go_seconds": 0.19,
+      "differences": []
+    },
+    {
+      "tool": "get-sys-setting",
+      "case": "get-sys-setting unknown code",
+      "verdict": "match",
+      "clio_seconds": 0.33,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "get-sys-setting",
+      "case": "get-sys-setting empty code",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "get-sys-setting",
+      "case": "get-sys-setting code of wrong type",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "list-sys-settings",
+      "case": "list-sys-settings",
+      "verdict": "match",
+      "clio_seconds": 1.18,
+      "go_seconds": 0.21,
+      "differences": []
+    },
+    {
+      "tool": "get-user-culture",
+      "case": "get-user-culture",
+      "verdict": "match",
+      "clio_seconds": 0.35,
+      "go_seconds": 0.04,
+      "differences": []
+    },
+    {
+      "tool": "get-user-culture",
+      "case": "get-user-culture target override",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "describe-environment",
+      "case": "describe-environment",
+      "verdict": "match",
+      "clio_seconds": 0.13,
+      "go_seconds": 0.17,
+      "differences": []
+    },
+    {
+      "tool": "describe-environment",
+      "case": "describe-environment timeout of wrong type",
+      "verdict": "both-failed",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": [
+        "$.error: value differs"
+      ]
+    },
+    {
+      "tool": "get-schema-name-prefix",
+      "case": "schema name prefix",
+      "verdict": "match",
+      "clio_seconds": 0.27,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "get-target-package",
+      "case": "target package current setting",
+      "verdict": "match",
+      "clio_seconds": 0.29,
+      "go_seconds": 0.06,
+      "differences": []
+    },
+    {
+      "tool": "get-target-package",
+      "case": "target package Custom",
+      "verdict": "match",
+      "clio_seconds": 0.04,
+      "go_seconds": 0.04,
+      "differences": []
+    },
+    {
+      "tool": "get-target-package",
+      "case": "target package case-insensitive",
+      "verdict": "match",
+      "clio_seconds": 0.04,
+      "go_seconds": 0.04,
+      "differences": []
+    },
+    {
+      "tool": "get-target-package",
+      "case": "target package locked",
+      "verdict": "match",
+      "clio_seconds": 0.04,
+      "go_seconds": 0.04,
+      "differences": []
+    },
+    {
+      "tool": "get-target-package",
+      "case": "target package unknown",
+      "verdict": "match",
+      "clio_seconds": 0.11,
+      "go_seconds": 0.04,
+      "differences": []
+    },
+    {
+      "tool": "get-target-package",
+      "case": "target package legacy alias",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "list-entity-client-schemas",
+      "case": "entity client schemas Contact",
+      "verdict": "match",
+      "clio_seconds": 0.18,
+      "go_seconds": 0.26,
+      "differences": []
+    },
+    {
+      "tool": "list-entity-client-schemas",
+      "case": "entity client schemas Account",
+      "verdict": "match",
+      "clio_seconds": 0.12,
+      "go_seconds": 0.12,
+      "differences": []
+    },
+    {
+      "tool": "list-entity-client-schemas",
+      "case": "entity client schemas typed Activity",
+      "verdict": "match",
+      "clio_seconds": 0.33,
+      "go_seconds": 0.23,
+      "differences": []
+    },
+    {
+      "tool": "list-entity-client-schemas",
+      "case": "entity client schemas unknown",
+      "verdict": "match",
+      "clio_seconds": 0.03,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "get-page",
+      "case": "page Contacts_FormPage",
+      "verdict": "match",
+      "clio_seconds": 7.21,
+      "go_seconds": 2.77,
+      "differences": []
+    },
+    {
+      "tool": "get-page",
+      "case": "page Accounts_FormPage",
+      "verdict": "match",
+      "clio_seconds": 3.07,
+      "go_seconds": 2.21,
+      "differences": []
+    },
+    {
+      "tool": "get-page",
+      "case": "page with editable schema",
+      "verdict": "known-diff",
+      "clio_seconds": 0.89,
+      "go_seconds": 0.69,
+      "differences": [
+        "$.editable.modifiedon: value differs"
+      ]
+    },
+    {
+      "tool": "get-page",
+      "case": "page mobile",
+      "verdict": "match",
+      "clio_seconds": 0.27,
+      "go_seconds": 0.18,
+      "differences": []
+    },
+    {
+      "tool": "get-page",
+      "case": "page unparsable body",
+      "verdict": "match",
+      "clio_seconds": 4.59,
+      "go_seconds": 1.5,
+      "differences": []
+    },
+    {
+      "tool": "get-page",
+      "case": "page unknown",
+      "verdict": "match",
+      "clio_seconds": 0.05,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "read-entity-business-rules",
+      "case": "entity rules AccountAddress (apply-filter)",
+      "verdict": "match",
+      "clio_seconds": 0.59,
+      "go_seconds": 0.37,
+      "differences": []
+    },
+    {
+      "tool": "read-entity-business-rules",
+      "case": "entity rules Activity (set-values)",
+      "verdict": "match",
+      "clio_seconds": 2.67,
+      "go_seconds": 0.78,
+      "differences": []
+    },
+    {
+      "tool": "read-entity-business-rules",
+      "case": "entity rules package case-insensitive",
+      "verdict": "match",
+      "clio_seconds": 0.52,
+      "go_seconds": 0.33,
+      "differences": []
+    },
+    {
+      "tool": "read-entity-business-rules",
+      "case": "entity rules unknown entity",
+      "verdict": "match",
+      "clio_seconds": 0.07,
+      "go_seconds": 0.06,
+      "differences": []
+    },
+    {
+      "tool": "read-entity-business-rules",
+      "case": "entity rules unknown package",
+      "verdict": "match",
+      "clio_seconds": 0.04,
+      "go_seconds": 0.04,
+      "differences": []
+    },
+    {
+      "tool": "read-page-business-rules",
+      "case": "page rules Accounts_FormPage",
+      "verdict": "match",
+      "clio_seconds": 1.21,
+      "go_seconds": 0.99,
+      "differences": []
+    },
+    {
+      "tool": "read-page-business-rules",
+      "case": "page rules schema-name alias",
+      "verdict": "match",
+      "clio_seconds": 1.05,
+      "go_seconds": 1.05,
+      "differences": []
+    },
+    {
+      "tool": "read-page-business-rules",
+      "case": "page rules mini page",
+      "verdict": "match",
+      "clio_seconds": 0.52,
+      "go_seconds": 0.28,
+      "differences": []
+    },
+    {
+      "tool": "read-page-business-rules",
+      "case": "page rules unknown page",
+      "verdict": "match",
+      "clio_seconds": 0.15,
+      "go_seconds": 0.16,
+      "differences": []
+    },
+    {
+      "tool": "read-page-business-rules",
+      "case": "page rules missing page name",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "get-record-rights",
+      "case": "record rights contact",
+      "verdict": "match",
+      "clio_seconds": 0.09,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "get-record-rights",
+      "case": "record rights no rows",
+      "verdict": "match",
+      "clio_seconds": 0.04,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "get-record-rights",
+      "case": "record rights unknown entity",
+      "verdict": "both-failed",
+      "clio_seconds": 0.06,
+      "go_seconds": 0.03,
+      "differences": [
+        "$.error: value differs"
+      ]
+    },
+    {
+      "tool": "get-process-signature",
+      "case": "process signature by code",
+      "verdict": "match",
+      "clio_seconds": 2.06,
+      "go_seconds": 1.42,
+      "differences": []
+    },
+    {
+      "tool": "get-process-signature",
+      "case": "process signature by caption",
+      "verdict": "match",
+      "clio_seconds": 2.3,
+      "go_seconds": 1.75,
+      "differences": []
+    },
+    {
+      "tool": "get-process-signature",
+      "case": "process signature unknown",
+      "verdict": "match",
+      "clio_seconds": 0.51,
+      "go_seconds": 0.16,
+      "differences": []
+    },
+    {
+      "tool": "get-process-signature",
+      "case": "process signature empty name",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "get-process-signature",
+      "case": "process signature unknown argument",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "read-page-business-rules",
+      "case": "page rules ForecastSheet_FormPage",
+      "verdict": "match",
+      "clio_seconds": 0.68,
+      "go_seconds": 0.46,
+      "differences": []
+    },
+    {
+      "tool": "list-themes",
+      "case": "list-themes default",
+      "verdict": "match",
+      "clio_seconds": 0.28,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "list-themes",
+      "case": "list-themes unknown argument",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "list-printables",
+      "case": "list-printables default",
+      "verdict": "match",
+      "clio_seconds": 0.17,
+      "go_seconds": 0.1,
+      "differences": []
+    },
+    {
+      "tool": "list-printables",
+      "case": "list-printables entity filter case-insensitive",
+      "verdict": "match",
+      "clio_seconds": 0.11,
+      "go_seconds": 0.1,
+      "differences": []
+    },
+    {
+      "tool": "list-printables",
+      "case": "list-printables module entity filter",
+      "verdict": "match",
+      "clio_seconds": 0.12,
+      "go_seconds": 0.1,
+      "differences": []
+    },
+    {
+      "tool": "list-printables",
+      "case": "list-printables no match",
+      "verdict": "match",
+      "clio_seconds": 0.1,
+      "go_seconds": 0.11,
+      "differences": []
+    },
+    {
+      "tool": "list-printables",
+      "case": "list-printables wrong argument type",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "list-user-tasks",
+      "case": "list-user-tasks default",
+      "verdict": "mismatch",
+      "clio_seconds": 0.51,
+      "go_seconds": 0.14,
+      "differences": [
+        "$.executionlogmessages: 25 items in clio, 24 in go",
+        "$.executionlogmessages[0].value: value differs",
+        "$.executionlogmessages[1].value: value differs",
+        "$.executionlogmessages[2].value: value differs",
+        "$.executionlogmessages[3].value: value differs",
+        "$.executionlogmessages[4].value: value differs",
+        "$.executionlogmessages[5].value: value differs",
+        "$.executionlogmessages[6].value: value differs",
+        "$.executionlogmessages[7].value: value differs",
+        "$.executionlogmessages[8].value: value differs",
+        "$.executionlogmessages[9].value: value differs",
+        "$.executionlogmessages[10].value: value differs",
+        "$.executionlogmessages[11].value: value differs",
+        "$.executionlogmessages[12].value: value differs",
+        "$.executionlogmessages[13].value: value differs",
+        "$.executionlogmessages[14].value: value differs",
+        "$.executionlogmessages[15].value: value differs",
+        "$.executionlogmessages[16].value: value differs",
+        "$.executionlogmessages[17].value: value differs",
+        "$.executionlogmessages[18].value: value differs"
+      ]
+    },
+    {
+      "tool": "list-user-tasks",
+      "case": "list-user-tasks unknown argument",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "list-page-templates",
+      "case": "list-page-templates default",
+      "verdict": "match",
+      "clio_seconds": 0.09,
+      "go_seconds": 0.06,
+      "differences": []
+    },
+    {
+      "tool": "list-page-templates",
+      "case": "list-page-templates web",
+      "verdict": "match",
+      "clio_seconds": 0.05,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "list-page-templates",
+      "case": "list-page-templates mobile alias",
+      "verdict": "match",
+      "clio_seconds": 0.04,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "list-page-templates",
+      "case": "list-page-templates unknown schema-type",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "compile-status",
+      "case": "compile-status latest",
+      "verdict": "known-diff",
+      "clio_seconds": 7.46,
+      "go_seconds": 0.15,
+      "differences": [
+        "$.checkedutc: value differs",
+        "$.compilationhistory[1].finishedsecondsago: value differs",
+        "$.compilationhistory[5].finishedsecondsago: value differs",
+        "$.compilationhistory[6].finishedsecondsago: value differs"
+      ]
+    },
+    {
+      "tool": "compile-status",
+      "case": "compile-status unknown operation-id",
+      "verdict": "known-diff",
+      "clio_seconds": 4.66,
+      "go_seconds": 0.09,
+      "differences": [
+        "$.checkedutc: value differs",
+        "$.compilationhistory[2].finishedsecondsago: value differs",
+        "$.compilationhistory[6].finishedsecondsago: value differs"
+      ]
+    },
+    {
+      "tool": "compile-status",
+      "case": "compile-status operation-id wrong type",
+      "verdict": "match",
+      "clio_seconds": 3.67,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "restart-status",
+      "case": "restart-status latest",
+      "verdict": "match",
+      "clio_seconds": 3.98,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "restart-status",
+      "case": "restart-status operation-id wrong type",
+      "verdict": "match",
+      "clio_seconds": 3.51,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "last-compilation-log",
+      "case": "last-compilation-log",
+      "verdict": "match",
+      "clio_seconds": 0.1,
+      "go_seconds": 0.04,
+      "differences": []
+    },
+    {
+      "tool": "last-compilation-log",
+      "case": "last-compilation-log unknown argument",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "get-fsm-mode",
+      "case": "get-fsm-mode environment selector wrong type",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "resolve-oauth-system-user",
+      "case": "resolve-oauth-system-user default",
+      "verdict": "match",
+      "clio_seconds": 0.11,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "resolve-oauth-system-user",
+      "case": "resolve-oauth-system-user name trimmed case-insensitive",
+      "verdict": "match",
+      "clio_seconds": 0.03,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "resolve-oauth-system-user",
+      "case": "resolve-oauth-system-user id wins over name",
+      "verdict": "match",
+      "clio_seconds": 0.03,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "resolve-oauth-system-user",
+      "case": "resolve-oauth-system-user name not found",
+      "verdict": "match",
+      "clio_seconds": 0.03,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "resolve-oauth-system-user",
+      "case": "resolve-oauth-system-user malformed id",
+      "verdict": "both-failed",
+      "clio_seconds": 0.05,
+      "go_seconds": 0.03,
+      "differences": [
+        "$.error: value differs"
+      ]
+    },
+    {
+      "tool": "resolve-oauth-system-user",
+      "case": "resolve-oauth-system-user name wrong type",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "verify-oauth-app",
+      "case": "verify-oauth-app configured credentials",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "verify-oauth-app",
+      "case": "verify-oauth-app half credential pair",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "verify-oauth-app",
+      "case": "verify-oauth-app unreachable identity server",
+      "verdict": "match",
+      "clio_seconds": 0.06,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "verify-oauth-app",
+      "case": "verify-oauth-app identity url with query",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "verify-oauth-app",
+      "case": "verify-oauth-app client-secret wrong type",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "get-fsm-mode",
+      "case": "get-fsm-mode",
+      "verdict": "match",
+      "clio_seconds": 0.28,
+      "go_seconds": 0.04,
+      "differences": []
+    },
+    {
+      "tool": "dataforge-status",
+      "case": "dataforge-status default",
+      "verdict": "match",
+      "clio_seconds": 0.08,
+      "go_seconds": 0.07,
+      "differences": []
+    },
+    {
+      "tool": "dataforge-status",
+      "case": "dataforge-status unknown argument ignored",
+      "verdict": "match",
+      "clio_seconds": 0.08,
+      "go_seconds": 0.11,
+      "differences": []
+    },
+    {
+      "tool": "dataforge-find-tables",
+      "case": "dataforge-find-tables contact",
+      "verdict": "match",
+      "clio_seconds": 0.09,
+      "go_seconds": 0.06,
+      "differences": []
+    },
+    {
+      "tool": "dataforge-find-tables",
+      "case": "dataforge-find-tables with limit string",
+      "verdict": "match",
+      "clio_seconds": 0.06,
+      "go_seconds": 0.06,
+      "differences": []
+    },
+    {
+      "tool": "dataforge-find-tables",
+      "case": "dataforge-find-tables missing query",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "dataforge-find-tables",
+      "case": "dataforge-find-tables blank query",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "dataforge-find-tables",
+      "case": "dataforge-find-tables wrong query type",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "dataforge-find-tables",
+      "case": "dataforge-find-tables fractional limit",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "dataforge-find-lookups",
+      "case": "dataforge-find-lookups Mr",
+      "verdict": "match",
+      "clio_seconds": 0.08,
+      "go_seconds": 0.06,
+      "differences": []
+    },
+    {
+      "tool": "dataforge-find-lookups",
+      "case": "dataforge-find-lookups missing query",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "dataforge-find-lookups",
+      "case": "dataforge-find-lookups wrong schema-name type",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "dataforge-get-relations",
+      "case": "dataforge-get-relations Contact to Account",
+      "verdict": "match",
+      "clio_seconds": 0.12,
+      "go_seconds": 0.06,
+      "differences": []
+    },
+    {
+      "tool": "dataforge-get-relations",
+      "case": "dataforge-get-relations missing target",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "dataforge-get-relations",
+      "case": "dataforge-get-relations missing both",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "dataforge-get-table-columns",
+      "case": "dataforge-get-table-columns Contact",
+      "verdict": "match",
+      "clio_seconds": 0.04,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "dataforge-get-table-columns",
+      "case": "dataforge-get-table-columns Account",
+      "verdict": "match",
+      "clio_seconds": 0.05,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "dataforge-get-table-columns",
+      "case": "dataforge-get-table-columns case-insensitive",
+      "verdict": "match",
+      "clio_seconds": 0.03,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "dataforge-get-table-columns",
+      "case": "dataforge-get-table-columns untrimmed name",
+      "verdict": "match",
+      "clio_seconds": 0.03,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "dataforge-get-table-columns",
+      "case": "dataforge-get-table-columns unknown",
+      "verdict": "match",
+      "clio_seconds": 0.03,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "dataforge-get-table-columns",
+      "case": "dataforge-get-table-columns missing",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "dataforge-context",
+      "case": "dataforge-context empty",
+      "verdict": "match",
+      "clio_seconds": 0.13,
+      "go_seconds": 0.06,
+      "differences": []
+    },
+    {
+      "tool": "dataforge-context",
+      "case": "dataforge-context full",
+      "verdict": "match",
+      "clio_seconds": 0.26,
+      "go_seconds": 0.28,
+      "differences": []
+    },
+    {
+      "tool": "dataforge-context",
+      "case": "dataforge-context summary fallback and dedupe",
+      "verdict": "match",
+      "clio_seconds": 0.15,
+      "go_seconds": 0.09,
+      "differences": []
+    },
+    {
+      "tool": "dataforge-context",
+      "case": "dataforge-context summary only",
+      "verdict": "match",
+      "clio_seconds": 0.23,
+      "go_seconds": 0.09,
+      "differences": []
+    },
+    {
+      "tool": "dataforge-context",
+      "case": "dataforge-context half pair",
+      "verdict": "match",
+      "clio_seconds": 0.07,
+      "go_seconds": 0.07,
+      "differences": []
+    },
+    {
+      "tool": "dataforge-context",
+      "case": "dataforge-context terms not an array",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "dataforge-context",
+      "case": "dataforge-context bad term item",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "dataforge-context",
+      "case": "dataforge-context bad pair item",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "get-schema",
+      "case": "get-schema source code",
+      "verdict": "match",
+      "clio_seconds": 0.49,
+      "go_seconds": 0.15,
+      "differences": []
+    },
+    {
+      "tool": "get-schema",
+      "case": "get-schema not found",
+      "verdict": "match",
+      "clio_seconds": 0.11,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "get-schema",
+      "case": "get-schema client unit name is not source code",
+      "verdict": "match",
+      "clio_seconds": 0.04,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "get-schema",
+      "case": "get-schema missing name",
+      "verdict": "match",
+      "clio_seconds": 0.02,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "get-schema",
+      "case": "get-schema unknown argument ignored",
+      "verdict": "match",
+      "clio_seconds": 0.11,
+      "go_seconds": 0.12,
+      "differences": []
+    },
+    {
+      "tool": "get-schema",
+      "case": "get-schema wrong argument type",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "get-schema",
+      "case": "get-schema output-file outside allowed roots",
+      "verdict": "both-failed",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": [
+        "$.error: value differs"
+      ]
+    },
+    {
+      "tool": "get-client-unit-schema",
+      "case": "get-client-unit-schema top layer",
+      "verdict": "match",
+      "clio_seconds": 0.55,
+      "go_seconds": 0.21,
+      "differences": []
+    },
+    {
+      "tool": "get-client-unit-schema",
+      "case": "get-client-unit-schema full hierarchy",
+      "verdict": "match",
+      "clio_seconds": 0.81,
+      "go_seconds": 0.53,
+      "differences": []
+    },
+    {
+      "tool": "get-client-unit-schema",
+      "case": "get-client-unit-schema exact layer",
+      "verdict": "match",
+      "clio_seconds": 0.04,
+      "go_seconds": 0.09,
+      "differences": []
+    },
+    {
+      "tool": "get-client-unit-schema",
+      "case": "get-client-unit-schema unknown uid",
+      "verdict": "match",
+      "clio_seconds": 0.04,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "get-client-unit-schema",
+      "case": "get-client-unit-schema not found",
+      "verdict": "match",
+      "clio_seconds": 0.04,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "get-client-unit-schema",
+      "case": "get-client-unit-schema neither name nor uid",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "get-client-unit-schema",
+      "case": "get-client-unit-schema wrong boolean type",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "get-page-hierarchy",
+      "case": "get-page-hierarchy whole chain",
+      "verdict": "match",
+      "clio_seconds": 2.38,
+      "go_seconds": 2.45,
+      "differences": []
+    },
+    {
+      "tool": "get-page-hierarchy",
+      "case": "get-page-hierarchy metadata only",
+      "verdict": "match",
+      "clio_seconds": 2.34,
+      "go_seconds": 2.67,
+      "differences": []
+    },
+    {
+      "tool": "get-page-hierarchy",
+      "case": "get-page-hierarchy paged window with bodies",
+      "verdict": "match",
+      "clio_seconds": 2.38,
+      "go_seconds": 2.06,
+      "differences": []
+    },
+    {
+      "tool": "get-page-hierarchy",
+      "case": "get-page-hierarchy template name",
+      "verdict": "match",
+      "clio_seconds": 0.25,
+      "go_seconds": 0.19,
+      "differences": []
+    },
+    {
+      "tool": "get-page-hierarchy",
+      "case": "get-page-hierarchy offset past end",
+      "verdict": "match",
+      "clio_seconds": 2.21,
+      "go_seconds": 2.11,
+      "differences": []
+    },
+    {
+      "tool": "get-page-hierarchy",
+      "case": "get-page-hierarchy not found",
+      "verdict": "match",
+      "clio_seconds": 0.04,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "get-page-hierarchy",
+      "case": "get-page-hierarchy negative limit",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "get-page-hierarchy",
+      "case": "get-page-hierarchy fractional offset",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "get-page-hierarchy",
+      "case": "get-page-hierarchy missing name",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "validate-page",
+      "case": "validate-page empty template body",
+      "verdict": "known-diff",
+      "clio_seconds": 0.48,
+      "go_seconds": 0.0,
+      "differences": [
+        "$.validation.warnings: only in go"
+      ]
+    },
+    {
+      "tool": "validate-page",
+      "case": "validate-page section with trailing comma",
+      "verdict": "known-diff",
+      "clio_seconds": 0.02,
+      "go_seconds": 0.0,
+      "differences": [
+        "$.validation.warnings: only in go"
+      ]
+    },
+    {
+      "tool": "validate-page",
+      "case": "validate-page comment inside a JSON section",
+      "verdict": "known-diff",
+      "clio_seconds": 0.03,
+      "go_seconds": 0.0,
+      "differences": [
+        "$.validation.warnings: only in go"
+      ]
+    },
+    {
+      "tool": "validate-page",
+      "case": "validate-page converters not an object",
+      "verdict": "known-diff",
+      "clio_seconds": 0.02,
+      "go_seconds": 0.0,
+      "differences": [
+        "$.validation.warnings: only in go"
+      ]
+    },
+    {
+      "tool": "validate-page",
+      "case": "validate-page missing markers",
+      "verdict": "known-diff",
+      "clio_seconds": 0.02,
+      "go_seconds": 0.0,
+      "differences": [
+        "$.validation.warnings: only in go"
+      ]
+    },
+    {
+      "tool": "validate-page",
+      "case": "validate-page unclosed body",
+      "verdict": "match",
+      "clio_seconds": 0.02,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "validate-page",
+      "case": "validate-page unterminated string",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "validate-page",
+      "case": "validate-page mismatched bracket",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "validate-page",
+      "case": "validate-page JavaScript error inside a section",
+      "verdict": "known-diff",
+      "clio_seconds": 0.02,
+      "go_seconds": 0.0,
+      "differences": [
+        "$.validation.errors[0]: value differs",
+        "$.validation.jssyntaxok: value differs",
+        "$.validation.markersok: value differs",
+        "$.validation.warnings: only in go"
+      ]
+    },
+    {
+      "tool": "validate-page",
+      "case": "validate-page handler request without vendor prefix",
+      "verdict": "known-diff",
+      "clio_seconds": 0.03,
+      "go_seconds": 0.0,
+      "differences": [
+        "$.valid: value differs",
+        "$.validation.contentok: value differs",
+        "$.validation.errors: only in clio",
+        "$.validation.warnings: only in go"
+      ]
+    },
+    {
+      "tool": "validate-page",
+      "case": "validate-page mobile body",
+      "verdict": "known-diff",
+      "clio_seconds": 0.05,
+      "go_seconds": 0.0,
+      "differences": [
+        "$.valid: value differs",
+        "$.validation.contentok: value differs",
+        "$.validation.errors: only in go",
+        "$.validation.jssyntaxok: value differs",
+        "$.validation.markersok: value differs"
+      ]
+    },
+    {
+      "tool": "validate-page",
+      "case": "validate-page invalid resources",
+      "verdict": "known-diff",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": [
+        "$.validation.warnings: only in go"
+      ]
+    },
+    {
+      "tool": "validate-page",
+      "case": "validate-page string resources",
+      "verdict": "known-diff",
+      "clio_seconds": 0.02,
+      "go_seconds": 0.0,
+      "differences": [
+        "$.validation.warnings: only in go"
+      ]
+    },
+    {
+      "tool": "validate-page",
+      "case": "validate-page no body",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "validate-page",
+      "case": "validate-page relative body-file",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "validate-page",
+      "case": "validate-page UNC body-file",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "validate-page",
+      "case": "validate-page missing body-file",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "validate-page",
+      "case": "validate-page body wins over body-file",
+      "verdict": "known-diff",
+      "clio_seconds": 0.02,
+      "go_seconds": 0.0,
+      "differences": [
+        "$.validation.warnings: only in go"
+      ]
+    },
+    {
+      "tool": "validate-page",
+      "case": "validate-page wrong argument type",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "validate-page",
+      "case": "validate-page unknown argument ignored",
+      "verdict": "known-diff",
+      "clio_seconds": 0.04,
+      "go_seconds": 0.0,
+      "differences": [
+        "$.validation.warnings: only in go"
+      ]
+    },
+    {
+      "tool": "get-page-hierarchy",
+      "case": "get-page-hierarchy Classic page chain",
+      "verdict": "match",
+      "clio_seconds": 13.28,
+      "go_seconds": 7.05,
+      "differences": []
+    },
+    {
+      "tool": "get-page",
+      "case": "get-page Classic page whose section JSONH rejects",
+      "verdict": "match",
+      "clio_seconds": 7.48,
+      "go_seconds": 8.69,
+      "differences": []
+    },
+    {
+      "tool": "get-page",
+      "case": "get-page Classic page with trailing text after a section",
+      "verdict": "match",
+      "clio_seconds": 11.6,
+      "go_seconds": 9.44,
+      "differences": []
+    },
+    {
+      "tool": "get-classic-list-columns",
+      "case": "get-classic-list-columns saved profile",
+      "verdict": "match",
+      "clio_seconds": 8.02,
+      "go_seconds": 4.48,
+      "differences": []
+    },
+    {
+      "tool": "get-classic-list-columns",
+      "case": "get-classic-list-columns profile listed view",
+      "verdict": "match",
+      "clio_seconds": 5.3,
+      "go_seconds": 3.88,
+      "differences": []
+    },
+    {
+      "tool": "get-classic-list-columns",
+      "case": "get-classic-list-columns static getGridDataColumns",
+      "verdict": "match",
+      "clio_seconds": 4.49,
+      "go_seconds": 3.4,
+      "differences": []
+    },
+    {
+      "tool": "get-classic-list-columns",
+      "case": "get-classic-list-columns entity default",
+      "verdict": "match",
+      "clio_seconds": 1.73,
+      "go_seconds": 1.44,
+      "differences": []
+    },
+    {
+      "tool": "get-classic-list-columns",
+      "case": "get-classic-list-columns unanchored layer",
+      "verdict": "match",
+      "clio_seconds": 0.21,
+      "go_seconds": 0.12,
+      "differences": []
+    },
+    {
+      "tool": "get-classic-list-columns",
+      "case": "get-classic-list-columns not found",
+      "verdict": "match",
+      "clio_seconds": 0.04,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "get-classic-list-columns",
+      "case": "get-classic-list-columns invalid name",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "get-classic-list-columns",
+      "case": "get-classic-list-columns wrong boolean type",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "get-classic-page-sources",
+      "case": "get-classic-page-sources not found",
+      "verdict": "match",
+      "clio_seconds": 0.08,
+      "go_seconds": 0.06,
+      "differences": []
+    },
+    {
+      "tool": "get-classic-page-sources",
+      "case": "get-classic-page-sources invalid name",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "get-classic-page-sources",
+      "case": "get-classic-page-sources missing name",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "get-classic-page-sources",
+      "case": "get-classic-page-sources output-file outside allowed roots",
+      "verdict": "match",
+      "clio_seconds": 1.69,
+      "go_seconds": 1.37,
+      "differences": []
+    },
+    {
+      "tool": "describe-business-process",
+      "case": "describe process by code",
+      "verdict": "match",
+      "clio_seconds": 1.61,
+      "go_seconds": 0.36,
+      "differences": []
+    },
+    {
+      "tool": "describe-business-process",
+      "case": "describe process by caption",
+      "verdict": "match",
+      "clio_seconds": 0.98,
+      "go_seconds": 0.23,
+      "differences": []
+    },
+    {
+      "tool": "describe-business-process",
+      "case": "describe process no identity",
+      "verdict": "match",
+      "clio_seconds": 0.05,
+      "go_seconds": 0.04,
+      "differences": []
+    },
+    {
+      "tool": "describe-business-process",
+      "case": "describe process unknown argument",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "describe-business-process",
+      "case": "describe process wrong type",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "get-process-page-facts",
+      "case": "page facts Accounts_FormPage",
+      "verdict": "match",
+      "clio_seconds": 1.89,
+      "go_seconds": 1.83,
+      "differences": []
+    },
+    {
+      "tool": "get-process-page-facts",
+      "case": "page facts Contacts_FormPage uk-UA",
+      "verdict": "match",
+      "clio_seconds": 2.36,
+      "go_seconds": 2.49,
+      "differences": []
+    },
+    {
+      "tool": "get-process-page-facts",
+      "case": "page facts mini page",
+      "verdict": "match",
+      "clio_seconds": 0.32,
+      "go_seconds": 0.25,
+      "differences": []
+    },
+    {
+      "tool": "get-process-page-facts",
+      "case": "page facts unknown page",
+      "verdict": "match",
+      "clio_seconds": 0.04,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "get-process-page-facts",
+      "case": "page facts classic page",
+      "verdict": "match",
+      "clio_seconds": 6.96,
+      "go_seconds": 6.51,
+      "differences": []
+    },
+    {
+      "tool": "get-process-page-facts",
+      "case": "page facts missing name",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "get-process-page-facts",
+      "case": "page facts alias",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "get-sequence-context",
+      "case": "sequence context",
+      "verdict": "match",
+      "clio_seconds": 1.2,
+      "go_seconds": 0.97,
+      "differences": []
+    },
+    {
+      "tool": "get-sequence-context",
+      "case": "sequence context unknown sequence",
+      "verdict": "match",
+      "clio_seconds": 0.88,
+      "go_seconds": 0.93,
+      "differences": []
+    },
+    {
+      "tool": "get-sequence-context",
+      "case": "sequence context empty id",
+      "verdict": "match",
+      "clio_seconds": 0.08,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "get-sequence-context",
+      "case": "sequence context invalid id",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "read-data-binding-db",
+      "case": "data binding SysModuleFolderMode",
+      "verdict": "match",
+      "clio_seconds": 0.31,
+      "go_seconds": 0.11,
+      "differences": []
+    },
+    {
+      "tool": "read-data-binding-db",
+      "case": "data binding with lookups",
+      "verdict": "match",
+      "clio_seconds": 0.28,
+      "go_seconds": 0.11,
+      "differences": []
+    },
+    {
+      "tool": "read-data-binding-db",
+      "case": "data binding unknown binding",
+      "verdict": "match",
+      "clio_seconds": 0.09,
+      "go_seconds": 0.07,
+      "differences": []
+    },
+    {
+      "tool": "read-data-binding-db",
+      "case": "data binding unknown package",
+      "verdict": "match",
+      "clio_seconds": 0.05,
+      "go_seconds": 0.05,
+      "differences": []
+    },
+    {
+      "tool": "read-data-binding-db",
+      "case": "data binding missing package",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "get-email-template",
+      "case": "email template message template",
+      "verdict": "match",
+      "clio_seconds": 4.5,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "get-email-template",
+      "case": "email template invalid id",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "get-email-template",
+      "case": "email template invalid language id",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "get-email-template",
+      "case": "email template missing id",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "get-related-page-addon",
+      "case": "related pages Account web",
+      "verdict": "match",
+      "clio_seconds": 0.79,
+      "go_seconds": 0.37,
+      "differences": []
+    },
+    {
+      "tool": "get-related-page-addon",
+      "case": "related pages Account mobile",
+      "verdict": "match",
+      "clio_seconds": 0.36,
+      "go_seconds": 0.31,
+      "differences": []
+    },
+    {
+      "tool": "get-related-page-addon",
+      "case": "related pages Contact web",
+      "verdict": "match",
+      "clio_seconds": 0.53,
+      "go_seconds": 0.49,
+      "differences": []
+    },
+    {
+      "tool": "get-related-page-addon",
+      "case": "related pages bad schema type",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "get-related-page-addon",
+      "case": "related pages unknown entity",
+      "verdict": "match",
+      "clio_seconds": 0.06,
+      "go_seconds": 0.06,
+      "differences": []
+    },
+    {
+      "tool": "get-related-page-addon",
+      "case": "related pages unknown package",
+      "verdict": "match",
+      "clio_seconds": 0.04,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "get-related-page-addon",
+      "case": "related pages missing package",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "inspect-user",
+      "case": "inspect-user list by login",
+      "verdict": "match",
+      "clio_seconds": 0.13,
+      "go_seconds": 0.04,
+      "differences": []
+    },
+    {
+      "tool": "inspect-user",
+      "case": "inspect-user list page",
+      "verdict": "match",
+      "clio_seconds": 0.18,
+      "go_seconds": 0.07,
+      "differences": []
+    },
+    {
+      "tool": "inspect-user",
+      "case": "inspect-user list string limit",
+      "verdict": "match",
+      "clio_seconds": 0.08,
+      "go_seconds": 0.04,
+      "differences": []
+    },
+    {
+      "tool": "inspect-user",
+      "case": "inspect-user list default page",
+      "verdict": "match",
+      "clio_seconds": 0.2,
+      "go_seconds": 0.11,
+      "differences": []
+    },
+    {
+      "tool": "inspect-user",
+      "case": "inspect-user list by id ignores unknown",
+      "verdict": "match",
+      "clio_seconds": 0.24,
+      "go_seconds": 0.06,
+      "differences": []
+    },
+    {
+      "tool": "inspect-user",
+      "case": "inspect-user lock-status",
+      "verdict": "match",
+      "clio_seconds": 0.21,
+      "go_seconds": 0.07,
+      "differences": []
+    },
+    {
+      "tool": "inspect-user",
+      "case": "inspect-user lock-status of a role",
+      "verdict": "match",
+      "clio_seconds": 0.04,
+      "go_seconds": 0.04,
+      "differences": []
+    },
+    {
+      "tool": "inspect-user",
+      "case": "inspect-user lock-status unknown id",
+      "verdict": "match",
+      "clio_seconds": 0.08,
+      "go_seconds": 0.04,
+      "differences": []
+    },
+    {
+      "tool": "inspect-user",
+      "case": "inspect-user lock-status without id",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "inspect-user",
+      "case": "inspect-user write action refused",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "inspect-user",
+      "case": "inspect-user missing action",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "inspect-user",
+      "case": "inspect-user empty login",
+      "verdict": "match",
+      "clio_seconds": 0.05,
+      "go_seconds": 0.01,
+      "differences": []
+    },
+    {
+      "tool": "inspect-user",
+      "case": "inspect-user limit out of range",
+      "verdict": "match",
+      "clio_seconds": 0.1,
+      "go_seconds": 0.01,
+      "differences": []
+    },
+    {
+      "tool": "inspect-user",
+      "case": "inspect-user negative offset",
+      "verdict": "match",
+      "clio_seconds": 0.03,
+      "go_seconds": 0.01,
+      "differences": []
+    },
+    {
+      "tool": "inspect-user",
+      "case": "inspect-user non-GUID id",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.01,
+      "differences": []
+    },
+    {
+      "tool": "inspect-user",
+      "case": "inspect-user braced id",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.01,
+      "differences": []
+    },
+    {
+      "tool": "inspect-user",
+      "case": "inspect-user fractional limit",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "inspect-user",
+      "case": "inspect-user non-boolean active",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.01,
+      "differences": []
+    },
+    {
+      "tool": "inspect-user",
+      "case": "inspect-user numeric action",
+      "verdict": "match",
+      "clio_seconds": 0.02,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "inspect-role",
+      "case": "inspect-role list by name",
+      "verdict": "match",
+      "clio_seconds": 0.08,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "inspect-role",
+      "case": "inspect-role list by id",
+      "verdict": "match",
+      "clio_seconds": 0.06,
+      "go_seconds": 0.04,
+      "differences": []
+    },
+    {
+      "tool": "inspect-role",
+      "case": "inspect-role list functional",
+      "verdict": "match",
+      "clio_seconds": 0.07,
+      "go_seconds": 0.04,
+      "differences": []
+    },
+    {
+      "tool": "inspect-role",
+      "case": "inspect-role list user id",
+      "verdict": "match",
+      "clio_seconds": 0.14,
+      "go_seconds": 0.04,
+      "differences": []
+    },
+    {
+      "tool": "inspect-role",
+      "case": "inspect-role list user type refused",
+      "verdict": "match",
+      "clio_seconds": 0.02,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "inspect-role",
+      "case": "inspect-role memberships",
+      "verdict": "match",
+      "clio_seconds": 0.11,
+      "go_seconds": 0.07,
+      "differences": []
+    },
+    {
+      "tool": "inspect-role",
+      "case": "inspect-role memberships effective",
+      "verdict": "match",
+      "clio_seconds": 0.1,
+      "go_seconds": 0.08,
+      "differences": []
+    },
+    {
+      "tool": "inspect-role",
+      "case": "inspect-role memberships of a role",
+      "verdict": "match",
+      "clio_seconds": 0.11,
+      "go_seconds": 0.04,
+      "differences": []
+    },
+    {
+      "tool": "inspect-role",
+      "case": "inspect-role members",
+      "verdict": "match",
+      "clio_seconds": 0.12,
+      "go_seconds": 0.07,
+      "differences": []
+    },
+    {
+      "tool": "inspect-role",
+      "case": "inspect-role members effective",
+      "verdict": "match",
+      "clio_seconds": 0.12,
+      "go_seconds": 0.08,
+      "differences": []
+    },
+    {
+      "tool": "inspect-role",
+      "case": "inspect-role members of a user",
+      "verdict": "match",
+      "clio_seconds": 0.1,
+      "go_seconds": 0.04,
+      "differences": []
+    },
+    {
+      "tool": "inspect-role",
+      "case": "inspect-role functional-roles",
+      "verdict": "match",
+      "clio_seconds": 0.13,
+      "go_seconds": 0.08,
+      "differences": []
+    },
+    {
+      "tool": "inspect-role",
+      "case": "inspect-role functional-roles of a functional role",
+      "verdict": "match",
+      "clio_seconds": 0.09,
+      "go_seconds": 0.05,
+      "differences": []
+    },
+    {
+      "tool": "inspect-role",
+      "case": "inspect-role write action refused",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.01,
+      "differences": []
+    },
+    {
+      "tool": "inspect-role",
+      "case": "inspect-role non-boolean effective",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.01,
+      "differences": []
+    },
+    {
+      "tool": "inspect-license",
+      "case": "inspect-license user-list",
+      "verdict": "match",
+      "clio_seconds": 0.18,
+      "go_seconds": 0.08,
+      "differences": []
+    },
+    {
+      "tool": "inspect-license",
+      "case": "inspect-license user-list technical user",
+      "verdict": "match",
+      "clio_seconds": 0.09,
+      "go_seconds": 0.04,
+      "differences": []
+    },
+    {
+      "tool": "inspect-license",
+      "case": "inspect-license user-list without id",
+      "verdict": "match",
+      "clio_seconds": 0.03,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "inspect-license",
+      "case": "inspect-license role-list",
+      "verdict": "match",
+      "clio_seconds": 0.25,
+      "go_seconds": 0.12,
+      "differences": []
+    },
+    {
+      "tool": "inspect-license",
+      "case": "inspect-license role-list of a user",
+      "verdict": "match",
+      "clio_seconds": 0.07,
+      "go_seconds": 0.21,
+      "differences": []
+    },
+    {
+      "tool": "inspect-license",
+      "case": "inspect-license write action refused",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "inspect-access",
+      "case": "inspect-access ip-list",
+      "verdict": "match",
+      "clio_seconds": 0.24,
+      "go_seconds": 0.07,
+      "differences": []
+    },
+    {
+      "tool": "inspect-access",
+      "case": "inspect-access ip-list without unit",
+      "verdict": "match",
+      "clio_seconds": 0.03,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "inspect-access",
+      "case": "inspect-access delegations",
+      "verdict": "match",
+      "clio_seconds": 0.13,
+      "go_seconds": 0.13,
+      "differences": []
+    },
+    {
+      "tool": "inspect-access",
+      "case": "inspect-access delegations of a role",
+      "verdict": "match",
+      "clio_seconds": 0.08,
+      "go_seconds": 0.04,
+      "differences": []
+    },
+    {
+      "tool": "inspect-access",
+      "case": "inspect-access operations by code",
+      "verdict": "match",
+      "clio_seconds": 0.12,
+      "go_seconds": 0.04,
+      "differences": []
+    },
+    {
+      "tool": "inspect-access",
+      "case": "inspect-access operations page",
+      "verdict": "match",
+      "clio_seconds": 0.08,
+      "go_seconds": 0.05,
+      "differences": []
+    },
+    {
+      "tool": "inspect-access",
+      "case": "inspect-access operations empty code",
+      "verdict": "match",
+      "clio_seconds": 0.12,
+      "go_seconds": 0.04,
+      "differences": []
+    },
+    {
+      "tool": "inspect-access",
+      "case": "inspect-access operation-grants",
+      "verdict": "match",
+      "clio_seconds": 0.12,
+      "go_seconds": 0.07,
+      "differences": []
+    },
+    {
+      "tool": "inspect-access",
+      "case": "inspect-access operation-grants unknown",
+      "verdict": "match",
+      "clio_seconds": 0.07,
+      "go_seconds": 0.04,
+      "differences": []
+    },
+    {
+      "tool": "inspect-access",
+      "case": "inspect-access write action refused",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "inspect-access",
+      "case": "inspect-access non-numeric position",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.01,
+      "differences": []
+    },
+    {
+      "tool": "check-theming-access",
+      "case": "check-theming-access",
+      "verdict": "match",
+      "clio_seconds": 0.24,
+      "go_seconds": 0.12,
+      "differences": []
+    },
+    {
+      "tool": "check-theming-access",
+      "case": "check-theming-access unknown argument",
+      "verdict": "match",
+      "clio_seconds": 0.02,
+      "go_seconds": 0.01,
+      "differences": []
+    },
+    {
+      "tool": "get-theme",
+      "case": "get-theme unknown id",
+      "verdict": "match",
+      "clio_seconds": 0.18,
+      "go_seconds": 0.11,
+      "differences": []
+    },
+    {
+      "tool": "get-theme",
+      "case": "get-theme braced unknown id",
+      "verdict": "match",
+      "clio_seconds": 0.12,
+      "go_seconds": 0.04,
+      "differences": []
+    },
+    {
+      "tool": "get-theme",
+      "case": "get-theme non-GUID id",
+      "verdict": "match",
+      "clio_seconds": 0.11,
+      "go_seconds": 0.01,
+      "differences": []
+    },
+    {
+      "tool": "get-theme",
+      "case": "get-theme missing id",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.01,
+      "differences": []
+    },
+    {
+      "tool": "get-theme",
+      "case": "get-theme numeric id",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.01,
+      "differences": []
+    },
+    {
+      "tool": "get-theme",
+      "case": "get-theme unknown argument",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.01,
+      "differences": []
+    },
+    {
+      "tool": "get-theme",
+      "case": "get-theme legacy outputFile",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.01,
+      "differences": []
+    },
+    {
+      "tool": "get-theme",
+      "case": "get-theme output-file outside allowed locations",
+      "verdict": "match",
+      "clio_seconds": 0.09,
+      "go_seconds": 0.01,
+      "differences": []
+    },
+    {
+      "tool": "get-theme",
+      "case": "get-theme output-file already exists",
+      "verdict": "match",
+      "clio_seconds": 0.11,
+      "go_seconds": 0.01,
+      "differences": []
+    },
+    {
+      "tool": "initialize",
+      "case": "initialize instructions and capabilities",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "get-guidance",
+      "case": "get-guidance core-rules",
+      "verdict": "match",
+      "clio_seconds": 0.73,
+      "go_seconds": 0.2,
+      "differences": []
+    },
+    {
+      "tool": "get-guidance",
+      "case": "get-guidance routing",
+      "verdict": "match",
+      "clio_seconds": 0.25,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "get-guidance",
+      "case": "get-guidance by topic id",
+      "verdict": "match",
+      "clio_seconds": 0.04,
+      "go_seconds": 0.02,
+      "differences": []
+    },
+    {
+      "tool": "get-guidance",
+      "case": "get-guidance unknown name",
+      "verdict": "match",
+      "clio_seconds": 0.13,
+      "go_seconds": 0.05,
+      "differences": []
+    },
+    {
+      "tool": "get-guidance",
+      "case": "get-guidance missing name",
+      "verdict": "match",
+      "clio_seconds": 1.43,
+      "go_seconds": 0.08,
+      "differences": []
+    },
+    {
+      "tool": "get-guidance",
+      "case": "get-guidance legacy alias",
+      "verdict": "match",
+      "clio_seconds": 0.11,
+      "go_seconds": 0.09,
+      "differences": []
+    },
+    {
+      "tool": "get-guidance",
+      "case": "get-guidance namespaced uri",
+      "verdict": "match",
+      "clio_seconds": 0.04,
+      "go_seconds": 0.01,
+      "differences": []
+    },
+    {
+      "tool": "get-guidance",
+      "case": "get-guidance reference item",
+      "verdict": "match",
+      "clio_seconds": 0.08,
+      "go_seconds": 0.02,
+      "differences": []
+    },
+    {
+      "tool": "list-knowledge-sources",
+      "case": "list-knowledge-sources",
+      "verdict": "match",
+      "clio_seconds": 0.12,
+      "go_seconds": 0.01,
+      "differences": []
+    },
+    {
+      "tool": "info-knowledge",
+      "case": "info-knowledge",
+      "verdict": "match",
+      "clio_seconds": 1.41,
+      "go_seconds": 0.13,
+      "differences": []
+    },
+    {
+      "tool": "info-knowledge",
+      "case": "info-knowledge one source",
+      "verdict": "match",
+      "clio_seconds": 0.24,
+      "go_seconds": 0.07,
+      "differences": []
+    },
+    {
+      "tool": "info-knowledge",
+      "case": "info-knowledge unknown source",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.01,
+      "differences": []
+    },
+    {
+      "tool": "list-knowledge-examples",
+      "case": "list-knowledge-examples",
+      "verdict": "match",
+      "clio_seconds": 1.61,
+      "go_seconds": 0.01,
+      "differences": []
+    },
+    {
+      "tool": "list-knowledge-examples",
+      "case": "list-knowledge-examples search",
+      "verdict": "match",
+      "clio_seconds": 0.03,
+      "go_seconds": 0.01,
+      "differences": []
+    },
+    {
+      "tool": "get-knowledge-feedback-policy",
+      "case": "get-knowledge-feedback-policy",
+      "verdict": "match",
+      "clio_seconds": 0.02,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "get-telemetry-consent",
+      "case": "get-telemetry-consent",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "resources/list",
+      "case": "resources/list first page",
+      "verdict": "match",
+      "clio_seconds": 0.03,
+      "go_seconds": 0.01,
+      "differences": []
+    },
+    {
+      "tool": "resources/list",
+      "case": "resources/list knowledge page",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.01,
+      "differences": []
+    },
+    {
+      "tool": "resources/list",
+      "case": "resources/list bad cursor",
+      "verdict": "match",
+      "clio_seconds": 0.02,
+      "go_seconds": 0.01,
+      "differences": []
+    },
+    {
+      "tool": "resources/templates/list",
+      "case": "resources/templates/list",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.01,
+      "differences": []
+    },
+    {
+      "tool": "resources/read",
+      "case": "resources/read namespaced",
+      "verdict": "match",
+      "clio_seconds": 0.19,
+      "go_seconds": 0.02,
+      "differences": []
+    },
+    {
+      "tool": "resources/read",
+      "case": "resources/read legacy guide",
+      "verdict": "match",
+      "clio_seconds": 0.07,
+      "go_seconds": 0.02,
+      "differences": []
+    },
+    {
+      "tool": "resources/read",
+      "case": "resources/read unknown knowledge item",
+      "verdict": "match",
+      "clio_seconds": 0.03,
+      "go_seconds": 0.01,
+      "differences": []
+    },
+    {
+      "tool": "resources/read",
+      "case": "resources/read unknown scheme",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "resources/read",
+      "case": "resources/read help unknown command",
+      "verdict": "match",
+      "clio_seconds": 0.03,
+      "go_seconds": 0.01,
+      "differences": []
+    },
+    {
+      "tool": "resources/read",
+      "case": "resources/read help command",
+      "verdict": "known-diff",
+      "clio_seconds": 0.02,
+      "go_seconds": 0.03,
+      "differences": [
+        "$.contents[0].text: value differs"
+      ]
+    },
+    {
+      "tool": "prompts/list",
+      "case": "prompts/list",
+      "verdict": "match",
+      "clio_seconds": 0.04,
+      "go_seconds": 0.02,
+      "differences": []
+    },
+    {
+      "tool": "prompts/get",
+      "case": "prompts/get restart",
+      "verdict": "match",
+      "clio_seconds": 0.05,
+      "go_seconds": 0.01,
+      "differences": []
+    },
+    {
+      "tool": "prompts/get",
+      "case": "prompts/get update-sys-setting neither",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "prompts/get",
+      "case": "prompts/get describe defaults",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "prompts/get",
+      "case": "prompts/get missing required",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "prompts/get",
+      "case": "prompts/get unknown",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "delete-entity-business-rules",
+      "case": "delete-entity-business-rules empty",
+      "verdict": "match",
+      "clio_seconds": 0.04,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "delete-entity-business-rules",
+      "case": "delete-entity-business-rules unknown",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "delete-page-business-rules",
+      "case": "delete-page-business-rules empty",
+      "verdict": "match",
+      "clio_seconds": 0.02,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "delete-page-business-rules",
+      "case": "delete-page-business-rules unknown",
+      "verdict": "match",
+      "clio_seconds": 0.02,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-business-rules",
+      "case": "create-entity-business-rules binding: unknown action type",
+      "verdict": "match",
+      "clio_seconds": 0.03,
+      "go_seconds": 0.01,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-business-rules",
+      "case": "create-entity-business-rules binding: action type out of order",
+      "verdict": "match",
+      "clio_seconds": 0.11,
+      "go_seconds": 0.05,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-business-rules",
+      "case": "create-entity-business-rules binding: null rule",
+      "verdict": "match",
+      "clio_seconds": 0.09,
+      "go_seconds": 0.04,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-business-rules",
+      "case": "create-entity-business-rules binding: unknown rule property",
+      "verdict": "match",
+      "clio_seconds": 0.08,
+      "go_seconds": 0.06,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-business-rules",
+      "case": "create-entity-business-rules binding: package not found",
+      "verdict": "match",
+      "clio_seconds": 0.16,
+      "go_seconds": 0.05,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-business-rules",
+      "case": "create-entity-business-rules binding: page action on entity tool",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-business-rules",
+      "case": "create-entity-business-rules binding: missing discriminator",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-business-rules",
+      "case": "create-entity-business-rules binding: rules not an array",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-business-rules",
+      "case": "create-entity-business-rules binding: empty rules",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-business-rules",
+      "case": "create-entity-business-rules binding: missing entity schema",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "update-page-business-rules",
+      "case": "update-page-business-rules binding: page-only shape",
+      "verdict": "match",
+      "clio_seconds": 0.02,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-business-rules",
+      "case": "create-entity-business-rules binding: enabled not a bool",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-business-rules",
+      "case": "create-entity-business-rules binding: null const value",
+      "verdict": "match",
+      "clio_seconds": 0.1,
+      "go_seconds": 0.04,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-business-rules",
+      "case": "create-entity-business-rules binding: unknown top-level key",
+      "verdict": "match",
+      "clio_seconds": 0.08,
+      "go_seconds": 0.11,
+      "differences": []
+    },
+    {
+      "tool": "create-page-business-rules",
+      "case": "create-page-business-rules binding: page missing fields",
+      "verdict": "match",
+      "clio_seconds": 0.02,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-page-business-rules",
+      "case": "create-page-business-rules binding: set-values on page",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-business-rules",
+      "case": "create-entity-business-rules binding: caption not a string",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-business-rules",
+      "case": "create-entity-business-rules binding: items not an array",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-business-rules",
+      "case": "create-entity-business-rules binding: clearValue not a bool",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-business-rules",
+      "case": "create-entity-business-rules binding: clearValue null",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-business-rules",
+      "case": "create-entity-business-rules binding: uId not a string",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-business-rules",
+      "case": "create-entity-business-rules binding: discriminator name case",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-business-rules",
+      "case": "create-entity-business-rules binding: discriminator value case",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-business-rules",
+      "case": "create-entity-business-rules binding: package-name not a string",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-business-rules",
+      "case": "create-entity-business-rules binding: rule not an object",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-business-rules",
+      "case": "create-entity-business-rules binding: condition not an object",
+      "verdict": "match",
+      "clio_seconds": 0.02,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-business-rules",
+      "case": "create-entity-business-rules binding: null condition and action",
+      "verdict": "match",
+      "clio_seconds": 0.11,
+      "go_seconds": 0.04,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-business-rules",
+      "case": "create-entity-business-rules binding: path not a string",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-business-rules",
+      "case": "create-entity-business-rules binding: set-values item not an object",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-business-rules",
+      "case": "create-entity-business-rules binding: item not a string",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-business-rules",
+      "case": "create-entity-business-rules binding: null item",
+      "verdict": "match",
+      "clio_seconds": 0.09,
+      "go_seconds": 0.1,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-business-rules",
+      "case": "create-entity-business-rules binding: type not a string",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.01,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-business-rules",
+      "case": "create-entity-business-rules binding: type null",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-business-rules",
+      "case": "create-entity-business-rules binding: action not an object",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.01,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-business-rules",
+      "case": "create-entity-business-rules binding: rules null",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.01,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-business-rules",
+      "case": "create-entity-business-rules binding: missing package and schema",
+      "verdict": "match",
+      "clio_seconds": 0.02,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "update-entity-business-rules",
+      "case": "update-entity-business-rules binding: update missing package and schema",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "update-entity-business-rules",
+      "case": "update-entity-business-rules binding: update null rule",
+      "verdict": "match",
+      "clio_seconds": 0.09,
+      "go_seconds": 0.05,
+      "differences": []
+    },
+    {
+      "tool": "update-page-business-rules",
+      "case": "update-page-business-rules binding: update page package not found",
+      "verdict": "match",
+      "clio_seconds": 0.09,
+      "go_seconds": 0.05,
+      "differences": []
+    },
+    {
+      "tool": "delete-entity-business-rules",
+      "case": "delete-entity-business-rules binding: delete unknown key",
+      "verdict": "match",
+      "clio_seconds": 0.09,
+      "go_seconds": 0.11,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-business-rules",
+      "case": "create-entity-business-rules binding: static filter string",
+      "verdict": "match",
+      "clio_seconds": 0.09,
+      "go_seconds": 0.04,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-business-rules",
+      "case": "create-entity-business-rules binding: create unknown environment",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.01,
+      "differences": []
+    },
+    {
+      "tool": "update-entity-business-rules",
+      "case": "update-entity-business-rules binding: update unknown environment",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-business-rules",
+      "case": "create-entity-business-rules stock entity validation: unknown attribute",
+      "verdict": "match",
+      "clio_seconds": 0.39,
+      "go_seconds": 0.25,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-business-rules",
+      "case": "create-entity-business-rules stock entity validation: forward path in condition",
+      "verdict": "match",
+      "clio_seconds": 0.54,
+      "go_seconds": 0.33,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-business-rules",
+      "case": "create-entity-business-rules stock entity validation: lookup record not found",
+      "verdict": "match",
+      "clio_seconds": 0.32,
+      "go_seconds": 0.32,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-business-rules",
+      "case": "create-entity-business-rules stock entity validation: system setting not found",
+      "verdict": "match",
+      "clio_seconds": 0.6,
+      "go_seconds": 0.25,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-business-rules",
+      "case": "create-entity-business-rules stock entity validation: relational on text",
+      "verdict": "match",
+      "clio_seconds": 0.27,
+      "go_seconds": 0.22,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-business-rules",
+      "case": "create-entity-business-rules stock entity validation: static filter unknown column",
+      "verdict": "match",
+      "clio_seconds": 0.55,
+      "go_seconds": 0.32,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-business-rules",
+      "case": "create-entity-business-rules stock entity validation: static filter relational on text",
+      "verdict": "match",
+      "clio_seconds": 0.43,
+      "go_seconds": 0.36,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-business-rules",
+      "case": "create-entity-business-rules stock entity validation: formula on text target",
+      "verdict": "match",
+      "clio_seconds": 0.29,
+      "go_seconds": 0.29,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-business-rules",
+      "case": "create-entity-business-rules stock entity validation: apply-filter schema mismatch",
+      "verdict": "match",
+      "clio_seconds": 0.59,
+      "go_seconds": 0.39,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-business-rules",
+      "case": "create-entity-business-rules stock entity validation: sys value lookup mismatch",
+      "verdict": "match",
+      "clio_seconds": 0.26,
+      "go_seconds": 0.21,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-business-rules",
+      "case": "create-entity-business-rules stock entity validation: set-values lookup record not found",
+      "verdict": "match",
+      "clio_seconds": 0.29,
+      "go_seconds": 0.35,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-business-rules",
+      "case": "create-entity-business-rules stock entity validation: entity schema not found",
+      "verdict": "match",
+      "clio_seconds": 0.09,
+      "go_seconds": 0.06,
+      "differences": []
+    },
+    {
+      "tool": "update-entity-business-rules",
+      "case": "update-entity-business-rules stock entity validation: update rule not found",
+      "verdict": "match",
+      "clio_seconds": 0.38,
+      "go_seconds": 0.35,
+      "differences": []
+    },
+    {
+      "tool": "create-page-business-rules",
+      "case": "create-page-business-rules stock entity validation: page schema not found",
+      "verdict": "match",
+      "clio_seconds": 0.16,
+      "go_seconds": 0.11,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-business-rules",
+      "case": "create-entity-business-rules stock entity validation: static filter lookup name not found",
+      "verdict": "match",
+      "clio_seconds": 0.6,
+      "go_seconds": 0.43,
+      "differences": []
+    },
+    {
+      "tool": "create-page-business-rules",
+      "case": "create-page-business-rules stock page validation: unknown attribute with candidates",
+      "verdict": "match",
+      "clio_seconds": 6.05,
+      "go_seconds": 3.53,
+      "differences": []
+    },
+    {
+      "tool": "create-page-business-rules",
+      "case": "create-page-business-rules stock page validation: unknown element with candidates",
+      "verdict": "match",
+      "clio_seconds": 4.1,
+      "go_seconds": 3.54,
+      "differences": []
+    },
+    {
+      "tool": "create-page-business-rules",
+      "case": "create-page-business-rules stock page validation: static filter unsupported on page",
+      "verdict": "match",
+      "clio_seconds": 4.2,
+      "go_seconds": 3.49,
+      "differences": []
+    },
+    {
+      "tool": "create-page-business-rules",
+      "case": "create-page-business-rules stock page validation: scoped path not found",
+      "verdict": "match",
+      "clio_seconds": 3.79,
+      "go_seconds": 3.3,
+      "differences": []
+    },
+    {
+      "tool": "update-page-business-rules",
+      "case": "update-page-business-rules stock page validation: update rule not found",
+      "verdict": "match",
+      "clio_seconds": 4.06,
+      "go_seconds": 3.63,
+      "differences": []
+    },
+    {
+      "tool": "get-request-info",
+      "case": "request-info list",
+      "verdict": "match",
+      "clio_seconds": 1.1,
+      "go_seconds": 0.25,
+      "differences": []
+    },
+    {
+      "tool": "get-request-info",
+      "case": "request-info list keyword",
+      "verdict": "match",
+      "clio_seconds": 0.43,
+      "go_seconds": 0.1,
+      "differences": []
+    },
+    {
+      "tool": "get-request-info",
+      "case": "request-info list keyword in parameters",
+      "verdict": "match",
+      "clio_seconds": 0.44,
+      "go_seconds": 0.09,
+      "differences": []
+    },
+    {
+      "tool": "get-request-info",
+      "case": "request-info detail",
+      "verdict": "known-diff",
+      "clio_seconds": 0.88,
+      "go_seconds": 0.11,
+      "differences": [
+        "$.documentationsource: value differs"
+      ]
+    },
+    {
+      "tool": "get-request-info",
+      "case": "request-info detail other case",
+      "verdict": "known-diff",
+      "clio_seconds": 0.41,
+      "go_seconds": 0.09,
+      "differences": [
+        "$.documentationsource: value differs"
+      ]
+    },
+    {
+      "tool": "get-request-info",
+      "case": "request-info not found by name",
+      "verdict": "match",
+      "clio_seconds": 0.34,
+      "go_seconds": 0.09,
+      "differences": []
+    },
+    {
+      "tool": "get-request-info",
+      "case": "request-info not found closest",
+      "verdict": "match",
+      "clio_seconds": 0.39,
+      "go_seconds": 0.09,
+      "differences": []
+    },
+    {
+      "tool": "get-request-info",
+      "case": "request-info not found closest with search",
+      "verdict": "match",
+      "clio_seconds": 0.44,
+      "go_seconds": 0.12,
+      "differences": []
+    },
+    {
+      "tool": "get-request-info",
+      "case": "request-info mobile list",
+      "verdict": "match",
+      "clio_seconds": 0.44,
+      "go_seconds": 0.09,
+      "differences": []
+    },
+    {
+      "tool": "get-request-info",
+      "case": "request-info unknown schema type",
+      "verdict": "match",
+      "clio_seconds": 0.41,
+      "go_seconds": 0.08,
+      "differences": []
+    },
+    {
+      "tool": "get-request-info",
+      "case": "request-info version with environment",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "get-request-info",
+      "case": "request-info alias",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "get-request-info",
+      "case": "request-info unknown key",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "get-request-info",
+      "case": "request-info wrong type",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "execute-dataservice-batch",
+      "case": "batch missing environment",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "execute-dataservice-batch",
+      "case": "batch empty operations",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "execute-dataservice-batch",
+      "case": "batch invalid operation",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "execute-sql-script",
+      "case": "sql missing input",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "execute-sql-script",
+      "case": "sql invalid view",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "execute-sql-script",
+      "case": "sql csv missing destination",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "run-process",
+      "case": "run-process missing code",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "run-process",
+      "case": "run-process unknown key",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "odata-create",
+      "case": "odata-create missing",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "odata-create",
+      "case": "odata-create invalid entity",
+      "verdict": "match",
+      "clio_seconds": 0.02,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "odata-create",
+      "case": "odata-create empty rows",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "odata-update",
+      "case": "odata-update missing",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "odata-update",
+      "case": "odata-update invalid entity",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "odata-update",
+      "case": "odata-update confirmation",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "odata-delete",
+      "case": "odata-delete missing",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "odata-delete",
+      "case": "odata-delete invalid entity",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "odata-delete",
+      "case": "odata-delete confirmation",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-data-binding-db",
+      "case": "binding-db create unknown package",
+      "verdict": "match",
+      "clio_seconds": 0.11,
+      "go_seconds": 0.04,
+      "differences": []
+    },
+    {
+      "tool": "create-data-binding-db",
+      "case": "binding-db create blank package",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-data-binding-db",
+      "case": "binding-db create rows not json",
+      "verdict": "match",
+      "clio_seconds": 0.12,
+      "go_seconds": 0.07,
+      "differences": []
+    },
+    {
+      "tool": "create-data-binding-db",
+      "case": "binding-db create rows not array",
+      "verdict": "match",
+      "clio_seconds": 0.08,
+      "go_seconds": 0.08,
+      "differences": []
+    },
+    {
+      "tool": "create-data-binding-db",
+      "case": "binding-db create unknown schema",
+      "verdict": "match",
+      "clio_seconds": 0.12,
+      "go_seconds": 0.07,
+      "differences": []
+    },
+    {
+      "tool": "create-data-binding-db",
+      "case": "binding-db create rows not a string",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "upsert-data-binding-row-db",
+      "case": "binding-db upsert unknown binding",
+      "verdict": "match",
+      "clio_seconds": 0.09,
+      "go_seconds": 0.07,
+      "differences": []
+    },
+    {
+      "tool": "remove-data-binding-row-db",
+      "case": "binding-db remove unknown binding",
+      "verdict": "match",
+      "clio_seconds": 0.09,
+      "go_seconds": 0.07,
+      "differences": []
+    },
+    {
+      "tool": "remove-data-binding-row-db",
+      "case": "binding-db remove unknown package",
+      "verdict": "match",
+      "clio_seconds": 0.05,
+      "go_seconds": 0.09,
+      "differences": []
+    },
+    {
+      "tool": "execute-dataservice-batch",
+      "case": "batch operations not an array",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "execute-dataservice-batch",
+      "case": "batch record-id not a uuid",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "execute-sql-script",
+      "case": "sql literal select refused by the stand",
+      "verdict": "match",
+      "clio_seconds": 0.1,
+      "go_seconds": 0.07,
+      "differences": []
+    },
+    {
+      "tool": "execute-sql-script",
+      "case": "sql literal select json refused by the stand",
+      "verdict": "match",
+      "clio_seconds": 0.08,
+      "go_seconds": 0.06,
+      "differences": []
+    },
+    {
+      "tool": "execute-sql-script",
+      "case": "sql both script and file",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "execute-sql-script",
+      "case": "sql xlsx missing destination",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "execute-sql-script",
+      "case": "sql silent not a boolean",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "run-process",
+      "case": "run-process unknown process",
+      "verdict": "match",
+      "clio_seconds": 0.51,
+      "go_seconds": 0.13,
+      "differences": []
+    },
+    {
+      "tool": "run-process",
+      "case": "run-process caption refused",
+      "verdict": "match",
+      "clio_seconds": 1.36,
+      "go_seconds": 0.43,
+      "differences": []
+    },
+    {
+      "tool": "run-process",
+      "case": "run-process wrong-case code refused",
+      "verdict": "match",
+      "clio_seconds": 0.75,
+      "go_seconds": 0.43,
+      "differences": []
+    },
+    {
+      "tool": "run-process",
+      "case": "run-process wrong-case parameter",
+      "verdict": "match",
+      "clio_seconds": 0.7,
+      "go_seconds": 0.46,
+      "differences": []
+    },
+    {
+      "tool": "run-process",
+      "case": "run-process unknown parameter",
+      "verdict": "match",
+      "clio_seconds": 0.67,
+      "go_seconds": 0.43,
+      "differences": []
+    },
+    {
+      "tool": "run-process",
+      "case": "run-process boolean refused",
+      "verdict": "match",
+      "clio_seconds": 0.7,
+      "go_seconds": 0.49,
+      "differences": []
+    },
+    {
+      "tool": "run-process",
+      "case": "run-process lookup refused",
+      "verdict": "match",
+      "clio_seconds": 0.64,
+      "go_seconds": 0.4,
+      "differences": []
+    },
+    {
+      "tool": "run-process",
+      "case": "run-process input as result refused",
+      "verdict": "match",
+      "clio_seconds": 0.69,
+      "go_seconds": 0.4,
+      "differences": []
+    },
+    {
+      "tool": "run-process",
+      "case": "run-process unknown result refused",
+      "verdict": "match",
+      "clio_seconds": 0.71,
+      "go_seconds": 0.42,
+      "differences": []
+    },
+    {
+      "tool": "run-process",
+      "case": "run-process parameters not an object",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "run-process",
+      "case": "params array",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "run-process",
+      "case": "result not array",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "run-process",
+      "case": "timeout string",
+      "verdict": "match",
+      "clio_seconds": 0.34,
+      "go_seconds": 0.06,
+      "differences": []
+    },
+    {
+      "tool": "run-process",
+      "case": "timeout float",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-data-binding",
+      "case": "binding create without workspace",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-data-binding",
+      "case": "binding create relative workspace",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-data-binding",
+      "case": "binding create missing workspace",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-data-binding",
+      "case": "binding create not a workspace",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-data-binding",
+      "case": "binding create install type",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-data-binding",
+      "case": "binding create values not a string",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "add-data-binding-row",
+      "case": "binding add not a workspace",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "add-data-binding-row",
+      "case": "binding add blank values",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "remove-data-binding-row",
+      "case": "binding remove not a workspace",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "remove-data-binding-row",
+      "case": "binding remove without workspace",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-sys-setting",
+      "case": "create-sys-setting missing code",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-sys-setting",
+      "case": "create-sys-setting missing name",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-sys-setting",
+      "case": "create-sys-setting unsupported type",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-sys-setting",
+      "case": "create-sys-setting lookup without reference",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-sys-setting",
+      "case": "create-sys-setting lookup on a missing schema",
+      "verdict": "match",
+      "clio_seconds": 0.27,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "create-sys-setting",
+      "case": "create-sys-setting wrong argument type",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-sys-setting",
+      "case": "create-sys-setting inline binary under the file policy",
+      "verdict": "match",
+      "clio_seconds": 0.67,
+      "go_seconds": 0.2,
+      "differences": []
+    },
+    {
+      "tool": "create-sys-setting",
+      "case": "create-sys-setting unknown environment",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "update-sys-setting",
+      "case": "update-sys-setting missing value",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "update-sys-setting",
+      "case": "update-sys-setting value and file",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "update-sys-setting",
+      "case": "update-sys-setting file on a missing setting",
+      "verdict": "match",
+      "clio_seconds": 0.3,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "update-sys-setting",
+      "case": "update-sys-setting file on a text setting",
+      "verdict": "match",
+      "clio_seconds": 0.33,
+      "go_seconds": 0.13,
+      "differences": []
+    },
+    {
+      "tool": "update-sys-setting",
+      "case": "update-sys-setting binary from a missing file",
+      "verdict": "match",
+      "clio_seconds": 0.79,
+      "go_seconds": 0.36,
+      "differences": []
+    },
+    {
+      "tool": "update-sys-setting",
+      "case": "update-sys-setting inline binary under the file policy",
+      "verdict": "match",
+      "clio_seconds": 0.56,
+      "go_seconds": 0.26,
+      "differences": []
+    },
+    {
+      "tool": "update-sys-setting",
+      "case": "update-sys-setting invalid code",
+      "verdict": "match",
+      "clio_seconds": 0.34,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "update-sys-setting",
+      "case": "update-sys-setting unknown environment",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.01,
+      "differences": []
+    },
+    {
+      "tool": "download-sys-setting-file",
+      "case": "download-sys-setting-file missing setting",
+      "verdict": "match",
+      "clio_seconds": 0.3,
+      "go_seconds": 0.08,
+      "differences": []
+    },
+    {
+      "tool": "download-sys-setting-file",
+      "case": "download-sys-setting-file text setting",
+      "verdict": "match",
+      "clio_seconds": 0.38,
+      "go_seconds": 0.07,
+      "differences": []
+    },
+    {
+      "tool": "download-sys-setting-file",
+      "case": "download-sys-setting-file relative path",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "download-sys-setting-file",
+      "case": "download-sys-setting-file missing code",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "download-sys-setting-file",
+      "case": "download-sys-setting-file directory only",
+      "verdict": "match",
+      "clio_seconds": 0.05,
+      "go_seconds": 0.04,
+      "differences": []
+    },
+    {
+      "tool": "download-sys-setting-file",
+      "case": "download-sys-setting-file existing destination",
+      "verdict": "match",
+      "clio_seconds": 0.04,
+      "go_seconds": 0.04,
+      "differences": []
+    },
+    {
+      "tool": "download-sys-setting-file",
+      "case": "download-sys-setting-file missing directory",
+      "verdict": "match",
+      "clio_seconds": 0.05,
+      "go_seconds": 0.04,
+      "differences": []
+    },
+    {
+      "tool": "download-sys-setting-file",
+      "case": "download-sys-setting-file unknown environment",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "download-sys-setting-file",
+      "case": "download-sys-setting-file wrong argument type",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "manage-user",
+      "case": "manage-user bogus",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "manage-user",
+      "case": "manage-user list",
+      "verdict": "match",
+      "clio_seconds": 0.04,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "manage-user",
+      "case": "manage-user create no password",
+      "verdict": "match",
+      "clio_seconds": 0.11,
+      "go_seconds": 0.04,
+      "differences": []
+    },
+    {
+      "tool": "manage-user",
+      "case": "manage-user create bad password ref",
+      "verdict": "match",
+      "clio_seconds": 0.04,
+      "go_seconds": 0.04,
+      "differences": []
+    },
+    {
+      "tool": "manage-user",
+      "case": "manage-user create unset password",
+      "verdict": "match",
+      "clio_seconds": 0.04,
+      "go_seconds": 0.1,
+      "differences": []
+    },
+    {
+      "tool": "manage-user",
+      "case": "manage-user update nothing",
+      "verdict": "match",
+      "clio_seconds": 0.04,
+      "go_seconds": 0.04,
+      "differences": []
+    },
+    {
+      "tool": "manage-user",
+      "case": "manage-user update role id",
+      "verdict": "match",
+      "clio_seconds": 0.04,
+      "go_seconds": 0.04,
+      "differences": []
+    },
+    {
+      "tool": "manage-user",
+      "case": "manage-user delete empty",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "manage-user",
+      "case": "manage-user unlock missing",
+      "verdict": "match",
+      "clio_seconds": 0.12,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "manage-user",
+      "case": "manage-user password ref",
+      "verdict": "match",
+      "clio_seconds": 0.04,
+      "go_seconds": 0.04,
+      "differences": []
+    },
+    {
+      "tool": "manage-user",
+      "case": "manage-user bad guid",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "manage-role",
+      "case": "manage-role bogus",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "manage-role",
+      "case": "manage-role create bad type",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "manage-role",
+      "case": "manage-role create existing",
+      "verdict": "match",
+      "clio_seconds": 0.04,
+      "go_seconds": 0.04,
+      "differences": []
+    },
+    {
+      "tool": "manage-role",
+      "case": "manage-role create no parent",
+      "verdict": "match",
+      "clio_seconds": 0.04,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "manage-role",
+      "case": "manage-role create functional under user",
+      "verdict": "match",
+      "clio_seconds": 0.33,
+      "go_seconds": 0.13,
+      "differences": []
+    },
+    {
+      "tool": "manage-role",
+      "case": "manage-role update nothing",
+      "verdict": "match",
+      "clio_seconds": 0.03,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "manage-role",
+      "case": "manage-role delete builtin",
+      "verdict": "match",
+      "clio_seconds": 0.04,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "manage-role",
+      "case": "manage-role ensure-manager empty",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "manage-role",
+      "case": "manage-role add-member not user",
+      "verdict": "match",
+      "clio_seconds": 0.12,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "manage-role",
+      "case": "manage-role remove-functional gate then missing",
+      "verdict": "match",
+      "clio_seconds": 0.05,
+      "go_seconds": 0.04,
+      "differences": []
+    },
+    {
+      "tool": "manage-license",
+      "case": "manage-license bogus",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "manage-license",
+      "case": "manage-license user-assign empty package",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "manage-license",
+      "case": "manage-license role-assign missing package",
+      "verdict": "match",
+      "clio_seconds": 0.13,
+      "go_seconds": 0.07,
+      "differences": []
+    },
+    {
+      "tool": "manage-license",
+      "case": "manage-license role-redistribute empty",
+      "verdict": "match",
+      "clio_seconds": 0.05,
+      "go_seconds": 0.04,
+      "differences": []
+    },
+    {
+      "tool": "manage-access",
+      "case": "manage-access bogus",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "manage-access",
+      "case": "manage-access ip-create bad ip",
+      "verdict": "match",
+      "clio_seconds": 0.39,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "manage-access",
+      "case": "manage-access ip-create inverted",
+      "verdict": "match",
+      "clio_seconds": 0.04,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "manage-access",
+      "case": "manage-access ip-update missing",
+      "verdict": "match",
+      "clio_seconds": 0.15,
+      "go_seconds": 0.07,
+      "differences": []
+    },
+    {
+      "tool": "manage-access",
+      "case": "manage-access ip-delete missing",
+      "verdict": "match",
+      "clio_seconds": 0.08,
+      "go_seconds": 0.08,
+      "differences": []
+    },
+    {
+      "tool": "manage-access",
+      "case": "manage-access delegate self",
+      "verdict": "match",
+      "clio_seconds": 0.09,
+      "go_seconds": 0.06,
+      "differences": []
+    },
+    {
+      "tool": "manage-access",
+      "case": "manage-access grant missing op",
+      "verdict": "match",
+      "clio_seconds": 0.11,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "manage-access",
+      "case": "manage-access position none",
+      "verdict": "match",
+      "clio_seconds": 0.08,
+      "go_seconds": 0.08,
+      "differences": []
+    },
+    {
+      "tool": "manage-access",
+      "case": "manage-access position missing",
+      "verdict": "match",
+      "clio_seconds": 0.13,
+      "go_seconds": 0.1,
+      "differences": []
+    },
+    {
+      "tool": "manage-access",
+      "case": "manage-access unknown env",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-server-to-server-oauth-app",
+      "case": "create-server-to-server-oauth-app bad user",
+      "verdict": "match",
+      "clio_seconds": 0.1,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "create-server-to-server-oauth-app",
+      "case": "create-server-to-server-oauth-app wrong type",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-server-to-server-oauth-app",
+      "case": "create-server-to-server-oauth-app unknown env",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.01,
+      "differences": []
+    },
+    {
+      "tool": "get-identity-public-jwk",
+      "case": "get-identity-public-jwk run",
+      "verdict": "match",
+      "clio_seconds": 0.08,
+      "go_seconds": 0.06,
+      "differences": []
+    },
+    {
+      "tool": "get-identity-public-jwk",
+      "case": "get-identity-public-jwk json",
+      "verdict": "match",
+      "clio_seconds": 0.16,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "get-identity-assertion",
+      "case": "get-identity-assertion",
+      "verdict": "match",
+      "clio_seconds": 0.05,
+      "go_seconds": 0.08,
+      "differences": []
+    },
+    {
+      "tool": "get-identity-assertion",
+      "case": "get-identity-assertion json",
+      "verdict": "match",
+      "clio_seconds": 0.04,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "get-identity-assertion",
+      "case": "get-identity-assertion blank env",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "get-identity-assertion",
+      "case": "get-identity-assertion unknown env",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "get-identity-assertion",
+      "case": "get-identity-assertion bad format type",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "set-fsm-mode",
+      "case": "set-fsm-mode invalid mode",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "set-fsm-mode",
+      "case": "set-fsm-mode unknown environment",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "set-fsm-mode",
+      "case": "set-fsm-mode wrong mode type",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-business-process",
+      "case": "create-business-process gate (descriptor string)",
+      "verdict": "match",
+      "clio_seconds": 0.45,
+      "go_seconds": 0.12,
+      "differences": []
+    },
+    {
+      "tool": "create-business-process",
+      "case": "create-business-process descriptor as an object",
+      "verdict": "match",
+      "clio_seconds": 0.29,
+      "go_seconds": 0.17,
+      "differences": []
+    },
+    {
+      "tool": "create-business-process",
+      "case": "create-business-process descriptor missing",
+      "verdict": "both-failed",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": [
+        "$.executionlogmessages[0].value: value differs"
+      ]
+    },
+    {
+      "tool": "create-business-process",
+      "case": "create-business-process descriptor boolean",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-business-process",
+      "case": "create-business-process unknown key",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-business-process",
+      "case": "create-business-process blank environment",
+      "verdict": "both-failed",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": [
+        "$.executionlogmessages[0].value: value differs"
+      ]
+    },
+    {
+      "tool": "create-business-process",
+      "case": "create-business-process unknown environment",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "modify-business-process",
+      "case": "modify-business-process no identity",
+      "verdict": "both-failed",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": [
+        "$.executionlogmessages[0].value: value differs"
+      ]
+    },
+    {
+      "tool": "modify-business-process",
+      "case": "modify-business-process both identities",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "modify-business-process",
+      "case": "modify-business-process gate",
+      "verdict": "match",
+      "clio_seconds": 0.33,
+      "go_seconds": 0.18,
+      "differences": []
+    },
+    {
+      "tool": "modify-business-process",
+      "case": "modify-business-process confirm not boolean",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "modify-business-process",
+      "case": "modify-business-process unknown key",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "modify-business-process-as-new-version",
+      "case": "modify-business-process-as-new-version gate",
+      "verdict": "match",
+      "clio_seconds": 0.34,
+      "go_seconds": 0.19,
+      "differences": []
+    },
+    {
+      "tool": "modify-business-process-as-new-version",
+      "case": "modify-business-process-as-new-version no identity",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "modify-business-process-as-new-version",
+      "case": "modify-business-process-as-new-version unknown key",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "set-active-business-process-version",
+      "case": "set-active-business-process-version gate",
+      "verdict": "match",
+      "clio_seconds": 0.66,
+      "go_seconds": 0.19,
+      "differences": []
+    },
+    {
+      "tool": "set-active-business-process-version",
+      "case": "set-active-business-process-version none",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "set-active-business-process-version",
+      "case": "set-active-business-process-version both",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "set-active-business-process-version",
+      "case": "set-active-business-process-version renamed key",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "validate-process-graph",
+      "case": "validate-process-graph no nodes",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "validate-process-graph",
+      "case": "validate-process-graph gate",
+      "verdict": "match",
+      "clio_seconds": 0.1,
+      "go_seconds": 0.08,
+      "differences": []
+    },
+    {
+      "tool": "validate-process-graph",
+      "case": "validate-process-graph node aliases",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "validate-process-graph",
+      "case": "validate-process-graph edge alias",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "validate-process-graph",
+      "case": "validate-process-graph null node",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "validate-process-graph",
+      "case": "validate-process-graph null edge",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "validate-process-graph",
+      "case": "validate-process-graph unknown key",
+      "verdict": "both-failed",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": [
+        "$.error: value differs"
+      ]
+    },
+    {
+      "tool": "validate-process-graph",
+      "case": "validate-process-graph nodes not array",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "validate-process-graph",
+      "case": "validate-process-graph node not object",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "validate-process-graph",
+      "case": "validate-process-graph results not strings",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "register-process-element",
+      "case": "register-process-element missing",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "register-process-element",
+      "case": "register-process-element bad package name",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "register-process-element",
+      "case": "register-process-element empty uid",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "register-process-element",
+      "case": "register-process-element no workspace",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "register-process-element",
+      "case": "register-process-element uid not a GUID",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "register-process-element",
+      "case": "register-process-element caption number",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "enroll-sequence-participants",
+      "case": "enroll-sequence-participants nonexistent sequence and contact",
+      "verdict": "match",
+      "clio_seconds": 0.1,
+      "go_seconds": 0.06,
+      "differences": []
+    },
+    {
+      "tool": "enroll-sequence-participants",
+      "case": "enroll-sequence-participants empty sequence",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "enroll-sequence-participants",
+      "case": "enroll-sequence-participants duplicate contacts",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "enroll-sequence-participants",
+      "case": "enroll-sequence-participants bad sequence",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "enroll-sequence-participants",
+      "case": "enroll-sequence-participants bad contact",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "enroll-sequence-participants",
+      "case": "enroll-sequence-participants missing contacts",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "enroll-sequence-participants",
+      "case": "enroll-sequence-participants blank environment",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "enroll-sequence-participants",
+      "case": "enroll-sequence-participants unknown environment",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.01,
+      "differences": []
+    },
+    {
+      "tool": "create-user-task",
+      "case": "create-user-task not a workspace",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-user-task",
+      "case": "create-user-task parameter shape",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-user-task",
+      "case": "create-user-task parameters not array",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-user-task",
+      "case": "create-user-task unknown environment",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "modify-user-task-parameters",
+      "case": "modify-user-task-parameters not a workspace",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "modify-user-task-parameters",
+      "case": "modify-user-task-parameters directions not array",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "install-process-builder",
+      "case": "install-process-builder unknown environment",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "upload-image",
+      "case": "upload-image missing file",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "upload-image",
+      "case": "upload-image empty file",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "upload-image",
+      "case": "upload-image unsupported extension",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "upload-image",
+      "case": "upload-image blank file",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "upload-image",
+      "case": "upload-image blank environment",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "upload-image",
+      "case": "upload-image legacy and unknown keys",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "upload-image",
+      "case": "upload-image unknown environment",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.01,
+      "differences": []
+    },
+    {
+      "tool": "upload-image",
+      "case": "upload-image file of the wrong type",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "set-logo",
+      "case": "set-logo no image",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "set-logo",
+      "case": "set-logo blank images",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "set-logo",
+      "case": "set-logo files not found",
+      "verdict": "match",
+      "clio_seconds": 0.03,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "set-logo",
+      "case": "set-logo unsupported favicon format",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "set-logo",
+      "case": "set-logo every slot refused by format",
+      "verdict": "match",
+      "clio_seconds": 0.02,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "set-logo",
+      "case": "set-logo legacy and unknown keys",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "set-logo",
+      "case": "set-logo empty environment",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "set-logo",
+      "case": "set-logo unknown environment",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.01,
+      "differences": []
+    },
+    {
+      "tool": "set-logo",
+      "case": "set-logo logo of the wrong type",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "set-background-image",
+      "case": "set-background-image no source",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "set-background-image",
+      "case": "set-background-image both sources",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "set-background-image",
+      "case": "set-background-image invalid id",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "set-background-image",
+      "case": "set-background-image empty id",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "set-background-image",
+      "case": "set-background-image unknown image",
+      "verdict": "match",
+      "clio_seconds": 0.48,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "set-background-image",
+      "case": "set-background-image unsupported file",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "set-background-image",
+      "case": "set-background-image missing file",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "set-background-image",
+      "case": "set-background-image legacy and unknown keys",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "set-background-image",
+      "case": "set-background-image keep flag of the wrong type",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "set-background-image",
+      "case": "set-background-image unknown environment",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.01,
+      "differences": []
+    },
+    {
+      "tool": "advise-theme-palette",
+      "case": "advise-theme-palette triage #E91E63",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "advise-theme-palette",
+      "case": "advise-theme-palette adapt-primary #E91E63",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "advise-theme-palette",
+      "case": "advise-theme-palette derive-secondary #E91E63",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "advise-theme-palette",
+      "case": "advise-theme-palette accent-stored #E91E63",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "advise-theme-palette",
+      "case": "advise-theme-palette accent-suggest #E91E63",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "advise-theme-palette",
+      "case": "advise-theme-palette accent-manual #E91E63",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "advise-theme-palette",
+      "case": "advise-theme-palette validate #E91E63",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "advise-theme-palette",
+      "case": "advise-theme-palette preview #E91E63",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "advise-theme-palette",
+      "case": "advise-theme-palette triage #123456",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "advise-theme-palette",
+      "case": "advise-theme-palette adapt-primary #123456",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "advise-theme-palette",
+      "case": "advise-theme-palette derive-secondary #123456",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "advise-theme-palette",
+      "case": "advise-theme-palette accent-stored #123456",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "advise-theme-palette",
+      "case": "advise-theme-palette accent-suggest #123456",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "advise-theme-palette",
+      "case": "advise-theme-palette accent-manual #123456",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "advise-theme-palette",
+      "case": "advise-theme-palette validate #123456",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "advise-theme-palette",
+      "case": "advise-theme-palette preview #123456",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "advise-theme-palette",
+      "case": "advise-theme-palette triage #FFE066",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "advise-theme-palette",
+      "case": "advise-theme-palette adapt-primary #FFE066",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "advise-theme-palette",
+      "case": "advise-theme-palette derive-secondary #FFE066",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "advise-theme-palette",
+      "case": "advise-theme-palette accent-stored #FFE066",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "advise-theme-palette",
+      "case": "advise-theme-palette accent-suggest #FFE066",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "advise-theme-palette",
+      "case": "advise-theme-palette accent-manual #FFE066",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "advise-theme-palette",
+      "case": "advise-theme-palette validate #FFE066",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "advise-theme-palette",
+      "case": "advise-theme-palette preview #FFE066",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "update-email-template",
+      "case": "email update without confirm",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "update-email-template",
+      "case": "email update confirm false",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "update-email-template",
+      "case": "email update invalid id",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "update-email-template",
+      "case": "email update unknown format",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "update-email-template",
+      "case": "email update missing host",
+      "verdict": "match",
+      "clio_seconds": 0.04,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "update-email-template",
+      "case": "email update missing checksum",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "update-email-template",
+      "case": "email update empty environment",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "pkg-to-db",
+      "case": "pkg-to-db unknown environment",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "pkg-to-db",
+      "case": "pkg-to-db environmentName not a string",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "pkg-to-file-system",
+      "case": "pkg-to-file-system unknown environment, unknown key ignored",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "pkg-to-db",
+      "case": "pkg-to-db by raw name needs confirmation",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "dataforge-initialize",
+      "case": "dataforge-initialize unknown environment",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.01,
+      "differences": []
+    },
+    {
+      "tool": "dataforge-initialize",
+      "case": "dataforge-initialize without environment-name",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "dataforge-update",
+      "case": "dataforge-update legacy environmentName reads as missing",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "dataforge-update",
+      "case": "dataforge-update environment-name not a string",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "install-gate",
+      "case": "install-gate unknown environment",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "restart-by-environment-name",
+      "case": "restart-by-environment-name unknown environment, no wait",
+      "verdict": "match",
+      "clio_seconds": 3.57,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "restart-by-environment-name",
+      "case": "restart-by-environment-name unknown environment, waited",
+      "verdict": "match",
+      "clio_seconds": 5.64,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "restart-by-environment-name",
+      "case": "restart-by-environment-name blank environment",
+      "verdict": "match",
+      "clio_seconds": 4.25,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "restart-by-environment-name",
+      "case": "restart-by-environment-name without environmentName",
+      "verdict": "match",
+      "clio_seconds": 3.78,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "restart-by-environment-name",
+      "case": "restart-by-environment-name waitReady not a boolean",
+      "verdict": "match",
+      "clio_seconds": 5.08,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "restart-by-credentials",
+      "case": "restart-by-credentials blank url",
+      "verdict": "match",
+      "clio_seconds": 4.8,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "restart-by-credentials",
+      "case": "restart-by-credentials blank userName",
+      "verdict": "match",
+      "clio_seconds": 2.88,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "restart-by-credentials",
+      "case": "restart-by-credentials blank password",
+      "verdict": "match",
+      "clio_seconds": 3.35,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "restart-by-credentials",
+      "case": "restart-by-credentials url that is not a URI",
+      "verdict": "match",
+      "clio_seconds": 3.05,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "compile-creatio",
+      "case": "compile-creatio comma-separated package list",
+      "verdict": "match",
+      "clio_seconds": 2.97,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "compile-creatio",
+      "case": "compile-creatio unknown environment",
+      "verdict": "match",
+      "clio_seconds": 3.2,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "install-dashboards-migrator",
+      "case": "install-dashboards-migrator unknown environment",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "add-custom-logging",
+      "case": "add-custom-logging validation reports every rule",
+      "verdict": "match",
+      "clio_seconds": 0.03,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "add-custom-logging",
+      "case": "add-custom-logging environment without EnvironmentPath",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "add-custom-logging",
+      "case": "add-custom-logging unknown environment",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "download-configuration-by-build",
+      "case": "download-configuration-by-build relative build path",
+      "verdict": "match",
+      "clio_seconds": 0.03,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "download-configuration-by-build",
+      "case": "download-configuration-by-build workspace not found",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "download-configuration-by-build",
+      "case": "download-configuration-by-build relative workspace path",
+      "verdict": "match",
+      "clio_seconds": 0.03,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "download-configuration-by-environment",
+      "case": "download-configuration-by-environment relative workspace path",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "download-configuration-by-environment",
+      "case": "download-configuration-by-environment without workspace-path",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-app",
+      "case": "create-app missing name",
+      "verdict": "both-failed",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": [
+        "$.error: value differs"
+      ]
+    },
+    {
+      "tool": "create-app",
+      "case": "create-app blank code",
+      "verdict": "both-failed",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": [
+        "$.error: value differs"
+      ]
+    },
+    {
+      "tool": "create-app",
+      "case": "create-app unknown template",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-app",
+      "case": "create-app color outside the palette",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-app",
+      "case": "create-app color name is not hex",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-app",
+      "case": "create-app localization map",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-app",
+      "case": "create-app name not a string",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-app",
+      "case": "create-app with-mobile-pages not a boolean",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-app",
+      "case": "create-app AI content generation",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-app",
+      "case": "create-app entity without useExistingEntitySchema",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-app",
+      "case": "create-app useExistingEntitySchema without entity",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-app",
+      "case": "create-app icon-id not a GUID (after Data Forge read)",
+      "verdict": "match",
+      "clio_seconds": 0.18,
+      "go_seconds": 0.12,
+      "differences": []
+    },
+    {
+      "tool": "create-app",
+      "case": "create-app client-type-id not a GUID",
+      "verdict": "match",
+      "clio_seconds": 0.16,
+      "go_seconds": 0.18,
+      "differences": []
+    },
+    {
+      "tool": "create-app",
+      "case": "create-app Cyrillic name under an en-US profile",
+      "verdict": "match",
+      "clio_seconds": 0.48,
+      "go_seconds": 0.15,
+      "differences": []
+    },
+    {
+      "tool": "create-app",
+      "case": "create-app by raw name needs confirmation",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-app-section",
+      "case": "create-app-section missing caption",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-app-section",
+      "case": "create-app-section missing application",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-app-section",
+      "case": "create-app-section unknown color",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-app-section",
+      "case": "create-app-section localization map",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-app-section",
+      "case": "create-app-section invalid explicit code",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-app-section",
+      "case": "create-app-section blank color",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-app-section",
+      "case": "create-app-section invalid caption-culture",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-app-section",
+      "case": "create-app-section Cyrillic caption under an en-US profile",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-app-section",
+      "case": "create-app-section unknown application",
+      "verdict": "match",
+      "clio_seconds": 1.09,
+      "go_seconds": 0.06,
+      "differences": []
+    },
+    {
+      "tool": "update-app-section",
+      "case": "update-app-section no field to change",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "update-app-section",
+      "case": "update-app-section missing application",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "update-app-section",
+      "case": "update-app-section blank caption",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "update-app-section",
+      "case": "update-app-section blank description",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "update-app-section",
+      "case": "update-app-section icon-id not a GUID",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "update-app-section",
+      "case": "update-app-section color outside the palette",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "update-app-section",
+      "case": "update-app-section unknown application",
+      "verdict": "match",
+      "clio_seconds": 0.76,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "update-app-section",
+      "case": "update-app-section unknown section of a stock app (read only)",
+      "verdict": "match",
+      "clio_seconds": 5.4,
+      "go_seconds": 0.81,
+      "differences": []
+    },
+    {
+      "tool": "delete-app-section",
+      "case": "delete-app-section missing section",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "delete-app-section",
+      "case": "delete-app-section missing application",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "delete-app-section",
+      "case": "delete-app-section delete-entity-schema not a boolean",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "delete-app-section",
+      "case": "delete-app-section unknown application",
+      "verdict": "match",
+      "clio_seconds": 0.25,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "delete-app-section",
+      "case": "delete-app-section unknown section of a stock app (read only)",
+      "verdict": "match",
+      "clio_seconds": 0.51,
+      "go_seconds": 0.07,
+      "differences": []
+    },
+    {
+      "tool": "create-schema",
+      "case": "create-schema empty name",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-sql-schema",
+      "case": "create-sql-schema empty name",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "update-schema",
+      "case": "update-schema empty name",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "update-schema",
+      "case": "update-schema missing body",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "update-sql-schema",
+      "case": "update-sql-schema empty name",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "update-sql-schema",
+      "case": "update-sql-schema missing body",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "install-sql-schema",
+      "case": "install-sql-schema empty name",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "delete-schema",
+      "case": "delete-schema empty input",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "export-schema",
+      "case": "export-schema empty input",
+      "verdict": "match",
+      "clio_seconds": 0.1,
+      "go_seconds": 0.04,
+      "differences": []
+    },
+    {
+      "tool": "import-schema",
+      "case": "import-schema empty input",
+      "verdict": "match",
+      "clio_seconds": 0.04,
+      "go_seconds": 0.04,
+      "differences": []
+    },
+    {
+      "tool": "delete-app",
+      "case": "delete-app empty input",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-schema",
+      "case": "ces package missing",
+      "verdict": "match",
+      "clio_seconds": 0.24,
+      "go_seconds": 0.25,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-schema",
+      "case": "ces legacy title package missing",
+      "verdict": "match",
+      "clio_seconds": 0.19,
+      "go_seconds": 0.16,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-schema",
+      "case": "ces no title",
+      "verdict": "both-failed",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.15,
+      "differences": [
+        "$.dataforge: only in go",
+        "$.executionlogmessages[0].value: value differs"
+      ]
+    },
+    {
+      "tool": "create-entity-schema",
+      "case": "ces no package-name",
+      "verdict": "both-failed",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.12,
+      "differences": [
+        "$.dataforge: only in go",
+        "$.executionlogmessages[0].value: value differs"
+      ]
+    },
+    {
+      "tool": "create-entity-schema",
+      "case": "ces column no name",
+      "verdict": "match",
+      "clio_seconds": 0.15,
+      "go_seconds": 0.2,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-schema",
+      "case": "ces column no type",
+      "verdict": "match",
+      "clio_seconds": 0.15,
+      "go_seconds": 0.11,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-schema",
+      "case": "ces column bad type package missing",
+      "verdict": "match",
+      "clio_seconds": 0.29,
+      "go_seconds": 0.18,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-schema",
+      "case": "ces extend mismatch",
+      "verdict": "match",
+      "clio_seconds": 0.15,
+      "go_seconds": 0.17,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-schema",
+      "case": "ces cyrillic en-US",
+      "verdict": "match",
+      "clio_seconds": 0.16,
+      "go_seconds": 0.12,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-schema",
+      "case": "ces column cyrillic caption",
+      "verdict": "match",
+      "clio_seconds": 0.23,
+      "go_seconds": 0.15,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-schema",
+      "case": "ces empty culture value",
+      "verdict": "match",
+      "clio_seconds": 0.32,
+      "go_seconds": 0.2,
+      "differences": []
+    },
+    {
+      "tool": "create-entity-schema",
+      "case": "ces unknown env",
+      "verdict": "match",
+      "clio_seconds": 0.02,
+      "go_seconds": 0.01,
+      "differences": []
+    },
+    {
+      "tool": "create-lookup",
+      "case": "lookup shadow Name",
+      "verdict": "match",
+      "clio_seconds": 0.55,
+      "go_seconds": 0.35,
+      "differences": []
+    },
+    {
+      "tool": "create-lookup",
+      "case": "lookup shadow both",
+      "verdict": "match",
+      "clio_seconds": 0.52,
+      "go_seconds": 0.25,
+      "differences": []
+    },
+    {
+      "tool": "create-lookup",
+      "case": "lookup package missing",
+      "verdict": "match",
+      "clio_seconds": 0.37,
+      "go_seconds": 0.24,
+      "differences": []
+    },
+    {
+      "tool": "create-lookup",
+      "case": "lookup unknown env",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "update-entity-schema",
+      "case": "ues no operations",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "update-entity-schema",
+      "case": "ues operations absent",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "update-entity-schema",
+      "case": "ues remove with title",
+      "verdict": "match",
+      "clio_seconds": 0.18,
+      "go_seconds": 0.09,
+      "differences": []
+    },
+    {
+      "tool": "update-entity-schema",
+      "case": "ues modify legacy title",
+      "verdict": "match",
+      "clio_seconds": 0.14,
+      "go_seconds": 0.09,
+      "differences": []
+    },
+    {
+      "tool": "update-entity-schema",
+      "case": "ues modify nothing",
+      "verdict": "match",
+      "clio_seconds": 0.21,
+      "go_seconds": 0.09,
+      "differences": []
+    },
+    {
+      "tool": "update-entity-schema",
+      "case": "ues bad action",
+      "verdict": "match",
+      "clio_seconds": 0.13,
+      "go_seconds": 0.09,
+      "differences": []
+    },
+    {
+      "tool": "update-entity-schema",
+      "case": "ues no column",
+      "verdict": "match",
+      "clio_seconds": 0.18,
+      "go_seconds": 0.09,
+      "differences": []
+    },
+    {
+      "tool": "update-entity-schema",
+      "case": "ues add no type",
+      "verdict": "match",
+      "clio_seconds": 0.16,
+      "go_seconds": 0.12,
+      "differences": []
+    },
+    {
+      "tool": "update-entity-schema",
+      "case": "ues package missing",
+      "verdict": "match",
+      "clio_seconds": 0.29,
+      "go_seconds": 0.16,
+      "differences": []
+    },
+    {
+      "tool": "update-entity-schema",
+      "case": "ues unknown env",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "modify-entity-schema-column",
+      "case": "mesc remove with title",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "modify-entity-schema-column",
+      "case": "mesc add no type",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "modify-entity-schema-column",
+      "case": "mesc bad action",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "modify-entity-schema-column",
+      "case": "mesc no column",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "modify-entity-schema-column",
+      "case": "mesc modify nothing",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "modify-entity-schema-column",
+      "case": "mesc remove with flag",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "modify-entity-schema-column",
+      "case": "mesc package missing",
+      "verdict": "match",
+      "clio_seconds": 0.08,
+      "go_seconds": 0.04,
+      "differences": []
+    },
+    {
+      "tool": "modify-entity-schema-column",
+      "case": "mesc unknown env",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "set-entity-schema-properties",
+      "case": "sesp nothing",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "set-entity-schema-properties",
+      "case": "sesp bad culture",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "set-entity-schema-properties",
+      "case": "sesp script mismatch",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "set-entity-schema-properties",
+      "case": "sesp no package-name",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "set-entity-schema-properties",
+      "case": "sesp package missing",
+      "verdict": "match",
+      "clio_seconds": 0.11,
+      "go_seconds": 0.04,
+      "differences": []
+    },
+    {
+      "tool": "set-entity-schema-properties",
+      "case": "sesp unknown env",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "sync-schemas",
+      "case": "sync no operations",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "sync-schemas",
+      "case": "sync empty operations",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "sync-schemas",
+      "case": "sync top-level alias",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "sync-schemas",
+      "case": "sync alias field",
+      "verdict": "match",
+      "clio_seconds": 0.08,
+      "go_seconds": 0.07,
+      "differences": []
+    },
+    {
+      "tool": "sync-schemas",
+      "case": "sync unknown type",
+      "verdict": "match",
+      "clio_seconds": 0.16,
+      "go_seconds": 0.19,
+      "differences": []
+    },
+    {
+      "tool": "sync-schemas",
+      "case": "sync missing type",
+      "verdict": "match",
+      "clio_seconds": 0.14,
+      "go_seconds": 0.18,
+      "differences": []
+    },
+    {
+      "tool": "sync-schemas",
+      "case": "sync seed no rows",
+      "verdict": "match",
+      "clio_seconds": 0.17,
+      "go_seconds": 0.09,
+      "differences": []
+    },
+    {
+      "tool": "sync-schemas",
+      "case": "sync seed row without values",
+      "verdict": "match",
+      "clio_seconds": 0.16,
+      "go_seconds": 0.18,
+      "differences": []
+    },
+    {
+      "tool": "sync-schemas",
+      "case": "sync dbview update",
+      "verdict": "match",
+      "clio_seconds": 0.13,
+      "go_seconds": 0.09,
+      "differences": []
+    },
+    {
+      "tool": "sync-schemas",
+      "case": "sync virtual with seed",
+      "verdict": "match",
+      "clio_seconds": 0.13,
+      "go_seconds": 0.09,
+      "differences": []
+    },
+    {
+      "tool": "sync-schemas",
+      "case": "sync legacy op key",
+      "verdict": "match",
+      "clio_seconds": 0.21,
+      "go_seconds": 0.09,
+      "differences": []
+    },
+    {
+      "tool": "sync-schemas",
+      "case": "sync update no ops",
+      "verdict": "match",
+      "clio_seconds": 0.13,
+      "go_seconds": 0.09,
+      "differences": []
+    },
+    {
+      "tool": "sync-schemas",
+      "case": "sync create package missing",
+      "verdict": "match",
+      "clio_seconds": 0.37,
+      "go_seconds": 0.27,
+      "differences": []
+    },
+    {
+      "tool": "sync-schemas",
+      "case": "sync update schema missing",
+      "verdict": "match",
+      "clio_seconds": 3.01,
+      "go_seconds": 0.19,
+      "differences": []
+    },
+    {
+      "tool": "sync-schemas",
+      "case": "sync lookup shadow",
+      "verdict": "match",
+      "clio_seconds": 0.21,
+      "go_seconds": 0.26,
+      "differences": []
+    },
+    {
+      "tool": "sync-schemas",
+      "case": "sync unknown env",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.02,
+      "differences": []
+    },
+    {
+      "tool": "get-component-info",
+      "case": "get-component-info list",
+      "verdict": "match",
+      "clio_seconds": 0.66,
+      "go_seconds": 0.26,
+      "differences": []
+    },
+    {
+      "tool": "get-component-info",
+      "case": "get-component-info list search",
+      "verdict": "match",
+      "clio_seconds": 3.75,
+      "go_seconds": 0.14,
+      "differences": []
+    },
+    {
+      "tool": "get-component-info",
+      "case": "get-component-info list keyword",
+      "verdict": "match",
+      "clio_seconds": 0.43,
+      "go_seconds": 0.13,
+      "differences": []
+    },
+    {
+      "tool": "get-component-info",
+      "case": "get-component-info detail TabContainer",
+      "verdict": "known-diff",
+      "clio_seconds": 0.55,
+      "go_seconds": 0.12,
+      "differences": [
+        "$.documentationsource: value differs"
+      ]
+    },
+    {
+      "tool": "get-component-info",
+      "case": "get-component-info detail Input",
+      "verdict": "known-diff",
+      "clio_seconds": 0.45,
+      "go_seconds": 0.13,
+      "differences": [
+        "$.documentationsource: value differs"
+      ]
+    },
+    {
+      "tool": "get-component-info",
+      "case": "get-component-info detail case-insensitive",
+      "verdict": "known-diff",
+      "clio_seconds": 0.43,
+      "go_seconds": 0.14,
+      "differences": [
+        "$.documentationsource: value differs"
+      ]
+    },
+    {
+      "tool": "get-component-info",
+      "case": "get-component-info unknown type",
+      "verdict": "match",
+      "clio_seconds": 0.48,
+      "go_seconds": 0.17,
+      "differences": []
+    },
+    {
+      "tool": "get-component-info",
+      "case": "get-component-info unknown type with search",
+      "verdict": "match",
+      "clio_seconds": 0.37,
+      "go_seconds": 0.21,
+      "differences": []
+    },
+    {
+      "tool": "get-component-info",
+      "case": "get-component-info label matching components",
+      "verdict": "match",
+      "clio_seconds": 0.48,
+      "go_seconds": 0.14,
+      "differences": []
+    },
+    {
+      "tool": "get-component-info",
+      "case": "get-component-info label naming a composite",
+      "verdict": "match",
+      "clio_seconds": 0.71,
+      "go_seconds": 0.17,
+      "differences": []
+    },
+    {
+      "tool": "get-component-info",
+      "case": "get-component-info composite",
+      "verdict": "known-diff",
+      "clio_seconds": 0.42,
+      "go_seconds": 0.18,
+      "differences": [
+        "$.documentationsource: value differs"
+      ]
+    },
+    {
+      "tool": "get-component-info",
+      "case": "get-component-info unknown composite",
+      "verdict": "match",
+      "clio_seconds": 0.58,
+      "go_seconds": 0.12,
+      "differences": []
+    },
+    {
+      "tool": "get-component-info",
+      "case": "get-component-info component-type and composite",
+      "verdict": "match",
+      "clio_seconds": 0.4,
+      "go_seconds": 0.11,
+      "differences": []
+    },
+    {
+      "tool": "get-component-info",
+      "case": "get-component-info mobile list",
+      "verdict": "match",
+      "clio_seconds": 0.41,
+      "go_seconds": 0.09,
+      "differences": []
+    },
+    {
+      "tool": "get-component-info",
+      "case": "get-component-info mobile detail",
+      "verdict": "known-diff",
+      "clio_seconds": 0.46,
+      "go_seconds": 0.1,
+      "differences": [
+        "$.documentationsource: value differs"
+      ]
+    },
+    {
+      "tool": "get-component-info",
+      "case": "get-component-info mobile composite",
+      "verdict": "match",
+      "clio_seconds": 0.4,
+      "go_seconds": 0.09,
+      "differences": []
+    },
+    {
+      "tool": "get-component-info",
+      "case": "get-component-info schema-type typo",
+      "verdict": "match",
+      "clio_seconds": 0.42,
+      "go_seconds": 0.14,
+      "differences": []
+    },
+    {
+      "tool": "get-component-info",
+      "case": "get-component-info explicit version",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "get-component-info",
+      "case": "get-component-info explicit version detail",
+      "verdict": "known-diff",
+      "clio_seconds": 0.35,
+      "go_seconds": 0.04,
+      "differences": [
+        "$.documentationsource: value differs"
+      ]
+    },
+    {
+      "tool": "get-component-info",
+      "case": "get-component-info unpublished version",
+      "verdict": "match",
+      "clio_seconds": 0.11,
+      "go_seconds": 0.3,
+      "differences": []
+    },
+    {
+      "tool": "get-component-info",
+      "case": "get-component-info version and environment-name",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "get-component-info",
+      "case": "get-component-info bad version",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "get-component-info",
+      "case": "get-component-info no environment",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "get-component-info",
+      "case": "get-component-info unknown environment",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.01,
+      "differences": []
+    },
+    {
+      "tool": "get-component-info",
+      "case": "get-component-info legacy alias",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "get-component-info",
+      "case": "get-component-info non-string type",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-client-unit-schema",
+      "case": "create-client-unit-schema invalid",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "update-client-unit-schema",
+      "case": "update-client-unit-schema invalid",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "set-record-rights",
+      "case": "set-record-rights invalid",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "set-record-rights",
+      "case": "set-record-rights invalid",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-page",
+      "case": "create-page invalid schema name",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-page",
+      "case": "create-page unknown template",
+      "verdict": "match",
+      "clio_seconds": 0.08,
+      "go_seconds": 0.06,
+      "differences": []
+    },
+    {
+      "tool": "create-page",
+      "case": "create-page unknown package",
+      "verdict": "match",
+      "clio_seconds": 0.09,
+      "go_seconds": 0.12,
+      "differences": []
+    },
+    {
+      "tool": "create-page",
+      "case": "create-page malformed optional properties",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-page",
+      "case": "create-page existing page name",
+      "verdict": "match",
+      "clio_seconds": 0.13,
+      "go_seconds": 0.09,
+      "differences": []
+    },
+    {
+      "tool": "update-page",
+      "case": "update-page empty body",
+      "verdict": "match",
+      "clio_seconds": 0.03,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "update-page",
+      "case": "update-page missing body file",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "update-page",
+      "case": "update-page append full config",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "update-page",
+      "case": "update-page unterminated body",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "update-page",
+      "case": "update-page malformed resources behind a syntax error",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "update-page",
+      "case": "update-page unknown schema dry run",
+      "verdict": "match",
+      "clio_seconds": 0.06,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "sync-pages",
+      "case": "sync-pages syntax failure and unknown schema",
+      "verdict": "match",
+      "clio_seconds": 0.12,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "sync-pages",
+      "case": "sync-pages missing markers",
+      "verdict": "match",
+      "clio_seconds": 0.47,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-related-page-addon",
+      "case": "create-related-page-addon missing entity",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-related-page-addon",
+      "case": "create-related-page-addon missing pages",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-related-page-addon",
+      "case": "create-related-page-addon null page entry",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-related-page-addon",
+      "case": "create-related-page-addon no general base default",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-related-page-addon",
+      "case": "create-related-page-addon custom role",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-related-page-addon",
+      "case": "create-related-page-addon typed page without type column",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-related-page-addon",
+      "case": "create-related-page-addon duplicate defaults",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-related-page-addon",
+      "case": "create-related-page-addon invalid schema type",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-related-page-addon",
+      "case": "create-related-page-addon unknown package",
+      "verdict": "match",
+      "clio_seconds": 0.04,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "create-related-page-addon",
+      "case": "create-related-page-addon unknown entity in package",
+      "verdict": "match",
+      "clio_seconds": 0.06,
+      "go_seconds": 0.06,
+      "differences": []
+    },
+    {
+      "tool": "create-user-task-page",
+      "case": "create-user-task-page invalid package name",
+      "verdict": "match",
+      "clio_seconds": 0.02,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-user-task-page",
+      "case": "create-user-task-page invalid page name",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-user-task-page",
+      "case": "create-user-task-page missing caption",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-user-task-page",
+      "case": "create-user-task-page missing user task",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-user-task-page",
+      "case": "create-user-task-page not a guid",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "create-user-task-page",
+      "case": "create-user-task-page missing workspace",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "merge-creatio-artifact",
+      "case": "merge-creatio-artifact parent segment",
+      "verdict": "known-diff",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": [
+        "$.resolverversion: value differs"
+      ]
+    },
+    {
+      "tool": "merge-creatio-artifact",
+      "case": "merge-creatio-artifact rooted path",
+      "verdict": "known-diff",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": [
+        "$.resolverversion: value differs"
+      ]
+    },
+    {
+      "tool": "merge-creatio-artifact",
+      "case": "merge-creatio-artifact missing ours",
+      "verdict": "known-diff",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": [
+        "$.resolverversion: value differs"
+      ]
+    },
+    {
+      "tool": "merge-creatio-artifact",
+      "case": "merge-creatio-artifact csharp",
+      "verdict": "known-diff",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": [
+        "$.resolverversion: value differs"
+      ]
+    },
+    {
+      "tool": "merge-creatio-artifact",
+      "case": "merge-creatio-artifact sql",
+      "verdict": "known-diff",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": [
+        "$.resolverversion: value differs"
+      ]
+    },
+    {
+      "tool": "merge-creatio-artifact",
+      "case": "merge-creatio-artifact process resource",
+      "verdict": "known-diff",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": [
+        "$.resolverversion: value differs"
+      ]
+    },
+    {
+      "tool": "merge-creatio-artifact",
+      "case": "merge-creatio-artifact process metadata by folder",
+      "verdict": "known-diff",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": [
+        "$.resolverversion: value differs"
+      ]
+    },
+    {
+      "tool": "merge-creatio-artifact",
+      "case": "merge-creatio-artifact unknown shape",
+      "verdict": "known-diff",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": [
+        "$.resolverversion: value differs"
+      ]
+    },
+    {
+      "tool": "merge-creatio-artifact",
+      "case": "merge-creatio-artifact client js outside Schemas",
+      "verdict": "known-diff",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": [
+        "$.resolverversion: value differs"
+      ]
+    },
+    {
+      "tool": "merge-creatio-artifact",
+      "case": "merge-creatio-artifact data binding without descriptor",
+      "verdict": "known-diff",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": [
+        "$.resolverversion: value differs"
+      ]
+    },
+    {
+      "tool": "merge-creatio-artifact",
+      "case": "merge-creatio-artifact metadata without descriptor",
+      "verdict": "known-diff",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": [
+        "$.resolverversion: value differs"
+      ]
+    },
+    {
+      "tool": "merge-creatio-artifact",
+      "case": "merge-creatio-artifact metadata of a process",
+      "verdict": "known-diff",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": [
+        "$.resolverversion: value differs"
+      ]
+    },
+    {
+      "tool": "merge-creatio-artifact",
+      "case": "merge-creatio-artifact metadata identity mismatch",
+      "verdict": "known-diff",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": [
+        "$.resolverversion: value differs"
+      ]
+    },
+    {
+      "tool": "merge-creatio-artifact",
+      "case": "merge-creatio-artifact addon subtype mismatch",
+      "verdict": "known-diff",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": [
+        "$.resolverversion: value differs"
+      ]
+    },
+    {
+      "tool": "merge-creatio-artifact",
+      "case": "merge-creatio-artifact unknown manager metadata",
+      "verdict": "known-diff",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": [
+        "$.resolverversion: value differs"
+      ]
+    },
+    {
+      "tool": "merge-creatio-artifact",
+      "case": "merge-creatio-artifact process descriptor",
+      "verdict": "known-diff",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": [
+        "$.resolverversion: value differs"
+      ]
+    },
+    {
+      "tool": "merge-creatio-artifact",
+      "case": "merge-creatio-artifact semantic properties merge",
+      "verdict": "known-diff",
+      "clio_seconds": 0.02,
+      "go_seconds": 0.0,
+      "differences": [
+        "$.content: only in clio",
+        "$.diagnostics: only in go",
+        "$.report.resolutiontype: only in clio",
+        "$.report.verificationpassed: value differs",
+        "$.report.winnerpolicy: only in clio",
+        "$.resolverversion: value differs",
+        "$.status: value differs"
+      ]
+    },
+    {
+      "tool": "merge-creatio-artifact",
+      "case": "merge-creatio-artifact unknown argument",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "merge-creatio-artifact",
+      "case": "merge-creatio-artifact non-string content",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "list-apps",
+      "case": "list-apps, wrapped args",
+      "verdict": "match",
+      "clio_seconds": 0.26,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "list-packages",
+      "case": "list-packages filter+paging, wrapped args",
+      "verdict": "match",
+      "clio_seconds": 0.08,
+      "go_seconds": 0.04,
+      "differences": []
+    },
+    {
+      "tool": "find-app",
+      "case": "find-app, wrapped args",
+      "verdict": "match",
+      "clio_seconds": 0.14,
+      "go_seconds": 0.22,
+      "differences": []
+    },
+    {
+      "tool": "get-sys-setting",
+      "case": "get-sys-setting by name, wrapped args",
+      "verdict": "match",
+      "clio_seconds": 0.29,
+      "go_seconds": 0.13,
+      "differences": []
+    }
+  ]
+}
