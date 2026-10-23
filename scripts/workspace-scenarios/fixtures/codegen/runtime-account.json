@@ -1,0 +1,18 @@
+{"schema":{"uId":"25d7c1ab-1de0-4501-b402-02e0e5a72d6e","name":"Account","caption":{"en-US":"Account","uk-UA":"Контрагент"},"description":{"en-US":"Organizations the company works with.\nCustomers, partners and suppliers.","uk-UA":"Контрагенти"},"primaryColumnUId":"ae0e45ca-c495-4fe7-a39d-3ab7278e1617","columns":{"Items":{
+"ae0e45ca-c495-4fe7-a39d-3ab7278e1617":{"uId":"ae0e45ca-c495-4fe7-a39d-3ab7278e1617","name":"Id","caption":{"en-US":"Id"},"description":{"en-US":"Unique identifier"},"dataValueType":0,"isRequired":true},
+"e80190a5-03b2-4095-90f7-a193a960adee":{"uId":"e80190a5-03b2-4095-90f7-a193a960adee","name":"Name","caption":{"en-US":"Name"},"description":{"en-US":"Account name","uk-UA":"Назва"},"dataValueType":28,"isRequired":true},
+"3a5f8c41-7e2b-4c9d-8f1a-2b3c4d5e6f70":{"uId":"3a5f8c41-7e2b-4c9d-8f1a-2b3c4d5e6f70","name":"Code","caption":{"en-US":"Code"},"description":{"en-US":"Code"},"dataValueType":27,"isRequired":false},
+"a4d8e1f0-1c2b-4a3d-9e8f-7a6b5c4d3e2f":{"uId":"a4d8e1f0-1c2b-4a3d-9e8f-7a6b5c4d3e2f","name":"AlternativeName","caption":{"en-US":"Alternative name"},"description":{"uk-UA":"Альтернативна назва"},"dataValueType":28,"isRequired":true},
+"9b1c2d3e-4f5a-4b6c-8d7e-9f0a1b2c3d4e":{"uId":"9b1c2d3e-4f5a-4b6c-8d7e-9f0a1b2c3d4e","name":"Owner","caption":{"en-US":"Owner"},"description":{"en-US":"Owner"},"dataValueType":10,"isRequired":false,"referenceSchemaName":"Contact"},
+"0c1d2e3f-4a5b-4c6d-8e7f-0a1b2c3d4e5f":{"uId":"0c1d2e3f-4a5b-4c6d-8e7f-0a1b2c3d4e5f","name":"PrimaryContact","caption":{"en-US":"Primary contact"},"description":{"en-US":"Primary contact"},"dataValueType":10,"isRequired":false,"referenceSchemaName":"Contact"},
+"1d2e3f4a-5b6c-4d7e-8f9a-1b2c3d4e5f6a":{"uId":"1d2e3f4a-5b6c-4d7e-8f9a-1b2c3d4e5f6a","name":"Type","caption":{"en-US":"Type"},"description":{"en-US":"Type"},"dataValueType":10,"isRequired":false,"referenceSchemaName":"AccountType"},
+"2e3f4a5b-6c7d-4e8f-9a0b-2c3d4e5f6a7b":{"uId":"2e3f4a5b-6c7d-4e8f-9a0b-2c3d4e5f6a7b","name":"Country","caption":{"en-US":"Country"},"dataValueType":10,"isRequired":false,"referenceSchemaName":"Country"},
+"3f4a5b6c-7d8e-4f9a-0b1c-3d4e5f6a7b8c":{"uId":"3f4a5b6c-7d8e-4f9a-0b1c-3d4e5f6a7b8c","name":"Web","caption":{"en-US":"Web"},"description":{"en-US":"Web"},"dataValueType":44,"isRequired":false},
+"4a5b6c7d-8e9f-4a0b-1c2d-4e5f6a7b8c9d":{"uId":"4a5b6c7d-8e9f-4a0b-1c2d-4e5f6a7b8c9d","name":"Phone","caption":{"en-US":"Primary phone"},"description":{"en-US":"Primary phone"},"dataValueType":42,"isRequired":true},
+"5b6c7d8e-9f0a-4b1c-2d3e-5f6a7b8c9d0e":{"uId":"5b6c7d8e-9f0a-4b1c-2d3e-5f6a7b8c9d0e","name":"Notes","caption":{"en-US":"Notes"},"dataValueType":29,"isRequired":false},
+"6c7d8e9f-0a1b-4c2d-3e4f-6a7b8c9d0e1f":{"uId":"6c7d8e9f-0a1b-4c2d-3e4f-6a7b8c9d0e1f","name":"AnnualRevenue","caption":{"en-US":"Annual revenue"},"description":{"en-US":"Annual revenue"},"dataValueType":6,"isRequired":false},
+"7d8e9f0a-1b2c-4d3e-4f5a-7b8c9d0e1f2a":{"uId":"7d8e9f0a-1b2c-4d3e-4f5a-7b8c9d0e1f2a","name":"Logo","caption":{"en-US":"Logo"},"description":{"en-US":"Logo"},"dataValueType":14,"isRequired":false},
+"8e9f0a1b-2c3d-4e4f-5a6b-8c9d0e1f2a3b":{"uId":"8e9f0a1b-2c3d-4e4f-5a6b-8c9d0e1f2a3b","name":"CreatedOn","caption":{"en-US":"Created on"},"description":{"en-US":"Created on"},"dataValueType":7,"isRequired":false},
+"9f0a1b2c-3d4e-4f5a-6b7c-9d0e1f2a3b4c":{"uId":"9f0a1b2c-3d4e-4f5a-6b7c-9d0e1f2a3b4c","name":"Rating","caption":{"en-US":"Rating"},"description":{"en-US":"Rating"},"dataValueType":33,"isRequired":false},
+"0a1b2c3d-4e5f-4a6b-7c8d-0e1f2a3b4c5d":{"uId":"0a1b2c3d-4e5f-4a6b-7c8d-0e1f2a3b4c5d","name":"Email","caption":{"en-US":"Email"},"description":{"en-US":"Email"},"dataValueType":45,"isRequired":true}
+}}},"success":true}
