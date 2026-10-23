@@ -99,7 +99,9 @@ func TestGroupGToolsRefuseWrongTypesAndForeignEnvironments(t *testing.T) {
 		}
 	}
 	for name, code := range map[string]string{"dataforge-status": "status_error", "dataforge-get-relations": "relations_error", "dataforge-context": "context_error"} {
-		result, err := session.CallTool(context.Background(), &mcp.CallToolParams{Name: name, Arguments: map[string]any{"environment-name": "other"}})
+		// clio checks the tool's own required arguments before the environment.
+		arguments := map[string]any{"environment-name": "other", "source-table": "Contact", "target-table": "Account"}
+		result, err := session.CallTool(context.Background(), &mcp.CallToolParams{Name: name, Arguments: arguments})
 		if err != nil || result.IsError {
 			t.Fatalf("%s = %#v, err = %v", name, result, err)
 		}

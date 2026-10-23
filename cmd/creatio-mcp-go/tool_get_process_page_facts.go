@@ -42,6 +42,9 @@ func init() {
 		if refusal := processPageArgumentError(args); refusal != "" {
 			return structuredToolResult(creatio.ProcessPageFactsResponse{SchemaName: schemaName, Error: refusal}), nil
 		}
+		if strings.TrimSpace(schemaName) == "" {
+			return structuredToolResult(creatio.ProcessPageFactsResponse{Error: "schema-name is required."}), nil
+		}
 		client, failure, err := envs.resolve("get-process-page-facts", args, scopeDirect)
 		if err != nil {
 			return nil, err

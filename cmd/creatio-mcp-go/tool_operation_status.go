@@ -144,6 +144,10 @@ func operationStatusResult(ctx context.Context, tool string, envs *environments,
 	if err != nil {
 		return nil, err
 	}
+	if envs.nameRequired(args) {
+		// clio refuses before it reads the registry: an absent or blank name has no tenant to look in.
+		return structuredToolResult(compileStatusResponse{Status: "invalid-request", Note: environmentNameRequired}), nil
+	}
 	record, ok := store.lookup(envs.tenantKey(name), operationID)
 	if !ok {
 		response := notFound(ctx, envs, name, operationID)

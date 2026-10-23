@@ -40,7 +40,7 @@ func init() {
 			return nil, err
 		}
 		if failure != nil {
-			return structuredToolResult(creatio.CommandFailure(redacted(failure))), nil
+			return resolverFailureEnvelope(failure), nil
 		}
 		return structuredToolResult(client.GenerateProcessModel(ctx, input)), nil
 	}, withAnnotations(toolAnnotations{Destructive: true}))

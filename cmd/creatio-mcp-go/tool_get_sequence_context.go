@@ -35,6 +35,9 @@ func init() {
 		default:
 			return nil, sequenceContextTypeError()
 		}
+		if envs.nameRequired(args) {
+			return nil, errors.New("environment-name is required.")
+		}
 		// clio resolves the environment per call; a failure is reported inside the tool's own answer.
 		client, failure, bindErr := envs.resolve("get-sequence-context", args, scopeName)
 		if bindErr != nil {

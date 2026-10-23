@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"strings"
 
 	"github.com/Alexandr-Kravchuk/creatio-mcp-go/internal/creatio"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -29,6 +30,12 @@ func init() {
 				return nil, err
 			}
 			values[name] = value
+		}
+		// clio checks both names before it resolves the environment.
+		for _, name := range []string{"entity-schema-name", "package-name"} {
+			if strings.TrimSpace(values[name]) == "" {
+				return structuredToolResult(creatio.RelatedPageAddonFailure(name + " is required.")), nil
+			}
 		}
 		// clio ignores unknown keys for this tool and honours uri/login/password.
 		client, failure, err := envs.resolve("get-related-page-addon", args, scopeDirect)

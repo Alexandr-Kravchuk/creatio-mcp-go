@@ -70,7 +70,7 @@ func init() {
 			return refusal, nil
 		}
 		// clio downloads from the active environment when the name is blank; this server asks for it.
-		if refusal := pkgWriteBlankEnvironment("environment-name", name); refusal != nil {
+		if refusal := pkgWriteBlankEnvironment(envs, name); refusal != nil {
 			return refusal, nil
 		}
 		client, failure, err := pkgWriteNamedEnvironment(envs, tool, name)

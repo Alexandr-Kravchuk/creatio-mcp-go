@@ -19,6 +19,9 @@ func init() {
 		if refusal := unknownArgumentError(args, "environment-name"); refusal != "" {
 			return structuredToolResult(creatio.ThemeListResult{Error: refusal}), nil
 		}
+		if envs.nameRequired(args) {
+			return structuredToolResult(creatio.ThemeListResult{Error: environmentNameRequired}), nil
+		}
 		client, failure, err := envs.resolve("list-themes", args, scopeName)
 		if err != nil {
 			return nil, err

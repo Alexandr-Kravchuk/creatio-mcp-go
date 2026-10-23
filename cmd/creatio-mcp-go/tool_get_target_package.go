@@ -36,6 +36,9 @@ func init() {
 		if err := decodeStrictArgs(withoutEnvironmentArgs(args, scopeName), &input); err != nil {
 			return nil, fmt.Errorf("decode get-target-package arguments: %w", err)
 		}
+		if envs.nameRequired(args) {
+			return structuredToolResult(creatio.TargetPackageResult{ResolutionFailed: &resolutionFailed, Error: environmentNameRequired}), nil
+		}
 		client, failure, err := envs.resolve("get-target-package", args, scopeName)
 		if err != nil {
 			return nil, err

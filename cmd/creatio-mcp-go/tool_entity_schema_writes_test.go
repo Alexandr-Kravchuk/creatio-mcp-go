@@ -35,7 +35,7 @@ func TestEntitySchemaWritesAreGatedAndReachableThroughExecutors(t *testing.T) {
 		dataForge bool
 	}{
 		{"create-entity-schema", map[string]any{"package-name": "P", "schema-name": "UsrA"},
-			"Schema 'UsrA' requires 'title-localizations' with a non-empty 'en-US' value.", true},
+			creatio.MiniContractCreateEntitySchema([]string{"title-localizations"}), false},
 		{"create-lookup", map[string]any{"package-name": "P", "schema-name": "UsrA", "title-localizations": map[string]any{"en-US": "A"},
 			"columns": []any{map[string]any{"name": "Name", "type": "Text"}}}, "create-lookup inherits BaseLookup columns. Do not add inherited columns: Name.", true},
 		{"update-entity-schema", map[string]any{"package-name": "P", "schema-name": "UsrA", "operations": []any{}},

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"strings"
 
 	"github.com/Alexandr-Kravchuk/creatio-mcp-go/internal/creatio"
 	"github.com/Alexandr-Kravchuk/creatio-mcp-go/internal/redact"
@@ -30,6 +31,10 @@ func init() {
 		code, err := optionalStringArg(args, "get-app-info", "code")
 		if err != nil {
 			return structuredToolResult(creatio.AppInfoResponse{Error: err.Error()}), nil
+		}
+		// clio checks the identifier before it resolves the environment.
+		if (strings.TrimSpace(id) == "") == (strings.TrimSpace(code) == "") {
+			return structuredToolResult(creatio.AppInfoResponse{Error: "Provide exactly one identifier: id or code."}), nil
 		}
 		client, failure, err := envs.resolve("get-app-info", args, scopeName)
 		if err != nil {

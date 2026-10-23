@@ -179,6 +179,10 @@ func init() {
 			// Refused before the command runs, so clio adds no synonym warning to it.
 			return structuredToolResult(creatio.NewCommandResult(1, "Error", refusal)), nil
 		}
+		// Refused before the command runs (FromValidationError), so no synonym warning is added.
+		if envs.nameRequired(args) {
+			return structuredToolResult(creatio.NewCommandResult(1, "Error", environmentNameRequired)), nil
+		}
 		client, failure, err := envs.resolve(tool, args, scopeName)
 		if err != nil {
 			return nil, err

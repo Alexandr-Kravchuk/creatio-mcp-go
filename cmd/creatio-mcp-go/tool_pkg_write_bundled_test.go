@@ -62,7 +62,7 @@ func TestInstallGateAndDashboardsMigratorRefusals(t *testing.T) {
 			t.Fatalf("%s unknown = %+v", tool, answer)
 		}
 		pkgWriteCall(t, session, tool, map[string]any{}, &answer)
-		if answer.ExitCode != 1 || answer.Messages[0].Value != "environment-name is required and cannot be empty." {
+		if answer.ExitCode != 1 || answer.Messages[0].Value != "[EnvironmentResolutionException] "+missingTargetMessage {
 			t.Fatalf("%s blank = %+v", tool, answer)
 		}
 		typed := pkgWriteCall(t, session, tool, map[string]any{"environment-name": true}, nil)

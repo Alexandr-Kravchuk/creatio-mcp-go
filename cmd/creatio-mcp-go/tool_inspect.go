@@ -133,6 +133,9 @@ func registerInspectTool(tool creatio.InspectTool, specs []inspectArgSpec, descr
 		if err != nil {
 			return nil, err
 		}
+		if refusal := creatio.InspectActionRefusal(tool, bound); refusal != nil {
+			return structuredToolResult(*refusal), nil
+		}
 		client, failure, err := envs.resolve(tool.Name, args, scopeName)
 		if err != nil {
 			return nil, err

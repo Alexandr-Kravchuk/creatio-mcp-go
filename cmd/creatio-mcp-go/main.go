@@ -294,6 +294,13 @@ func invokeHiddenTool(ctx context.Context, envs *environments, hostTools hiddenT
 		if err := decodeStrictArgs(withoutEnvironmentArgs(args, scopeDirect), &input); err != nil {
 			return nil, fmt.Errorf("decode get-package-file arguments: %w", err)
 		}
+		// clio checks both arguments before it resolves the environment.
+		if strings.TrimSpace(input.PackageName) == "" {
+			return structuredToolResult(creatio.PackageFileResult{Error: "package-name is required and cannot be empty."}), nil
+		}
+		if strings.TrimSpace(input.FilePath) == "" {
+			return structuredToolResult(creatio.PackageFileResult{Error: "file-path is required and cannot be empty."}), nil
+		}
 		client, failure, err := envs.resolve(name, args, scopeDirect)
 		if err != nil {
 			return nil, err
@@ -308,6 +315,10 @@ func invokeHiddenTool(ctx context.Context, envs *environments, hostTools hiddenT
 		}
 		if err := decodeStrictArgs(withoutEnvironmentArgs(args, scopeDirect), &input); err != nil {
 			return nil, fmt.Errorf("decode list-package-files arguments: %w", err)
+		}
+		// clio checks the package before it resolves the environment.
+		if strings.TrimSpace(input.PackageName) == "" {
+			return structuredToolResult(creatio.PackageFilesResult{Files: []string{}, Error: "package-name is required and cannot be empty."}), nil
 		}
 		client, failure, err := envs.resolve(name, args, scopeDirect)
 		if err != nil {
@@ -343,6 +354,10 @@ func invokeHiddenTool(ctx context.Context, envs *environments, hostTools hiddenT
 		}
 		if err := decodeStrictArgs(withoutEnvironmentArgs(args, scopeName), &input); err != nil {
 			return nil, fmt.Errorf("decode list-app-sections arguments: %w", err)
+		}
+		// clio checks the application code before it resolves the environment.
+		if strings.TrimSpace(input.ApplicationCode) == "" {
+			return structuredToolResult(creatio.AppSectionsResult{Error: "application-code is required."}), nil
 		}
 		client, failure, err := envs.resolve(name, args, scopeName)
 		if err != nil {
@@ -389,7 +404,7 @@ func invokeHiddenTool(ctx context.Context, envs *environments, hostTools hiddenT
 		return structuredToolResult(hostTools.findEmptyIISPort(ctx)), nil
 	case "execute-esq":
 		// clio 8.1.0.142's ExecuteEsqTool.Run, shared with execute-esq-to-file (tool_esq142.go).
-		bound, err := clioBind(name, args, esqMembers)
+		bound, err := clioBind(name, args, envs.requireEnvironment(esqMembers))
 		if err != nil {
 			return nil, err
 		}
@@ -428,8 +443,12 @@ func invokeHiddenTool(ctx context.Context, envs *environments, hostTools hiddenT
 		if err := decodeStrictArgs(args, &input); err != nil {
 			return nil, fmt.Errorf("decode start-creatio arguments: %w", err)
 		}
+		if _, present := args["environmentName"]; !present {
+			// clio binds the flat parameter environmentName; without it the call is refused before the tool runs.
+			return nil, errors.New("The arguments dictionary is missing a value for the required parameter 'environmentName'. (Parameter 'arguments')")
+		}
 		if strings.TrimSpace(input.EnvironmentName) == "" {
-			return nil, errors.New("environmentName is required")
+			return resolverFailureEnvelope(&environmentError{message: missingTargetMessage}), nil
 		}
 		result, err := hostTools.startCreatio(ctx, input.EnvironmentName, progress)
 		if err != nil {

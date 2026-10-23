@@ -85,11 +85,12 @@ func init() {
 	// clio: RestartInstanceByName(environmentName [required], waitReady = true, waitTimeoutSeconds = 600).
 	registerTool(map[string]any{"name": "restart-by-environment-name"}, func(ctx context.Context, envs *environments, args map[string]any) (*mcp.CallToolResult, error) {
 		const tool = "restart-by-environment-name"
-		name, err := pkgWriteRequiredFlatString(args, tool, "environmentName")
+		// clio binds every parameter before it reports a missing one, so a wrongly typed option is refused first.
+		waitReady, waitTimeout, err := pkgWriteRestartOptions(args, tool)
 		if err != nil {
 			return nil, err
 		}
-		waitReady, waitTimeout, err := pkgWriteRestartOptions(args, tool)
+		name, err := pkgWriteRequiredFlatString(args, tool, "environmentName")
 		if err != nil {
 			return nil, err
 		}

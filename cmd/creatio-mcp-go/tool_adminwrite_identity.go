@@ -33,12 +33,13 @@ func invokeAdminWriteIdentity(ctx context.Context, envs *environments, args map[
 	if err != nil {
 		return nil, err
 	}
-	if !present {
-		return nil, errors.New("The arguments dictionary is missing a value for the required parameter 'environmentName'. (Parameter 'arguments')")
-	}
+	// clio binds every parameter before it reports a missing one, so a format of the wrong type is refused first.
 	format, err := optionalStringArg(args, tool.Name, "format")
 	if err != nil {
 		return nil, err
+	}
+	if !present {
+		return nil, errors.New("The arguments dictionary is missing a value for the required parameter 'environmentName'. (Parameter 'arguments')")
 	}
 	if strings.TrimSpace(name) == "" {
 		return structuredToolResult(creatio.CommandFailure("environment-name is required and cannot be empty.")), nil
@@ -59,6 +60,10 @@ func adminWriteIdentityEnvironment(args map[string]any, tool string) (string, bo
 	for _, key := range []string{"environmentName", "environment-name"} {
 		if value, ok := args[key]; ok && value != nil {
 			text, err := optionalStringArg(args, tool, key)
+			if err == nil && key == "environment-name" && strings.TrimSpace(text) == "" {
+				// clio binds only environmentName: a blank environment-name is no value for it.
+				break
+			}
 			return text, true, err
 		}
 	}

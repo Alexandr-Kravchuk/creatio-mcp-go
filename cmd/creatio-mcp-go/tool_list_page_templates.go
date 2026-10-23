@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"strings"
 
 	"github.com/Alexandr-Kravchuk/creatio-mcp-go/internal/creatio"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -19,6 +20,12 @@ func init() {
 		schemaType, err := optionalStringArg(args, "list-page-templates", "schema-type")
 		if err != nil {
 			return nil, err
+		}
+		// clio checks the schema-type filter before it resolves the environment (ENG-91825).
+		if strings.TrimSpace(schemaType) != "" {
+			if _, err := creatio.ParsePageSchemaType(schemaType); err != nil {
+				return structuredToolResult(creatio.PageTemplateListResult{Error: err.Error()}), nil
+			}
 		}
 		// clio resolves the environment per call; a failure is reported inside the tool's own answer.
 		client, failure, bindErr := envs.resolve("list-page-templates", args, scopeDirect)

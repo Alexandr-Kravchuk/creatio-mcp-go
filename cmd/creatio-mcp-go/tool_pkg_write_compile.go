@@ -188,7 +188,7 @@ func invokePkgWriteCompile(ctx context.Context, envs *environments, args map[str
 		return structuredToolResult(creatio.CommandFailure(refusal)), nil
 	}
 	name := bound.environmentName
-	if refusal := pkgWriteBlankEnvironment("environment-name", name); refusal != nil {
+	if refusal := pkgWriteBlankEnvironment(envs, name); refusal != nil {
 		return refusal, nil
 	}
 	tenantKey := envs.tenantKey(name)

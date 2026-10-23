@@ -25,6 +25,9 @@ func init() {
 		if refusal := unknownArgumentError(args, "environment-name"); refusal != "" {
 			return structuredToolResult(creatio.ThemingAccessFailure(refusal)), nil
 		}
+		if envs.nameRequired(args) {
+			return structuredToolResult(creatio.ThemingAccessFailure(environmentNameRequired)), nil
+		}
 		client, failure, err := envs.resolve("check-theming-access", args, scopeName)
 		if err != nil {
 			return nil, err

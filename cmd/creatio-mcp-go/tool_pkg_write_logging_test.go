@@ -56,9 +56,13 @@ func TestAddCustomLoggingThroughClioRun(t *testing.T) {
 	}
 	pkgWriteAssertGated(t, session, "add-custom-logging", map[string]any{"environment-name": "parity-env", "package-name": "UsrOrders"})
 
+	// clio resolves the environment before it validates the options: a call without one is the resolver's refusal.
 	pkgWriteCall(t, session, "add-custom-logging", map[string]any{"min-level": "loud", "file-name": "../x"}, &answer)
+	if answer.ExitCode != 1 || len(answer.Messages) != 1 || answer.Messages[0].Value != "[EnvironmentResolutionException] "+missingTargetMessage {
+		t.Fatalf("without environment = %+v", answer)
+	}
+	pkgWriteCall(t, session, "add-custom-logging", map[string]any{"environment-name": "parity-env", "min-level": "loud", "file-name": "../x"}, &answer)
 	want := []string{
-		"ERROR (NotEmptyValidator) - A registered environment name is required.",
 		"ERROR (NotEmptyValidator) - Package name is required.",
 		"ERROR (PredicateValidator) - Package name may contain only letters, digits, underscore, dot, and hyphen, and must start with a letter or underscore.",
 		"ERROR (PredicateValidator) - Min level must be one of: Trace, Debug, Info, Warn, Error, Fatal, Off.",

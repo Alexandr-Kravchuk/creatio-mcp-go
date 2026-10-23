@@ -136,7 +136,7 @@ func TestPkgToDBAndFileSystemThroughClioRun(t *testing.T) {
 		t.Fatalf("unknown environment = %+v", answer)
 	}
 	pkgWriteCall(t, session, "pkg-to-db", map[string]any{"environmentName": "  "}, &answer)
-	if answer.ExitCode != 1 || answer.Messages[0].Value != "environmentName is required and cannot be empty." {
+	if answer.ExitCode != 1 || answer.Messages[0].Value != "[EnvironmentResolutionException] "+missingTargetMessage {
 		t.Fatalf("blank environment = %+v", answer)
 	}
 	missing := pkgWriteCall(t, session, "pkg-to-db", map[string]any{"environment-name": "parity-env"}, nil)
