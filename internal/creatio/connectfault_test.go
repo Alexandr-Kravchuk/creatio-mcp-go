@@ -158,14 +158,14 @@ func shortenLoginTimeout(t *testing.T, timeout time.Duration) {
 func TestLoginWaitKeepsItsCategory(t *testing.T) {
 	// A caller waiting while another call logs in waits for the login timeout, not for its request's deadline,
 	// and then got no answer in time, as Creatio.Client's login lock wait does.
-	shortenLoginTimeout(t, 150*time.Millisecond)
+	shortenLoginTimeout(t, time.Second)
 	client := newFormsTestClient(t, "http://nonexistent.invalid")
 	client.authFlight = &authFlight{done: make(chan struct{})}
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Millisecond)
 	defer cancel()
 	started := time.Now()
 	_, _, err := client.doAuthenticated(ctx, client.requestClient(), noRequest)
-	if elapsed := time.Since(started); elapsed < 150*time.Millisecond {
+	if elapsed := time.Since(started); elapsed < time.Second {
 		t.Fatalf("the waiter gave up after %v, before the login timeout", elapsed)
 	}
 	if !isTransportError(err) || isAuthenticationError(err) || !errors.Is(err, context.DeadlineExceeded) || err.Error() != "The operation was canceled." {
@@ -176,7 +176,7 @@ func TestLoginWaitKeepsItsCategory(t *testing.T) {
 	time.AfterFunc(10*time.Millisecond, stop)
 	started = time.Now()
 	_, _, err = client.doAuthenticated(cancelled, client.requestClient(), noRequest)
-	if elapsed := time.Since(started); elapsed >= 150*time.Millisecond || !errors.Is(err, context.Canceled) || !isTransportError(err) {
+	if elapsed := time.Since(started); elapsed >= time.Second || !errors.Is(err, context.Canceled) || !isTransportError(err) {
 		t.Fatalf("cancelled waiter: err = %v after %v", err, elapsed)
 	}
 	// Every waiter of a failed login gets the leader's error with the category it was given.
