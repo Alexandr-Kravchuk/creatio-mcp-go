@@ -1,0 +1,1973 @@
+[
+ {
+  "label": "ok-minimal",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\"}}}",
+  "report": {
+   "status": "healthy",
+   "active-environment-key": "a",
+   "resolved-active-environment-key": "a",
+   "environment-count": 1,
+   "issues": [],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": true
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "sv-string-3",
+  "content": "{\"SettingsVersion\": \"3\", \"Environments\": {}}",
+  "report": {
+   "status": "healthy",
+   "environment-count": 0,
+   "issues": [],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": false
+  },
+  "after": {
+   "SettingsVersion": "3",
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "sv-string-x",
+  "content": "{\"SettingsVersion\": \"x\", \"Environments\": {}}",
+  "report": {
+   "status": "issues-detected",
+   "environment-count": 0,
+   "issues": [
+    {
+     "code": "settings-shape-mismatch",
+     "message": "appsettings.json is valid JSON, but this clio version (8.1.0.142) cannot bind the following member(s): SettingsVersion. Correct SettingsVersion by hand. clio will not rewrite the file while a member fails to bind, so nothing else in it is at risk - but every setting under that member is taking its default value until it is fixed."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": false
+  },
+  "after": {
+   "SettingsVersion": "x",
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "sv-float",
+  "content": "{\"SettingsVersion\": 3.5, \"Environments\": {}}",
+  "report": {
+   "status": "healthy",
+   "environment-count": 0,
+   "issues": [],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": false
+  },
+  "after": {
+   "SettingsVersion": 3.5,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "sv-bool",
+  "content": "{\"SettingsVersion\": true, \"Environments\": {}}",
+  "report": {
+   "status": "issues-detected",
+   "environment-count": 0,
+   "issues": [
+    {
+     "code": "settings-shape-mismatch",
+     "message": "appsettings.json is valid JSON, but this clio version (8.1.0.142) cannot bind the following member(s): SettingsVersion. Correct SettingsVersion by hand. clio will not rewrite the file while a member fails to bind, so nothing else in it is at risk - but every setting under that member is taking its default value until it is fixed."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": false
+  },
+  "after": {
+   "SettingsVersion": true,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "sv-null",
+  "content": "{\"SettingsVersion\": null, \"Environments\": {}}",
+  "report": {
+   "status": "healthy",
+   "environment-count": 0,
+   "issues": [],
+   "repairs-applied": [
+    {
+     "code": "deploy-creatio-site-port-range-added",
+     "message": "deploy-creatio default site-port-range was set to [40100, 40199]"
+    }
+   ],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": false
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": [
+    40100,
+    40199
+   ]
+  }
+ },
+ {
+  "label": "sv-object",
+  "content": "{\"SettingsVersion\": {}, \"Environments\": {}}",
+  "report": {
+   "status": "issues-detected",
+   "environment-count": 0,
+   "issues": [
+    {
+     "code": "settings-shape-mismatch",
+     "message": "appsettings.json is valid JSON, but this clio version (8.1.0.142) cannot bind the following member(s): SettingsVersion. Correct SettingsVersion by hand. clio will not rewrite the file while a member fails to bind, so nothing else in it is at risk - but every setting under that member is taking its default value until it is fixed."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": false
+  },
+  "after": {
+   "SettingsVersion": {},
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "isnetcore-yes",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\", \"IsNetCore\": \"yes\"}}}",
+  "report": {
+   "status": "broken",
+   "environment-count": 0,
+   "issues": [
+    {
+     "code": "settings-shape-mismatch",
+     "message": "appsettings.json is valid JSON, but clio cannot bind environment 'a': the member 'Environments.a.IsNetCore' has a value of the wrong shape. Environments are not loaded at all while this is true, because a member that silently took its default value would change what commands do (a Safe environment would stop asking for confirmation). Correct 'Environments.a.IsNetCore' by hand, or re-register the environment with 'clio reg-web-app'."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": false
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "isnetcore-True",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\", \"IsNetCore\": \"True\"}}}",
+  "report": {
+   "status": "healthy",
+   "active-environment-key": "a",
+   "resolved-active-environment-key": "a",
+   "environment-count": 1,
+   "issues": [],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": true
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "isnetcore-1",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\", \"IsNetCore\": 1}}}",
+  "report": {
+   "status": "healthy",
+   "active-environment-key": "a",
+   "resolved-active-environment-key": "a",
+   "environment-count": 1,
+   "issues": [],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": true
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "isnetcore-null",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\", \"IsNetCore\": null}}}",
+  "report": {
+   "status": "broken",
+   "environment-count": 0,
+   "issues": [
+    {
+     "code": "settings-shape-mismatch",
+     "message": "appsettings.json is valid JSON, but clio cannot bind environment 'a': the member 'Environments.a.IsNetCore' has a value of the wrong shape. Environments are not loaded at all while this is true, because a member that silently took its default value would change what commands do (a Safe environment would stop asking for confirmation). Correct 'Environments.a.IsNetCore' by hand, or re-register the environment with 'clio reg-web-app'."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": false
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "isnetcore-empty",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\", \"IsNetCore\": \"\"}}}",
+  "report": {
+   "status": "broken",
+   "environment-count": 0,
+   "issues": [
+    {
+     "code": "settings-shape-mismatch",
+     "message": "appsettings.json is valid JSON, but clio cannot bind environment 'a': the member 'Environments.a.IsNetCore' has a value of the wrong shape. Environments are not loaded at all while this is true, because a member that silently took its default value would change what commands do (a Safe environment would stop asking for confirmation). Correct 'Environments.a.IsNetCore' by hand, or re-register the environment with 'clio reg-web-app'."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": false
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "isnetcore-float",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\", \"IsNetCore\": 0.5}}}",
+  "report": {
+   "status": "healthy",
+   "active-environment-key": "a",
+   "resolved-active-environment-key": "a",
+   "environment-count": 1,
+   "issues": [],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": true
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "safe-empty",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\", \"Safe\": \"\"}}}",
+  "report": {
+   "status": "healthy",
+   "active-environment-key": "a",
+   "resolved-active-environment-key": "a",
+   "environment-count": 1,
+   "issues": [],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": true
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "safe-null",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\", \"Safe\": null}}}",
+  "report": {
+   "status": "healthy",
+   "active-environment-key": "a",
+   "resolved-active-environment-key": "a",
+   "environment-count": 1,
+   "issues": [],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": true
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "safe-array",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\", \"Safe\": []}}}",
+  "report": {
+   "status": "broken",
+   "environment-count": 0,
+   "issues": [
+    {
+     "code": "settings-shape-mismatch",
+     "message": "appsettings.json is valid JSON, but clio cannot bind environment 'a': the member 'Environments.a.Safe' has a value of the wrong shape. Environments are not loaded at all while this is true, because a member that silently took its default value would change what commands do (a Safe environment would stop asking for confirmation). Correct 'Environments.a.Safe' by hand, or re-register the environment with 'clio reg-web-app'."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": false
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "authflow-name",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\", \"AuthFlow\": \"AuthorizationCode\"}}}",
+  "report": {
+   "status": "healthy",
+   "active-environment-key": "a",
+   "resolved-active-environment-key": "a",
+   "environment-count": 1,
+   "issues": [],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": true
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "authflow-lower",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\", \"AuthFlow\": \"authorizationcode\"}}}",
+  "report": {
+   "status": "healthy",
+   "active-environment-key": "a",
+   "resolved-active-environment-key": "a",
+   "environment-count": 1,
+   "issues": [],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": true
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "authflow-nope",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\", \"AuthFlow\": \"nope\"}}}",
+  "report": {
+   "status": "broken",
+   "environment-count": 0,
+   "issues": [
+    {
+     "code": "settings-shape-mismatch",
+     "message": "appsettings.json is valid JSON, but clio cannot bind environment 'a': the member 'Environments.a.AuthFlow' has a value of the wrong shape. Environments are not loaded at all while this is true, because a member that silently took its default value would change what commands do (a Safe environment would stop asking for confirmation). Correct 'Environments.a.AuthFlow' by hand, or re-register the environment with 'clio reg-web-app'."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": false
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "authflow-7",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\", \"AuthFlow\": 7}}}",
+  "report": {
+   "status": "healthy",
+   "active-environment-key": "a",
+   "resolved-active-environment-key": "a",
+   "environment-count": 1,
+   "issues": [],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": true
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "authflow-str1",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\", \"AuthFlow\": \"1\"}}}",
+  "report": {
+   "status": "healthy",
+   "active-environment-key": "a",
+   "resolved-active-environment-key": "a",
+   "environment-count": 1,
+   "issues": [],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": true
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "authflow-null",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\", \"AuthFlow\": null}}}",
+  "report": {
+   "status": "broken",
+   "environment-count": 0,
+   "issues": [
+    {
+     "code": "settings-shape-mismatch",
+     "message": "appsettings.json is valid JSON, but clio cannot bind environment 'a': the member 'Environments.a.AuthFlow' has a value of the wrong shape. Environments are not loaded at all while this is true, because a member that silently took its default value would change what commands do (a Safe environment would stop asking for confirmation). Correct 'Environments.a.AuthFlow' by hand, or re-register the environment with 'clio reg-web-app'."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": false
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "authflow-bool",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\", \"AuthFlow\": true}}}",
+  "report": {
+   "status": "healthy",
+   "active-environment-key": "a",
+   "resolved-active-environment-key": "a",
+   "environment-count": 1,
+   "issues": [],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": true
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "redirectport-str",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\", \"RedirectPort\": \"80\"}}}",
+  "report": {
+   "status": "healthy",
+   "active-environment-key": "a",
+   "resolved-active-environment-key": "a",
+   "environment-count": 1,
+   "issues": [],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": true
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "redirectport-x",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\", \"RedirectPort\": \"x\"}}}",
+  "report": {
+   "status": "broken",
+   "environment-count": 0,
+   "issues": [
+    {
+     "code": "settings-shape-mismatch",
+     "message": "appsettings.json is valid JSON, but clio cannot bind environment 'a': the member 'Environments.a.RedirectPort' has a value of the wrong shape. Environments are not loaded at all while this is true, because a member that silently took its default value would change what commands do (a Safe environment would stop asking for confirmation). Correct 'Environments.a.RedirectPort' by hand, or re-register the environment with 'clio reg-web-app'."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": false
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "redirectport-float",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\", \"RedirectPort\": 80.7}}}",
+  "report": {
+   "status": "healthy",
+   "active-environment-key": "a",
+   "resolved-active-environment-key": "a",
+   "environment-count": 1,
+   "issues": [],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": true
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "redirectport-big",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\", \"RedirectPort\": 99999999999}}}",
+  "report": {
+   "status": "broken",
+   "environment-count": 0,
+   "issues": [
+    {
+     "code": "settings-shape-mismatch",
+     "message": "appsettings.json is valid JSON, but clio cannot bind environment 'a': the member 'Environments.a.RedirectPort' has a value of the wrong shape. Environments are not loaded at all while this is true, because a member that silently took its default value would change what commands do (a Safe environment would stop asking for confirmation). Correct 'Environments.a.RedirectPort' by hand, or re-register the environment with 'clio reg-web-app'."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": false
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "env-int",
+  "content": "{\"SettingsVersion\": 3, \"Environments\": {\"a\": 5}}",
+  "report": {
+   "status": "broken",
+   "environment-count": 0,
+   "issues": [
+    {
+     "code": "settings-shape-mismatch",
+     "message": "appsettings.json is valid JSON, but clio cannot bind environment 'a': the member 'Environments.a' has a value of the wrong shape. Environments are not loaded at all while this is true, because a member that silently took its default value would change what commands do (a Safe environment would stop asking for confirmation). Correct 'Environments.a' by hand, or re-register the environment with 'clio reg-web-app'."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": false
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "env-null",
+  "content": "{\"SettingsVersion\": 3, \"Environments\": {\"a\": null}}",
+  "report": {
+   "status": "issues-detected",
+   "environment-count": 1,
+   "issues": [
+    {
+     "code": "invalid-active-environment",
+     "message": "ActiveEnvironmentKey is missing or does not point to a configured environment. Use 'clio set-active-environment <name>' to fix this."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": false
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "envs-array",
+  "content": "{\"SettingsVersion\": 3, \"Environments\": []}",
+  "report": {
+   "status": "broken",
+   "environment-count": 0,
+   "issues": [
+    {
+     "code": "settings-shape-mismatch",
+     "message": "appsettings.json is valid JSON, but clio cannot bind the Environments section: the member 'Environments' has a value of the wrong shape. Environments are not loaded at all while this is true, because a member that silently took its default value would change what commands do (a Safe environment would stop asking for confirmation). Correct 'Environments' by hand, or re-register the environment with 'clio reg-web-app'."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": false
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "envs-string",
+  "content": "{\"SettingsVersion\": 3, \"Environments\": \"x\"}",
+  "report": {
+   "status": "broken",
+   "environment-count": 0,
+   "issues": [
+    {
+     "code": "settings-shape-mismatch",
+     "message": "appsettings.json is valid JSON, but clio cannot bind the Environments section: the member 'Environments' has a value of the wrong shape. Environments are not loaded at all while this is true, because a member that silently took its default value would change what commands do (a Safe environment would stop asking for confirmation). Correct 'Environments' by hand, or re-register the environment with 'clio reg-web-app'."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": false
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "identity-int",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\", \"IdentityService\": 5}}}",
+  "report": {
+   "status": "broken",
+   "environment-count": 0,
+   "issues": [
+    {
+     "code": "settings-shape-mismatch",
+     "message": "appsettings.json is valid JSON, but clio cannot bind environment 'a': the member 'Environments.a.IdentityService' has a value of the wrong shape. Environments are not loaded at all while this is true, because a member that silently took its default value would change what commands do (a Safe environment would stop asking for confirmation). Correct 'Environments.a.IdentityService' by hand, or re-register the environment with 'clio reg-web-app'."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": false
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "identity-null",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\", \"IdentityService\": null}}}",
+  "report": {
+   "status": "healthy",
+   "active-environment-key": "a",
+   "resolved-active-environment-key": "a",
+   "environment-count": 1,
+   "issues": [],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": true
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "identity-crm-x",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\", \"IdentityService\": {\"CrmReferencesCleared\": \"x\"}}}}",
+  "report": {
+   "status": "broken",
+   "environment-count": 0,
+   "issues": [
+    {
+     "code": "settings-shape-mismatch",
+     "message": "appsettings.json is valid JSON, but clio cannot bind environment 'a': the member 'Environments.a.IdentityService.CrmReferencesCleared' has a value of the wrong shape. Environments are not loaded at all while this is true, because a member that silently took its default value would change what commands do (a Safe environment would stop asking for confirmation). Correct 'Environments.a.IdentityService.CrmReferencesCleared' by hand, or re-register the environment with 'clio reg-web-app'."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": false
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "uri-object",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": {}}}}",
+  "report": {
+   "status": "broken",
+   "environment-count": 0,
+   "issues": [
+    {
+     "code": "settings-shape-mismatch",
+     "message": "appsettings.json is valid JSON, but clio cannot bind environment 'a': the member 'Environments.a.Uri' has a value of the wrong shape. Environments are not loaded at all while this is true, because a member that silently took its default value would change what commands do (a Safe environment would stop asking for confirmation). Correct 'Environments.a.Uri' by hand, or re-register the environment with 'clio reg-web-app'."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": false
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "uri-int",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": 5}}}",
+  "report": {
+   "status": "healthy",
+   "active-environment-key": "a",
+   "resolved-active-environment-key": "a",
+   "environment-count": 1,
+   "issues": [],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": true
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "uri-bool",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": true}}}",
+  "report": {
+   "status": "healthy",
+   "active-environment-key": "a",
+   "resolved-active-environment-key": "a",
+   "environment-count": 1,
+   "issues": [],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": true
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "login-array",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\", \"Login\": []}}}",
+  "report": {
+   "status": "broken",
+   "environment-count": 0,
+   "issues": [
+    {
+     "code": "settings-shape-mismatch",
+     "message": "appsettings.json is valid JSON, but clio cannot bind environment 'a': the member 'Environments.a.Login' has a value of the wrong shape. Environments are not loaded at all while this is true, because a member that silently took its default value would change what commands do (a Safe environment would stop asking for confirmation). Correct 'Environments.a.Login' by hand, or re-register the environment with 'clio reg-web-app'."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": false
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "env-unknown-member",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\", \"Foo\": {\"a\": 1}, \"DbServer\": {\"Uri\": \"x\"}}}}",
+  "report": {
+   "status": "healthy",
+   "active-environment-key": "a",
+   "resolved-active-environment-key": "a",
+   "environment-count": 1,
+   "issues": [],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": true
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "features-maybe",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\"}}, \"features\": {\"x\": \"maybe\"}}",
+  "report": {
+   "status": "issues-detected",
+   "active-environment-key": "a",
+   "resolved-active-environment-key": "a",
+   "environment-count": 1,
+   "issues": [
+    {
+     "code": "settings-shape-mismatch",
+     "message": "appsettings.json is valid JSON, but this clio version (8.1.0.142) cannot bind the following member(s): features.x. Correct features.x by hand. clio will not rewrite the file while a member fails to bind, so nothing else in it is at risk - but every setting under that member is taking its default value until it is fixed."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": true
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "features-array",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\"}}, \"features\": []}",
+  "report": {
+   "status": "issues-detected",
+   "active-environment-key": "a",
+   "resolved-active-environment-key": "a",
+   "environment-count": 1,
+   "issues": [
+    {
+     "code": "settings-shape-mismatch",
+     "message": "appsettings.json is valid JSON, but this clio version (8.1.0.142) cannot bind the following member(s): features. Correct features by hand. clio will not rewrite the file while a member fails to bind, so nothing else in it is at risk - but every setting under that member is taking its default value until it is fixed."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": true
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "features-null",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\"}}, \"features\": null}",
+  "report": {
+   "status": "healthy",
+   "active-environment-key": "a",
+   "resolved-active-environment-key": "a",
+   "environment-count": 1,
+   "issues": [],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": true
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "features-int",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\"}}, \"features\": {\"x\": 1}}",
+  "report": {
+   "status": "healthy",
+   "active-environment-key": "a",
+   "resolved-active-environment-key": "a",
+   "environment-count": 1,
+   "issues": [],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": true
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "active-int",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": 5, \"Environments\": {\"a\": {\"Uri\": \"http://x\"}}}",
+  "report": {
+   "status": "issues-detected",
+   "active-environment-key": "5",
+   "environment-count": 1,
+   "issues": [
+    {
+     "code": "invalid-active-environment",
+     "message": "ActiveEnvironmentKey is missing or does not point to a configured environment. Use 'clio set-active-environment <name>' to fix this."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": false
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "active-object",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": {}, \"Environments\": {\"a\": {\"Uri\": \"http://x\"}}}",
+  "report": {
+   "status": "issues-detected",
+   "environment-count": 1,
+   "issues": [
+    {
+     "code": "settings-shape-mismatch",
+     "message": "appsettings.json is valid JSON, but this clio version (8.1.0.142) cannot bind the following member(s): ActiveEnvironmentKey. Correct ActiveEnvironmentKey by hand. clio will not rewrite the file while a member fails to bind, so nothing else in it is at risk - but every setting under that member is taking its default value until it is fixed."
+    },
+    {
+     "code": "invalid-active-environment",
+     "message": "ActiveEnvironmentKey is missing or does not point to a configured environment. Use 'clio set-active-environment <name>' to fix this."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": false
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "active-empty",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"\", \"Environments\": {\"a\": {\"Uri\": \"http://x\"}}}",
+  "report": {
+   "status": "issues-detected",
+   "active-environment-key": "",
+   "environment-count": 1,
+   "issues": [
+    {
+     "code": "invalid-active-environment",
+     "message": "ActiveEnvironmentKey is missing or does not point to a configured environment. Use 'clio set-active-environment <name>' to fix this."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": false
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "active-null",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": null, \"Environments\": {\"a\": {\"Uri\": \"http://x\"}}}",
+  "report": {
+   "status": "issues-detected",
+   "environment-count": 1,
+   "issues": [
+    {
+     "code": "invalid-active-environment",
+     "message": "ActiveEnvironmentKey is missing or does not point to a configured environment. Use 'clio set-active-environment <name>' to fix this."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": false
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "autoupdate-bool",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\"}}, \"autoupdate\": false}",
+  "report": {
+   "status": "healthy",
+   "active-environment-key": "a",
+   "resolved-active-environment-key": "a",
+   "environment-count": 1,
+   "issues": [],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": true
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "autoupdate-string",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\"}}, \"autoupdate\": \"x\"}",
+  "report": {
+   "status": "healthy",
+   "active-environment-key": "a",
+   "resolved-active-environment-key": "a",
+   "environment-count": 1,
+   "issues": [],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": true
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "autoupdate-clio-enabled-x",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\"}}, \"autoupdate\": {\"clio\": {\"enabled\": \"x\"}}}",
+  "report": {
+   "status": "issues-detected",
+   "active-environment-key": "a",
+   "resolved-active-environment-key": "a",
+   "environment-count": 1,
+   "issues": [
+    {
+     "code": "settings-shape-mismatch",
+     "message": "appsettings.json is valid JSON, but this clio version (8.1.0.142) cannot bind the following member(s): autoupdate.clio.enabled. Correct autoupdate.clio.enabled by hand. clio will not rewrite the file while a member fails to bind, so nothing else in it is at risk - but every setting under that member is taking its default value until it is fixed."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": true
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "autoupdate-clio-freq-x",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\"}}, \"autoupdate\": {\"clio\": {\"frequency-minutes\": \"x\"}}}",
+  "report": {
+   "status": "issues-detected",
+   "active-environment-key": "a",
+   "resolved-active-environment-key": "a",
+   "environment-count": 1,
+   "issues": [
+    {
+     "code": "settings-shape-mismatch",
+     "message": "appsettings.json is valid JSON, but this clio version (8.1.0.142) cannot bind the following member(s): autoupdate.clio.frequency-minutes. Correct autoupdate.clio.frequency-minutes by hand. clio will not rewrite the file while a member fails to bind, so nothing else in it is at risk - but every setting under that member is taking its default value until it is fixed."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": true
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "autoupdate-clio-nextrun-x",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\"}}, \"autoupdate\": {\"clio\": {\"next-run\": \"x\"}}}",
+  "report": {
+   "status": "issues-detected",
+   "active-environment-key": "a",
+   "resolved-active-environment-key": "a",
+   "environment-count": 1,
+   "issues": [
+    {
+     "code": "settings-shape-mismatch",
+     "message": "appsettings.json is valid JSON, but this clio version (8.1.0.142) cannot bind the following member(s): autoupdate.clio.next-run. Correct autoupdate.clio.next-run by hand. clio will not rewrite the file while a member fails to bind, so nothing else in it is at risk - but every setting under that member is taking its default value until it is fixed."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": true
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "autoupdate-clio-nextrun-ok",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\"}}, \"autoupdate\": {\"clio\": {\"next-run\": \"2026-01-01T00:00:00+00:00\"}}}",
+  "report": {
+   "status": "healthy",
+   "active-environment-key": "a",
+   "resolved-active-environment-key": "a",
+   "environment-count": 1,
+   "issues": [],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": true
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "autoupdate-unknown-plus-fail",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\"}}, \"autoupdate\": {\"zzz\": 1, \"clio\": 7}}",
+  "report": {
+   "status": "issues-detected",
+   "active-environment-key": "a",
+   "resolved-active-environment-key": "a",
+   "environment-count": 1,
+   "issues": [
+    {
+     "code": "settings-shape-mismatch",
+     "message": "appsettings.json is valid JSON, but this clio version (8.1.0.142) cannot bind the following member(s): autoupdate.clio. A newer clio has written the file. Do NOT edit it - restart the resident process (the MCP session) so it runs the new clio build, or update this one with 'clio update-cli' when there is no session to restart. The settings themselves are intact and are left untouched."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": true
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "dcd-siteport-x",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\"}}, \"deploy-creatio-defaults\": {\"site-port\": \"x\"}}",
+  "report": {
+   "status": "issues-detected",
+   "active-environment-key": "a",
+   "resolved-active-environment-key": "a",
+   "environment-count": 1,
+   "issues": [
+    {
+     "code": "settings-shape-mismatch",
+     "message": "appsettings.json is valid JSON, but this clio version (8.1.0.142) cannot bind the following member(s): deploy-creatio-defaults.site-port. Correct deploy-creatio-defaults.site-port by hand. clio will not rewrite the file while a member fails to bind, so nothing else in it is at risk - but every setting under that member is taking its default value until it is fixed."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": true
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "dcd-int",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\"}}, \"deploy-creatio-defaults\": 5}",
+  "report": {
+   "status": "issues-detected",
+   "active-environment-key": "a",
+   "resolved-active-environment-key": "a",
+   "environment-count": 1,
+   "issues": [
+    {
+     "code": "settings-shape-mismatch",
+     "message": "appsettings.json is valid JSON, but this clio version (8.1.0.142) cannot bind the following member(s): deploy-creatio-defaults. Correct deploy-creatio-defaults by hand. clio will not rewrite the file while a member fails to bind, so nothing else in it is at risk - but every setting under that member is taking its default value until it is fixed."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": true
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "dcd-range-strings",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\"}}, \"deploy-creatio-defaults\": {\"site-port-range\": [\"a\", \"b\"]}}",
+  "report": {
+   "status": "issues-detected",
+   "active-environment-key": "a",
+   "resolved-active-environment-key": "a",
+   "environment-count": 1,
+   "issues": [
+    {
+     "code": "settings-shape-mismatch",
+     "message": "appsettings.json is valid JSON, but this clio version (8.1.0.142) cannot bind the following member(s): deploy-creatio-defaults.site-port-range[0], deploy-creatio-defaults.site-port-range[1]. Correct deploy-creatio-defaults.site-port-range[0], deploy-creatio-defaults.site-port-range[1] by hand. clio will not rewrite the file while a member fails to bind, so nothing else in it is at risk - but every setting under that member is taking its default value until it is fixed."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": true
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": [
+    "a",
+    "b"
+   ]
+  }
+ },
+ {
+  "label": "dcd-range-object",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\"}}, \"deploy-creatio-defaults\": {\"site-port-range\": {}}}",
+  "report": {
+   "status": "issues-detected",
+   "active-environment-key": "a",
+   "resolved-active-environment-key": "a",
+   "environment-count": 1,
+   "issues": [
+    {
+     "code": "settings-shape-mismatch",
+     "message": "appsettings.json is valid JSON, but this clio version (8.1.0.142) cannot bind the following member(s): deploy-creatio-defaults.site-port-range. Correct deploy-creatio-defaults.site-port-range by hand. clio will not rewrite the file while a member fails to bind, so nothing else in it is at risk - but every setting under that member is taking its default value until it is fixed."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": true
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": {}
+  }
+ },
+ {
+  "label": "knowledge-int",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\"}}, \"knowledge\": 5}",
+  "report": {
+   "status": "issues-detected",
+   "active-environment-key": "a",
+   "resolved-active-environment-key": "a",
+   "environment-count": 1,
+   "issues": [
+    {
+     "code": "settings-shape-mismatch",
+     "message": "appsettings.json is valid JSON, but this clio version (8.1.0.142) cannot bind the following member(s): knowledge. Correct knowledge by hand. clio will not rewrite the file while a member fails to bind, so nothing else in it is at risk - but every setting under that member is taking its default value until it is fixed."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": true
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "knowledge-sources-int",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\"}}, \"knowledge\": {\"sources\": 5}}",
+  "report": {
+   "status": "issues-detected",
+   "active-environment-key": "a",
+   "resolved-active-environment-key": "a",
+   "environment-count": 1,
+   "issues": [
+    {
+     "code": "settings-shape-mismatch",
+     "message": "appsettings.json is valid JSON, but this clio version (8.1.0.142) cannot bind the following member(s): knowledge.sources. Correct knowledge.sources by hand. clio will not rewrite the file while a member fails to bind, so nothing else in it is at risk - but every setting under that member is taking its default value until it is fixed."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": true
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "knowledge-rootpath-obj",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\"}}, \"knowledge\": {\"root-path\": {}}}",
+  "report": {
+   "status": "issues-detected",
+   "active-environment-key": "a",
+   "resolved-active-environment-key": "a",
+   "environment-count": 1,
+   "issues": [
+    {
+     "code": "settings-shape-mismatch",
+     "message": "appsettings.json is valid JSON, but this clio version (8.1.0.142) cannot bind the following member(s): knowledge.root-path. Correct knowledge.root-path by hand. clio will not rewrite the file while a member fails to bind, so nothing else in it is at risk - but every setting under that member is taking its default value until it is fixed."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": true
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "kf-int",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\"}}, \"knowledge-feedback\": 5}",
+  "report": {
+   "status": "issues-detected",
+   "active-environment-key": "a",
+   "resolved-active-environment-key": "a",
+   "environment-count": 1,
+   "issues": [
+    {
+     "code": "settings-shape-mismatch",
+     "message": "appsettings.json is valid JSON, but this clio version (8.1.0.142) cannot bind the following member(s): knowledge-feedback. Correct knowledge-feedback by hand. clio will not rewrite the file while a member fails to bind, so nothing else in it is at risk - but every setting under that member is taking its default value until it is fixed."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": true
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "products-object",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\"}}, \"creatio-products\": {}}",
+  "report": {
+   "status": "issues-detected",
+   "active-environment-key": "a",
+   "resolved-active-environment-key": "a",
+   "environment-count": 1,
+   "issues": [
+    {
+     "code": "settings-shape-mismatch",
+     "message": "appsettings.json is valid JSON, but this clio version (8.1.0.142) cannot bind the following member(s): creatio-products. Correct creatio-products by hand. clio will not rewrite the file while a member fails to bind, so nothing else in it is at risk - but every setting under that member is taking its default value until it is fixed."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": true
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "products-int",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\"}}, \"creatio-products\": 5}",
+  "report": {
+   "status": "healthy",
+   "active-environment-key": "a",
+   "resolved-active-environment-key": "a",
+   "environment-count": 1,
+   "issues": [],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": true
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "schema-int",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\"}}, \"$schema\": 5}",
+  "report": {
+   "status": "healthy",
+   "active-environment-key": "a",
+   "resolved-active-environment-key": "a",
+   "environment-count": 1,
+   "issues": [],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": true
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "dbkeys-int",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\"}}, \"dbConnectionStringKeys\": 5}",
+  "report": {
+   "status": "issues-detected",
+   "active-environment-key": "a",
+   "resolved-active-environment-key": "a",
+   "environment-count": 1,
+   "issues": [
+    {
+     "code": "settings-shape-mismatch",
+     "message": "appsettings.json is valid JSON, but this clio version (8.1.0.142) cannot bind the following member(s): dbConnectionStringKeys. Correct dbConnectionStringKeys by hand. clio will not rewrite the file while a member fails to bind, so nothing else in it is at risk - but every setting under that member is taking its default value until it is fixed."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": true
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "dbkeys-entry-int",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\"}}, \"dbConnectionStringKeys\": {\"k\": 5}}",
+  "report": {
+   "status": "issues-detected",
+   "active-environment-key": "a",
+   "resolved-active-environment-key": "a",
+   "environment-count": 1,
+   "issues": [
+    {
+     "code": "settings-shape-mismatch",
+     "message": "appsettings.json is valid JSON, but this clio version (8.1.0.142) cannot bind the following member(s): dbConnectionStringKeys.k. Correct dbConnectionStringKeys.k by hand. clio will not rewrite the file while a member fails to bind, so nothing else in it is at risk - but every setting under that member is taking its default value until it is fixed."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": true
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "db-int",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\"}}, \"db\": 5}",
+  "report": {
+   "status": "issues-detected",
+   "active-environment-key": "a",
+   "resolved-active-environment-key": "a",
+   "environment-count": 1,
+   "issues": [
+    {
+     "code": "settings-shape-mismatch",
+     "message": "appsettings.json is valid JSON, but this clio version (8.1.0.142) cannot bind the following member(s): db. Correct db by hand. clio will not rewrite the file while a member fails to bind, so nothing else in it is at risk - but every setting under that member is taking its default value until it is fixed."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": true
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "redis-int",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\"}}, \"redis\": 5}",
+  "report": {
+   "status": "issues-detected",
+   "active-environment-key": "a",
+   "resolved-active-environment-key": "a",
+   "environment-count": 1,
+   "issues": [
+    {
+     "code": "settings-shape-mismatch",
+     "message": "appsettings.json is valid JSON, but this clio version (8.1.0.142) cannot bind the following member(s): redis. Correct redis by hand. clio will not rewrite the file while a member fails to bind, so nothing else in it is at risk - but every setting under that member is taking its default value until it is fixed."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": true
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "defaultredis-obj",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\"}}, \"defaultRedis\": {}}",
+  "report": {
+   "status": "issues-detected",
+   "active-environment-key": "a",
+   "resolved-active-environment-key": "a",
+   "environment-count": 1,
+   "issues": [
+    {
+     "code": "settings-shape-mismatch",
+     "message": "appsettings.json is valid JSON, but this clio version (8.1.0.142) cannot bind the following member(s): defaultRedis. Correct defaultRedis by hand. clio will not rewrite the file while a member fails to bind, so nothing else in it is at risk - but every setting under that member is taking its default value until it is fixed."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": true
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "telemetry-enabled-x",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\"}}, \"telemetry\": {\"enabled\": \"x\"}}",
+  "report": {
+   "status": "issues-detected",
+   "active-environment-key": "a",
+   "resolved-active-environment-key": "a",
+   "environment-count": 1,
+   "issues": [
+    {
+     "code": "settings-shape-mismatch",
+     "message": "appsettings.json is valid JSON, but this clio version (8.1.0.142) cannot bind the following member(s): telemetry.enabled. Correct telemetry.enabled by hand. clio will not rewrite the file while a member fails to bind, so nothing else in it is at risk - but every setting under that member is taking its default value until it is fixed."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": true
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "dbhub-int",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\"}}, \"dbhub\": 5}",
+  "report": {
+   "status": "issues-detected",
+   "active-environment-key": "a",
+   "resolved-active-environment-key": "a",
+   "environment-count": 1,
+   "issues": [
+    {
+     "code": "settings-shape-mismatch",
+     "message": "appsettings.json is valid JSON, but this clio version (8.1.0.142) cannot bind the following member(s): dbhub. Correct dbhub by hand. clio will not rewrite the file while a member fails to bind, so nothing else in it is at risk - but every setting under that member is taking its default value until it is fixed."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": true
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "psb-int",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\"}}, \"page-smoke-browser\": 5}",
+  "report": {
+   "status": "issues-detected",
+   "active-environment-key": "a",
+   "resolved-active-environment-key": "a",
+   "environment-count": 1,
+   "issues": [
+    {
+     "code": "settings-shape-mismatch",
+     "message": "appsettings.json is valid JSON, but this clio version (8.1.0.142) cannot bind the following member(s): page-smoke-browser. Correct page-smoke-browser by hand. clio will not rewrite the file while a member fails to bind, so nothing else in it is at risk - but every setting under that member is taking its default value until it is fixed."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": true
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "workspaces-obj",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\"}}, \"workspaces-root\": {}}",
+  "report": {
+   "status": "issues-detected",
+   "active-environment-key": "a",
+   "resolved-active-environment-key": "a",
+   "environment-count": 1,
+   "issues": [
+    {
+     "code": "settings-shape-mismatch",
+     "message": "appsettings.json is valid JSON, but this clio version (8.1.0.142) cannot bind the following member(s): workspaces-root. Correct workspaces-root by hand. clio will not rewrite the file while a member fails to bind, so nothing else in it is at risk - but every setting under that member is taking its default value until it is fixed."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": true
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "container-obj",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\"}}, \"container-image-cli\": {}}",
+  "report": {
+   "status": "issues-detected",
+   "active-environment-key": "a",
+   "resolved-active-environment-key": "a",
+   "environment-count": 1,
+   "issues": [
+    {
+     "code": "settings-shape-mismatch",
+     "message": "appsettings.json is valid JSON, but this clio version (8.1.0.142) cannot bind the following member(s): container-image-cli. Correct container-image-cli by hand. clio will not rewrite the file while a member fails to bind, so nothing else in it is at risk - but every setting under that member is taking its default value until it is fixed."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": true
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "remote-obj",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\"}}, \"remote-artefact-server-path\": {}}",
+  "report": {
+   "status": "healthy",
+   "active-environment-key": "a",
+   "resolved-active-environment-key": "a",
+   "environment-count": 1,
+   "issues": [],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": true
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "multi-fail",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"Uri\": \"http://x\"}}, \"features\": [], \"creatio-products\": {}}",
+  "report": {
+   "status": "issues-detected",
+   "active-environment-key": "a",
+   "resolved-active-environment-key": "a",
+   "environment-count": 1,
+   "issues": [
+    {
+     "code": "settings-shape-mismatch",
+     "message": "appsettings.json is valid JSON, but this clio version (8.1.0.142) cannot bind the following member(s): features, creatio-products. Correct features, creatio-products by hand. clio will not rewrite the file while a member fails to bind, so nothing else in it is at risk - but every setting under that member is taking its default value until it is fixed."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": true
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "multi-env-fail",
+  "content": "{\"SettingsVersion\": 3, \"Environments\": {\"a\": {\"Safe\": \"maybe\"}, \"b\": {\"IsNetCore\": \"x\"}}}",
+  "report": {
+   "status": "broken",
+   "environment-count": 0,
+   "issues": [
+    {
+     "code": "settings-shape-mismatch",
+     "message": "appsettings.json is valid JSON, but clio cannot bind environment 'a': the member 'Environments.a.Safe' has a value of the wrong shape. Environments are not loaded at all while this is true, because a member that silently took its default value would change what commands do (a Safe environment would stop asking for confirmation). Correct 'Environments.a.Safe' by hand, or re-register the environment with 'clio reg-web-app'."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": false
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "newer-version-fail",
+  "content": "{\"SettingsVersion\": 4, \"features\": [], \"Environments\": {}}",
+  "report": {
+   "status": "issues-detected",
+   "environment-count": 0,
+   "issues": [
+    {
+     "code": "settings-shape-mismatch",
+     "message": "appsettings.json is valid JSON, but this clio version (8.1.0.142) cannot bind the following member(s): features. A newer clio has written the file. Do NOT edit it - restart the resident process (the MCP session) so it runs the new clio build, or update this one with 'clio update-cli' when there is no session to restart. The settings themselves are intact and are left untouched."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": false
+  },
+  "after": {
+   "SettingsVersion": 4,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "unknown-top-plus-fail",
+  "content": "{\"SettingsVersion\": 3, \"zzz\": 1, \"features\": [], \"Environments\": {}}",
+  "report": {
+   "status": "issues-detected",
+   "environment-count": 0,
+   "issues": [
+    {
+     "code": "settings-shape-mismatch",
+     "message": "appsettings.json is valid JSON, but this clio version (8.1.0.142) cannot bind the following member(s): features. Correct features by hand. clio will not rewrite the file while a member fails to bind, so nothing else in it is at risk - but every setting under that member is taking its default value until it is fixed."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": false
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "lowercase-envs",
+  "content": "{\"SettingsVersion\": 3, \"environments\": {\"a\": {\"Safe\": \"maybe\"}}}",
+  "report": {
+   "status": "broken",
+   "environment-count": 0,
+   "issues": [
+    {
+     "code": "settings-shape-mismatch",
+     "message": "appsettings.json is valid JSON, but clio cannot bind environment 'a': the member 'environments.a.Safe' has a value of the wrong shape. Environments are not loaded at all while this is true, because a member that silently took its default value would change what commands do (a Safe environment would stop asking for confirmation). Correct 'environments.a.Safe' by hand, or re-register the environment with 'clio reg-web-app'."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": false
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "lowercase-member",
+  "content": "{\"SettingsVersion\": 3, \"ActiveEnvironmentKey\": \"a\", \"Environments\": {\"a\": {\"uri\": \"http://x\", \"isnetcore\": \"x\"}}}",
+  "report": {
+   "status": "broken",
+   "environment-count": 0,
+   "issues": [
+    {
+     "code": "settings-shape-mismatch",
+     "message": "appsettings.json is valid JSON, but clio cannot bind environment 'a': the member 'Environments.a.isnetcore' has a value of the wrong shape. Environments are not loaded at all while this is true, because a member that silently took its default value would change what commands do (a Safe environment would stop asking for confirmation). Correct 'Environments.a.isnetcore' by hand, or re-register the environment with 'clio reg-web-app'."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": false
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "comments",
+  "content": "{ // c\n \"SettingsVersion\": 3, \"Environments\": {}, }",
+  "report": {
+   "status": "healthy",
+   "environment-count": 0,
+   "issues": [],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": false
+  },
+  "after": null
+ },
+ {
+  "label": "trailing-garbage",
+  "content": "{\"SettingsVersion\": 3} x",
+  "report": {
+   "status": "broken",
+   "environment-count": 0,
+   "issues": [
+    {
+     "code": "settings-file-unreadable",
+     "message": "appsettings.json could not be parsed: Additional text encountered after finished reading JSON content: x. Path '', line 1, position 23."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": false
+  },
+  "after": null
+ },
+ {
+  "label": "bom",
+  "content": "﻿{\"SettingsVersion\": 3, \"Environments\": {}}",
+  "report": {
+   "status": "healthy",
+   "environment-count": 0,
+   "issues": [],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": false
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "dup-keys",
+  "content": "{\"SettingsVersion\": 3, \"Environments\": {\"a\": {\"Uri\": \"http://x\"}, \"a\": {\"Uri\": \"http://y\"}}}",
+  "report": {
+   "status": "issues-detected",
+   "environment-count": 1,
+   "issues": [
+    {
+     "code": "invalid-active-environment",
+     "message": "ActiveEnvironmentKey is missing or does not point to a configured environment. Use 'clio set-active-environment <name>' to fix this."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": false
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "string-root",
+  "content": "\"x\"",
+  "report": {
+   "status": "broken",
+   "environment-count": 0,
+   "issues": [
+    {
+     "code": "settings-file-unreadable",
+     "message": "appsettings.json does not contain a JSON object at its root."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": false
+  },
+  "after": null
+ },
+ {
+  "label": "mig-none",
+  "content": "{\"Environments\": {}}",
+  "report": {
+   "status": "healthy",
+   "environment-count": 0,
+   "issues": [],
+   "repairs-applied": [
+    {
+     "code": "deploy-creatio-site-port-range-added",
+     "message": "deploy-creatio default site-port-range was set to [40100, 40199]"
+    }
+   ],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": false
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": [
+    40100,
+    40199
+   ]
+  }
+ },
+ {
+  "label": "mig-none-range",
+  "content": "{\"Environments\": {}, \"deploy-creatio-defaults\": {\"site-port-range\": [1, 2]}}",
+  "report": {
+   "status": "healthy",
+   "environment-count": 0,
+   "issues": [],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": false
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": [
+    1,
+    2
+   ]
+  }
+ },
+ {
+  "label": "mig-v1",
+  "content": "{\"SettingsVersion\": 1, \"Environments\": {}}",
+  "report": {
+   "status": "healthy",
+   "environment-count": 0,
+   "issues": [],
+   "repairs-applied": [
+    {
+     "code": "deploy-creatio-site-port-range-added",
+     "message": "deploy-creatio default site-port-range was set to [40100, 40199]"
+    }
+   ],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": false
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": [
+    40100,
+    40199
+   ]
+  }
+ },
+ {
+  "label": "mig-v2",
+  "content": "{\"SettingsVersion\": 2, \"Environments\": {}}",
+  "report": {
+   "status": "healthy",
+   "environment-count": 0,
+   "issues": [],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": false
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "mig-v0-dcd-empty",
+  "content": "{\"SettingsVersion\": 0, \"Environments\": {}, \"deploy-creatio-defaults\": {}}",
+  "report": {
+   "status": "healthy",
+   "environment-count": 0,
+   "issues": [],
+   "repairs-applied": [
+    {
+     "code": "deploy-creatio-site-port-range-added",
+     "message": "deploy-creatio default site-port-range was set to [40100, 40199]"
+    }
+   ],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": false
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": [
+    40100,
+    40199
+   ]
+  }
+ },
+ {
+  "label": "mig-v5",
+  "content": "{\"SettingsVersion\": 5, \"Environments\": {}}",
+  "report": {
+   "status": "healthy",
+   "environment-count": 0,
+   "issues": [],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": false
+  },
+  "after": {
+   "SettingsVersion": 5,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "mig-negative",
+  "content": "{\"SettingsVersion\": -1, \"Environments\": {}}",
+  "report": {
+   "status": "healthy",
+   "environment-count": 0,
+   "issues": [],
+   "repairs-applied": [
+    {
+     "code": "deploy-creatio-site-port-range-added",
+     "message": "deploy-creatio default site-port-range was set to [40100, 40199]"
+    }
+   ],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": false
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": [
+    40100,
+    40199
+   ]
+  }
+ },
+ {
+  "label": "mig-with-shape",
+  "content": "{\"Environments\": {}, \"features\": []}",
+  "report": {
+   "status": "issues-detected",
+   "environment-count": 0,
+   "issues": [
+    {
+     "code": "settings-shape-mismatch",
+     "message": "appsettings.json is valid JSON, but this clio version (8.1.0.142) cannot bind the following member(s): features. Correct features by hand. clio will not rewrite the file while a member fails to bind, so nothing else in it is at risk - but every setting under that member is taking its default value until it is fixed."
+    }
+   ],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": false
+  },
+  "after": {
+   "SettingsVersion": null,
+   "site-port-range": null
+  }
+ },
+ {
+  "label": "envs-missing",
+  "content": "{\"SettingsVersion\": 3}",
+  "report": {
+   "status": "healthy",
+   "environment-count": 0,
+   "issues": [],
+   "repairs-applied": [],
+   "can-start-bootstrap-tools": true,
+   "can-execute-env-tools": false
+  },
+  "after": {
+   "SettingsVersion": 3,
+   "site-port-range": null
+  }
+ }
+]
