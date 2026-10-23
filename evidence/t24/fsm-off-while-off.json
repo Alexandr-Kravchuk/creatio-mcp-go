@@ -1,0 +1,218 @@
+{
+  "schema": 1,
+  "clio_startup_seconds": 0.74,
+  "go_startup_seconds": 0.56,
+  "counts": {
+    "skipped": 0,
+    "match": 7,
+    "both-failed": 0,
+    "error-text": 0,
+    "known-diff": 0,
+    "mismatch": 0
+  },
+  "scenarios": [
+    {
+      "scenario": "set-fsm-mode off while off round 0 (warm-up)",
+      "verdict": "match",
+      "first": "clio",
+      "steps": [
+        {
+          "step": "mode before",
+          "kind": "read-back",
+          "verdict": "match",
+          "clio_seconds": 3.3,
+          "go_seconds": 0.62,
+          "differences": []
+        },
+        {
+          "step": "2:expect",
+          "kind": "expect",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "off",
+          "kind": "write",
+          "verdict": "match",
+          "clio_seconds": 11.94,
+          "go_seconds": 4.91,
+          "differences": []
+        }
+      ]
+    },
+    {
+      "scenario": "set-fsm-mode off while off round 1",
+      "verdict": "match",
+      "first": "go",
+      "steps": [
+        {
+          "step": "mode before",
+          "kind": "read-back",
+          "verdict": "match",
+          "clio_seconds": 3.02,
+          "go_seconds": 0.17,
+          "differences": []
+        },
+        {
+          "step": "2:expect",
+          "kind": "expect",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "off",
+          "kind": "write",
+          "verdict": "match",
+          "clio_seconds": 0.57,
+          "go_seconds": 0.1,
+          "differences": []
+        }
+      ]
+    },
+    {
+      "scenario": "set-fsm-mode off while off round 2",
+      "verdict": "match",
+      "first": "clio",
+      "steps": [
+        {
+          "step": "mode before",
+          "kind": "read-back",
+          "verdict": "match",
+          "clio_seconds": 0.54,
+          "go_seconds": 0.11,
+          "differences": []
+        },
+        {
+          "step": "2:expect",
+          "kind": "expect",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "off",
+          "kind": "write",
+          "verdict": "match",
+          "clio_seconds": 0.6,
+          "go_seconds": 0.08,
+          "differences": []
+        }
+      ]
+    },
+    {
+      "scenario": "set-fsm-mode off while off round 3",
+      "verdict": "match",
+      "first": "go",
+      "steps": [
+        {
+          "step": "mode before",
+          "kind": "read-back",
+          "verdict": "match",
+          "clio_seconds": 0.61,
+          "go_seconds": 0.06,
+          "differences": []
+        },
+        {
+          "step": "2:expect",
+          "kind": "expect",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "off",
+          "kind": "write",
+          "verdict": "match",
+          "clio_seconds": 0.74,
+          "go_seconds": 0.09,
+          "differences": []
+        }
+      ]
+    },
+    {
+      "scenario": "set-fsm-mode off while off round 4",
+      "verdict": "match",
+      "first": "clio",
+      "steps": [
+        {
+          "step": "mode before",
+          "kind": "read-back",
+          "verdict": "match",
+          "clio_seconds": 0.53,
+          "go_seconds": 0.07,
+          "differences": []
+        },
+        {
+          "step": "2:expect",
+          "kind": "expect",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "off",
+          "kind": "write",
+          "verdict": "match",
+          "clio_seconds": 0.56,
+          "go_seconds": 0.1,
+          "differences": []
+        }
+      ]
+    },
+    {
+      "scenario": "set-fsm-mode off while off round 5",
+      "verdict": "match",
+      "first": "go",
+      "steps": [
+        {
+          "step": "mode before",
+          "kind": "read-back",
+          "verdict": "match",
+          "clio_seconds": 0.69,
+          "go_seconds": 0.06,
+          "differences": []
+        },
+        {
+          "step": "2:expect",
+          "kind": "expect",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "off",
+          "kind": "write",
+          "verdict": "match",
+          "clio_seconds": 0.63,
+          "go_seconds": 0.11,
+          "differences": []
+        }
+      ]
+    },
+    {
+      "scenario": "set-fsm-mode off while off round 6",
+      "verdict": "match",
+      "first": "clio",
+      "steps": [
+        {
+          "step": "mode before",
+          "kind": "read-back",
+          "verdict": "match",
+          "clio_seconds": 0.57,
+          "go_seconds": 0.1,
+          "differences": []
+        },
+        {
+          "step": "2:expect",
+          "kind": "expect",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "off",
+          "kind": "write",
+          "verdict": "match",
+          "clio_seconds": 1.12,
+          "go_seconds": 0.18,
+          "differences": []
+        }
+      ]
+    }
+  ]
+}

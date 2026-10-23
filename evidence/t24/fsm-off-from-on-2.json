@@ -1,0 +1,428 @@
+{
+  "schema": 1,
+  "clio_startup_seconds": 0.9,
+  "go_startup_seconds": 0.07,
+  "counts": {
+    "skipped": 0,
+    "match": 0,
+    "both-failed": 0,
+    "error-text": 0,
+    "known-diff": 7,
+    "mismatch": 0
+  },
+  "scenarios": [
+    {
+      "scenario": "set-fsm-mode off from on round 0 (warm-up)",
+      "verdict": "known-diff",
+      "first": "clio",
+      "steps": [
+        {
+          "step": "on (setup through clio)",
+          "kind": "write",
+          "verdict": "known-diff",
+          "clio_seconds": 84.22,
+          "go_seconds": 26.39,
+          "differences": [
+            "$.executionlogmessages[0].value: value differs"
+          ]
+        },
+        {
+          "step": "mode on",
+          "kind": "read-back",
+          "verdict": "match",
+          "clio_seconds": 0.51,
+          "go_seconds": 0.58,
+          "differences": []
+        },
+        {
+          "step": "3:expect",
+          "kind": "expect",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "off",
+          "kind": "write",
+          "verdict": "known-diff",
+          "clio_seconds": 21.48,
+          "go_seconds": 62.12,
+          "differences": [
+            "$.executionlogmessages: 4 items in clio, 3 in go",
+            "$.executionlogmessages[0].value: only in clio",
+            "$.executionlogmessages[1].messagetype: value differs",
+            "$.executionlogmessages[1].value: value differs",
+            "$.executionlogmessages[2].value: only in go"
+          ]
+        },
+        {
+          "step": "mode after",
+          "kind": "read-back",
+          "verdict": "match",
+          "clio_seconds": 10.99,
+          "go_seconds": 0.13,
+          "differences": []
+        },
+        {
+          "step": "6:expect",
+          "kind": "expect",
+          "verdict": "match",
+          "differences": []
+        }
+      ]
+    },
+    {
+      "scenario": "set-fsm-mode off from on round 1",
+      "verdict": "known-diff",
+      "first": "go",
+      "steps": [
+        {
+          "step": "on (setup through clio)",
+          "kind": "write",
+          "verdict": "known-diff",
+          "clio_seconds": 45.42,
+          "go_seconds": 77.89,
+          "differences": [
+            "$.executionlogmessages[0].value: value differs"
+          ]
+        },
+        {
+          "step": "mode on",
+          "kind": "read-back",
+          "verdict": "match",
+          "clio_seconds": 1.43,
+          "go_seconds": 0.11,
+          "differences": []
+        },
+        {
+          "step": "3:expect",
+          "kind": "expect",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "off",
+          "kind": "write",
+          "verdict": "known-diff",
+          "clio_seconds": 73.52,
+          "go_seconds": 19.09,
+          "differences": [
+            "$.executionlogmessages: 3 items in clio, 4 in go",
+            "$.executionlogmessages[0].value: only in go",
+            "$.executionlogmessages[1].messagetype: value differs",
+            "$.executionlogmessages[1].value: value differs",
+            "$.executionlogmessages[2].value: only in clio"
+          ]
+        },
+        {
+          "step": "mode after",
+          "kind": "read-back",
+          "verdict": "match",
+          "clio_seconds": 0.81,
+          "go_seconds": 0.31,
+          "differences": []
+        },
+        {
+          "step": "6:expect",
+          "kind": "expect",
+          "verdict": "match",
+          "differences": []
+        }
+      ]
+    },
+    {
+      "scenario": "set-fsm-mode off from on round 2",
+      "verdict": "known-diff",
+      "first": "clio",
+      "steps": [
+        {
+          "step": "on (setup through clio)",
+          "kind": "write",
+          "verdict": "known-diff",
+          "clio_seconds": 75.55,
+          "go_seconds": 23.03,
+          "differences": [
+            "$.executionlogmessages[0].value: value differs"
+          ]
+        },
+        {
+          "step": "mode on",
+          "kind": "read-back",
+          "verdict": "match",
+          "clio_seconds": 0.57,
+          "go_seconds": 0.08,
+          "differences": []
+        },
+        {
+          "step": "3:expect",
+          "kind": "expect",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "off",
+          "kind": "write",
+          "verdict": "known-diff",
+          "clio_seconds": 15.03,
+          "go_seconds": 63.78,
+          "differences": [
+            "$.executionlogmessages: 4 items in clio, 3 in go",
+            "$.executionlogmessages[0].value: only in clio",
+            "$.executionlogmessages[1].messagetype: value differs",
+            "$.executionlogmessages[1].value: value differs",
+            "$.executionlogmessages[2].value: only in go"
+          ]
+        },
+        {
+          "step": "mode after",
+          "kind": "read-back",
+          "verdict": "match",
+          "clio_seconds": 11.92,
+          "go_seconds": 0.18,
+          "differences": []
+        },
+        {
+          "step": "6:expect",
+          "kind": "expect",
+          "verdict": "match",
+          "differences": []
+        }
+      ]
+    },
+    {
+      "scenario": "set-fsm-mode off from on round 3",
+      "verdict": "known-diff",
+      "first": "go",
+      "steps": [
+        {
+          "step": "on (setup through clio)",
+          "kind": "write",
+          "verdict": "known-diff",
+          "clio_seconds": 25.77,
+          "go_seconds": 75.9,
+          "differences": [
+            "$.executionlogmessages[0].value: value differs"
+          ]
+        },
+        {
+          "step": "mode on",
+          "kind": "read-back",
+          "verdict": "match",
+          "clio_seconds": 0.48,
+          "go_seconds": 0.09,
+          "differences": []
+        },
+        {
+          "step": "3:expect",
+          "kind": "expect",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "off",
+          "kind": "write",
+          "verdict": "known-diff",
+          "clio_seconds": 65.7,
+          "go_seconds": 35.65,
+          "differences": [
+            "$.executionlogmessages: 3 items in clio, 4 in go",
+            "$.executionlogmessages[0].value: only in go",
+            "$.executionlogmessages[1].messagetype: value differs",
+            "$.executionlogmessages[1].value: value differs",
+            "$.executionlogmessages[2].value: only in clio"
+          ]
+        },
+        {
+          "step": "mode after",
+          "kind": "read-back",
+          "verdict": "match",
+          "clio_seconds": 0.52,
+          "go_seconds": 0.12,
+          "differences": []
+        },
+        {
+          "step": "6:expect",
+          "kind": "expect",
+          "verdict": "match",
+          "differences": []
+        }
+      ]
+    },
+    {
+      "scenario": "set-fsm-mode off from on round 4",
+      "verdict": "known-diff",
+      "first": "clio",
+      "steps": [
+        {
+          "step": "on (setup through clio)",
+          "kind": "write",
+          "verdict": "known-diff",
+          "clio_seconds": 79.18,
+          "go_seconds": 22.7,
+          "differences": [
+            "$.executionlogmessages[0].value: value differs"
+          ]
+        },
+        {
+          "step": "mode on",
+          "kind": "read-back",
+          "verdict": "match",
+          "clio_seconds": 0.54,
+          "go_seconds": 0.06,
+          "differences": []
+        },
+        {
+          "step": "3:expect",
+          "kind": "expect",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "off",
+          "kind": "write",
+          "verdict": "known-diff",
+          "clio_seconds": 14.56,
+          "go_seconds": 71.89,
+          "differences": [
+            "$.executionlogmessages: 4 items in clio, 3 in go",
+            "$.executionlogmessages[0].value: only in clio",
+            "$.executionlogmessages[1].messagetype: value differs",
+            "$.executionlogmessages[1].value: value differs",
+            "$.executionlogmessages[2].value: only in go"
+          ]
+        },
+        {
+          "step": "mode after",
+          "kind": "read-back",
+          "verdict": "match",
+          "clio_seconds": 11.37,
+          "go_seconds": 0.17,
+          "differences": []
+        },
+        {
+          "step": "6:expect",
+          "kind": "expect",
+          "verdict": "match",
+          "differences": []
+        }
+      ]
+    },
+    {
+      "scenario": "set-fsm-mode off from on round 5",
+      "verdict": "known-diff",
+      "first": "go",
+      "steps": [
+        {
+          "step": "on (setup through clio)",
+          "kind": "write",
+          "verdict": "known-diff",
+          "clio_seconds": 13.31,
+          "go_seconds": 147.33,
+          "differences": [
+            "$.executionlogmessages[0].value: value differs"
+          ]
+        },
+        {
+          "step": "mode on",
+          "kind": "read-back",
+          "verdict": "match",
+          "clio_seconds": 0.46,
+          "go_seconds": 0.29,
+          "differences": []
+        },
+        {
+          "step": "3:expect",
+          "kind": "expect",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "off",
+          "kind": "write",
+          "verdict": "known-diff",
+          "clio_seconds": 81.14,
+          "go_seconds": 31.12,
+          "differences": [
+            "$.executionlogmessages: 3 items in clio, 4 in go",
+            "$.executionlogmessages[0].value: only in go",
+            "$.executionlogmessages[1].messagetype: value differs",
+            "$.executionlogmessages[1].value: value differs",
+            "$.executionlogmessages[2].value: only in clio"
+          ]
+        },
+        {
+          "step": "mode after",
+          "kind": "read-back",
+          "verdict": "match",
+          "clio_seconds": 0.6,
+          "go_seconds": 0.18,
+          "differences": []
+        },
+        {
+          "step": "6:expect",
+          "kind": "expect",
+          "verdict": "match",
+          "differences": []
+        }
+      ]
+    },
+    {
+      "scenario": "set-fsm-mode off from on round 6",
+      "verdict": "known-diff",
+      "first": "clio",
+      "steps": [
+        {
+          "step": "on (setup through clio)",
+          "kind": "write",
+          "verdict": "known-diff",
+          "clio_seconds": 85.28,
+          "go_seconds": 20.57,
+          "differences": [
+            "$.executionlogmessages[0].value: value differs"
+          ]
+        },
+        {
+          "step": "mode on",
+          "kind": "read-back",
+          "verdict": "match",
+          "clio_seconds": 0.54,
+          "go_seconds": 0.12,
+          "differences": []
+        },
+        {
+          "step": "3:expect",
+          "kind": "expect",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "off",
+          "kind": "write",
+          "verdict": "known-diff",
+          "clio_seconds": 14.34,
+          "go_seconds": 66.62,
+          "differences": [
+            "$.executionlogmessages: 4 items in clio, 3 in go",
+            "$.executionlogmessages[0].value: only in clio",
+            "$.executionlogmessages[1].messagetype: value differs",
+            "$.executionlogmessages[1].value: value differs",
+            "$.executionlogmessages[2].value: only in go"
+          ]
+        },
+        {
+          "step": "mode after",
+          "kind": "read-back",
+          "verdict": "match",
+          "clio_seconds": 0.72,
+          "go_seconds": 0.11,
+          "differences": []
+        },
+        {
+          "step": "6:expect",
+          "kind": "expect",
+          "verdict": "match",
+          "differences": []
+        }
+      ]
+    }
+  ]
+}
