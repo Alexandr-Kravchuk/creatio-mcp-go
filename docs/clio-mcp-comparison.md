@@ -22,7 +22,7 @@ Sources: [README](../README.md), [install.md](install.md).
 | Pro | Figure |
 |---|---|
 | Faster where clio spends time on itself | start 0.04–0.06 s vs 3.2–3.9 s; `list-pages` 0.14 s vs 4.74 s; reads overall 2.7 times faster ([compare-2026-10-22](status/compare-2026-10-22.md)) |
-| Short write steps take under a second | it reuses its login session, clio logs in before every call: `restart-by-environment-name` without waiting 0.56–0.60 s vs 2.51–3.08 s ([T24](status/t24-write-timing.md)) |
+| Short write steps take under a second | `restart-by-environment-name` without waiting 0.56–0.60 s vs 2.51–3.08 s; where clio's extra time goes was not established (both servers reuse their session for this tool) ([T24](status/t24-write-timing.md)) |
 | One file, no .NET | 23 MB on disk and 24–28 MB of memory; clio takes 504 MB plus .NET and 136–170 MB ([compare-2026-10-22](status/compare-2026-10-22.md#process-footprint)) |
 | Agents and skills work unchanged | 1025 contracts match clio 8.1.0.142, 0 unexplained; the same 74 prompts and guidance ([clio-comparison-2026-10-20](status/clio-comparison-2026-10-20.md)) |
 | Updates without stopping the server | the installer renames the new file over the old one, a running server keeps working; on Windows `dotnet tool update clio` fails while `clio mcp-server` runs ([install.md](install.md#1-install), [research.md](research.md#prototype-1--replacing-the-binary-while-it-runs)) |
