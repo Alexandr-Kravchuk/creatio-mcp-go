@@ -29,6 +29,14 @@ func (m *OrderedMap[V]) Set(key string, value V) {
 	m.Values[key] = value
 }
 
+// Len is the number of keys.
+func (m *OrderedMap[V]) Len() int {
+	if m == nil {
+		return 0
+	}
+	return len(m.Keys)
+}
+
 func (m *OrderedMap[V]) MarshalJSON() ([]byte, error) {
 	var buffer bytes.Buffer
 	buffer.WriteByte('{')
@@ -93,8 +101,8 @@ type DroppedElement struct {
 
 // ReasonCode is ReasonCode; Params values are JsonNode.
 type ReasonCode struct {
-	Code   *string                      `json:"code,omitzero"`
-	Params *OrderedMap[json.RawMessage] `json:"params,omitzero"`
+	Code   *string          `json:"code,omitzero"`
+	Params *OrderedMap[*jn] `json:"params,omitzero"`
 }
 
 // Reason codes (ReasonCodes).
