@@ -37,7 +37,7 @@ func init() {
 	registerTool(map[string]any{
 		"name": "get-theme",
 		"description": "Read the content (theme.css) and metadata of a custom Creatio theme by id on the target environment " +
-			"(Creatio 10.0.0 or later; the floor is not pre-checked). The theme is resolved through the GetAvailableThemes catalog and its CSS " +
+			"(Creatio 10.0.0 or later, checked before the theme is read). The theme is resolved through the GetAvailableThemes catalog and its CSS " +
 			"read from the catalog's cssFilePath. Returns { success, id, caption, cssClassName, cssFilePath, cssContent?, cssContentLength?, error? }. " +
 			"Set output-file to write the CSS to disk instead of the response: the path must be inside the workspace or the OS temp " +
 			"directory and must not exist yet.",
@@ -68,12 +68,13 @@ func invokeGetTheme(ctx context.Context, envs *environments, args map[string]any
 	if strings.TrimSpace(id) == "" {
 		return structuredToolResult(creatio.ThemeGetResult{Error: "id is required and cannot be empty."}), nil
 	}
-	client, failure, err := envs.resolve("get-theme", args, scopeName)
-	if err != nil {
-		return nil, err
-	}
-	if failure != nil {
-		return structuredToolResult(creatio.ThemeGetResult{Error: redacted(failure)}), nil
+	// clio's GetThemeOptions carry [RequiresCreatioVersion("10.0.0")]: the floor is enforced after the
+	// environment resolves and before the command reads the id, the catalog or the output path.
+	client, _, answer, err := themeWriteResolve(ctx, envs, "get-theme", args, func(message string) *mcp.CallToolResult {
+		return structuredToolResult(creatio.ThemeGetResult{Error: message})
+	})
+	if err != nil || answer != nil {
+		return answer, err
 	}
 	return structuredToolResult(client.GetTheme(ctx, id, outputFile)), nil
 }
