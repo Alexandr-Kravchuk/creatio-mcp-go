@@ -61,7 +61,7 @@ func (c *Client) RestartApplication(ctx context.Context) CommandResult {
 		case <-time.After(pkgWriteRestartRetryDelay):
 		}
 	}
-	return CommandFailure(err.Error())
+	return CommandFailure(readableMessage(err))
 }
 
 type pkgWriteReadiness int

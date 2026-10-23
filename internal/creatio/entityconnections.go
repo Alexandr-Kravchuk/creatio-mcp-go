@@ -425,11 +425,16 @@ func (c *Client) entityConnectionsSelect(ctx context.Context, query *jnode) ([]*
 	address := c.serviceURL(route)
 	response, err := c.serviceRequest(ctx, serviceCall{Route: route, Body: query.newtonsoftJSON(), Timeout: 100 * time.Second, Limit: maxResponseBytes})
 	if err != nil {
+		if message, ok := c.metadataSelectFailure(err); ok {
+			return nil, false, message
+		}
+		if fault, ok := asConnectFault(err); ok {
+			// The AggregateException of a call made with a session: the helper does not catch it.
+			return nil, false, fault.Error()
+		}
 		fault := c.rightsTransportFault(err, 100*time.Second)
 		if rightsIsTimeout(fault) {
-			return nil, false, "SelectQuery timed out before the environment answered (URL: " + address + "). Detail: " + fault.Error() +
-				". This says nothing about the requested schema or package — retry the request, and if it persists check the environment " +
-				"health (healthcheck) and whether the target instance is still responding."
+			return nil, false, selectQueryTimeoutFailure(address, fault.Error())
 		}
 		if rightsIsConnectionFailure(err) {
 			return nil, false, selectQueryTransportFailure(address, fault)
@@ -464,14 +469,27 @@ func (c *Client) entityConnectionsSelect(ctx context.Context, query *jnode) ([]*
 }
 
 // metadataSelectFailure is PageSchemaMetadataHelper.ExecuteSelectQuery's text for a metadata SelectQuery whose
-// login got no answer (measured against clio 8.1.0.142 with get-page, get-related-page-addon and sync-pages);
-// ok is false for any other failure.
+// login got no answer, the WebException that helper catches (measured against clio 8.1.0.142 with get-page,
+// get-related-page-addon and sync-pages, for a host that does not resolve, a closed port and a host that never
+// answers); ok is false for any other failure, a call's AggregateException included.
 func (c *Client) metadataSelectFailure(err error) (string, bool) {
-	fault, ok := asConnectFault(err)
+	fault, ok := asLoginConnectFault(err)
 	if !ok {
 		return "", false
 	}
-	return selectQueryTransportFailure(c.serviceURL("DataService/json/SyncReply/SelectQuery"), fault), true
+	address := c.serviceURL("DataService/json/SyncReply/SelectQuery")
+	if fault.kind == faultTimeout {
+		return selectQueryTimeoutFailure(address, fault.Error()+" (WebException: Timeout)"), true
+	}
+	return selectQueryTransportFailure(address, fault), true
+}
+
+// selectQueryTimeoutFailure is PageSchemaMetadataHelper.ExecuteSelectQuery's text for a SelectQuery that got no
+// answer in time.
+func selectQueryTimeoutFailure(address, detail string) string {
+	return "SelectQuery timed out before the environment answered (URL: " + address + "). Detail: " + detail +
+		". This says nothing about the requested schema or package — retry the request, and if it persists check the environment " +
+		"health (healthcheck) and whether the target instance is still responding."
 }
 
 // selectQueryTransportFailure is PageSchemaMetadataHelper.ExecuteSelectQuery's text for a SelectQuery that could
@@ -486,7 +504,7 @@ func selectQueryTransportFailure(address string, fault error) string {
 // answer arrives with its endpoint redacted, as clio's helper reports it (measured with a host that does not
 // resolve and with a closed port).
 func connectionsTransportDetail(fault error) string {
-	if connect, ok := asConnectFault(fault); ok {
+	if connect, ok := asLoginConnectFault(fault); ok {
 		return "Cannot connect to the application: " + redact.Text(connect.Error()) + " (WebException: ConnectFailure). Make sure the site is running and accessible."
 	}
 	if strings.HasPrefix(fault.Error(), "Connection refused (") {

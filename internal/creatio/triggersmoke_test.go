@@ -53,7 +53,7 @@ func TestTriggerSmokeResponseKeepsClioLists(t *testing.T) {
 
 func TestClioConnectionText(t *testing.T) {
 	refused := &url.Error{Op: "Post", URL: "http://127.0.0.1:9/0/DataService/json/SyncReply/SelectQuery", Err: syscall.ECONNREFUSED}
-	if got := clioConnectionText(refused); got != "Connection refused (127.0.0.1:9)" {
+	if got := clioConnectionText(refused); got != refusedSentence()+" (127.0.0.1:9)" {
 		t.Fatalf("got %q", got)
 	}
 	if got := clioConnectionText(errors.New("other")); got != "other" {

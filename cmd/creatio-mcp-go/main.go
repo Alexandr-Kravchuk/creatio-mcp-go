@@ -125,7 +125,7 @@ func newMCPServerWithHiddenTools(envs *environments, hostTools hiddenToolService
 				if err != nil {
 					return structuredToolResult(creatio.AppListResponse{Error: redacted(err)}), nil
 				}
-				response := client.ListAppsResponse(ctx)
+				response := client.ListAppsResponse(withClioLogin(ctx, "list-apps"))
 				// clio's list-apps redacts every failure it reports.
 				response.Error = redact.Text(response.Error)
 				return structuredToolResult(response), nil
@@ -598,10 +598,10 @@ func clioFailure(prefix string, err error) error {
 		return err
 	}
 	// Redacted as clio's McpToolErrorFilter and clio-run catch blocks redact a raised failure. A request that got
-	// no answer is reported by its innermost exception, the SocketException, as clio's filter reports it.
+	// no answer is reported by its innermost exception, the SocketException or the cancelled operation, as clio's filter reports it.
 	text := err.Error()
-	if socket, ok := creatio.SocketExceptionText(err); ok {
-		text = socket
+	if innermost, ok := creatio.InnermostExceptionText(err); ok {
+		text = innermost
 	}
 	return errors.New(prefix + redact.Text(text))
 }

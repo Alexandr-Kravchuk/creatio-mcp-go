@@ -1,39 +1,89 @@
 package creatio
 
 import (
+	"context"
 	"errors"
 	"net"
 	"net/url"
 	"runtime"
 	"strings"
-	"syscall"
 )
 
-// connectFault is a request that got no HTTP answer at all - the host did not resolve, or the connection was
-// refused or reset - worded as .NET's socket stack words the same fault, because clio reports what
-// Creatio.Client raised (measured against clio 8.1.0.142 with a host that does not resolve and a closed port).
-// Creatio.Client raises a WebException whose message is HttpRequestException's, "<socket sentence> (host:port)",
-// over the SocketException that carries the sentence alone.
+// connectFault is a request that got no HTTP answer - the host did not resolve, the connection was refused,
+// reset after the request was sent, or the login got no answer in time - worded as .NET words the same fault,
+// because clio reports what Creatio.Client raised (measured against clio 8.1.0.142 with a host that does not
+// resolve, a closed port, a stand that resets each connection after reading the request and one that never
+// answers).
+//
+// The outer exception depends on where the fault happened. The login before a call raises a WebException that
+// carries the inner exception's message as is. A synchronous call made with an established session raises the
+// AggregateException of Task.Result, which adds its own sentence: clio reuses its session across calls, so a
+// host that goes away after the first call is met there (measured: a stand stopped after the session was
+// established).
 type connectFault struct {
-	sentence string // SocketException.Message
+	kind     connectFaultKind
+	sentence string // the innermost exception's message: SocketException's, or OperationCanceledException's
 	endpoint string // host:port being dialed, with the scheme's port when the URL names none
+	request  bool   // met by a call made with an established session, not by the login
 	err      error  // the Go transport error
 }
 
-// Error is the WebException / HttpRequestException message: the sentence and the endpoint in parentheses.
-func (f *connectFault) Error() string { return f.sentence + " (" + f.endpoint + ")" }
+type connectFaultKind int
+
+const (
+	faultConnect connectFaultKind = iota // no connection: the host did not resolve or refused it
+	faultReset                           // the connection was reset after the request was sent
+	faultTimeout                         // the login got no answer within its timeout
+)
+
+const (
+	httpSendFailure   = "An error occurred while sending the request."
+	operationCanceled = "The operation was canceled."
+)
+
+// httpMessage is the message of the exception HttpClient raised: HttpRequestException's ("<sentence>
+// (host:port)" when no connection was made), or OperationCanceledException's for a login that timed out.
+func (f *connectFault) httpMessage() string {
+	switch f.kind {
+	case faultReset:
+		return httpSendFailure
+	case faultTimeout:
+		return operationCanceled
+	}
+	return f.sentence + " (" + f.endpoint + ")"
+}
+
+// Error is the outer exception's message.
+func (f *connectFault) Error() string {
+	if f.request {
+		return "One or more errors occurred. (" + f.httpMessage() + ")"
+	}
+	return f.httpMessage()
+}
 
 func (f *connectFault) Unwrap() error { return f.err }
 
 // exceptionChain is CommandExecutionResult.FormatExceptionChain over the exceptions Creatio.Client raises for
 // this fault, the text of clio's exit -1 envelope.
 func (f *connectFault) exceptionChain() string {
-	return "[WebException] " + f.Error() + " → [HttpRequestException] " + f.Error() + " → [SocketException] " + f.sentence
+	outer := "[WebException] "
+	if f.request {
+		outer = "[AggregateException] "
+	}
+	chain := outer + f.Error() + " → "
+	switch f.kind {
+	case faultReset:
+		return chain + "[HttpRequestException] " + httpSendFailure + " → [IOException] Unable to read data from the transport connection: " +
+			f.sentence + ". → [SocketException] " + f.sentence
+	case faultTimeout:
+		return chain + "[OperationCanceledException] " + operationCanceled
+	}
+	return chain + "[HttpRequestException] " + f.httpMessage() + " → [SocketException] " + f.sentence
 }
 
-// providerMessage is the ErrorMessage ATF.Repository's RemoteDataProvider keeps for this fault: the WebException
-// message followed by its inner HttpRequestException's, which here are the same text.
-func (f *connectFault) providerMessage() string { return f.Error() + f.Error() }
+// providerMessage is the ErrorMessage ATF.Repository's RemoteDataProvider keeps for this fault: the outer
+// exception's message followed by its inner exception's.
+func (f *connectFault) providerMessage() string { return f.Error() + f.httpMessage() }
 
 // newConnectFault words err as .NET does when it is a transport failure with a known .NET sentence, or
 // returns nil (a timeout, a TLS failure, a DNS error other than "no such host") so the caller keeps Go's text.
@@ -44,6 +94,22 @@ func connectFaultOn(err error, goos string) *connectFault {
 	if !errors.As(err, &urlErr) {
 		return nil
 	}
+	kind := faultConnect
+	if isConnectionReset(urlErr.Err) {
+		var opErr *net.OpError
+		if !errors.As(urlErr.Err, &opErr) {
+			return nil
+		}
+		switch opErr.Op {
+		case "read":
+			// The request went out and the answer never came: .NET reports the read that failed.
+			kind = faultReset
+		case "dial":
+		default:
+			// A reset while the request was being written: .NET's wording for it was not measured.
+			return nil
+		}
+	}
 	sentence := connectSentence(urlErr.Err, goos)
 	if sentence == "" {
 		return nil
@@ -52,7 +118,14 @@ func connectFaultOn(err error, goos string) *connectFault {
 	if parseErr != nil || parsed.Hostname() == "" {
 		return nil
 	}
-	return &connectFault{sentence: sentence, endpoint: net.JoinHostPort(parsed.Hostname(), connectPort(parsed)), err: err}
+	return &connectFault{kind: kind, sentence: sentence, endpoint: net.JoinHostPort(parsed.Hostname(), connectPort(parsed)), err: err}
+}
+
+// loginTimeoutFault is a login that got no answer within Creatio.Client's login timeout: the cancelled wait
+// surfaces as OperationCanceledException inside a WebException (measured against clio 8.1.0.142 with a stand
+// that accepts connections and never answers).
+func loginTimeoutFault(err error) error {
+	return transportError{err: &connectFault{kind: faultTimeout, sentence: operationCanceled, err: err}}
 }
 
 // connectSentence is the SocketException message .NET gives the fault on that platform: the resolver's
@@ -68,9 +141,15 @@ func connectSentence(err error, goos string) string {
 			return "No such host is known."
 		}
 		return "Name or service not known"
-	case errors.Is(err, syscall.ECONNREFUSED):
+	case isConnectionRefused(err):
+		if goos == "windows" {
+			return "No connection could be made because the target machine actively refused it."
+		}
 		return "Connection refused"
-	case errors.Is(err, syscall.ECONNRESET):
+	case isConnectionReset(err):
+		if goos == "windows" {
+			return "An existing connection was forcibly closed by the remote host."
+		}
 		return "Connection reset by peer"
 	}
 	return ""
@@ -94,14 +173,82 @@ func asConnectFault(err error) (*connectFault, bool) {
 	return fault, true
 }
 
-// SocketExceptionText is the innermost exception message clio's MCP error filter shows for a raised failure
+// asLoginConnectFault is a fault the login met, which clio's helpers that catch WebException word their own
+// way; a call's AggregateException passes through them with its own message.
+func asLoginConnectFault(err error) (*connectFault, bool) {
+	fault, ok := asConnectFault(err)
+	if !ok || fault.request {
+		return nil, false
+	}
+	return fault, true
+}
+
+// requestConnectFailure classifies a connect or reset fault of a call made with an established session, or
+// returns ok=false for any other failure. A tool whose clio counterpart logs in before every call meets a host
+// it cannot connect to at that login, so its connect fault keeps the login's wording (measured: those tools
+// logged in again on every call to a stand that answered, and answered the login's text once it went down).
+// A reset after the request was sent stays the call's: such a host accepted the connection, and clio's login
+// to it succeeded before the call was reset (measured).
+func requestConnectFailure(ctx context.Context, err error) (error, bool) {
+	fault := newConnectFault(err)
+	if fault == nil {
+		return nil, false
+	}
+	if fault.kind == faultConnect && logsInBeforeEachCall(ctx) {
+		return loginError{err: transportError{err: fault}}, true
+	}
+	fault.request = true
+	return transportError{err: fault}, true
+}
+
+// getAnswersEmpty is Creatio.Client's ExecuteGetRequest, which catches the HttpRequestException of its GET and
+// answers an empty body instead: a call made with an established session that met a connect or reset fault
+// reads "" in clio, and the tool reports what an empty body gives (measured: list-page-templates,
+// last-compilation-log and get-email-template against a stand stopped after the session was established).
+func getAnswersEmpty(err error) bool {
+	fault, ok := asConnectFault(err)
+	return ok && fault.request
+}
+
+type loginBeforeEachCallKey struct{}
+
+// WithLoginBeforeEachCall marks a call whose clio counterpart logs in before it runs instead of reusing the
+// session (a worker process or a client of its own per call): a host it cannot connect to fails that login,
+// so this server words such a fault of the call's requests as the login's, although it holds a session.
+func WithLoginBeforeEachCall(ctx context.Context) context.Context {
+	return context.WithValue(ctx, loginBeforeEachCallKey{}, true)
+}
+
+func logsInBeforeEachCall(ctx context.Context) bool {
+	marked, _ := ctx.Value(loginBeforeEachCallKey{}).(bool)
+	return marked
+}
+
+// InnermostExceptionText is the innermost exception message clio's MCP error filter shows for a raised failure
 // that is a connect fault ("MCP tool 'x' failed: <sentence>"); ok is false for any other failure.
-func SocketExceptionText(err error) (string, bool) {
+func InnermostExceptionText(err error) (string, bool) {
 	fault, ok := asConnectFault(err)
 	if !ok {
 		return "", false
 	}
 	return fault.sentence, true
+}
+
+// readableMessage is clio's GetReadableMessageException, which RemoteCommand logs for a failed command: a
+// connect fault the login met is a WebException, enriched with its status (measured against clio 8.1.0.142 with
+// restart-by-environment-name and a closed port or a resetting stand); a call's AggregateException is rendered
+// by its inner exception (read in clio's source); any other failure by its own message.
+func readableMessage(err error) string {
+	fault, ok := asConnectFault(err)
+	switch {
+	case !ok:
+		return err.Error()
+	case fault.request:
+		return fault.httpMessage()
+	case fault.kind == faultTimeout:
+		return fault.Error() + " (WebException: Timeout)"
+	}
+	return "Cannot connect to the application: " + fault.Error() + " (WebException: ConnectFailure). Make sure the site is running and accessible."
 }
 
 // CommandExceptionText is the text of clio's exit -1 envelope (CommandExecutionResult.FromException) for an

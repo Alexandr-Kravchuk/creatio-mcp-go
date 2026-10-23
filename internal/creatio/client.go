@@ -235,7 +235,8 @@ func (c *Client) formsSession(ctx context.Context) (*authSession, error) {
 	if err != nil {
 		return nil, fmt.Errorf("create cookie jar: %w", err)
 	}
-	loginClient := &http.Client{Transport: c.http.Transport, Jar: jar, CheckRedirect: c.http.CheckRedirect, Timeout: c.http.Timeout}
+	// No client timeout: the login context carries Creatio.Client's login timeout (currentSession).
+	loginClient := &http.Client{Transport: c.http.Transport, Jar: jar, CheckRedirect: c.http.CheckRedirect}
 	if err := c.formsLogin(ctx, loginClient); err != nil {
 		return nil, err
 	}
@@ -272,7 +273,7 @@ func (c *Client) doAuthenticated(ctx context.Context, client *http.Client, build
 	}
 	response, err := c.sendWithSession(client, request, session)
 	if err != nil {
-		return nil, false, transportError{err: err}
+		return nil, false, requestTransportFailure(ctx, err)
 	}
 	if !responseNeedsAuthentication(response) {
 		return response, false, nil
@@ -289,12 +290,48 @@ func (c *Client) doAuthenticated(ctx context.Context, client *http.Client, build
 	}
 	response, err = c.sendWithSession(client, retryRequest, refreshed)
 	if err != nil {
-		return nil, false, transportError{err: err}
+		return nil, false, requestTransportFailure(ctx, err)
 	}
 	return response, responseNeedsAuthentication(response), nil
 }
 
+// loginTimeout is how long Creatio.Client lets the login before a call take (EnsureAuthenticatedAsync(100000)),
+// waiting for another call's login included. It runs on its own clock: the timeout a call gives its request
+// does not apply to the login before it. A variable so that tests can shorten it.
+var loginTimeout = 100 * time.Second
+
+// loginContext is the context the login before a call runs on: the call's values and its cancellation, but
+// loginTimeout instead of the call's deadline, which is the request's own timeout.
+func loginContext(ctx context.Context) (context.Context, context.CancelFunc) {
+	loginCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), loginTimeout)
+	stop := context.AfterFunc(ctx, func() {
+		if errors.Is(ctx.Err(), context.Canceled) {
+			cancel()
+		}
+	})
+	return loginCtx, func() {
+		stop()
+		cancel()
+	}
+}
+
+// loginFailure is how a login that ran into the login context's end is reported: past loginTimeout it got no
+// answer in time, as clio's login does; cancelled by the caller, it keeps the cancellation.
+func loginFailure(loginCtx context.Context, err error) error {
+	if errors.Is(loginCtx.Err(), context.DeadlineExceeded) {
+		return loginTimeoutFault(err)
+	}
+	if isTransportError(err) {
+		return err
+	}
+	return transportError{err: err}
+}
+
 func (c *Client) currentSession(ctx context.Context) (*authSession, error) {
+	// The login context is made only when the call has to log in or wait for a login.
+	var loginCtx context.Context
+	stop := func() {}
+	defer func() { stop() }()
 	for {
 		c.authMu.Lock()
 		if c.session != nil && c.session.valid(time.Now()) {
@@ -302,12 +339,15 @@ func (c *Client) currentSession(ctx context.Context) (*authSession, error) {
 			c.authMu.Unlock()
 			return session, nil
 		}
+		if loginCtx == nil {
+			loginCtx, stop = loginContext(ctx)
+		}
 		if flight := c.authFlight; flight != nil {
 			c.authMu.Unlock()
 			select {
-			case <-ctx.Done():
-				// The caller's deadline ran out while another call was logging in: no answer came in time.
-				return nil, transportError{err: ctx.Err()}
+			case <-loginCtx.Done():
+				// The login timeout ran out while another call was logging in: no answer came in time.
+				return nil, loginFailure(loginCtx, loginCtx.Err())
 			case <-flight.done:
 				if flight.err != nil {
 					return nil, flight.err
@@ -325,12 +365,15 @@ func (c *Client) currentSession(ctx context.Context) (*authSession, error) {
 			// A bearer token stored in clio's settings is used as is; nothing can refresh it.
 			session = &authSession{token: c.config.AccessToken}
 		} else if c.config.ClientID != "" {
-			session, err = c.acquireToken(ctx)
+			session, err = c.acquireToken(loginCtx)
 		} else {
-			session, err = c.formsSession(ctx)
+			session, err = c.formsSession(loginCtx)
 		}
-		if ctx.Err() != nil && err == nil {
-			err = transportError{err: ctx.Err()}
+		switch {
+		case loginCtx.Err() != nil && err == nil:
+			err = loginFailure(loginCtx, loginCtx.Err())
+		case loginCtx.Err() != nil && isTransportError(err):
+			err = loginFailure(loginCtx, err)
 		}
 
 		c.authMu.Lock()
@@ -492,10 +535,21 @@ func isLoginError(err error) bool {
 }
 
 // isRequestTransportError is a transport failure of the endpoint request itself, after the session was
-// established. Helpers that prefix such a failure with their route leave a login failure's text alone: clio's
-// login step raises before any route is named.
+// established, that carries Go's text. Helpers that prefix such a failure with their route leave a login
+// failure's text alone, as they leave a connect fault's: clio's login step raises before any route is named,
+// and a call's connect fault reaches clio's tools as Creatio.Client's exception, with no route in it.
 func isRequestTransportError(err error) bool {
-	return isTransportError(err) && !isLoginError(err)
+	_, connect := asConnectFault(err)
+	return isTransportError(err) && !isLoginError(err) && !connect
+}
+
+// requestTransportFailure classifies an endpoint request that got no usable answer as a transport failure,
+// worded as Creatio.Client words it when it is a connect or reset fault.
+func requestTransportFailure(ctx context.Context, err error) error {
+	if classified, ok := requestConnectFailure(ctx, err); ok {
+		return classified
+	}
+	return transportError{err: err}
 }
 
 // classifyLoginFailure keeps the category a session failure was given where it happened (a login request

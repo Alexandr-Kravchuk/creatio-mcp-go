@@ -167,7 +167,7 @@ func (c *Client) themeWriteResolveVersion(ctx context.Context) (themeWriteVersio
 		if version, ok := themeWriteParseVersion(themeWriteStringAt(secondary.payload, "SysInfo", "CoreVersion")); ok {
 			return version, themeWriteResolved
 		}
-	case isRequestTransportError(err):
+	case isRequestTransportError(err) || getAnswersEmpty(err):
 		responded = true
 	}
 	if responded {

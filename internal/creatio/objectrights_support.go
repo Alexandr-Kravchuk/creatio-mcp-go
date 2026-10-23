@@ -15,7 +15,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"syscall"
 	"time"
 	"unicode"
 	"unicode/utf16"
@@ -172,15 +171,20 @@ func (c *Client) rightsTransportFault(err error, timeout time.Duration) error {
 	if !rightsIsConnectionFailure(err) {
 		return err
 	}
+	fault, ok := asConnectFault(err)
+	if !ok {
+		// A request sent outside the authenticated path: worded here, with the platform's sentence.
+		fault = newConnectFault(err)
+	}
+	if fault != nil {
+		// Worded as .NET words it, a login that timed out included.
+		return &rightsFault{timeout: fault.kind == faultTimeout, noAnswer: true, message: fault.Error(), cause: fault}
+	}
 	var netErr net.Error
 	if errors.Is(err, context.DeadlineExceeded) || (errors.As(err, &netErr) && netErr.Timeout()) {
 		return &rightsFault{timeout: true, noAnswer: true, message: "A task was canceled."}
 	}
-	if fault, ok := asConnectFault(err); ok {
-		// A login that got no answer, already worded as .NET words it.
-		return &rightsFault{noAnswer: true, message: fault.Error(), cause: fault}
-	}
-	if errors.Is(err, syscall.ECONNREFUSED) {
+	if isConnectionRefused(err) {
 		return &rightsFault{noAnswer: true, message: "Connection refused (" + rightsHostPort(c.config.BaseURL) + ")"}
 	}
 	var urlErr *url.Error
