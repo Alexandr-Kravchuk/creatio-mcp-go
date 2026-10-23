@@ -127,10 +127,10 @@ func TestCreateWorkspaceWithoutNuGetWarnsAndOmitsTheVersion(t *testing.T) {
 func TestCreateWorkspaceRefusals(t *testing.T) {
 	base := t.TempDir()
 	cases := map[string]CreateWorkspaceRequest{
-		"WorkspaceName is required when using --empty. (Parameter 'options')":                                 {Directory: base},
+		"WorkspaceName is required when using --empty. (Parameter 'options')":                                  {Directory: base},
 		"Provide --directory for create-workspace --empty or configure 'workspaces-root' in appsettings.json.": {WorkspaceName: "x"},
-		"--directory and appsettings 'workspaces-root' must be absolute paths.":                               {WorkspaceName: "x", Directory: "relative"},
-		"WorkspaceName must be located under the resolved base directory.":                                    {WorkspaceName: "../x", Directory: base},
+		"--directory and appsettings 'workspaces-root' must be absolute paths.":                                {WorkspaceName: "x", Directory: "relative"},
+		"WorkspaceName must be located under the resolved base directory.":                                     {WorkspaceName: "../x", Directory: base},
 	}
 	for want, request := range cases {
 		result := CreateWorkspace(context.Background(), request)
