@@ -1,0 +1,16 @@
+[
+  {"name": "create-workspace", "steps": [
+    {"tool": "create-workspace", "args": {"workspaceName": "ws", "directory": "{home}/base"}},
+    {"tool": "create-workspace", "label": "existing non-empty", "args": {"workspaceName": "ws", "directory": "{home}/base"}},
+    {"tool": "create-workspace", "label": "no directory, no workspaces-root", "args": {"workspaceName": "w2"}},
+    {"tool": "create-workspace", "label": "relative directory", "args": {"workspaceName": "w3", "directory": "base"}},
+    {"tool": "create-workspace", "label": "missing directory", "args": {"workspaceName": "w4", "directory": "{home}/nowhere"}},
+    {"tool": "create-workspace", "label": "rooted name", "args": {"workspaceName": "/abs", "directory": "{home}/base"}},
+    {"tool": "create-workspace", "label": "escaping name", "args": {"workspaceName": "../out", "directory": "{home}/base"}},
+    {"tool": "create-workspace", "label": "blank name", "args": {"workspaceName": " ", "directory": "{home}/base"}},
+    {"tool": "create-workspace", "label": "no args", "args": {}},
+    {"tool": "create-workspace", "label": "wrong type", "args": {"workspaceName": 5, "directory": "{home}/base"}},
+    {"tool": "create-workspace", "label": "case-insensitive keys", "args": {"WORKSPACENAME": "w5", "Directory": "{home}/base"}},
+    {"tool": "create-workspace", "label": "nested name", "args": {"workspaceName": "a/b", "directory": "{home}/base"}}
+  ]}
+]
