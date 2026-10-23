@@ -1,6 +1,7 @@
 # T27 — get-mobile-page-conversion-guide (section, to merge into t27-page-smoke-mobile.md)
 
-State on 2026-10-23: **partial port, tool NOT registered.** clio's own design notes say a partial guide is
+State on 2026-10-23 (second session): **engine ported and byte-equal to clio on 530 recorded calls; tool flow,
+probes and registration still open — tool NOT registered.** clio's own design notes say a partial guide is
 worse than none (it would tell an agent to insert elements the mobile template already has, or drop rules it
 cannot see), so the tool stays out of `tools/list` until the engine and its regression tests are complete.
 The inventory row stays "not ported".
@@ -30,15 +31,38 @@ initializer (`[]`, `"items"`, `"caption"`, `"crt.TabContainer"`, `"latest"`), an
 leading UTF-8 BOM is stripped. Any parse or validation error sends the whole document to the bundled rules,
 as in clio; only the error texts of refusals that never reach a caller differ (the unknown-discriminator text).
 
+## Engine (ported 2026-10-23, second session)
+
+`WebToMobileAnalysisService.cs` + `.ComponentRemovals.cs`, `ExcludedComponentsPass`, `WebToMobilePropertyPrune`,
+`MissingTargetPageQueueBuilder`, `MobileRegistryGeneration`, `MobileRegistryDeclarations`/`DeclaredPropertyIndex`
+are in `internal/mobileguide` (`analyze.go`, `declared.go`, `walk.go`, `walk_branches.go`, `values.go`,
+`removals.go`, `passes.go`, `adaptive.go`, `datasections.go`), entry point `Analyze(*AnalyzeInput)`.
+
+- One ordered DOM (`jnode.go`) stands in for both of clio's JSON stacks: a Newtonsoft parse (`toJToken`) turns
+  ISO-looking strings into Date tokens (19–40 chars, 'T' at 10; an offset is converted to local time as Json.NET
+  does) and re-prints numbers (.NET doubles with ".0", integers via BigInteger); a System.Text.Json parse keeps
+  number text verbatim and stores JSON null as a nil child. `JToken.DeepEquals` and `JsonNode.DeepEquals` are
+  separate (`jtokenEquals`, `nodeEquals` — decimal value equality), as are the three writers (STJ default
+  encoder for `ToJsonString`, Json.NET, clio's relaxed MCP encoder for the answer) and `JToken.ToString()`.
+- `dotnet.go`: .NET `Dictionary`/`HashSet` with the free-list slot reuse (enumeration order after a removal is
+  .NET's), `OrdinalIgnoreCase` equality/ordering, `SortedSet`, stable `OrderBy`, the JPath subset
+  `viewConfigTemplates` use (`name`, `[n]`, `[a:b:c]`, `[*]`, `['x']`; several matches on `SelectToken` is an error).
+- **Oracle**: `internal/mobileguide/oracle_test.go` replays `testdata/clio-analyze-records.tar.gz` — every
+  `Analyze` call clio 8.1.0.142's own MobilePageConverter suite (800 tests) makes, with its inputs and clio's
+  answer serialized by clio's MCP options and encoder. **530 of 530 byte-equal.** Re-record with
+  `scripts/mobileguide-oracle/record.sh ~/.cache/creatio-mcp-go/clio-8.1.0.142` (copies the checkout, wraps
+  `Analyze`, builds only the MobilePageConverter tests, runs them with `CLIO_ORACLE_DIR`).
+- Known, unmeasured: a date-like string read as a Date token and then printed through `JToken.ToString()` (a
+  name, a caption) uses en-US culture formatting; an exception message raised inside the engine (malformed
+  rules, a non-string `path`) is approximated.
+
 ## Not ported yet (lines of clio C#)
 
 | Piece | Lines | Notes |
 |---|---|---|
-| `WebToMobileAnalysisService.cs` + `.ComponentRemovals.cs` | 7,401 + 816 | the engine; Newtonsoft `JObject` manipulation incl. JSONPath `SelectToken` (index and slice) used by `viewConfigTemplates` |
 | `MobilePageConversionGuideTool.cs` flow | ~600 of 1,005 | the handler itself: argument binding, environment resolution, page reads, version resolution, catalog loads, template probes, `ResolveEffectiveTemplateName`, `IsFormPage`, `DeriveMobileSchemaName`, container/component name maps, positional placements, `BuildRulesWarning` (needs the engine's `UnknownMobileRequestTargets`) |
 | Probes: `MobileActionTargetProbe`, `PageBusinessRuleProbe`, `MobileSectionRegistrationProbe`, `ExistingMobilePageProbe` | 927 + 450 + 194 + 184 | read-only data reads |
-| `ExcludedComponentsPass`, `WebToMobilePropertyPrune`, `DefaultPageAddonReader`, `MissingTargetPageQueueBuilder`, `MobileRegistryGeneration`, `RelatedPageAddonMetadata`, `SchemaNameResolver` | 578 + 199 + 120 + 104 + 81 + 92 + 127 | |
-| Engine tests to port | ~22,700 | `WebToMobileConversionServiceTests.cs`, `WebToMobileRealPageRegressionTests.cs`, `WebToMobileGeneralInfoTabRegressionTests.cs`, tool and refusal-wiring tests |
+| `DefaultPageAddonReader`, `RelatedPageAddonMetadata`, `SchemaNameResolver` (probe helpers) | 120 + 92 + 127 | |
 | Live comparison with clio 142 | — | refusal paths + fake stand `scripts/fake-stands/t27/` — not started |
 
 ## Next session: facts already established
