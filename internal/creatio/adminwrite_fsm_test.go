@@ -2,12 +2,16 @@ package creatio
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"reflect"
 	"runtime"
 	"strings"
+	"sync"
 	"testing"
+	"time"
 )
 
 const adminWriteFsmOff = `{"applicationInfo":{"sysValues":{},"useStaticFileContent":true,"staticFileContent":{"schemasRuntimePath":"conf/content"}}}`
@@ -96,5 +100,61 @@ func TestSetFsmModeOffEditsTheLocalConfigOfANetCoreSite(t *testing.T) {
 	missing := client.SetFsmMode(context.Background(), AdminWriteFsmTarget{Name: "dev", IsNetCore: true}, "off")
 	if missing.ExitCode != -1 || missing.Messages[len(missing.Messages)-1].Value != "[Exception] Could not find path to environment: 'dev'" {
 		t.Errorf("no path = %#v", missing)
+	}
+}
+
+// The probe before the remote toggle waits for a slow GetApplicationInfo the way clio's FsmModeStatusService does
+// (Timeout.Infinite) instead of failing at the client's default timeout: the site may still be restarting after
+// the previous toggle (live run T24). get-fsm-mode itself keeps the default.
+func TestSetFsmModeProbeOutlastsTheClientTimeout(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("the remote toggle is the macOS/Linux path")
+	}
+	const delay = 300 * time.Millisecond
+	var routes []string
+	var mu sync.Mutex
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasSuffix(r.URL.Path, "/Login") {
+			_, _ = w.Write([]byte(`{"Code":0}`))
+			return
+		}
+		route := strings.TrimPrefix(r.URL.Path, "/0/")
+		mu.Lock()
+		routes = append(routes, route)
+		mu.Unlock()
+		switch route {
+		case "ServiceModel/WorkspaceExplorerService.svc/GetIsFileDesignMode":
+			_, _ = w.Write([]byte(`{"success":true,"value":false}`))
+		case applicationInfoRoute:
+			time.Sleep(delay)
+			_, _ = w.Write([]byte(adminWriteFsmOff))
+		default:
+			t.Errorf("unexpected route %s", route)
+			http.NotFound(w, r)
+		}
+	}))
+	t.Cleanup(server.Close)
+	client := newFormsTestClient(t, server.URL)
+	client.http.Timeout = delay / 3
+
+	result := client.SetFsmMode(context.Background(), AdminWriteFsmTarget{Name: "dev"}, "off")
+	want := []LogMessage{
+		{"None", ""},
+		{"Warning", "The environment already has file design mode disabled, so there was nothing to import. " +
+			"Applying the file system mode configuration."},
+		{"None", "FSM already off on environment 'dev'; no config edit needed."},
+	}
+	if result.ExitCode != 0 || !reflect.DeepEqual(result.Messages, want) {
+		t.Fatalf("result = %#v", result)
+	}
+	mu.Lock()
+	got := strings.Join(routes, ",")
+	mu.Unlock()
+	if got != "ServiceModel/WorkspaceExplorerService.svc/GetIsFileDesignMode,"+applicationInfoRoute {
+		t.Errorf("routes = %s", got)
+	}
+	// The read tool keeps the client's timeout.
+	if _, err := client.GetFsmMode(context.Background()); err == nil {
+		t.Error("get-fsm-mode waited past the client timeout")
 	}
 }

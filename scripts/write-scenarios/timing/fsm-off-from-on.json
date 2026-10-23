@@ -1,0 +1,457 @@
+[
+ {
+  "label": "set-fsm-mode off from on round 0 (warm-up)",
+  "why": "T24 timing, window-only: file system mode is a property of the whole stand. clio switches the stand on (setup, both calls through clio: the second finds it on and only exports); after a 30 s settle both servers read the mode, then the first side switches it off (import into the database, then cliogate's SetFileDesignMode, after which IIS recycles the application) and the second side calls off at once, the first request after that recycle (it finds file design mode disabled). Run with --order alternate: the first side flips with every round. Leaves the stand in FSM off.",
+  "steps": [
+   {
+    "kind": "write",
+    "label": "on (setup through clio)",
+    "tool": "set-fsm-mode",
+    "clio-run": true,
+    "server": "clio",
+    "args": {
+     "mode": "on"
+    },
+    "known-differences": [
+     "$.executionlogmessages"
+    ],
+    "why": "Setup, not measured: the second call finds FSM already on."
+   },
+   {
+    "kind": "read-back",
+    "tool": "get-fsm-mode",
+    "clio-environment-key": "environmentName",
+    "args": {},
+    "clio-run": true,
+    "why": "clio's tool takes flat arguments (environmentName), so the read goes through clio-run on both sides, as in window/t12.json. It is an authenticated GetApplicationInfo call: it also brings each server's session and the stand's application up before the timed step.",
+    "label": "mode on",
+    "settle-seconds": 30
+   },
+   {
+    "kind": "expect",
+    "step": "mode on",
+    "path": "$.mode",
+    "equals": "on"
+   },
+   {
+    "kind": "write",
+    "label": "off",
+    "tool": "set-fsm-mode",
+    "clio-run": true,
+    "args": {
+     "mode": "off"
+    },
+    "known-differences": [
+     "$.executionlogmessages"
+    ],
+    "why": "Measured. First side: the whole off path from FSM on; second side: sent at once after the first side's recycle, as in the first T23 run (no settle)."
+   },
+   {
+    "kind": "read-back",
+    "tool": "get-fsm-mode",
+    "clio-environment-key": "environmentName",
+    "args": {},
+    "clio-run": true,
+    "why": "clio's tool takes flat arguments (environmentName), so the read goes through clio-run on both sides, as in window/t12.json. It is an authenticated GetApplicationInfo call: it also brings each server's session and the stand's application up before the timed step.",
+    "label": "mode after",
+    "settle-seconds": 30
+   },
+   {
+    "kind": "expect",
+    "step": "mode after",
+    "path": "$.mode",
+    "equals": "off"
+   }
+  ]
+ },
+ {
+  "label": "set-fsm-mode off from on round 1",
+  "why": "T24 timing, window-only: file system mode is a property of the whole stand. clio switches the stand on (setup, both calls through clio: the second finds it on and only exports); after a 30 s settle both servers read the mode, then the first side switches it off (import into the database, then cliogate's SetFileDesignMode, after which IIS recycles the application) and the second side calls off at once, the first request after that recycle (it finds file design mode disabled). Run with --order alternate: the first side flips with every round. Leaves the stand in FSM off.",
+  "steps": [
+   {
+    "kind": "write",
+    "label": "on (setup through clio)",
+    "tool": "set-fsm-mode",
+    "clio-run": true,
+    "server": "clio",
+    "args": {
+     "mode": "on"
+    },
+    "known-differences": [
+     "$.executionlogmessages"
+    ],
+    "why": "Setup, not measured: the second call finds FSM already on."
+   },
+   {
+    "kind": "read-back",
+    "tool": "get-fsm-mode",
+    "clio-environment-key": "environmentName",
+    "args": {},
+    "clio-run": true,
+    "why": "clio's tool takes flat arguments (environmentName), so the read goes through clio-run on both sides, as in window/t12.json. It is an authenticated GetApplicationInfo call: it also brings each server's session and the stand's application up before the timed step.",
+    "label": "mode on",
+    "settle-seconds": 30
+   },
+   {
+    "kind": "expect",
+    "step": "mode on",
+    "path": "$.mode",
+    "equals": "on"
+   },
+   {
+    "kind": "write",
+    "label": "off",
+    "tool": "set-fsm-mode",
+    "clio-run": true,
+    "args": {
+     "mode": "off"
+    },
+    "known-differences": [
+     "$.executionlogmessages"
+    ],
+    "why": "Measured. First side: the whole off path from FSM on; second side: sent at once after the first side's recycle, as in the first T23 run (no settle)."
+   },
+   {
+    "kind": "read-back",
+    "tool": "get-fsm-mode",
+    "clio-environment-key": "environmentName",
+    "args": {},
+    "clio-run": true,
+    "why": "clio's tool takes flat arguments (environmentName), so the read goes through clio-run on both sides, as in window/t12.json. It is an authenticated GetApplicationInfo call: it also brings each server's session and the stand's application up before the timed step.",
+    "label": "mode after",
+    "settle-seconds": 30
+   },
+   {
+    "kind": "expect",
+    "step": "mode after",
+    "path": "$.mode",
+    "equals": "off"
+   }
+  ]
+ },
+ {
+  "label": "set-fsm-mode off from on round 2",
+  "why": "T24 timing, window-only: file system mode is a property of the whole stand. clio switches the stand on (setup, both calls through clio: the second finds it on and only exports); after a 30 s settle both servers read the mode, then the first side switches it off (import into the database, then cliogate's SetFileDesignMode, after which IIS recycles the application) and the second side calls off at once, the first request after that recycle (it finds file design mode disabled). Run with --order alternate: the first side flips with every round. Leaves the stand in FSM off.",
+  "steps": [
+   {
+    "kind": "write",
+    "label": "on (setup through clio)",
+    "tool": "set-fsm-mode",
+    "clio-run": true,
+    "server": "clio",
+    "args": {
+     "mode": "on"
+    },
+    "known-differences": [
+     "$.executionlogmessages"
+    ],
+    "why": "Setup, not measured: the second call finds FSM already on."
+   },
+   {
+    "kind": "read-back",
+    "tool": "get-fsm-mode",
+    "clio-environment-key": "environmentName",
+    "args": {},
+    "clio-run": true,
+    "why": "clio's tool takes flat arguments (environmentName), so the read goes through clio-run on both sides, as in window/t12.json. It is an authenticated GetApplicationInfo call: it also brings each server's session and the stand's application up before the timed step.",
+    "label": "mode on",
+    "settle-seconds": 30
+   },
+   {
+    "kind": "expect",
+    "step": "mode on",
+    "path": "$.mode",
+    "equals": "on"
+   },
+   {
+    "kind": "write",
+    "label": "off",
+    "tool": "set-fsm-mode",
+    "clio-run": true,
+    "args": {
+     "mode": "off"
+    },
+    "known-differences": [
+     "$.executionlogmessages"
+    ],
+    "why": "Measured. First side: the whole off path from FSM on; second side: sent at once after the first side's recycle, as in the first T23 run (no settle)."
+   },
+   {
+    "kind": "read-back",
+    "tool": "get-fsm-mode",
+    "clio-environment-key": "environmentName",
+    "args": {},
+    "clio-run": true,
+    "why": "clio's tool takes flat arguments (environmentName), so the read goes through clio-run on both sides, as in window/t12.json. It is an authenticated GetApplicationInfo call: it also brings each server's session and the stand's application up before the timed step.",
+    "label": "mode after",
+    "settle-seconds": 30
+   },
+   {
+    "kind": "expect",
+    "step": "mode after",
+    "path": "$.mode",
+    "equals": "off"
+   }
+  ]
+ },
+ {
+  "label": "set-fsm-mode off from on round 3",
+  "why": "T24 timing, window-only: file system mode is a property of the whole stand. clio switches the stand on (setup, both calls through clio: the second finds it on and only exports); after a 30 s settle both servers read the mode, then the first side switches it off (import into the database, then cliogate's SetFileDesignMode, after which IIS recycles the application) and the second side calls off at once, the first request after that recycle (it finds file design mode disabled). Run with --order alternate: the first side flips with every round. Leaves the stand in FSM off.",
+  "steps": [
+   {
+    "kind": "write",
+    "label": "on (setup through clio)",
+    "tool": "set-fsm-mode",
+    "clio-run": true,
+    "server": "clio",
+    "args": {
+     "mode": "on"
+    },
+    "known-differences": [
+     "$.executionlogmessages"
+    ],
+    "why": "Setup, not measured: the second call finds FSM already on."
+   },
+   {
+    "kind": "read-back",
+    "tool": "get-fsm-mode",
+    "clio-environment-key": "environmentName",
+    "args": {},
+    "clio-run": true,
+    "why": "clio's tool takes flat arguments (environmentName), so the read goes through clio-run on both sides, as in window/t12.json. It is an authenticated GetApplicationInfo call: it also brings each server's session and the stand's application up before the timed step.",
+    "label": "mode on",
+    "settle-seconds": 30
+   },
+   {
+    "kind": "expect",
+    "step": "mode on",
+    "path": "$.mode",
+    "equals": "on"
+   },
+   {
+    "kind": "write",
+    "label": "off",
+    "tool": "set-fsm-mode",
+    "clio-run": true,
+    "args": {
+     "mode": "off"
+    },
+    "known-differences": [
+     "$.executionlogmessages"
+    ],
+    "why": "Measured. First side: the whole off path from FSM on; second side: sent at once after the first side's recycle, as in the first T23 run (no settle)."
+   },
+   {
+    "kind": "read-back",
+    "tool": "get-fsm-mode",
+    "clio-environment-key": "environmentName",
+    "args": {},
+    "clio-run": true,
+    "why": "clio's tool takes flat arguments (environmentName), so the read goes through clio-run on both sides, as in window/t12.json. It is an authenticated GetApplicationInfo call: it also brings each server's session and the stand's application up before the timed step.",
+    "label": "mode after",
+    "settle-seconds": 30
+   },
+   {
+    "kind": "expect",
+    "step": "mode after",
+    "path": "$.mode",
+    "equals": "off"
+   }
+  ]
+ },
+ {
+  "label": "set-fsm-mode off from on round 4",
+  "why": "T24 timing, window-only: file system mode is a property of the whole stand. clio switches the stand on (setup, both calls through clio: the second finds it on and only exports); after a 30 s settle both servers read the mode, then the first side switches it off (import into the database, then cliogate's SetFileDesignMode, after which IIS recycles the application) and the second side calls off at once, the first request after that recycle (it finds file design mode disabled). Run with --order alternate: the first side flips with every round. Leaves the stand in FSM off.",
+  "steps": [
+   {
+    "kind": "write",
+    "label": "on (setup through clio)",
+    "tool": "set-fsm-mode",
+    "clio-run": true,
+    "server": "clio",
+    "args": {
+     "mode": "on"
+    },
+    "known-differences": [
+     "$.executionlogmessages"
+    ],
+    "why": "Setup, not measured: the second call finds FSM already on."
+   },
+   {
+    "kind": "read-back",
+    "tool": "get-fsm-mode",
+    "clio-environment-key": "environmentName",
+    "args": {},
+    "clio-run": true,
+    "why": "clio's tool takes flat arguments (environmentName), so the read goes through clio-run on both sides, as in window/t12.json. It is an authenticated GetApplicationInfo call: it also brings each server's session and the stand's application up before the timed step.",
+    "label": "mode on",
+    "settle-seconds": 30
+   },
+   {
+    "kind": "expect",
+    "step": "mode on",
+    "path": "$.mode",
+    "equals": "on"
+   },
+   {
+    "kind": "write",
+    "label": "off",
+    "tool": "set-fsm-mode",
+    "clio-run": true,
+    "args": {
+     "mode": "off"
+    },
+    "known-differences": [
+     "$.executionlogmessages"
+    ],
+    "why": "Measured. First side: the whole off path from FSM on; second side: sent at once after the first side's recycle, as in the first T23 run (no settle)."
+   },
+   {
+    "kind": "read-back",
+    "tool": "get-fsm-mode",
+    "clio-environment-key": "environmentName",
+    "args": {},
+    "clio-run": true,
+    "why": "clio's tool takes flat arguments (environmentName), so the read goes through clio-run on both sides, as in window/t12.json. It is an authenticated GetApplicationInfo call: it also brings each server's session and the stand's application up before the timed step.",
+    "label": "mode after",
+    "settle-seconds": 30
+   },
+   {
+    "kind": "expect",
+    "step": "mode after",
+    "path": "$.mode",
+    "equals": "off"
+   }
+  ]
+ },
+ {
+  "label": "set-fsm-mode off from on round 5",
+  "why": "T24 timing, window-only: file system mode is a property of the whole stand. clio switches the stand on (setup, both calls through clio: the second finds it on and only exports); after a 30 s settle both servers read the mode, then the first side switches it off (import into the database, then cliogate's SetFileDesignMode, after which IIS recycles the application) and the second side calls off at once, the first request after that recycle (it finds file design mode disabled). Run with --order alternate: the first side flips with every round. Leaves the stand in FSM off.",
+  "steps": [
+   {
+    "kind": "write",
+    "label": "on (setup through clio)",
+    "tool": "set-fsm-mode",
+    "clio-run": true,
+    "server": "clio",
+    "args": {
+     "mode": "on"
+    },
+    "known-differences": [
+     "$.executionlogmessages"
+    ],
+    "why": "Setup, not measured: the second call finds FSM already on."
+   },
+   {
+    "kind": "read-back",
+    "tool": "get-fsm-mode",
+    "clio-environment-key": "environmentName",
+    "args": {},
+    "clio-run": true,
+    "why": "clio's tool takes flat arguments (environmentName), so the read goes through clio-run on both sides, as in window/t12.json. It is an authenticated GetApplicationInfo call: it also brings each server's session and the stand's application up before the timed step.",
+    "label": "mode on",
+    "settle-seconds": 30
+   },
+   {
+    "kind": "expect",
+    "step": "mode on",
+    "path": "$.mode",
+    "equals": "on"
+   },
+   {
+    "kind": "write",
+    "label": "off",
+    "tool": "set-fsm-mode",
+    "clio-run": true,
+    "args": {
+     "mode": "off"
+    },
+    "known-differences": [
+     "$.executionlogmessages"
+    ],
+    "why": "Measured. First side: the whole off path from FSM on; second side: sent at once after the first side's recycle, as in the first T23 run (no settle)."
+   },
+   {
+    "kind": "read-back",
+    "tool": "get-fsm-mode",
+    "clio-environment-key": "environmentName",
+    "args": {},
+    "clio-run": true,
+    "why": "clio's tool takes flat arguments (environmentName), so the read goes through clio-run on both sides, as in window/t12.json. It is an authenticated GetApplicationInfo call: it also brings each server's session and the stand's application up before the timed step.",
+    "label": "mode after",
+    "settle-seconds": 30
+   },
+   {
+    "kind": "expect",
+    "step": "mode after",
+    "path": "$.mode",
+    "equals": "off"
+   }
+  ]
+ },
+ {
+  "label": "set-fsm-mode off from on round 6",
+  "why": "T24 timing, window-only: file system mode is a property of the whole stand. clio switches the stand on (setup, both calls through clio: the second finds it on and only exports); after a 30 s settle both servers read the mode, then the first side switches it off (import into the database, then cliogate's SetFileDesignMode, after which IIS recycles the application) and the second side calls off at once, the first request after that recycle (it finds file design mode disabled). Run with --order alternate: the first side flips with every round. Leaves the stand in FSM off.",
+  "steps": [
+   {
+    "kind": "write",
+    "label": "on (setup through clio)",
+    "tool": "set-fsm-mode",
+    "clio-run": true,
+    "server": "clio",
+    "args": {
+     "mode": "on"
+    },
+    "known-differences": [
+     "$.executionlogmessages"
+    ],
+    "why": "Setup, not measured: the second call finds FSM already on."
+   },
+   {
+    "kind": "read-back",
+    "tool": "get-fsm-mode",
+    "clio-environment-key": "environmentName",
+    "args": {},
+    "clio-run": true,
+    "why": "clio's tool takes flat arguments (environmentName), so the read goes through clio-run on both sides, as in window/t12.json. It is an authenticated GetApplicationInfo call: it also brings each server's session and the stand's application up before the timed step.",
+    "label": "mode on",
+    "settle-seconds": 30
+   },
+   {
+    "kind": "expect",
+    "step": "mode on",
+    "path": "$.mode",
+    "equals": "on"
+   },
+   {
+    "kind": "write",
+    "label": "off",
+    "tool": "set-fsm-mode",
+    "clio-run": true,
+    "args": {
+     "mode": "off"
+    },
+    "known-differences": [
+     "$.executionlogmessages"
+    ],
+    "why": "Measured. First side: the whole off path from FSM on; second side: sent at once after the first side's recycle, as in the first T23 run (no settle)."
+   },
+   {
+    "kind": "read-back",
+    "tool": "get-fsm-mode",
+    "clio-environment-key": "environmentName",
+    "args": {},
+    "clio-run": true,
+    "why": "clio's tool takes flat arguments (environmentName), so the read goes through clio-run on both sides, as in window/t12.json. It is an authenticated GetApplicationInfo call: it also brings each server's session and the stand's application up before the timed step.",
+    "label": "mode after",
+    "settle-seconds": 30
+   },
+   {
+    "kind": "expect",
+    "step": "mode after",
+    "path": "$.mode",
+    "equals": "off"
+   }
+  ]
+ }
+]

@@ -1,0 +1,275 @@
+[
+ {
+  "label": "restart-by-environment-name waitReady false round 0 (warm-up)",
+  "why": "T24 timing, window-only: restarts the application for every user. Both servers read the mode (the application and both sessions are up), then each side sends the restart request alone 120 s after the previous call, as window/t15.json does: the first side's request reaches a running application, the second side's is the first request after the first side's restart. A last read brings the application up again. Run with --order alternate: the first side flips with every round.",
+  "steps": [
+   {
+    "kind": "read-back",
+    "tool": "get-fsm-mode",
+    "clio-environment-key": "environmentName",
+    "args": {},
+    "clio-run": true,
+    "why": "clio's tool takes flat arguments (environmentName), so the read goes through clio-run on both sides, as in window/t12.json. It is an authenticated GetApplicationInfo call: it also brings each server's session and the stand's application up before the timed step.",
+    "label": "ready before"
+   },
+   {
+    "kind": "write",
+    "label": "restart waitReady false",
+    "tool": "restart-by-environment-name",
+    "clio-run": true,
+    "clio-environment-key": "environmentName",
+    "settle-seconds": 120,
+    "args": {
+     "waitReady": false
+    },
+    "known-differences": [
+     "$.correlationid"
+    ],
+    "why": "Measured: the restart request alone (UnloadAppDomain on .NET Framework)."
+   },
+   {
+    "kind": "read-back",
+    "tool": "get-fsm-mode",
+    "clio-environment-key": "environmentName",
+    "args": {},
+    "clio-run": true,
+    "why": "clio's tool takes flat arguments (environmentName), so the read goes through clio-run on both sides, as in window/t12.json. It is an authenticated GetApplicationInfo call: it also brings each server's session and the stand's application up before the timed step.",
+    "label": "ready after"
+   }
+  ]
+ },
+ {
+  "label": "restart-by-environment-name waitReady false round 1",
+  "why": "T24 timing, window-only: restarts the application for every user. Both servers read the mode (the application and both sessions are up), then each side sends the restart request alone 120 s after the previous call, as window/t15.json does: the first side's request reaches a running application, the second side's is the first request after the first side's restart. A last read brings the application up again. Run with --order alternate: the first side flips with every round.",
+  "steps": [
+   {
+    "kind": "read-back",
+    "tool": "get-fsm-mode",
+    "clio-environment-key": "environmentName",
+    "args": {},
+    "clio-run": true,
+    "why": "clio's tool takes flat arguments (environmentName), so the read goes through clio-run on both sides, as in window/t12.json. It is an authenticated GetApplicationInfo call: it also brings each server's session and the stand's application up before the timed step.",
+    "label": "ready before"
+   },
+   {
+    "kind": "write",
+    "label": "restart waitReady false",
+    "tool": "restart-by-environment-name",
+    "clio-run": true,
+    "clio-environment-key": "environmentName",
+    "settle-seconds": 120,
+    "args": {
+     "waitReady": false
+    },
+    "known-differences": [
+     "$.correlationid"
+    ],
+    "why": "Measured: the restart request alone (UnloadAppDomain on .NET Framework)."
+   },
+   {
+    "kind": "read-back",
+    "tool": "get-fsm-mode",
+    "clio-environment-key": "environmentName",
+    "args": {},
+    "clio-run": true,
+    "why": "clio's tool takes flat arguments (environmentName), so the read goes through clio-run on both sides, as in window/t12.json. It is an authenticated GetApplicationInfo call: it also brings each server's session and the stand's application up before the timed step.",
+    "label": "ready after"
+   }
+  ]
+ },
+ {
+  "label": "restart-by-environment-name waitReady false round 2",
+  "why": "T24 timing, window-only: restarts the application for every user. Both servers read the mode (the application and both sessions are up), then each side sends the restart request alone 120 s after the previous call, as window/t15.json does: the first side's request reaches a running application, the second side's is the first request after the first side's restart. A last read brings the application up again. Run with --order alternate: the first side flips with every round.",
+  "steps": [
+   {
+    "kind": "read-back",
+    "tool": "get-fsm-mode",
+    "clio-environment-key": "environmentName",
+    "args": {},
+    "clio-run": true,
+    "why": "clio's tool takes flat arguments (environmentName), so the read goes through clio-run on both sides, as in window/t12.json. It is an authenticated GetApplicationInfo call: it also brings each server's session and the stand's application up before the timed step.",
+    "label": "ready before"
+   },
+   {
+    "kind": "write",
+    "label": "restart waitReady false",
+    "tool": "restart-by-environment-name",
+    "clio-run": true,
+    "clio-environment-key": "environmentName",
+    "settle-seconds": 120,
+    "args": {
+     "waitReady": false
+    },
+    "known-differences": [
+     "$.correlationid"
+    ],
+    "why": "Measured: the restart request alone (UnloadAppDomain on .NET Framework)."
+   },
+   {
+    "kind": "read-back",
+    "tool": "get-fsm-mode",
+    "clio-environment-key": "environmentName",
+    "args": {},
+    "clio-run": true,
+    "why": "clio's tool takes flat arguments (environmentName), so the read goes through clio-run on both sides, as in window/t12.json. It is an authenticated GetApplicationInfo call: it also brings each server's session and the stand's application up before the timed step.",
+    "label": "ready after"
+   }
+  ]
+ },
+ {
+  "label": "restart-by-environment-name waitReady false round 3",
+  "why": "T24 timing, window-only: restarts the application for every user. Both servers read the mode (the application and both sessions are up), then each side sends the restart request alone 120 s after the previous call, as window/t15.json does: the first side's request reaches a running application, the second side's is the first request after the first side's restart. A last read brings the application up again. Run with --order alternate: the first side flips with every round.",
+  "steps": [
+   {
+    "kind": "read-back",
+    "tool": "get-fsm-mode",
+    "clio-environment-key": "environmentName",
+    "args": {},
+    "clio-run": true,
+    "why": "clio's tool takes flat arguments (environmentName), so the read goes through clio-run on both sides, as in window/t12.json. It is an authenticated GetApplicationInfo call: it also brings each server's session and the stand's application up before the timed step.",
+    "label": "ready before"
+   },
+   {
+    "kind": "write",
+    "label": "restart waitReady false",
+    "tool": "restart-by-environment-name",
+    "clio-run": true,
+    "clio-environment-key": "environmentName",
+    "settle-seconds": 120,
+    "args": {
+     "waitReady": false
+    },
+    "known-differences": [
+     "$.correlationid"
+    ],
+    "why": "Measured: the restart request alone (UnloadAppDomain on .NET Framework)."
+   },
+   {
+    "kind": "read-back",
+    "tool": "get-fsm-mode",
+    "clio-environment-key": "environmentName",
+    "args": {},
+    "clio-run": true,
+    "why": "clio's tool takes flat arguments (environmentName), so the read goes through clio-run on both sides, as in window/t12.json. It is an authenticated GetApplicationInfo call: it also brings each server's session and the stand's application up before the timed step.",
+    "label": "ready after"
+   }
+  ]
+ },
+ {
+  "label": "restart-by-environment-name waitReady false round 4",
+  "why": "T24 timing, window-only: restarts the application for every user. Both servers read the mode (the application and both sessions are up), then each side sends the restart request alone 120 s after the previous call, as window/t15.json does: the first side's request reaches a running application, the second side's is the first request after the first side's restart. A last read brings the application up again. Run with --order alternate: the first side flips with every round.",
+  "steps": [
+   {
+    "kind": "read-back",
+    "tool": "get-fsm-mode",
+    "clio-environment-key": "environmentName",
+    "args": {},
+    "clio-run": true,
+    "why": "clio's tool takes flat arguments (environmentName), so the read goes through clio-run on both sides, as in window/t12.json. It is an authenticated GetApplicationInfo call: it also brings each server's session and the stand's application up before the timed step.",
+    "label": "ready before"
+   },
+   {
+    "kind": "write",
+    "label": "restart waitReady false",
+    "tool": "restart-by-environment-name",
+    "clio-run": true,
+    "clio-environment-key": "environmentName",
+    "settle-seconds": 120,
+    "args": {
+     "waitReady": false
+    },
+    "known-differences": [
+     "$.correlationid"
+    ],
+    "why": "Measured: the restart request alone (UnloadAppDomain on .NET Framework)."
+   },
+   {
+    "kind": "read-back",
+    "tool": "get-fsm-mode",
+    "clio-environment-key": "environmentName",
+    "args": {},
+    "clio-run": true,
+    "why": "clio's tool takes flat arguments (environmentName), so the read goes through clio-run on both sides, as in window/t12.json. It is an authenticated GetApplicationInfo call: it also brings each server's session and the stand's application up before the timed step.",
+    "label": "ready after"
+   }
+  ]
+ },
+ {
+  "label": "restart-by-environment-name waitReady false round 5",
+  "why": "T24 timing, window-only: restarts the application for every user. Both servers read the mode (the application and both sessions are up), then each side sends the restart request alone 120 s after the previous call, as window/t15.json does: the first side's request reaches a running application, the second side's is the first request after the first side's restart. A last read brings the application up again. Run with --order alternate: the first side flips with every round.",
+  "steps": [
+   {
+    "kind": "read-back",
+    "tool": "get-fsm-mode",
+    "clio-environment-key": "environmentName",
+    "args": {},
+    "clio-run": true,
+    "why": "clio's tool takes flat arguments (environmentName), so the read goes through clio-run on both sides, as in window/t12.json. It is an authenticated GetApplicationInfo call: it also brings each server's session and the stand's application up before the timed step.",
+    "label": "ready before"
+   },
+   {
+    "kind": "write",
+    "label": "restart waitReady false",
+    "tool": "restart-by-environment-name",
+    "clio-run": true,
+    "clio-environment-key": "environmentName",
+    "settle-seconds": 120,
+    "args": {
+     "waitReady": false
+    },
+    "known-differences": [
+     "$.correlationid"
+    ],
+    "why": "Measured: the restart request alone (UnloadAppDomain on .NET Framework)."
+   },
+   {
+    "kind": "read-back",
+    "tool": "get-fsm-mode",
+    "clio-environment-key": "environmentName",
+    "args": {},
+    "clio-run": true,
+    "why": "clio's tool takes flat arguments (environmentName), so the read goes through clio-run on both sides, as in window/t12.json. It is an authenticated GetApplicationInfo call: it also brings each server's session and the stand's application up before the timed step.",
+    "label": "ready after"
+   }
+  ]
+ },
+ {
+  "label": "restart-by-environment-name waitReady false round 6",
+  "why": "T24 timing, window-only: restarts the application for every user. Both servers read the mode (the application and both sessions are up), then each side sends the restart request alone 120 s after the previous call, as window/t15.json does: the first side's request reaches a running application, the second side's is the first request after the first side's restart. A last read brings the application up again. Run with --order alternate: the first side flips with every round.",
+  "steps": [
+   {
+    "kind": "read-back",
+    "tool": "get-fsm-mode",
+    "clio-environment-key": "environmentName",
+    "args": {},
+    "clio-run": true,
+    "why": "clio's tool takes flat arguments (environmentName), so the read goes through clio-run on both sides, as in window/t12.json. It is an authenticated GetApplicationInfo call: it also brings each server's session and the stand's application up before the timed step.",
+    "label": "ready before"
+   },
+   {
+    "kind": "write",
+    "label": "restart waitReady false",
+    "tool": "restart-by-environment-name",
+    "clio-run": true,
+    "clio-environment-key": "environmentName",
+    "settle-seconds": 120,
+    "args": {
+     "waitReady": false
+    },
+    "known-differences": [
+     "$.correlationid"
+    ],
+    "why": "Measured: the restart request alone (UnloadAppDomain on .NET Framework)."
+   },
+   {
+    "kind": "read-back",
+    "tool": "get-fsm-mode",
+    "clio-environment-key": "environmentName",
+    "args": {},
+    "clio-run": true,
+    "why": "clio's tool takes flat arguments (environmentName), so the read goes through clio-run on both sides, as in window/t12.json. It is an authenticated GetApplicationInfo call: it also brings each server's session and the stand's application up before the timed step.",
+    "label": "ready after"
+   }
+  ]
+ }
+]

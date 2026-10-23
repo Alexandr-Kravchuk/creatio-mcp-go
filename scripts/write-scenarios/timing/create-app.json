@@ -1,0 +1,401 @@
+[
+ {
+  "label": "create-app round 0 (warm-up)",
+  "why": "T24 timing, window-only: both servers read the mode 120 s apart (the previous round's deletes and OData build settle), then each side creates its own application back to back, as window/t15.json does before a compile: the second side starts right after the first side's create. Run with --order alternate: the first side flips with every round.",
+  "steps": [
+   {
+    "kind": "read-back",
+    "tool": "get-fsm-mode",
+    "clio-environment-key": "environmentName",
+    "args": {},
+    "clio-run": true,
+    "why": "clio's tool takes flat arguments (environmentName), so the read goes through clio-run on both sides, as in window/t12.json. It is an authenticated GetApplicationInfo call: it also brings each server's session and the stand's application up before the timed step.",
+    "label": "settle",
+    "settle-seconds": 120
+   },
+   {
+    "kind": "write",
+    "label": "create-app",
+    "tool": "create-app",
+    "clio-run": true,
+    "creates": "UsrParity{run}{side}Tm0",
+    "args": {
+     "name": "UsrParity{run}{side}Tm0",
+     "code": "UsrParity{run}{side}Tm0",
+     "template-code": "AppFreedomUI",
+     "with-mobile-pages": false,
+     "description": "Created by scripts/compare-mcp-writes.py; safe to delete"
+    },
+    "retry-while": "rebuilding the OData library",
+    "retry-attempts": 6,
+    "retry-delay-seconds": 30,
+    "known-differences": [
+     "$.entities[0].uid",
+     "$.pages[0].uid",
+     "$.pages[1].uid",
+     "$.pages[2].uid",
+     "$.applicationid",
+     "$.packageuid"
+    ],
+    "why": "Measured. Page, entity, application and package ids are created per side."
+   },
+   {
+    "kind": "cleanup",
+    "for": "UsrParity{run}{side}Tm0",
+    "server": "own",
+    "calls": [
+     {
+      "tool": "delete-app",
+      "clio-run": true,
+      "settle-seconds": 60,
+      "args": {
+       "app-name": "UsrParity{run}{side}Tm0"
+      }
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "label": "create-app round 1",
+  "why": "T24 timing, window-only: both servers read the mode 120 s apart (the previous round's deletes and OData build settle), then each side creates its own application back to back, as window/t15.json does before a compile: the second side starts right after the first side's create. Run with --order alternate: the first side flips with every round.",
+  "steps": [
+   {
+    "kind": "read-back",
+    "tool": "get-fsm-mode",
+    "clio-environment-key": "environmentName",
+    "args": {},
+    "clio-run": true,
+    "why": "clio's tool takes flat arguments (environmentName), so the read goes through clio-run on both sides, as in window/t12.json. It is an authenticated GetApplicationInfo call: it also brings each server's session and the stand's application up before the timed step.",
+    "label": "settle",
+    "settle-seconds": 120
+   },
+   {
+    "kind": "write",
+    "label": "create-app",
+    "tool": "create-app",
+    "clio-run": true,
+    "creates": "UsrParity{run}{side}Tm1",
+    "args": {
+     "name": "UsrParity{run}{side}Tm1",
+     "code": "UsrParity{run}{side}Tm1",
+     "template-code": "AppFreedomUI",
+     "with-mobile-pages": false,
+     "description": "Created by scripts/compare-mcp-writes.py; safe to delete"
+    },
+    "retry-while": "rebuilding the OData library",
+    "retry-attempts": 6,
+    "retry-delay-seconds": 30,
+    "known-differences": [
+     "$.entities[0].uid",
+     "$.pages[0].uid",
+     "$.pages[1].uid",
+     "$.pages[2].uid",
+     "$.applicationid",
+     "$.packageuid"
+    ],
+    "why": "Measured. Page, entity, application and package ids are created per side."
+   },
+   {
+    "kind": "cleanup",
+    "for": "UsrParity{run}{side}Tm1",
+    "server": "own",
+    "calls": [
+     {
+      "tool": "delete-app",
+      "clio-run": true,
+      "settle-seconds": 60,
+      "args": {
+       "app-name": "UsrParity{run}{side}Tm1"
+      }
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "label": "create-app round 2",
+  "why": "T24 timing, window-only: both servers read the mode 120 s apart (the previous round's deletes and OData build settle), then each side creates its own application back to back, as window/t15.json does before a compile: the second side starts right after the first side's create. Run with --order alternate: the first side flips with every round.",
+  "steps": [
+   {
+    "kind": "read-back",
+    "tool": "get-fsm-mode",
+    "clio-environment-key": "environmentName",
+    "args": {},
+    "clio-run": true,
+    "why": "clio's tool takes flat arguments (environmentName), so the read goes through clio-run on both sides, as in window/t12.json. It is an authenticated GetApplicationInfo call: it also brings each server's session and the stand's application up before the timed step.",
+    "label": "settle",
+    "settle-seconds": 120
+   },
+   {
+    "kind": "write",
+    "label": "create-app",
+    "tool": "create-app",
+    "clio-run": true,
+    "creates": "UsrParity{run}{side}Tm2",
+    "args": {
+     "name": "UsrParity{run}{side}Tm2",
+     "code": "UsrParity{run}{side}Tm2",
+     "template-code": "AppFreedomUI",
+     "with-mobile-pages": false,
+     "description": "Created by scripts/compare-mcp-writes.py; safe to delete"
+    },
+    "retry-while": "rebuilding the OData library",
+    "retry-attempts": 6,
+    "retry-delay-seconds": 30,
+    "known-differences": [
+     "$.entities[0].uid",
+     "$.pages[0].uid",
+     "$.pages[1].uid",
+     "$.pages[2].uid",
+     "$.applicationid",
+     "$.packageuid"
+    ],
+    "why": "Measured. Page, entity, application and package ids are created per side."
+   },
+   {
+    "kind": "cleanup",
+    "for": "UsrParity{run}{side}Tm2",
+    "server": "own",
+    "calls": [
+     {
+      "tool": "delete-app",
+      "clio-run": true,
+      "settle-seconds": 60,
+      "args": {
+       "app-name": "UsrParity{run}{side}Tm2"
+      }
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "label": "create-app round 3",
+  "why": "T24 timing, window-only: both servers read the mode 120 s apart (the previous round's deletes and OData build settle), then each side creates its own application back to back, as window/t15.json does before a compile: the second side starts right after the first side's create. Run with --order alternate: the first side flips with every round.",
+  "steps": [
+   {
+    "kind": "read-back",
+    "tool": "get-fsm-mode",
+    "clio-environment-key": "environmentName",
+    "args": {},
+    "clio-run": true,
+    "why": "clio's tool takes flat arguments (environmentName), so the read goes through clio-run on both sides, as in window/t12.json. It is an authenticated GetApplicationInfo call: it also brings each server's session and the stand's application up before the timed step.",
+    "label": "settle",
+    "settle-seconds": 120
+   },
+   {
+    "kind": "write",
+    "label": "create-app",
+    "tool": "create-app",
+    "clio-run": true,
+    "creates": "UsrParity{run}{side}Tm3",
+    "args": {
+     "name": "UsrParity{run}{side}Tm3",
+     "code": "UsrParity{run}{side}Tm3",
+     "template-code": "AppFreedomUI",
+     "with-mobile-pages": false,
+     "description": "Created by scripts/compare-mcp-writes.py; safe to delete"
+    },
+    "retry-while": "rebuilding the OData library",
+    "retry-attempts": 6,
+    "retry-delay-seconds": 30,
+    "known-differences": [
+     "$.entities[0].uid",
+     "$.pages[0].uid",
+     "$.pages[1].uid",
+     "$.pages[2].uid",
+     "$.applicationid",
+     "$.packageuid"
+    ],
+    "why": "Measured. Page, entity, application and package ids are created per side."
+   },
+   {
+    "kind": "cleanup",
+    "for": "UsrParity{run}{side}Tm3",
+    "server": "own",
+    "calls": [
+     {
+      "tool": "delete-app",
+      "clio-run": true,
+      "settle-seconds": 60,
+      "args": {
+       "app-name": "UsrParity{run}{side}Tm3"
+      }
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "label": "create-app round 4",
+  "why": "T24 timing, window-only: both servers read the mode 120 s apart (the previous round's deletes and OData build settle), then each side creates its own application back to back, as window/t15.json does before a compile: the second side starts right after the first side's create. Run with --order alternate: the first side flips with every round.",
+  "steps": [
+   {
+    "kind": "read-back",
+    "tool": "get-fsm-mode",
+    "clio-environment-key": "environmentName",
+    "args": {},
+    "clio-run": true,
+    "why": "clio's tool takes flat arguments (environmentName), so the read goes through clio-run on both sides, as in window/t12.json. It is an authenticated GetApplicationInfo call: it also brings each server's session and the stand's application up before the timed step.",
+    "label": "settle",
+    "settle-seconds": 120
+   },
+   {
+    "kind": "write",
+    "label": "create-app",
+    "tool": "create-app",
+    "clio-run": true,
+    "creates": "UsrParity{run}{side}Tm4",
+    "args": {
+     "name": "UsrParity{run}{side}Tm4",
+     "code": "UsrParity{run}{side}Tm4",
+     "template-code": "AppFreedomUI",
+     "with-mobile-pages": false,
+     "description": "Created by scripts/compare-mcp-writes.py; safe to delete"
+    },
+    "retry-while": "rebuilding the OData library",
+    "retry-attempts": 6,
+    "retry-delay-seconds": 30,
+    "known-differences": [
+     "$.entities[0].uid",
+     "$.pages[0].uid",
+     "$.pages[1].uid",
+     "$.pages[2].uid",
+     "$.applicationid",
+     "$.packageuid"
+    ],
+    "why": "Measured. Page, entity, application and package ids are created per side."
+   },
+   {
+    "kind": "cleanup",
+    "for": "UsrParity{run}{side}Tm4",
+    "server": "own",
+    "calls": [
+     {
+      "tool": "delete-app",
+      "clio-run": true,
+      "settle-seconds": 60,
+      "args": {
+       "app-name": "UsrParity{run}{side}Tm4"
+      }
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "label": "create-app round 5",
+  "why": "T24 timing, window-only: both servers read the mode 120 s apart (the previous round's deletes and OData build settle), then each side creates its own application back to back, as window/t15.json does before a compile: the second side starts right after the first side's create. Run with --order alternate: the first side flips with every round.",
+  "steps": [
+   {
+    "kind": "read-back",
+    "tool": "get-fsm-mode",
+    "clio-environment-key": "environmentName",
+    "args": {},
+    "clio-run": true,
+    "why": "clio's tool takes flat arguments (environmentName), so the read goes through clio-run on both sides, as in window/t12.json. It is an authenticated GetApplicationInfo call: it also brings each server's session and the stand's application up before the timed step.",
+    "label": "settle",
+    "settle-seconds": 120
+   },
+   {
+    "kind": "write",
+    "label": "create-app",
+    "tool": "create-app",
+    "clio-run": true,
+    "creates": "UsrParity{run}{side}Tm5",
+    "args": {
+     "name": "UsrParity{run}{side}Tm5",
+     "code": "UsrParity{run}{side}Tm5",
+     "template-code": "AppFreedomUI",
+     "with-mobile-pages": false,
+     "description": "Created by scripts/compare-mcp-writes.py; safe to delete"
+    },
+    "retry-while": "rebuilding the OData library",
+    "retry-attempts": 6,
+    "retry-delay-seconds": 30,
+    "known-differences": [
+     "$.entities[0].uid",
+     "$.pages[0].uid",
+     "$.pages[1].uid",
+     "$.pages[2].uid",
+     "$.applicationid",
+     "$.packageuid"
+    ],
+    "why": "Measured. Page, entity, application and package ids are created per side."
+   },
+   {
+    "kind": "cleanup",
+    "for": "UsrParity{run}{side}Tm5",
+    "server": "own",
+    "calls": [
+     {
+      "tool": "delete-app",
+      "clio-run": true,
+      "settle-seconds": 60,
+      "args": {
+       "app-name": "UsrParity{run}{side}Tm5"
+      }
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "label": "create-app round 6",
+  "why": "T24 timing, window-only: both servers read the mode 120 s apart (the previous round's deletes and OData build settle), then each side creates its own application back to back, as window/t15.json does before a compile: the second side starts right after the first side's create. Run with --order alternate: the first side flips with every round.",
+  "steps": [
+   {
+    "kind": "read-back",
+    "tool": "get-fsm-mode",
+    "clio-environment-key": "environmentName",
+    "args": {},
+    "clio-run": true,
+    "why": "clio's tool takes flat arguments (environmentName), so the read goes through clio-run on both sides, as in window/t12.json. It is an authenticated GetApplicationInfo call: it also brings each server's session and the stand's application up before the timed step.",
+    "label": "settle",
+    "settle-seconds": 120
+   },
+   {
+    "kind": "write",
+    "label": "create-app",
+    "tool": "create-app",
+    "clio-run": true,
+    "creates": "UsrParity{run}{side}Tm6",
+    "args": {
+     "name": "UsrParity{run}{side}Tm6",
+     "code": "UsrParity{run}{side}Tm6",
+     "template-code": "AppFreedomUI",
+     "with-mobile-pages": false,
+     "description": "Created by scripts/compare-mcp-writes.py; safe to delete"
+    },
+    "retry-while": "rebuilding the OData library",
+    "retry-attempts": 6,
+    "retry-delay-seconds": 30,
+    "known-differences": [
+     "$.entities[0].uid",
+     "$.pages[0].uid",
+     "$.pages[1].uid",
+     "$.pages[2].uid",
+     "$.applicationid",
+     "$.packageuid"
+    ],
+    "why": "Measured. Page, entity, application and package ids are created per side."
+   },
+   {
+    "kind": "cleanup",
+    "for": "UsrParity{run}{side}Tm6",
+    "server": "own",
+    "calls": [
+     {
+      "tool": "delete-app",
+      "clio-run": true,
+      "settle-seconds": 60,
+      "args": {
+       "app-name": "UsrParity{run}{side}Tm6"
+      }
+     }
+    ]
+   }
+  ]
+ }
+]
