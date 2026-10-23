@@ -27,15 +27,15 @@ type RegistrationTarget struct {
 	IsNetCore                                                bool
 }
 
-// loginFailure is a failed login or request: outer is the exception clio's command logs, base the innermost
+// registrationFailure is a failed login or request: outer is the exception clio's command logs, base the innermost
 // exception its probe summary names.
-type loginFailure struct{ outer, base string }
+type registrationFailure struct{ outer, base string }
 
-func (f *loginFailure) Error() string { return f.outer }
+func (f *registrationFailure) Error() string { return f.outer }
 
 // BaseMessage is the innermost exception's message for a failure from this file, the text otherwise.
 func BaseMessage(err error) string {
-	var failure *loginFailure
+	var failure *registrationFailure
 	if errors.As(err, &failure) {
 		return failure.base
 	}
@@ -75,7 +75,7 @@ func registrationLogin(ctx context.Context, target RegistrationTarget, timeout t
 	body, _ := json.Marshal(map[string]any{"UserName": target.Login, "UserPassword": target.Password, "TimeZoneOffset": -offset / 60})
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, base+"/ServiceModel/AuthService.svc/Login", bytes.NewReader(body))
 	if err != nil {
-		return nil, &loginFailure{err.Error(), err.Error()}
+		return nil, &registrationFailure{err.Error(), err.Error()}
 	}
 	request.Header.Set("Content-Type", "application/json")
 	response, err := client.Do(request)
@@ -84,7 +84,7 @@ func registrationLogin(ctx context.Context, target RegistrationTarget, timeout t
 	}
 	payload, _ := readResponseLimit(response, maxResponseBytes)
 	if response.StatusCode < 200 || response.StatusCode > 299 {
-		return nil, &loginFailure{
+		return nil, &registrationFailure{
 			outer: fmt.Sprintf("The remote server returned an error: (%d) %s.", response.StatusCode, reasonPhrase(response)),
 			base:  fmt.Sprintf("The authentication endpoint returned HTTP %d %s.", response.StatusCode, reasonPhrase(response)),
 		}
@@ -95,7 +95,7 @@ func registrationLogin(ctx context.Context, target RegistrationTarget, timeout t
 	if json.Unmarshal(payload, &answer) != nil || answer.Code == nil || *answer.Code != 0 {
 		// clio's text also carries its login diagnostics in brackets (client and timing counters).
 		message := "Unauthorized " + target.Login + " for " + target.URI
-		return nil, &loginFailure{message, message}
+		return nil, &registrationFailure{message, message}
 	}
 	session := &registrationSession{client: client}
 	if parsed, err := url.Parse(base + "/"); err == nil {
@@ -113,7 +113,7 @@ func registrationToken(ctx context.Context, client *http.Client, target Registra
 	form := url.Values{"client_id": {target.ClientID}, "client_secret": {target.ClientSecret}, "grant_type": {"client_credentials"}}
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, target.AuthAppURI, strings.NewReader(form.Encode()))
 	if err != nil {
-		return nil, &loginFailure{"One or more errors occurred. (" + err.Error() + ")", err.Error()}
+		return nil, &registrationFailure{"One or more errors occurred. (" + err.Error() + ")", err.Error()}
 	}
 	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	response, err := client.Do(request)
@@ -123,14 +123,14 @@ func registrationToken(ctx context.Context, client *http.Client, target Registra
 	payload, _ := readResponseLimit(response, maxResponseBytes)
 	if response.StatusCode < 200 || response.StatusCode > 299 {
 		inner := fmt.Sprintf("Response status code does not indicate success: %d (%s).", response.StatusCode, reasonPhrase(response))
-		return nil, &loginFailure{"One or more errors occurred. (" + inner + ")", inner}
+		return nil, &registrationFailure{"One or more errors occurred. (" + inner + ")", inner}
 	}
 	var token struct {
 		AccessToken string `json:"access_token"`
 	}
 	if json.Unmarshal(payload, &token) != nil || token.AccessToken == "" {
 		message := "OAuth token endpoint returned no access_token"
-		return nil, &loginFailure{"One or more errors occurred. (" + message + ")", message}
+		return nil, &registrationFailure{"One or more errors occurred. (" + message + ")", message}
 	}
 	return &registrationSession{client: client, bearer: token.AccessToken}, nil
 }
@@ -149,7 +149,7 @@ func transportFailure(err error, aggregate bool) error {
 	if aggregate {
 		outer = "One or more errors occurred. (" + outer + ")"
 	}
-	return &loginFailure{outer, sentence}
+	return &registrationFailure{outer, sentence}
 }
 
 func isTimeout(err error) bool {

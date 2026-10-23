@@ -87,7 +87,7 @@ func TestDetectRuntimeDecidesAsClio(t *testing.T) {
 		want := strings.NewReplacer("{uri}", uri, "{host}", parsed.Host).Replace(test.wantRefusal)
 		switch {
 		case test.wantContains != "":
-			if err == nil || !strings.Contains(err.Error(), test.wantContains) || !strings.Contains(err.Error(), "=> Connection refused") {
+			if err == nil || !strings.Contains(err.Error(), test.wantContains) || !strings.Contains(err.Error(), "=> "+refusedSentence()) {
 				t.Fatalf("%s: err = %v", test.mode, err)
 			}
 		case want != "":
@@ -112,7 +112,7 @@ func useRegistrationTransport(t *testing.T, transport http.RoundTripper) {
 func TestCheckRegistrationLoginTexts(t *testing.T) {
 	useRegistrationTransport(t, refusingTransport())
 	if err := CheckRegistrationLogin(context.Background(), RegistrationTarget{URI: "http://127.0.0.1:9", Login: "u", Password: "p"}); err == nil ||
-		err.Error() != "Connection refused (127.0.0.1:9)" {
+		err.Error() != refusedSentence()+" (127.0.0.1:9)" {
 		t.Fatalf("closed port: %v", err)
 	}
 	useRegistrationTransport(t, registrationTransport())

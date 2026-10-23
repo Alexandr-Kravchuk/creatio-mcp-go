@@ -70,8 +70,8 @@ func (c *Client) CheckAuthCodeFlow(ctx context.Context, format string) CommandRe
 // an error status (a WebException ProtocolError) or rejected (UnauthorizedAccessException, whose clio text also
 // carries bracketed login diagnostics).
 func (c *Client) remoteCommandFailureText(err error) string {
-	if fault, ok := asConnectFault(err); ok {
-		return "Cannot connect to the application: " + fault.Error() + " (WebException: ConnectFailure). Make sure the site is running and accessible."
+	if _, ok := asConnectFault(err); ok {
+		return readableMessage(err)
 	}
 	var status, code int
 	if _, scanErr := fmt.Sscanf(err.Error(), "forms login returned HTTP %d", &status); scanErr == nil && status > 0 {
