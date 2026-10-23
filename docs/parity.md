@@ -24,6 +24,10 @@ case once per name against the same two processes, so one Go process serves both
 alternation; the evidence numbers the environments instead of naming them. The write script below takes
 the same `--go-env-mode` with the same default.
 
+In `--go-env-mode=variables` Go cannot echo a name it was not given, so `$.environmentname` is a known
+difference there, and so are the paths a case lists under `known-differences-variables` (list-user-tasks
+quotes the `CREATIO_URL` target where clio quotes the name). In name mode those paths are compared.
+
 A case with `"clio-run": true` reaches both servers through `clio-run`. Use it for a tool that is not
 read-only: called directly by raw name, both servers answer `confirmation-required` instead of running it
 (see [writing-tools.md](writing-tools.md)).
