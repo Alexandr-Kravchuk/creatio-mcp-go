@@ -13,6 +13,17 @@ The inventory row stays "not ported".
 | Rules models | `WebToMobilePageConversionRulesModels.cs`, `WebToMobileComponentRemovalRules.cs`, `ComponentPropertyFilters.cs` | `internal/mobileguide/rules.go` | `rules_test.go` |
 | Rules catalog (CDN chain → bundled fallback, validation, reason-code subset, discriminator anywhere in the object) | `WebToMobilePageConversionRulesCatalog.cs`, flavor `RegistryFlavor.WebToMobilePageConversionRules` (`CLIO_WEB_TO_MOBILE_PAGE_CONVERSION_RULES_LOCAL_FILE`, cache sub-folder `web-to-mobile-page-conversion-rules`) | `rules.go` (`ParseRules`, `GetRules`, `BundledRules`), `internal/creatio/mobileguide_rules_fetch.go` (reuses the component-registry fetch chain) | `rules_test.go`: every refusal shape of `WebToMobilePageConversionRulesCatalogTests.cs`, the four published-but-wrong reason codes, the three unusable discriminators, fallback on unavailable / invalid document, cancellation propagates |
 
+| Answer types | `MobilePageConversionGuideModels.cs` (2,148 lines, 612 without doc comments) — every serialized type, member order, reason-code constants | `internal/mobileguide/models.go`, `response.go` (`Response`) | `response_test.go`: null left out, empty list written as `[]`, dictionary keys in insertion order |
+| Tool helpers without the engine | `MobilePageConversionGuideTool.cs`: `Fail` (redacted), `DetectSourceType`, `RejectUnsupportedSourceType`, both template refusal texts, `BuildRequestRegistryWarning`, `WorseResolvedFrom`, the bad-`version` text | `internal/mobileguide/response.go` | `response_test.go` |
+
+Serialization of the answer: clio's MCP options are `McpJsonUtilities.DefaultOptions` — `JsonSerializerDefaults.Web`
+plus `DefaultIgnoreCondition = WhenWritingNull` (read from the decompiled `ModelContextProtocol.Core.dll` of the
+8.1.0.142 tool package). So every null member is omitted, including members without their own `[JsonIgnore]`, and
+`ElementMapEntry` (no `[JsonPropertyName]`) is named by the camelCase policy. Go reproduces this with `omitzero`
+(a nil slice/pointer is dropped, an empty non-nil slice is written as `[]`); `requiresVersionConfirmation`
+(WhenWritingDefault) is the only bool that is dropped when false. `JsonNode` members are `json.RawMessage` that the
+engine must fill; the text goes through `creatio.ClioJSONText` at the tool boundary like the other typed answers.
+
 System.Text.Json reading rules reproduced: case-insensitive member names, a missing member keeps its C#
 initializer (`[]`, `"items"`, `"caption"`, `"crt.TabContainer"`, `"latest"`), an explicit `null` clears it,
 `null` for a non-nullable bool is an error, dictionaries keep first-seen key order with the last value, a
@@ -24,12 +35,40 @@ as in clio; only the error texts of refusals that never reach a caller differ (t
 | Piece | Lines | Notes |
 |---|---|---|
 | `WebToMobileAnalysisService.cs` + `.ComponentRemovals.cs` | 7,401 + 816 | the engine; Newtonsoft `JObject` manipulation incl. JSONPath `SelectToken` (index and slice) used by `viewConfigTemplates` |
-| `MobilePageConversionGuideModels.cs` | 2,148 | answer types: JSON names, member order, null/default omission — not started |
-| `MobilePageConversionGuideTool.cs` | 1,005 | flow read; args, binder refusals, validation order not yet written |
+| `MobilePageConversionGuideTool.cs` flow | ~600 of 1,005 | the handler itself: argument binding, environment resolution, page reads, version resolution, catalog loads, template probes, `ResolveEffectiveTemplateName`, `IsFormPage`, `DeriveMobileSchemaName`, container/component name maps, positional placements, `BuildRulesWarning` (needs the engine's `UnknownMobileRequestTargets`) |
 | Probes: `MobileActionTargetProbe`, `PageBusinessRuleProbe`, `MobileSectionRegistrationProbe`, `ExistingMobilePageProbe` | 927 + 450 + 194 + 184 | read-only data reads |
 | `ExcludedComponentsPass`, `WebToMobilePropertyPrune`, `DefaultPageAddonReader`, `MissingTargetPageQueueBuilder`, `MobileRegistryGeneration`, `RelatedPageAddonMetadata`, `SchemaNameResolver` | 578 + 199 + 120 + 104 + 81 + 92 + 127 | |
 | Engine tests to port | ~22,700 | `WebToMobileConversionServiceTests.cs`, `WebToMobileRealPageRegressionTests.cs`, `WebToMobileGeneralInfoTabRegressionTests.cs`, tool and refusal-wiring tests |
 | Live comparison with clio 142 | — | refusal paths + fake stand `scripts/fake-stands/t27/` — not started |
+
+## Next session: facts already established
+
+- The tool takes ONE record argument, so its MCP input is `{"args": {schema-name, target-schema-name, version,
+  environment-name, uri, login, password}}`; `main.go` already unwraps `args`. Contract and annotations come from the
+  inventory by name (`registerTool(map[string]any{"name": "get-mobile-page-conversion-guide"}, …)`, ReadOnly,
+  Idempotent, not Destructive, not OpenWorld).
+- `cmd/creatio-mcp-go/tool_t21a_test.go` asserts the tool is NOT registered; flip that assertion in the commit that
+  registers it, together with the inventory row.
+- clio's order: page read (env resolution happens inside it, so an unknown environment answers
+  `Failed to read source page '<name>': <message>` inside the tool's own envelope — to be confirmed live) →
+  unsuccessful read `Could not read source page '<name>': <error>. If the page is a Classic UI page, migrate it to a
+  Freedom UI web page first.` → source type → `version` check → version resolution → mobile catalog, web catalog,
+  mobile request catalog (each failure has its own `Failed to load the … catalog for version '<v>': …` text) → rules →
+  mobile template probe (refusal) → web template baseline (refusal) → probes → engine (`Failed to analyze source page …`).
+  Whether the Safe-environment refusal applies to this read-only tool is unverified.
+- The engine needs data that only `internal/creatio` has unexported: the merged page bundle (`PageGetResult.bundle`,
+  a `jnode`), version resolution (`componentInfoResolveVersion`, `componentInfoProbeVersion`,
+  `componentInfoThreePartVersion`, `componentInfoMarkersFor`), the parsed web/mobile component catalogs
+  (`componentInfoParseCatalog` entries incl. properties and `globalReferences.baseInputs` for
+  `MobileRegistryGeneration`) and the mobile request catalog (`dataWriteParseRequestCatalog`). Plan: one new file
+  `internal/creatio/mobileguide_bridge.go` exporting exactly these, and keep the engine in `internal/mobileguide`.
+- The engine works on Newtonsoft `JObject` and STJ `JsonNode`; it uses JSONPath `SelectToken("columns[0].code")` and
+  `SelectTokens("columns[1:]")` for `viewConfigTemplates`. A DOM with both writers already exists unexported as
+  `internal/creatio/jsonnode.go`; `mobileguide` needs its own copy or an exported one.
+- Registry overrides for the offline comparison: `CLIO_COMPONENT_REGISTRY_LOCAL_FILE`,
+  `CLIO_MOBILE_COMPONENT_REGISTRY_LOCAL_FILE`, `CLIO_MOBILE_REQUEST_REGISTRY_LOCAL_FILE`,
+  `CLIO_WEB_TO_MOBILE_PAGE_CONVERSION_RULES_LOCAL_FILE` (a missing override file is an IOException, so the rules fall
+  back to the bundled copy; the component catalogs fail instead).
 
 ## How to rerun
 
