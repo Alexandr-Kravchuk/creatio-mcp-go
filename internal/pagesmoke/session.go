@@ -535,3 +535,8 @@ func writeOwnerOnlyAtomic(path, content string) error {
 	}
 	return nil
 }
+
+func readFileText(path string) (string, error) {
+	data, err := os.ReadFile(path)
+	return string(data), err
+}
