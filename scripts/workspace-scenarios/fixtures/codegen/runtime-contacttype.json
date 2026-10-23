@@ -1,0 +1,5 @@
+{"schema":{"uId":"0ff7c5c6-8d4b-4b0c-a1c4-f3a2d1e2c3b4","name":"ContactType","caption":{"en-US":"Contact type"},"columns":{"Items":{
+"ae0e45ca-c495-4fe7-a39d-3ab7278e1617":{"uId":"ae0e45ca-c495-4fe7-a39d-3ab7278e1617","name":"Id","caption":{"en-US":"Id"},"dataValueType":0,"isRequired":true},
+"736c30a7-c0ec-4fa9-b034-2552b319b633":{"uId":"736c30a7-c0ec-4fa9-b034-2552b319b633","name":"Name","caption":{"en-US":"Name"},"description":{"en-US":"Name"},"dataValueType":28,"isRequired":true},
+"e1a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c":{"uId":"e1a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c","name":"Description","caption":{"en-US":"Description"},"description":{"en-US":"Description"},"dataValueType":28,"isRequired":false}
+}}},"success":true}

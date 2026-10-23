@@ -1,0 +1,8 @@
+{"collection":[
+{"isVirtual":false,"id":"25d7c1ab-1de0-4501-b402-02e0e5a72d6e","name":"Account","caption":"Account","uId":"25d7c1ab-1de0-4501-b402-02e0e5a72d6e","packageUId":"5a9d8c6b-1f3e-4d2a-9b7c-0e1f2a3b4c5d","parentUId":"1bab9dcf-17d5-49f8-9536-8e0064f1dce0","extendParent":false},
+{"isVirtual":false,"id":"16be3651-8fe2-4159-8dd0-a803d4683dd3","name":"Contact","caption":"Contact","uId":"16be3651-8fe2-4159-8dd0-a803d4683dd3","packageUId":"5a9d8c6b-1f3e-4d2a-9b7c-0e1f2a3b4c5d","parentUId":"1bab9dcf-17d5-49f8-9536-8e0064f1dce0","extendParent":false},
+{"isVirtual":false,"id":"0ff7c5c6-8d4b-4b0c-a1c4-f3a2d1e2c3b4","name":"ContactType","caption":"Contact type","uId":"0ff7c5c6-8d4b-4b0c-a1c4-f3a2d1e2c3b4","packageUId":"5a9d8c6b-1f3e-4d2a-9b7c-0e1f2a3b4c5d","parentUId":"ab1e7a7a-2a0e-4b5e-9f3c-5d6e7f8a9b0c","extendParent":false},
+{"isVirtual":false,"id":"09ce5d50-30b6-4a9a-8c9d-9c4f4e1f0a11","name":"Country","caption":"Country","uId":"09ce5d50-30b6-4a9a-8c9d-9c4f4e1f0a11","packageUId":"5a9d8c6b-1f3e-4d2a-9b7c-0e1f2a3b4c5d","parentUId":"ab1e7a7a-2a0e-4b5e-9f3c-5d6e7f8a9b0c","extendParent":false},
+{"isVirtual":false,"id":"2a3b4c5d-6e7f-4809-9a1b-2c3d4e5f6a7b","name":"ContactCommunication","caption":"Contact communication option","uId":"2a3b4c5d-6e7f-4809-9a1b-2c3d4e5f6a7b","packageUId":"5a9d8c6b-1f3e-4d2a-9b7c-0e1f2a3b4c5d","parentUId":"1bab9dcf-17d5-49f8-9536-8e0064f1dce0","extendParent":false},
+{"isVirtual":true,"id":"16be3651-8fe2-4159-8dd0-a803d4683dd3","name":"Contact","caption":"Contact (replaced)","uId":"16be3651-8fe2-4159-8dd0-a803d4683dd3","packageUId":"6b0e9d7c-2f4e-4e3b-8c9d-1f2a3b4c5d6e","parentUId":"16be3651-8fe2-4159-8dd0-a803d4683dd3","extendParent":true}
+],"success":true,"errorInfo":null}

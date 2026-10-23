@@ -1,0 +1,17 @@
+{"schema":{"uId":"16be3651-8fe2-4159-8dd0-a803d4683dd3","name":"Contact","caption":{"en-US":"Contact"},"description":{"en-US":"People the company works with"},"columns":{"Items":{
+"ae0e45ca-c495-4fe7-a39d-3ab7278e1617":{"uId":"ae0e45ca-c495-4fe7-a39d-3ab7278e1617","name":"Id","caption":{"en-US":"Id"},"dataValueType":0,"isRequired":true},
+"b1c2d3e4-f5a6-4b7c-8d9e-0f1a2b3c4d5e":{"uId":"b1c2d3e4-f5a6-4b7c-8d9e-0f1a2b3c4d5e","name":"Name","caption":{"en-US":"Full name"},"description":{"en-US":"Full name"},"dataValueType":28,"isRequired":true},
+"c2d3e4f5-a6b7-4c8d-9e0f-1a2b3c4d5e6f":{"uId":"c2d3e4f5-a6b7-4c8d-9e0f-1a2b3c4d5e6f","name":"Account","caption":{"en-US":"Account"},"description":{"en-US":"Account"},"dataValueType":10,"isRequired":false,"referenceSchemaName":"Account"},
+"d3e4f5a6-b7c8-4d9e-0f1a-2b3c4d5e6f7a":{"uId":"d3e4f5a6-b7c8-4d9e-0f1a-2b3c4d5e6f7a","name":"Email","caption":{"en-US":"Email"},"description":{"en-US":"Email"},"dataValueType":45,"isRequired":false},
+"e4f5a6b7-c8d9-4e0f-1a2b-3c4d5e6f7a8b":{"uId":"e4f5a6b7-c8d9-4e0f-1a2b-3c4d5e6f7a8b","name":"BirthDate","caption":{"en-US":"Birth date"},"description":{"en-US":"Birth date"},"dataValueType":8,"isRequired":false},
+"f5a6b7c8-d9e0-4f1a-2b3c-4d5e6f7a8b9c":{"uId":"f5a6b7c8-d9e0-4f1a-2b3c-4d5e6f7a8b9c","name":"Age","caption":{"en-US":"Age"},"description":{"en-US":"Age"},"dataValueType":4,"isRequired":false},
+"a6b7c8d9-e0f1-4a2b-3c4d-5e6f7a8b9c0d":{"uId":"a6b7c8d9-e0f1-4a2b-3c4d-5e6f7a8b9c0d","name":"IsNew","caption":{"en-US":"New"},"description":{"en-US":"Is new"},"dataValueType":12,"isRequired":false},
+"b7c8d9e0-f1a2-4b3c-4d5e-6f7a8b9c0d1e":{"uId":"b7c8d9e0-f1a2-4b3c-4d5e-6f7a8b9c0d1e","name":"Photo","caption":{"en-US":"Photo"},"description":{"en-US":"Photo data"},"dataValueType":13,"isRequired":false},
+"c8d9e0f1-a2b3-4c4d-5e6f-7a8b9c0d1e2f":{"uId":"c8d9e0f1-a2b3-4c4d-5e6f-7a8b9c0d1e2f","name":"Owner","caption":{"en-US":"Owner"},"description":{"en-US":"Owner"},"dataValueType":10,"isRequired":false,"referenceSchemaName":"Contact"},
+"d9e0f1a2-b3c4-4d5e-6f7a-8b9c0d1e2f3a":{"uId":"d9e0f1a2-b3c4-4d5e-6f7a-8b9c0d1e2f3a","name":"Type","caption":{"en-US":"Type"},"description":{"en-US":"Type"},"dataValueType":10,"isRequired":true,"referenceSchemaName":"ContactType"},
+"e0f1a2b3-c4d5-4e6f-7a8b-9c0d1e2f3a4b":{"uId":"e0f1a2b3-c4d5-4e6f-7a8b-9c0d1e2f3a4b","name":"Weight","caption":{"en-US":"Weight"},"description":{"en-US":"Weight"},"dataValueType":32,"isRequired":false},
+"f1a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c":{"uId":"f1a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c","name":"Notes","caption":{"en-US":"Notes"},"description":{"en-US":"Notes about the contact.\nFree text."},"dataValueType":30,"isRequired":false},
+"a2b3c4d5-e6f7-4a8b-9c0d-1e2f3a4b5c6d":{"uId":"a2b3c4d5-e6f7-4a8b-9c0d-1e2f3a4b5c6d","name":"CreatedBy","caption":{"en-US":"Created by"},"description":{"en-US":"Created by"},"dataValueType":10,"isRequired":false,"referenceSchemaName":"Contact"},
+"b3c4d5e6-f7a8-4b9c-0d1e-2f3a4b5c6d7e":{"uId":"b3c4d5e6-f7a8-4b9c-0d1e-2f3a4b5c6d7e","name":"Gender","caption":{"en-US":"Gender"},"description":{"en-US":"Gender"},"dataValueType":11,"isRequired":false,"referenceSchemaName":null},
+"c4d5e6f7-a8b9-4c0d-1e2f-3a4b5c6d7e8f":{"uId":"c4d5e6f7-a8b9-4c0d-1e2f-3a4b5c6d7e8f","name":"Completeness","caption":{"en-US":"Completeness"},"description":null,"dataValueType":1,"isRequired":false}
+}}},"success":true}

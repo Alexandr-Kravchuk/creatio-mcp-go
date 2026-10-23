@@ -1,2 +1,3 @@
 internal/workspace/templates/templates.zip binary
 internal/workspace/templates/manifest.json -text
+internal/workspace/testdata/models/*.cs -text -whitespace

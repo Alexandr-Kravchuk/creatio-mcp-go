@@ -13,8 +13,10 @@ A scenario with "stand": {"rules": [...]} gets a fake Creatio site per side, reg
 it answers AuthService.svc/Login with session cookies and every other request with the first rule whose
 "route" ends the path and whose "method" and "contains" (texts in the body or query) match; a rule answers
 "body" (text), "body_base64" or "body_file" (relative to scripts/workspace-scenarios/fixtures) with
-"status" and "content_type", and may "set" a flag that later rules require with "if" or exclude with
-"unless". Unmatched requests get {"success":true}.
+"status" and "content_type" after "delay" seconds (none by default), and may "set" a flag that later rules
+require with "if" or exclude with "unless". Unmatched requests get {"success":true}. "sort-requests": true
+compares the requests as a sorted list, for a command that sends them in parallel (clio's add-item-model reads
+four runtime schemas at a time).
 
 In arguments {home} is the side's home and {ws} is {home}/base/ws. Compared per step: the answer, with
 clio's correlation-id left out and the home path replaced by {home}. Compared per scenario: the tree under
@@ -144,6 +146,8 @@ class Stand:
                 if rule is None:
                     self.answer(200, b'{"success":true}', "application/json; charset=utf-8")
                     return
+                if rule.get("delay"):
+                    time.sleep(rule["delay"])
                 if "body_file" in rule:
                     data = (FIXTURES / rule["body_file"]).read_bytes()
                 elif "body_base64" in rule:
@@ -293,6 +297,8 @@ def run_side(command, home, scenario, clio_dll):
         if stand:
             stand.close()
     requests = normalize_requests(stand.requests, home, stand.url) if stand else []
+    if scenario.get("sort-requests"):
+        requests = sorted(requests)
     return answers, files, requests
 
 

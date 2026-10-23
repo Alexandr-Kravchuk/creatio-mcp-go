@@ -1,0 +1,12 @@
+{"schema":{"uId":"2a3b4c5d-6e7f-4809-9a1b-2c3d4e5f6a7b","name":"ContactCommunication","caption":{"en-US":"Contact communication option"},"description":{"en-US":"Phones, e-mails and other ways to reach a contact"},"columns":{"Items":{
+"ae0e45ca-c495-4fe7-a39d-3ab7278e1617":{"uId":"ae0e45ca-c495-4fe7-a39d-3ab7278e1617","name":"Id","caption":{"en-US":"Id"},"dataValueType":0,"isRequired":true},
+"f2a3b4c5-d6e7-4f8a-9b0c-1d2e3f4a5b6c":{"uId":"f2a3b4c5-d6e7-4f8a-9b0c-1d2e3f4a5b6c","name":"Contact","caption":{"en-US":"Contact"},"description":{"en-US":"Contact"},"dataValueType":10,"isRequired":true,"referenceSchemaName":"Contact"},
+"a3b4c5d6-e7f8-4a9b-0c1d-2e3f4a5b6c7d":{"uId":"a3b4c5d6-e7f8-4a9b-0c1d-2e3f4a5b6c7d","name":"Number","caption":{"en-US":"Number"},"description":{"en-US":"Number"},"dataValueType":28,"isRequired":true},
+"b4c5d6e7-f8a9-4b0c-1d2e-3f4a5b6c7d8e":{"uId":"b4c5d6e7-f8a9-4b0c-1d2e-3f4a5b6c7d8e","name":"CommunicationType","caption":{"en-US":"Type"},"description":{"en-US":"Type"},"dataValueType":10,"isRequired":true,"referenceSchemaName":"CommunicationType"},
+"c5d6e7f8-a9b0-4c1d-2e3f-4a5b6c7d8e9f":{"uId":"c5d6e7f8-a9b0-4c1d-2e3f-4a5b6c7d8e9f","name":"Primary","caption":{"en-US":"Primary"},"dataValueType":12,"isRequired":false},
+"d6e7f8a9-b0c1-4d2e-3f4a-5b6c7d8e9f0a":{"uId":"d6e7f8a9-b0c1-4d2e-3f4a-5b6c7d8e9f0a","name":"Position","caption":{"en-US":"Position"},"description":{"en-US":"Position"},"dataValueType":4,"isRequired":false},
+"e7f8a9b0-c1d2-4e3f-4a5b-6c7d8e9f0a1b":{"uId":"e7f8a9b0-c1d2-4e3f-4a5b-6c7d8e9f0a1b","name":"UsrAccount","caption":{"en-US":"Account"},"description":{"en-US":"Account"},"dataValueType":10,"isRequired":false,"referenceSchemaName":"Account"},
+"f8a9b0c1-d2e3-4f4a-5b6c-7d8e9f0a1b2c":{"uId":"f8a9b0c1-d2e3-4f4a-5b6c-7d8e9f0a1b2c","name":"Usr_Account","caption":{"en-US":"Account (legacy)"},"description":{"en-US":"Account (legacy)"},"dataValueType":10,"isRequired":false,"referenceSchemaName":"Account"},
+"a9b0c1d2-e3f4-4a5b-6c7d-8e9f0a1b2c3d":{"uId":"a9b0c1d2-e3f4-4a5b-6c7d-8e9f0a1b2c3d","name":"Extra","caption":{"en-US":"Extra"},"dataValueType":1,"isRequired":false,"referenceSchemaName":" "},
+"b0c1d2e3-f4a5-4b6c-7d8e-9f0a1b2c3d4e":{"uId":"b0c1d2e3-f4a5-4b6c-7d8e-9f0a1b2c3d4e","name":"usrAccountLink","caption":{"en-US":"Account link"},"dataValueType":10,"isRequired":false,"referenceSchemaName":"Account"}
+}}},"success":true}
