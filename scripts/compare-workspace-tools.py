@@ -8,8 +8,13 @@ is a list of steps (scripts/workspace-scenarios/*.json):
 
   {"tool": "create-workspace", "args": {...}}           a call through clio-run ("direct": true: by raw name)
   {"mkdir": "base"} / {"write": "path", "content": ".."} prepare the home
-  {"stand": "<name>"}                                    serve a fake Creatio stand from fake-stands.py for
-                                                         the following steps; its environment is "fake"
+
+A scenario with "stand": {"rules": [...]} gets a fake Creatio site per side, registered as environment "fake":
+it answers AuthService.svc/Login with session cookies and every other request with the first rule whose
+"route" ends the path and whose "method" and "contains" (texts in the body or query) match; a rule answers
+"body" (text), "body_base64" or "body_file" (relative to scripts/workspace-scenarios/fixtures) with
+"status" and "content_type", and may "set" a flag that later rules require with "if" or exclude with
+"unless". Unmatched requests get {"success":true}.
 
 In arguments {home} is the side's home and {ws} is {home}/base/ws. Compared per step: the answer, with
 clio's correlation-id left out and the home path replaced by {home}. Compared per scenario: the tree under
@@ -21,10 +26,12 @@ CreatioSDK versions from api.nuget.org on both sides, as clio does.
     python3 scripts/compare-workspace-tools.py --clio-dll <clio.dll> --go-bin <creatio-mcp-go> --work <dir> \
         [--scenario NAME ...] [--evidence evidence/t16c-workspace.json] [--show]
 """
-import argparse, glob, hashlib, json, os, pathlib, re, shutil, stat, subprocess, sys, time
+import argparse, base64, glob, hashlib, http.server, json, os, pathlib, re, shutil, socket, stat, subprocess, sys
+import threading, time, urllib.parse
 
 REPO = pathlib.Path(__file__).resolve().parent.parent
 SCENARIOS = REPO / "scripts" / "workspace-scenarios"
+FIXTURES = SCENARIOS / "fixtures"
 GUID = re.compile(r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")
 DATE = re.compile(r"/Date\(\d+\)/")
 CORRELATION = re.compile(r',?"correlation-id":"[0-9a-f]+"')
@@ -80,6 +87,118 @@ class Server:
         except Exception:
             self.process.kill()
             self.process.wait()
+
+
+class Stand:
+    """A fake Creatio site answering a scenario's rules; it records every request but the login."""
+
+    def __init__(self, rules):
+        self.rules, self.flags, self.requests, self.lock = rules, set(), [], threading.Lock()
+        with socket.socket() as probe:
+            probe.bind(("127.0.0.1", 0))
+            self.port = probe.getsockname()[1]
+        self.url = f"http://127.0.0.1:{self.port}"
+        self.server = http.server.ThreadingHTTPServer(("127.0.0.1", self.port), self.handler())
+        threading.Thread(target=self.server.serve_forever, daemon=True).start()
+
+    def close(self):
+        self.server.shutdown()
+        self.server.server_close()
+
+    def handler(self):
+        stand = self
+
+        class Handler(http.server.BaseHTTPRequestHandler):
+            protocol_version = "HTTP/1.1"
+
+            def log_message(self, *args):
+                pass
+
+            def answer(self, status, data, content_type, cookies=False):
+                self.send_response(status)
+                self.send_header("Content-Type", content_type)
+                self.send_header("Content-Length", str(len(data)))
+                if cookies:
+                    for cookie in (".ASPXAUTH=fake; path=/", "BPMCSRF=fakecsrf; path=/", "BPMLOADER=fake; path=/",
+                                   "UserType=General; path=/"):
+                        self.send_header("Set-Cookie", cookie)
+                self.end_headers()
+                self.wfile.write(data)
+
+            def handle_any(self):
+                length = int(self.headers.get("Content-Length") or 0)
+                raw = self.rfile.read(length) if length else b""
+                if self.headers.get("Transfer-Encoding", "").lower() == "chunked":
+                    raw = self.read_chunked()
+                path, _, query = self.path.partition("?")
+                query = urllib.parse.unquote(query)
+                if path.startswith("/0/"):
+                    path = path[2:]
+                if path.endswith("/AuthService.svc/Login"):
+                    self.answer(200, b'{"Code":0,"Message":""}', "application/json; charset=utf-8", cookies=True)
+                    return
+                text = raw.decode("utf-8", "replace")
+                with stand.lock:
+                    stand.requests.append({"method": self.command, "path": path, "query": query, "body": raw})
+                    rule = stand.match(self.command, path, text + "\n" + query)
+                if rule is None:
+                    self.answer(200, b'{"success":true}', "application/json; charset=utf-8")
+                    return
+                if "body_file" in rule:
+                    data = (FIXTURES / rule["body_file"]).read_bytes()
+                elif "body_base64" in rule:
+                    data = base64.b64decode(rule["body_base64"])
+                else:
+                    data = rule.get("body", "").encode("utf-8")
+                self.answer(rule.get("status", 200), data, rule.get("content_type", "application/json; charset=utf-8"))
+
+            def read_chunked(self):
+                data = b""
+                while True:
+                    size = int(self.rfile.readline().strip() or b"0", 16)
+                    if size == 0:
+                        self.rfile.readline()
+                        return data
+                    data += self.rfile.read(size)
+                    self.rfile.readline()
+
+            do_GET = do_POST = do_PUT = do_DELETE = do_PATCH = handle_any
+
+        return Handler
+
+    def match(self, method, path, seen):
+        for rule in self.rules:
+            if rule.get("method", method) != method or not path.endswith(rule["route"]):
+                continue
+            contains = rule.get("contains", [])
+            contains = [contains] if isinstance(contains, str) else contains
+            if not all(text in seen for text in contains) or any(text in seen for text in rule.get("excludes", [])):
+                continue
+            if rule.get("if") and rule["if"] not in self.flags or rule.get("unless") and rule["unless"] in self.flags:
+                continue
+            if rule.get("set"):
+                self.flags.add(rule["set"])
+            if rule.get("clear"):
+                self.flags.discard(rule["clear"])
+            return rule
+        return None
+
+
+def normalize_requests(requests, home, url):
+    out = []
+    guids, dates = {}, {}
+    for request in requests:
+        try:
+            body = request["body"].decode("utf-8")
+            for variant in sorted({home, os.path.realpath(home), json.dumps(home)[1:-1]}, key=len, reverse=True):
+                body = body.replace(variant, "{home}")
+            body = body.replace(url, "{stand}")
+            body = GUID.sub(lambda m: guids.setdefault(m.group(0).lower(), f"{{guid{len(guids) + 1}}}"), body)
+            body = DATE.sub(lambda m: dates.setdefault(m.group(0), f"{{date{len(dates) + 1}}}"), body)
+        except UnicodeDecodeError:
+            body = "sha256:" + hashlib.sha256(request["body"]).hexdigest()
+        out.append(f'{request["method"]} {request["path"]}?{request["query"]} {body}')
+    return out
 
 
 def answer_text(response, home):
@@ -166,7 +285,18 @@ def substitute(value, mapping):
     return value
 
 
-def run_side(command, home, scenario, clio_dll, stand_url):
+def run_side(command, home, scenario, clio_dll):
+    stand = Stand(scenario["stand"]["rules"]) if scenario.get("stand") else None
+    try:
+        answers, files = run_steps(command, home, scenario, clio_dll, stand.url if stand else None)
+    finally:
+        if stand:
+            stand.close()
+    requests = normalize_requests(stand.requests, home, stand.url) if stand else []
+    return answers, files, requests
+
+
+def run_steps(command, home, scenario, clio_dll, stand_url):
     environments = {}
     if scenario.get("environments", True):
         environments = {"fake": {"Uri": stand_url or "http://127.0.0.1:9", "Login": "example-user", "Password": "replace-me",
@@ -191,7 +321,10 @@ def run_side(command, home, scenario, clio_dll, stand_url):
                 response = server.request("tools/call", {"name": step["tool"], "arguments": args})
             else:
                 response = server.request("tools/call", {"name": "clio-run", "arguments": {"command": step["tool"], "args": args}})
-            answers.append({"step": step.get("label", step["tool"]), "answer": answer_text(response, home),
+            text = answer_text(response, home)
+            if stand_url:
+                text = text.replace(stand_url, "{stand}")
+            answers.append({"step": step.get("label", step["tool"]), "answer": text,
                             "progress": len(response["progress"]) > 0})
     finally:
         server.close()
@@ -200,8 +333,10 @@ def run_side(command, home, scenario, clio_dll, stand_url):
 
 def compare(clio_side, go_side):
     differences = []
-    clio_answers, clio_tree = clio_side
-    go_answers, go_tree = go_side
+    clio_answers, clio_tree, clio_requests = clio_side
+    go_answers, go_tree, go_requests = go_side
+    if clio_requests != go_requests:
+        differences.append({"what": "requests", "clio": "\n".join(clio_requests), "go": "\n".join(go_requests)})
     for clio_answer, go_answer in zip(clio_answers, go_answers):
         if clio_answer["answer"] != go_answer["answer"]:
             differences.append({"step": clio_answer["step"], "what": "answer", "clio": clio_answer["answer"], "go": go_answer["answer"]})
@@ -237,7 +372,7 @@ def main():
         sides = {}
         for side, command in (("clio", ["dotnet", options.clio_dll, "mcp-server"]), ("go", [os.path.realpath(options.go_bin)])):
             home = os.path.join(work, scenario["name"], side)
-            sides[side] = run_side(command, home, scenario, options.clio_dll, None)
+            sides[side] = run_side(command, home, scenario, options.clio_dll)
         differences = compare(sides["clio"], sides["go"])
         known = scenario.get("known-differences", [])
         unexplained = [d for d in differences if not any(k in json.dumps(d) for k in known)]
@@ -247,7 +382,7 @@ def main():
                         "steps": len(sides["clio"][0]), "differences": [{k: v for k, v in d.items() if k in ("step", "path", "what")} for d in differences]})
         print(f"{verdict:10} {scenario['name']} ({len(sides['clio'][0])} calls, {files} files)")
         for difference in differences[:40]:
-            print("    ", difference.get("step") or difference.get("path"), difference["what"])
+            print("    ", difference.get("step") or difference.get("path") or "", difference["what"])
             if options.show and "clio" in difference:
                 print("       clio:", str(difference["clio"])[:3000])
                 print("       go:  ", str(difference["go"])[:3000])
