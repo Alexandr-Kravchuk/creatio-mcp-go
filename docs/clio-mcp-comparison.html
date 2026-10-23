@@ -126,7 +126,7 @@ main { max-width: 1280px; margin: 0 auto; display: flex; flex-direction: column;
 <tr><td>35 clio tools are not served: deploying and restoring stands, Redis, workspaces, reg-web-app, page-smoke, the mobile page guide</td><td>You still need clio: environments are registered and infrastructure work is done through it. Calling such a tool here returns the “unknown tool” refusal.</td></tr>
 <tr><td>Does not install or update the knowledge library itself; clio does it when mcp-server starts and every hour</td><td>Until clio install-knowledge has run, get-guidance answers guidance-unavailable and the agent works without core-rules and routing. Git knowledge sources: clio only.</td></tr>
 <tr><td>Contracts are recorded from clio 8.1.0.142 and built into the binary</td><td>Tools and arguments of later clio versions arrive here only with a new creatio-mcp-go release; until then the agent may get a refusal.</td></tr>
-<tr><td>validate-page runs a declared subset of clio’s rules (not known-containers)</td><td>A page defect clio would catch can pass here; the answer warns about it.</td></tr>
+<tr><td>validate-page runs a declared subset of clio’s rules (known-containers runs; binding, handler, converter, validator, lint, chart, run-process, slot and data-source checks do not)</td><td>A page defect clio would catch can pass here; the answer warns about it.</td></tr>
 </table>
 <p style="position:absolute;left:128px;bottom:64px;width:1300px;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#5d6779">creatio-mcp-go v0.2.1 · clio 8.1.0.142</p>
 <p style="position:absolute;right:128px;bottom:64px;width:200px;text-align:right;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#5d6779">4 / 12</p>
@@ -144,10 +144,8 @@ main { max-width: 1280px; margin: 0 auto; display: flex; flex-direction: column;
 </div>
 <table style="font-size:24px;line-height:1.35;color:#12161d;background:#fbfcfe">
 <tr style="background:#e1e6ee"><th style="width:40%;font-weight:600">Con</th><th style="width:60%;font-weight:600">What it means for you</th></tr>
-<tr><td>A call without environment-name goes to the default environment; clio refuses such a call</td><td>A missing environment name gives no error: a write can land on the wrong stand.</td></tr>
 <tr><td>set-fsm-mode: clio retries the mode check and the package loads up to 30 times, 3 s apart; this server tries once</td><td>A dropped connection while FSM switches fails the command where clio would have waited.</td></tr>
 <tr><td>Host does not answer: login waits 45 s, clio 100 s. Host disappears mid-session: Go’s error text, not clio’s</td><td>A slow stand is refused sooner; an agent that recognizes errors by clio’s texts will not recognize this one.</td></tr>
-<tr><td>odata-read returns at most 4 MiB inline; clio has no limit</td><td>A large result fails as a transport error; use odata-read-to-file for it.</td></tr>
 </table>
 <p style="position:absolute;left:128px;bottom:64px;width:1300px;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#5d6779">creatio-mcp-go v0.2.1 · clio 8.1.0.142</p>
 <p style="position:absolute;right:128px;bottom:64px;width:200px;text-align:right;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#5d6779">5 / 12</p>
@@ -155,7 +153,7 @@ main { max-width: 1280px; margin: 0 auto; display: flex; flex-direction: column;
 </section>
 </div>
 </div>
-<p class="notes">The default environment comes from the CREATIO_* variables, otherwise clio’s active environment; this keeps older registrations with variables working. set-fsm-mode retries: no Go call in the live runs needed them, clio needed one once. The 4 MiB limit of odata-read is documented, not measured. Sources: docs/release-notes-v0.2.0.md, docs/release-notes-v0.2.1.md, docs/status/t24-write-timing.md, docs/install.md.</p>
+<p class="notes">set-fsm-mode retries: no Go call in the live runs needed them, clio needed one once. Sources: docs/release-notes-v0.2.0.md, docs/release-notes-v0.2.1.md, docs/status/t24-write-timing.md, docs/install.md.</p>
 <div class="frame" id="cons-maturity">
 <div class="stage">
 <section class="slide" id="cons-maturity" data-transition="fade" style="background:#f6f8fb;color:#12161d;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
