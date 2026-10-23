@@ -286,11 +286,16 @@ func schemaWriteTransferOrUnknown(value string) string {
 	return value
 }
 
-// SchemaTransferRequirement checks the minimum ClioGate version before command validation, as clio dispatch does.
-func (c *Client) SchemaTransferRequirement(ctx context.Context) string {
+// SchemaTransferRequirement checks the minimum ClioGate version before command validation, as clio dispatch does;
+// "" when it is met. A package list that could not be read is not a refusal: clio lets that failure propagate to
+// its exit -1 envelope (measured against clio 8.1.0.142 with a closed port), so it is returned as err.
+func (c *Client) SchemaTransferRequirement(ctx context.Context) (string, error) {
 	version, found, err := c.lowestClioGateVersion(ctx)
-	if err == nil && found && describeCompareVersions(version, "2.0.0.46") >= 0 {
-		return ""
+	if err != nil {
+		return "", err
 	}
-	return "To use this command, you need to install the cliogate package version 2.0.0.46 or higher. Install or update the package in the target environment and retry.\nRun 'clio install-gate -e <environment>' (or call the install-gate MCP tool) to install/update cliogate."
+	if found && describeCompareVersions(version, "2.0.0.46") >= 0 {
+		return "", nil
+	}
+	return "To use this command, you need to install the cliogate package version 2.0.0.46 or higher. Install or update the package in the target environment and retry.\nRun 'clio install-gate -e <environment>' (or call the install-gate MCP tool) to install/update cliogate.", nil
 }

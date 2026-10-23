@@ -302,15 +302,17 @@ func (c *Client) emailTemplateRead(ctx context.Context, entity, filter, selectCo
 		request.Header.Set("Accept", "application/json")
 		return request, nil
 	})
-	if err != nil {
+	var payload []byte
+	if err == nil {
+		payload, err = readResponse(response)
+		if err != nil {
+			return nil, fmt.Errorf("OData response: %w", err)
+		}
+	} else if !getAnswersEmpty(err) {
 		if isRequestTransportError(err) {
 			return nil, fmt.Errorf("OData transport failure: %w", err)
 		}
 		return nil, err
-	}
-	payload, err := readResponse(response)
-	if err != nil {
-		return nil, fmt.Errorf("OData response: %w", err)
 	}
 	if strings.TrimSpace(string(payload)) == "" {
 		return nil, fmt.Errorf("Creatio OData %s response was empty.", entity)

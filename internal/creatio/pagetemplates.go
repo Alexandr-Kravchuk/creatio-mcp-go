@@ -86,7 +86,9 @@ func (c *Client) loadPageTemplates(ctx context.Context, schemaType int) ([]PageT
 		} else if len([]rune(snippet)) > 200 {
 			snippet = string([]rune(snippet)[:200]) + "…"
 		}
-		return nil, fmt.Errorf("Page template catalog endpoint returned an unparseable response (%s). Response preview: %s", route, snippet)
+		address := fmt.Sprintf("%s?schemaType=%d", c.serviceURL(route), schemaType)
+		return nil, fmt.Errorf("Page template catalog endpoint returned an unparseable response (URL: %s). Parser error: %s. Response preview: %s",
+			address, pageWriteNewtonsoftParseError(payload, err), snippet)
 	}
 	var success bool
 	_ = json.Unmarshal(response["success"], &success)
@@ -185,6 +187,9 @@ func (c *Client) getSchemaTemplateJSON(ctx context.Context, route string, schema
 		return request, nil
 	})
 	if err != nil {
+		if getAnswersEmpty(err) {
+			return []byte{}, nil
+		}
 		if isAuthenticationError(err) {
 			return nil, err
 		}

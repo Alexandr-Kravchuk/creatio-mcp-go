@@ -46,11 +46,15 @@ type pkgWriteException struct {
 
 func (e *pkgWriteException) Error() string { return e.message }
 
-// PkgWriteExceptionText is clio's CommandExecutionResult.FormatExceptionChain for one exception.
+// PkgWriteExceptionText is clio's CommandExecutionResult.FormatExceptionChain: one exception, or the chain
+// Creatio.Client raises for a request that got no answer.
 func PkgWriteExceptionText(err error) string {
 	var typed *pkgWriteException
 	if errors.As(err, &typed) {
 		return "[" + typed.typeName + "] " + typed.message
+	}
+	if _, ok := asConnectFault(err); ok {
+		return CommandExceptionText(err)
 	}
 	return "[Exception] " + err.Error()
 }

@@ -513,7 +513,7 @@ func callHiddenTool(ctx context.Context, envs *environments, hostTools hiddenToo
 			return toolError(err)
 		}
 	}
-	result, err := invokeHiddenTool(ctx, envs, hostTools, name, args, progress)
+	result, err := invokeHiddenTool(withClioLogin(ctx, name), envs, hostTools, name, args, progress)
 	if err != nil {
 		result = toolError(clioFailure(failurePrefix, err))
 	}
