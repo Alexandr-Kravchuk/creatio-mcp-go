@@ -42,7 +42,7 @@ func ValidateModelFolder(folder string) string {
 	if strings.HasPrefix(folder, `\\`) || strings.HasPrefix(folder, "//") {
 		return "Folder path must be a local absolute path: " + folder
 	}
-	if !isFullyQualified(folder) {
+	if !IsFullyQualified(folder) {
 		return "Folder path must be absolute: " + folder
 	}
 	return ""
