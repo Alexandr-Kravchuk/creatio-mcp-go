@@ -122,6 +122,18 @@ def known_difference(path, known):
     return False
 
 
+def case_known_differences(case, go_env_mode):
+    """The difference paths a case accepts. In --go-env-mode=variables Go is given no environment name, so it
+    cannot echo one: $.environmentname (compile-status, get-fsm-mode, ...) and the paths the case lists under
+    known-differences-variables (list-user-tasks quotes the target URL where clio quotes the name) are known
+    there too. In name mode those paths must match."""
+    known = set(case.get("known-differences", []))
+    if go_env_mode == "variables":
+        known.add("$.environmentname")
+        known.update(case.get("known-differences-variables", []))
+    return known
+
+
 def normalize(value):
     """Ignore serializer conventions: key case, '-'/'_' and absent-versus-empty values."""
     if isinstance(value, dict):
@@ -321,10 +333,7 @@ def main():
             else:
                 name, clio_value, clio_seconds, go_value, go_seconds = call_tool(case, index)
             outcome, paths = verdict(normalize(clio_value), normalize(go_value))
-            known = set(case.get("known-differences", []))
-            if options.go_env_mode == "variables":
-                # Go is given no name in this mode, so it cannot echo one (compile-status, get-fsm-mode, ...).
-                known.add("$.environmentname")
+            known = case_known_differences(case, options.go_env_mode)
             if outcome == "mismatch" and paths and all(known_difference(path, known) for path in paths):
                 # Listed in the case file with the reason; reported, but not counted as a regression.
                 outcome = "known-diff"

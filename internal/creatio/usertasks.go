@@ -16,16 +16,22 @@ const processBuilderMissingMessage = "To use this command, you need to install t
 	"Install the package in the target environment and retry.\n" + processWriteInstallHint
 
 // ListUserTasks reads the process designer palette through the CrtProcessBuilder ProcessDesignService. Like
-// clio it first refuses when that package is not installed. Past that gate the log opens with clio's
-// "Reading user task catalog from '<environment>'..." Info line, then lists one "name<TAB>uid" Info line per
-// task and a closing total, or the Error of a failed read, exactly as clio's command log does.
+// clio it first applies its [RequiresPackage(CrtProcessBuilder)] gate: it refuses when that package is not
+// installed or is older than the CrtProcessBuilder the installed clio carries. Past that gate the log opens
+// with clio's "Reading user task catalog from '<environment>'..." Info line, then lists one "name<TAB>uid"
+// Info line per task and a closing total, or the Error of a failed read, exactly as clio's command log does.
+// A call that names no environment (the CREATIO_* target, which clio does not have) is quoted by the target's
+// URL, the one thing that identifies it.
 func (c *Client) ListUserTasks(ctx context.Context, environmentName string) CommandResult {
-	installed, err := c.userTasksPackageInstalled(ctx, processBuilderPackageName)
+	refusal, err := c.processWriteGate(ctx, "")
 	if err != nil {
 		return NewCommandResult(-1, "Error", CommandExceptionText(err))
 	}
-	if !installed {
-		return NewCommandResult(1, "Error", processBuilderMissingMessage)
+	if refusal != "" {
+		return NewCommandResult(1, "Error", refusal)
+	}
+	if strings.TrimSpace(environmentName) == "" {
+		environmentName = c.config.BaseURL
 	}
 	reading := LogMessage{MessageType: "Info", Value: fmt.Sprintf("Reading user task catalog from '%s'...", environmentName)}
 	tasks, err := c.readUserTasks(ctx)
@@ -75,19 +81,4 @@ func (c *Client) readUserTasks(ctx context.Context) ([]userTaskInfo, error) {
 		return nil, errors.New("ListUserTasks failed.")
 	}
 	return envelope.Result.UserTasks, nil
-}
-
-// packageInstalled checks presence the way clio's package gate does: a case-insensitive name match against the
-// installed package list.
-func (c *Client) userTasksPackageInstalled(ctx context.Context, name string) (bool, error) {
-	rows, err := c.selectRows(ctx, buildSelectQuery("SysPackage", map[string]string{"Name": "Name"}, nil, 10000))
-	if err != nil {
-		return false, err
-	}
-	for _, row := range rows {
-		if strings.EqualFold(rowString(row, "Name"), name) {
-			return true, nil
-		}
-	}
-	return false, nil
 }

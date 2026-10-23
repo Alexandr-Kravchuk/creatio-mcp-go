@@ -12,7 +12,7 @@ func init() {
 		"name": "list-themes",
 		"description": "List the custom Creatio themes available on the target environment through ThemeService (Creatio 10.0.0 or later). " +
 			"Returns { success, themes:[{ id, caption, cssClassName, cssFilePath }], error? }. An empty themes array means the catalog " +
-			"is empty or the caller lacks the CanCustomizeBranding license. The Creatio version floor is not pre-checked.",
+			"is empty or the caller lacks the CanCustomizeBranding license. The Creatio version is checked before the catalog is read.",
 		"inputSchema": map[string]any{"type": "object", "properties": map[string]any{}},
 	}, func(ctx context.Context, envs *environments, args map[string]any) (*mcp.CallToolResult, error) {
 		// clio refuses unknown keys inside its envelope, so these failures stay success:false results.
@@ -22,12 +22,12 @@ func init() {
 		if envs.nameRequired(args) {
 			return structuredToolResult(creatio.ThemeListResult{Error: environmentNameRequired}), nil
 		}
-		client, failure, err := envs.resolve("list-themes", args, scopeName)
-		if err != nil {
-			return nil, err
-		}
-		if failure != nil {
-			return structuredToolResult(creatio.ThemeListResult{Error: redacted(failure)}), nil
+		// clio's ListThemesOptions carry [RequiresCreatioVersion("10.0.0")], enforced before the catalog read.
+		client, _, answer, err := themeWriteResolve(ctx, envs, "list-themes", args, func(message string) *mcp.CallToolResult {
+			return structuredToolResult(creatio.ThemeListResult{Error: message})
+		})
+		if err != nil || answer != nil {
+			return answer, err
 		}
 		return structuredToolResult(client.ListThemes(ctx)), nil
 	})

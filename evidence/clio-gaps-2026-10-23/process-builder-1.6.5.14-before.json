@@ -1,0 +1,263 @@
+{
+  "schema": 1,
+  "clio_startup_seconds": 2.79,
+  "go_startup_seconds": 0.12,
+  "counts": {
+    "match": 24,
+    "both-failed": 2,
+    "error-text": 0,
+    "known-diff": 0,
+    "mismatch": 3
+  },
+  "cases": [
+    {
+      "tool": "list-themes",
+      "case": "list-themes legacy environmentName spelling",
+      "verdict": "match",
+      "clio_seconds": 0.06,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "list-themes",
+      "case": "list-themes default",
+      "verdict": "match",
+      "clio_seconds": 1.22,
+      "go_seconds": 0.58,
+      "differences": []
+    },
+    {
+      "tool": "list-themes",
+      "case": "list-themes unknown argument",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "list-user-tasks",
+      "case": "list-user-tasks default",
+      "verdict": "mismatch",
+      "clio_seconds": 0.16,
+      "go_seconds": 0.87,
+      "differences": [
+        "$.executionlogmessages: 1 items in clio, 25 in go",
+        "$.executionlogmessages[0].messagetype: value differs",
+        "$.executionlogmessages[0].value: value differs",
+        "$.exitcode: value differs"
+      ]
+    },
+    {
+      "tool": "list-user-tasks",
+      "case": "list-user-tasks unknown argument",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "describe-business-process",
+      "case": "describe process by code",
+      "verdict": "mismatch",
+      "clio_seconds": 0.06,
+      "go_seconds": 5.76,
+      "differences": [
+        "$.executionlogmessages[0].messagetype: value differs",
+        "$.executionlogmessages[0].value: value differs",
+        "$.exitcode: value differs"
+      ]
+    },
+    {
+      "tool": "describe-business-process",
+      "case": "describe process by caption",
+      "verdict": "mismatch",
+      "clio_seconds": 0.07,
+      "go_seconds": 2.02,
+      "differences": [
+        "$.executionlogmessages[0].messagetype: value differs",
+        "$.executionlogmessages[0].value: value differs",
+        "$.exitcode: value differs"
+      ]
+    },
+    {
+      "tool": "describe-business-process",
+      "case": "describe process no identity",
+      "verdict": "both-failed",
+      "clio_seconds": 0.06,
+      "go_seconds": 0.06,
+      "differences": [
+        "$.executionlogmessages[0].value: value differs"
+      ]
+    },
+    {
+      "tool": "describe-business-process",
+      "case": "describe process unknown argument",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "describe-business-process",
+      "case": "describe process wrong type",
+      "verdict": "match",
+      "clio_seconds": 0.03,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "get-theme",
+      "case": "get-theme unknown id",
+      "verdict": "match",
+      "clio_seconds": 0.15,
+      "go_seconds": 0.1,
+      "differences": []
+    },
+    {
+      "tool": "get-theme",
+      "case": "get-theme braced unknown id",
+      "verdict": "match",
+      "clio_seconds": 0.1,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "get-theme",
+      "case": "get-theme non-GUID id",
+      "verdict": "match",
+      "clio_seconds": 0.06,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "get-theme",
+      "case": "get-theme missing id",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "get-theme",
+      "case": "get-theme numeric id",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "get-theme",
+      "case": "get-theme unknown argument",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "get-theme",
+      "case": "get-theme legacy outputFile",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "get-theme",
+      "case": "get-theme output-file outside allowed locations",
+      "verdict": "match",
+      "clio_seconds": 0.07,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "get-theme",
+      "case": "get-theme output-file already exists",
+      "verdict": "match",
+      "clio_seconds": 0.07,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "validate-process-graph",
+      "case": "validate-process-graph no nodes",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "validate-process-graph",
+      "case": "validate-process-graph gate",
+      "verdict": "match",
+      "clio_seconds": 0.08,
+      "go_seconds": 0.1,
+      "differences": []
+    },
+    {
+      "tool": "validate-process-graph",
+      "case": "validate-process-graph node aliases",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "validate-process-graph",
+      "case": "validate-process-graph edge alias",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "validate-process-graph",
+      "case": "validate-process-graph null node",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "validate-process-graph",
+      "case": "validate-process-graph null edge",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "validate-process-graph",
+      "case": "validate-process-graph unknown key",
+      "verdict": "both-failed",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": [
+        "$.error: value differs"
+      ]
+    },
+    {
+      "tool": "validate-process-graph",
+      "case": "validate-process-graph nodes not array",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "validate-process-graph",
+      "case": "validate-process-graph node not object",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "validate-process-graph",
+      "case": "validate-process-graph results not strings",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    }
+  ]
+}
