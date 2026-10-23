@@ -1,0 +1,91 @@
+{
+  "schema": 1,
+  "counts": {
+    "match": 7,
+    "known-diff": 2,
+    "mismatch": 0
+  },
+  "scenarios": [
+    {
+      "scenario": "gsc-modes",
+      "verdict": "match",
+      "files": 0,
+      "steps": 15,
+      "differences": []
+    },
+    {
+      "scenario": "gsc-fractional-minutes",
+      "verdict": "known-diff",
+      "files": 0,
+      "steps": 2,
+      "differences": [
+        {
+          "step": "fractional 1.5 minutes",
+          "what": "answer"
+        },
+        {
+          "step": "fractional 0.02 minutes",
+          "what": "answer"
+        }
+      ]
+    },
+    {
+      "scenario": "gsc-validation",
+      "verdict": "known-diff",
+      "files": 0,
+      "steps": 28,
+      "differences": [
+        {
+          "step": "aliases and unknown keys in request order",
+          "what": "answer"
+        },
+        {
+          "step": "duplicate key variants",
+          "what": "answer"
+        }
+      ]
+    },
+    {
+      "scenario": "gsc-responses",
+      "verdict": "match",
+      "files": 0,
+      "steps": 32,
+      "differences": []
+    },
+    {
+      "scenario": "gsc-request-timeout",
+      "verdict": "match",
+      "files": 0,
+      "steps": 2,
+      "differences": []
+    },
+    {
+      "scenario": "aim-validation",
+      "verdict": "match",
+      "files": 1,
+      "steps": 16,
+      "differences": []
+    },
+    {
+      "scenario": "aim-models",
+      "verdict": "match",
+      "files": 19,
+      "steps": 3,
+      "differences": []
+    },
+    {
+      "scenario": "aim-list-failures",
+      "verdict": "match",
+      "files": 2,
+      "steps": 7,
+      "differences": []
+    },
+    {
+      "scenario": "aim-runtime-failures",
+      "verdict": "match",
+      "files": 4,
+      "steps": 9,
+      "differences": []
+    }
+  ]
+}

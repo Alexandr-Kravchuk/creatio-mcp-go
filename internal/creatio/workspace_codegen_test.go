@@ -3,7 +3,6 @@ package creatio
 import (
 	"context"
 	"io"
-	"net"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -168,17 +167,15 @@ func TestGenerateSourceCodeTimeoutAndUnreachableSite(t *testing.T) {
 		t.Fatalf("timeout result = %#v", result)
 	}
 
-	listener, err := net.Listen("tcp", "127.0.0.1:0")
-	if err != nil {
-		t.Fatal(err)
-	}
-	address := listener.Addr().String()
-	_ = listener.Close()
-	dead, _ := NewClient(Config{BaseURL: "http://" + address, Login: "example-user", Password: "replace-me", IsNetCore: true})
+	dead := newFormsTestClient(t, "http://127.0.0.1:9")
+	dead.http.Transport = refusingTransport()
 	result = dead.GenerateSourceCode(context.Background(), GenerateSourceCodeRequest{TimeoutMilliseconds: GenerateSourceCodeDefaultTimeout})
-	want := "Cannot connect to the application: Connection refused (" + address + ") (WebException: ConnectFailure). Make sure the site is running and accessible."
+	want := "Cannot connect to the application: Connection refused (127.0.0.1:9) (WebException: ConnectFailure). Make sure the site is running and accessible."
 	if result.ExitCode != 1 || len(result.Messages) != 3 || result.Messages[2].Value != want {
 		t.Fatalf("unreachable result = %#v", result)
+	}
+	if _, _, err := dead.EntityModelSchemas(context.Background(), "en-US"); err == nil || err.Error() != "Connection refused (127.0.0.1:9)" {
+		t.Fatalf("unreachable model read = %v", err)
 	}
 }
 
