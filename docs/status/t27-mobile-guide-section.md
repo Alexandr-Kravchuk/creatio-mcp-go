@@ -70,6 +70,12 @@ as in clio; only the error texts of refusals that never reach a caller differ (t
   `CLIO_WEB_TO_MOBILE_PAGE_CONVERSION_RULES_LOCAL_FILE` (a missing override file is an IOException, so the rules fall
   back to the bundled copy; the component catalogs fail instead).
 
+## Checks at fcbc7f7
+
+`gofmt -l .` empty, `go vet ./...`, `go test -race ./...` (all packages ok), `GOOS=windows GOARCH=amd64 go build ./...`,
+`python3 -m pytest -q scripts` (74 passed, 8 skipped), `scripts/check-public-safety.sh` passed, generator `--check` ok.
+No live comparison with clio 142 yet: nothing is registered, so there is nothing to compare.
+
 ## How to rerun
 
     python3 scripts/generate-mobile-conversion-rules.py --clio-source ~/.cache/creatio-mcp-go/clio-8.1.0.142 --check
