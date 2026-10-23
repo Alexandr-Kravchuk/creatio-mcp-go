@@ -1,0 +1,57 @@
+# Weekly check for a new clio release: scripts/clio-watch.sh installs the newest clio from NuGet, records
+# its MCP inventory and, when clio's tools, contracts, prompts or resources changed, pushes the branch
+# clio-<version>-inventory with the regenerated docs/ and internal/cliocontract and opens or updates a PR.
+# The PR is never merged automatically.
+#
+# Only GITHUB_TOKEN is used. Two consequences:
+# - a PR opened with GITHUB_TOKEN does not start ci.yml; close and reopen it, or push a commit to the
+#   branch, to run CI;
+# - while "Allow GitHub Actions to create and approve pull requests" is off in the repository settings,
+#   GitHub refuses the PR, and the script opens or updates an issue with the same text and a link to
+#   open the PR by hand. The text is also written to the job summary.
+
+name: clio watch
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+    inputs:
+      clio-version:
+        description: "clio version to check instead of the newest on NuGet (e.g. 8.1.0.143)"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: clio-watch
+  cancel-in-progress: false
+
+jobs:
+  watch:
+    name: Compare the newest clio with the committed inventory
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: true
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: "10.0.x"
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.x"
+      - name: Check clio
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CLIO_VERSION: ${{ inputs.clio-version }}
+        run: |
+          args=()
+          if [[ -n ${CLIO_VERSION:-} ]]; then args+=(--clio-version "$CLIO_VERSION"); fi
+          scripts/clio-watch.sh "${args[@]}"
