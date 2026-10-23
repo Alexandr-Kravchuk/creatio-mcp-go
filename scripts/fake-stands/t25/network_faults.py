@@ -6,6 +6,7 @@ A local fake stand on 127.0.0.1 that the probe switches between behaviours while
 environment, `netfail`, pointing at the fake stand; the real clio settings are never read. No DNS is involved.
 
 Scenarios, per case:
+  fresh-dns     the environment names nonexistent.invalid, which does not resolve (uses the system resolver)
   fresh-down    nothing listens on the port: the login is refused
   fresh-reset   every connection is reset (SO_LINGER 0) after its request was read: the login is reset
   fresh-hang    every connection is accepted and never answered: the login gets no answer
@@ -126,7 +127,8 @@ class FakeStand:
             if self.mode == "hang":
                 self.held.append(conn)
             elif self.mode == "reset" or (self.mode == "reset-login" and not login):
-                conn.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, struct.pack("ii", 1, 0))
+                # struct linger: two ints on POSIX, two u_shorts in Winsock.
+                conn.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, struct.pack("HH" if os.name == "nt" else "ii", 1, 0))
                 conn.close()
             elif login:
                 self._reply(conn, 200, {"Code": 0, "Message": ""}, cookies=True)
@@ -190,12 +192,12 @@ def free_port():
         return probe.getsockname()[1]
 
 
-def settings_home(port):
+def settings_home(port, host="127.0.0.1"):
     home = tempfile.mkdtemp(prefix="t25-clio-home-")
     settings = {
         "ActiveEnvironmentKey": ENVIRONMENT,
         "autoupdate": {"clio": {"enabled": False}, "knowledge": {"enabled": False}, "toolkit": {"enabled": False}},
-        "Environments": {ENVIRONMENT: {"Uri": f"http://127.0.0.1:{port}", "Login": "example-user", "Password": "replace-me",
+        "Environments": {ENVIRONMENT: {"Uri": f"http://{host}:{port}", "Login": "example-user", "Password": "replace-me",
                                        "IsNetCore": False}},
     }
     pathlib.Path(home, "appsettings.json").write_text(json.dumps(settings, indent=2), encoding="utf-8")
@@ -221,7 +223,7 @@ def probe(options):
         # establish the session would leave it running, and the recorded call would only report that.
         cases = [case for case in cases if not case.get("fresh-only")]
     port = free_port()
-    home = settings_home(port)
+    home = settings_home(port, "nonexistent.invalid" if options.scenario == "fresh-dns" else "127.0.0.1")
     stand = FakeStand(port)
     state = {"server": Server(options.side, options.binary, home)}
     results = []
@@ -254,11 +256,12 @@ def probe(options):
                 entry["logins"] = [counted[1] - counted[0], counted[2] - counted[1], stand.logins() - counted[2]]
             else:
                 mode = options.scenario.split("-", 1)[1]
-                if mode != "down":
+                if mode not in ("down", "dns"):
                     stand.start(mode)
                 entry["response"], entry["seconds"] = once(call, options.timeout)
             stand.stop()
-            entry["response"] = json.loads(json.dumps(entry["response"]).replace(f"127.0.0.1:{port}", "127.0.0.1:PORT"))
+            entry["response"] = json.loads(json.dumps(entry["response"]).replace(f"127.0.0.1:{port}", "127.0.0.1:PORT")
+                                           .replace(f"nonexistent.invalid:{port}", "nonexistent.invalid:PORT"))
             results.append(entry)
             print(case["tool"], entry.get("logins", ""), entry["seconds"], flush=True)
     finally:
@@ -296,7 +299,7 @@ def main():
     run = commands.add_parser("probe", help="call every case on one server and record the answers")
     run.add_argument("side", choices=("clio", "go"))
     run.add_argument("binary", help="clio.dll for clio, the built server for go")
-    run.add_argument("scenario", choices=("fresh-down", "fresh-reset", "fresh-hang", "cached-down", "cached-reset"))
+    run.add_argument("scenario", choices=("fresh-dns", "fresh-down", "fresh-reset", "fresh-hang", "cached-down", "cached-reset"))
     run.add_argument("out")
     run.add_argument("--cases", default=str(HERE / "cases.json"))
     run.add_argument("--tools", nargs="*")

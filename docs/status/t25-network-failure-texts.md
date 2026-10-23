@@ -1,8 +1,9 @@
 # T25: network-failure answers after the login and when the login hangs
 
 Date: 2026-10-23. Reference: clio 8.1.0.142 (`clio.dll`, `mcp-server`). This server: before = `df4198a` (v0.2.1),
-after = `87bd443`. Measured on macOS against a local fake stand (no Creatio stand, no DNS); each server ran
-with a temporary `CLIO_HOME` holding one environment that points at the fake stand.
+after = `87bd443`. Measured on macOS and on Windows 11 Pro (en-US, a workstation reached over ssh) against a local
+fake stand; each server ran with a temporary `CLIO_HOME` holding one environment that points at the fake stand. Only
+the `fresh-dns` scenario uses the system resolver (`nonexistent.invalid`).
 
 ## Question
 
@@ -74,10 +75,11 @@ expiry of the session for later (see "Known differences").
 
 ## Result
 
-Identical answers after `compare-mcp`'s normalization (the stand's port replaced by `PORT`):
+Identical answers after `compare-mcp`'s normalization (the stand's port replaced by `PORT`), macOS:
 
 | Scenario | Tools | Identical before | Identical after | Got worse | Still differ |
 |---|---:|---:|---:|---|---|
+| `fresh-dns` | 114 | 104 | 109 | — | validate-page, get-theme, modify-business-process, create-app, create-entity-schema |
 | `fresh-down` | 114 | 104 | 109 | — | validate-page, get-theme, modify-business-process, create-app, create-entity-schema |
 | `fresh-reset` | 114 | 48 | 109 | — | validate-page, get-theme, modify-business-process, create-app, create-entity-schema |
 | `fresh-hang` | 10 | 2 | 10 | — | — |
@@ -90,7 +92,27 @@ of the 'Restart' family is already running". Its case calls the tool for real (`
 comparison had only the blank-environment validation case. So `fresh-down` before is 104 of 114 where v0.2.1
 counted 105 of 110: the four tools added here differed, and the restart's real call differed (the bare message).
 
-Hung login, per tool (seconds until the answer):
+Windows 11 Pro (en-US), the same binaries built for windows/amd64 and the same harness:
+
+| Scenario | Tools | Identical before | Identical after | Got worse | Still differ |
+|---|---:|---:|---:|---|---|
+| `fresh-dns` | 114 | 104 | 109 | — | validate-page, get-theme, modify-business-process, create-app, create-entity-schema |
+| `fresh-down` | 114 | 44 | 109 | — | validate-page, get-theme, modify-business-process, create-app, create-entity-schema |
+| `fresh-reset` | 114 | 44 | 109 | — | validate-page, get-theme, modify-business-process, create-app, create-entity-schema |
+| `fresh-hang` | 5 | 0 | 5 | — | — |
+| `cached-down` | 113 | 44 | 109 | — | validate-page, modify-business-process, create-app, create-entity-schema |
+| `cached-reset` | 113 | 44 | 109 | — | validate-page, modify-business-process, create-app, create-entity-schema |
+
+On Windows clio words the faults with the system's texts, now measured: `No such host is known.`, `No connection
+could be made because the target machine actively refused it.`, `An existing connection was forcibly closed by the
+remote host.` (inside `Unable to read data from the transport connection: …`). Before, this server matched only the
+first: a refused or reset connection is a Winsock error (`WSAECONNREFUSED`, `WSAECONNRESET`) that it did not
+recognise, so it kept Go's text. The same 15 tools log in on every call on Windows. A refused connection takes clio
+about 2 s on Windows (median 2.03 s per tool in `fresh-down`); this server answers it at once. The texts are the
+same, the time is not, and nothing was changed for it.
+
+Hung login on macOS, per tool (seconds until the answer; on Windows the five tools measured give the same 100 s
+and the same texts):
 
 | Tool | clio s | Go before s | Go after s | Before | After |
 |---|---:|---:|---:|---|---|
@@ -108,7 +130,8 @@ Hung login, per tool (seconds until the answer):
 The four tools that still differ in every scenario differ in argument validation, before any request
 (`validate-page`, `modify-business-process`, `create-app`, `create-entity-schema`), and `get-theme` lacks clio's
 platform version gate; both are older differences, unrelated to the network. Per-tool answers:
-[evidence/t25/network-faults.json](../../evidence/t25/network-faults.json).
+[evidence/t25/network-faults.json](../../evidence/t25/network-faults.json) (macOS) and
+[evidence/t25/network-faults-windows.json](../../evidence/t25/network-faults-windows.json).
 
 ## What changed
 
@@ -148,10 +171,14 @@ Unit tests with injected transports and local listeners only (no DNS):
   `TestLoginPerCallToolKeepsTheLoginWording`, `TestSchemaTransferGateReportsAnUnreadablePackageList`, Windows
   sentences in `TestConnectSentenceIsDotNetSocketTextPerPlatform`. These use new API and do not compile on
   `df4198a`.
-- `connectfault_windows_test.go` (Windows CI only): `WSAECONNREFUSED` and `WSAECONNRESET` become .NET faults.
+- `connectfault_windows_test.go` (Windows only; passed on the workstation, see below): `WSAECONNREFUSED` and `WSAECONNRESET` become .NET faults.
 - `cmd/creatio-mcp-go/clio_login_test.go`: a stand that goes away after `find-app` logged in: `get-app-info`
   answers the login's wording, `find-app` the AggregateException's; fails with the tool list switched off.
 - Existing tests that compared against `Connection refused (…)` now use the platform's sentence.
+
+On the Windows workstation the windows/amd64 test binaries of `internal/creatio` and `cmd/creatio-mcp-go` pass in
+full (no `-race`: it needs cgo there), `TestWindowsSocketErrorsAreDotNetFaults` and the cmd test against a real
+closed port included.
 
 Gate on the final tree: `go vet ./...`, `GOOS=windows GOARCH=amd64 go vet` and `go build ./...`,
 `go test -race ./...`, `python3 -m pytest -q scripts` (74 passed, 8 skipped), `scripts/check-public-safety.sh`,
@@ -161,7 +188,7 @@ Gate on the final tree: `go vet ./...`, `GOOS=windows GOARCH=amd64 go vet` and `
 
 ```sh
 go build -o /tmp/go-after ./cmd/creatio-mcp-go
-for sc in fresh-down fresh-reset cached-down cached-reset; do
+for sc in fresh-dns fresh-down fresh-reset cached-down cached-reset; do
   python3 scripts/fake-stands/t25/network_faults.py probe clio <clio.dll> $sc clio-$sc.json &
   python3 scripts/fake-stands/t25/network_faults.py probe go /tmp/go-after $sc go-$sc.json &
 done; wait
@@ -181,9 +208,8 @@ python3 scripts/fake-stands/t25/network_faults.py probe clio <clio.dll> fresh-ha
 - A call that hangs after the login (request timeouts) keeps this server's texts; clio's request timeouts differ
   per call and were not measured. A reset while the request is still being written, or during the connect, keeps
   Go's text.
-- The Windows sentences (`No connection could be made because the target machine actively refused it.`, `An existing
-  connection was forcibly closed by the remote host.`, `No such host is known.`) are the system texts .NET shows;
-  not measured on Windows, and an OS in another language shows them translated.
+- The Windows sentences were measured on an English Windows 11. On a Windows in another language clio shows them
+  translated; this server always prints the English ones.
 - The OAuth token request keeps the client's 45 s timeout; clio's token request was not measured.
 - Older, not network: the template catalog's HTML-answer text differs from clio's; `get-theme` has no version gate;
   argument validation of the four tools above.

@@ -1,9 +1,723 @@
 {
+ "platform": "macOS",
  "reference": "clio 8.1.0.142",
  "go-before": "df4198a (v0.2.1)",
  "go-after": "87bd443",
  "harness": "scripts/fake-stands/t25/network_faults.py",
  "scenarios": {
+  "fresh-dns": {
+   "tools-compared": 114,
+   "identical-before": 104,
+   "identical-after": 109,
+   "got-worse": [],
+   "still-differ": [
+    "validate-page",
+    "get-theme",
+    "modify-business-process",
+    "create-app",
+    "create-entity-schema"
+   ],
+   "tools": {
+    "list-apps": {
+     "before": "match",
+     "after": "match"
+    },
+    "list-packages": {
+     "before": "match",
+     "after": "match"
+    },
+    "list-app-sections": {
+     "before": "match",
+     "after": "match"
+    },
+    "list-pages": {
+     "before": "match",
+     "after": "match"
+    },
+    "get-entity-schema-properties": {
+     "before": "match",
+     "after": "match"
+    },
+    "get-sql-schema": {
+     "before": "match",
+     "after": "match"
+    },
+    "list-package-files": {
+     "before": "match",
+     "after": "match"
+    },
+    "get-package-file": {
+     "before": "match",
+     "after": "match"
+    },
+    "execute-esq": {
+     "before": "match",
+     "after": "match"
+    },
+    "list-themes": {
+     "before": "match",
+     "after": "match"
+    },
+    "get-app-info": {
+     "before": "match",
+     "after": "match"
+    },
+    "find-app": {
+     "before": "match",
+     "after": "match"
+    },
+    "find-entity-schema": {
+     "before": "match",
+     "after": "match"
+    },
+    "get-entity-schema-column-properties": {
+     "before": "match",
+     "after": "match"
+    },
+    "get-sys-setting": {
+     "before": "match",
+     "after": "match"
+    },
+    "list-sys-settings": {
+     "before": "match",
+     "after": "match"
+    },
+    "get-user-culture": {
+     "before": "match",
+     "after": "match"
+    },
+    "describe-environment": {
+     "before": "match",
+     "after": "match"
+    },
+    "get-schema-name-prefix": {
+     "before": "match",
+     "after": "match"
+    },
+    "get-target-package": {
+     "before": "match",
+     "after": "match"
+    },
+    "list-entity-client-schemas": {
+     "before": "match",
+     "after": "match"
+    },
+    "get-page": {
+     "before": "match",
+     "after": "match"
+    },
+    "read-entity-business-rules": {
+     "before": "match",
+     "after": "match"
+    },
+    "read-page-business-rules": {
+     "before": "match",
+     "after": "match"
+    },
+    "get-record-rights": {
+     "before": "match",
+     "after": "match"
+    },
+    "get-process-signature": {
+     "before": "match",
+     "after": "match"
+    },
+    "list-printables": {
+     "before": "match",
+     "after": "match"
+    },
+    "list-user-tasks": {
+     "before": "match",
+     "after": "match"
+    },
+    "list-page-templates": {
+     "before": "match",
+     "after": "match"
+    },
+    "compile-status": {
+     "before": "match",
+     "after": "match"
+    },
+    "restart-status": {
+     "before": "match",
+     "after": "match"
+    },
+    "last-compilation-log": {
+     "before": "match",
+     "after": "match"
+    },
+    "resolve-oauth-system-user": {
+     "before": "match",
+     "after": "match"
+    },
+    "verify-oauth-app": {
+     "before": "match",
+     "after": "match"
+    },
+    "get-fsm-mode": {
+     "before": "match",
+     "after": "match"
+    },
+    "dataforge-status": {
+     "before": "match",
+     "after": "match"
+    },
+    "dataforge-find-tables": {
+     "before": "match",
+     "after": "match"
+    },
+    "dataforge-find-lookups": {
+     "before": "match",
+     "after": "match"
+    },
+    "dataforge-get-relations": {
+     "before": "match",
+     "after": "match"
+    },
+    "dataforge-get-table-columns": {
+     "before": "match",
+     "after": "match"
+    },
+    "dataforge-context": {
+     "before": "match",
+     "after": "match"
+    },
+    "get-schema": {
+     "before": "match",
+     "after": "match"
+    },
+    "get-client-unit-schema": {
+     "before": "match",
+     "after": "match"
+    },
+    "get-page-hierarchy": {
+     "before": "match",
+     "after": "match"
+    },
+    "validate-page": {
+     "before": "differ",
+     "after": "differ",
+     "clio": {
+      "valid": true,
+      "validation": {
+       "markersok": true,
+       "jssyntaxok": true,
+       "contentok": true
+      }
+     },
+     "go-before": {
+      "valid": true,
+      "validation": {
+       "markersok": true,
+       "jssyntaxok": true,
+       "contentok": true,
+       "warnings": [
+        "This server checked only JavaScript syntax (structurally: brackets, strings, comments, templates), the section marker pairs, the JSON/object content of each section, and the resources argument. It did NOT run clio's field and column binding, handler, converter, validator, schema-deps, context-await, localizable-text, AST lint, chart-widget, run-process-button or parent-container (known-containers) checks; run clio validate-page before update-page for the full verdict."
+       ]
+      }
+     },
+     "go-after": {
+      "valid": true,
+      "validation": {
+       "markersok": true,
+       "jssyntaxok": true,
+       "contentok": true,
+       "warnings": [
+        "This server checked only JavaScript syntax (structurally: brackets, strings, comments, templates), the section marker pairs, the JSON/object content of each section, and the resources argument. It did NOT run clio's field and column binding, handler, converter, validator, schema-deps, context-await, localizable-text, AST lint, chart-widget, run-process-button or parent-container (known-containers) checks; run clio validate-page before update-page for the full verdict."
+       ]
+      }
+     }
+    },
+    "get-classic-list-columns": {
+     "before": "match",
+     "after": "match"
+    },
+    "get-classic-page-sources": {
+     "before": "match",
+     "after": "match"
+    },
+    "describe-business-process": {
+     "before": "match",
+     "after": "match"
+    },
+    "get-process-page-facts": {
+     "before": "match",
+     "after": "match"
+    },
+    "get-sequence-context": {
+     "before": "match",
+     "after": "match"
+    },
+    "read-data-binding-db": {
+     "before": "match",
+     "after": "match"
+    },
+    "get-email-template": {
+     "before": "match",
+     "after": "match"
+    },
+    "get-related-page-addon": {
+     "before": "match",
+     "after": "match"
+    },
+    "inspect-user": {
+     "before": "match",
+     "after": "match"
+    },
+    "inspect-role": {
+     "before": "match",
+     "after": "match"
+    },
+    "inspect-license": {
+     "before": "match",
+     "after": "match"
+    },
+    "inspect-access": {
+     "before": "match",
+     "after": "match"
+    },
+    "check-theming-access": {
+     "before": "match",
+     "after": "match"
+    },
+    "get-theme": {
+     "before": "differ",
+     "after": "differ",
+     "clio": {
+      "success": false,
+      "error": "Could not perform the Creatio platform version check for the target environment (it could not be reached, or access was denied). This command requires 10.0.0 or later — verify connectivity and permissions, then retry. [version-check-failed]"
+     },
+     "go-before": {
+      "success": false,
+      "error": "nodename nor servname provided, or not known ([redacted-uri])"
+     },
+     "go-after": {
+      "success": false,
+      "error": "nodename nor servname provided, or not known ([redacted-uri])"
+     }
+    },
+    "create-entity-business-rules": {
+     "before": "match",
+     "after": "match"
+    },
+    "update-page-business-rules": {
+     "before": "match",
+     "after": "match"
+    },
+    "create-page-business-rules": {
+     "before": "match",
+     "after": "match"
+    },
+    "update-entity-business-rules": {
+     "before": "match",
+     "after": "match"
+    },
+    "delete-entity-business-rules": {
+     "before": "match",
+     "after": "match"
+    },
+    "get-request-info": {
+     "before": "match",
+     "after": "match"
+    },
+    "run-process": {
+     "before": "match",
+     "after": "match"
+    },
+    "odata-update": {
+     "before": "match",
+     "after": "match"
+    },
+    "odata-delete": {
+     "before": "match",
+     "after": "match"
+    },
+    "create-data-binding-db": {
+     "before": "match",
+     "after": "match"
+    },
+    "upsert-data-binding-row-db": {
+     "before": "match",
+     "after": "match"
+    },
+    "remove-data-binding-row-db": {
+     "before": "match",
+     "after": "match"
+    },
+    "execute-dataservice-batch": {
+     "before": "match",
+     "after": "match"
+    },
+    "execute-sql-script": {
+     "before": "match",
+     "after": "match"
+    },
+    "create-sys-setting": {
+     "before": "match",
+     "after": "match"
+    },
+    "update-sys-setting": {
+     "before": "match",
+     "after": "match"
+    },
+    "download-sys-setting-file": {
+     "before": "match",
+     "after": "match"
+    },
+    "manage-user": {
+     "before": "match",
+     "after": "match"
+    },
+    "manage-role": {
+     "before": "match",
+     "after": "match"
+    },
+    "manage-license": {
+     "before": "match",
+     "after": "match"
+    },
+    "manage-access": {
+     "before": "match",
+     "after": "match"
+    },
+    "create-server-to-server-oauth-app": {
+     "before": "match",
+     "after": "match"
+    },
+    "set-fsm-mode": {
+     "before": "match",
+     "after": "match"
+    },
+    "create-business-process": {
+     "before": "match",
+     "after": "match"
+    },
+    "modify-business-process": {
+     "before": "differ",
+     "after": "differ",
+     "clio": {
+      "exitcode": -1,
+      "executionlogmessages": [
+       {
+        "messagetype": "Error",
+        "value": "one of process-name or process-uid is required. modify-business-process: missing required argument 'process-name or process-uid'. Required: environment-name (registered environment); process-name OR process-uid (exactly one); operations (JSON array of {op, ...}; each op carries its payload under a named key: addElement element, addParameter parameter, addMapping mapping, setElement elementUpdate; get-tool-contract tool-names=[modify-business-process] lists every op shape). Minimal valid arguments: {\"environment-name\":\"<env>\",\"process-name\":\"UsrDemoProcess\",\"operations\":[{\"op\":\"addParameter\",\"parameter\":{\"name\":\"UsrAmount\",\"type\":\"Integer\"}}]}"
+       }
+      ]
+     },
+     "go-before": {
+      "exitcode": -1,
+      "executionlogmessages": [
+       {
+        "messagetype": "Error",
+        "value": "one of process-name or process-uid is required."
+       }
+      ]
+     },
+     "go-after": {
+      "exitcode": -1,
+      "executionlogmessages": [
+       {
+        "messagetype": "Error",
+        "value": "one of process-name or process-uid is required."
+       }
+      ]
+     }
+    },
+    "modify-business-process-as-new-version": {
+     "before": "match",
+     "after": "match"
+    },
+    "set-active-business-process-version": {
+     "before": "match",
+     "after": "match"
+    },
+    "validate-process-graph": {
+     "before": "match",
+     "after": "match"
+    },
+    "enroll-sequence-participants": {
+     "before": "match",
+     "after": "match"
+    },
+    "set-logo": {
+     "before": "match",
+     "after": "match"
+    },
+    "set-background-image": {
+     "before": "match",
+     "after": "match"
+    },
+    "advise-theme-palette": {
+     "before": "match",
+     "after": "match"
+    },
+    "update-email-template": {
+     "before": "match",
+     "after": "match"
+    },
+    "restart-by-environment-name": {
+     "before": "differ",
+     "after": "match",
+     "clio": {
+      "exitcode": 1,
+      "executionlogmessages": [
+       {
+        "messagetype": "Error",
+        "value": "Cannot connect to the application: nodename nor servname provided, or not known (nonexistent.invalid:PORT) (WebException: ConnectFailure). Make sure the site is running and accessible."
+       }
+      ]
+     },
+     "go-before": {
+      "exitcode": 1,
+      "executionlogmessages": [
+       {
+        "messagetype": "Error",
+        "value": "nodename nor servname provided, or not known (nonexistent.invalid:PORT)"
+       }
+      ]
+     }
+    },
+    "compile-creatio": {
+     "before": "match",
+     "after": "match"
+    },
+    "add-custom-logging": {
+     "before": "match",
+     "after": "match"
+    },
+    "create-app": {
+     "before": "differ",
+     "after": "differ",
+     "clio": {
+      "success": false,
+      "error": "code is required. create-app: missing required argument 'code'. Required: name (display name); code (business part of the app code; the schema prefix is added for you); environment-name (registered environment). Minimal valid arguments: {\"environment-name\":\"<env>\",\"name\":\"Todo list\",\"code\":\"TodoList\"}"
+     },
+     "go-before": {
+      "success": false,
+      "error": "code is required."
+     },
+     "go-after": {
+      "success": false,
+      "error": "code is required."
+     }
+    },
+    "create-app-section": {
+     "before": "match",
+     "after": "match"
+    },
+    "update-app-section": {
+     "before": "match",
+     "after": "match"
+    },
+    "delete-app-section": {
+     "before": "match",
+     "after": "match"
+    },
+    "create-entity-schema": {
+     "before": "differ",
+     "after": "differ",
+     "clio": {
+      "exitcode": 1,
+      "executionlogmessages": [
+       {
+        "messagetype": "Error",
+        "value": "create-entity-schema: missing required argument 'title-localizations'. Required: environment-name (registered environment); package-name (existing package); schema-name (with the environment's prefix); title-localizations (object with an en-US value); columns (optional). Minimal valid arguments: {\"environment-name\":\"<env>\",\"package-name\":\"<package>\",\"schema-name\":\"UsrOrder\",\"title-localizations\":{\"en-US\":\"Order\"},\"columns\":[{\"name\":\"UsrAmount\",\"type\":\"Decimal2\",\"title-localizations\":{\"en-US\":\"Amount\"}}]}"
+       }
+      ]
+     },
+     "go-before": {
+      "exitcode": 1,
+      "executionlogmessages": [
+       {
+        "messagetype": "Error",
+        "value": "Schema 'UsrParityNoSuchEntity' requires 'title-localizations' with a non-empty 'en-US' value."
+       }
+      ],
+      "dataforge": {
+       "used": true,
+       "coverage": {
+        "health": false,
+        "tables": false,
+        "lookups": false,
+        "relations": false,
+        "tablecolumns": false
+       },
+       "warnings": [
+        "dataforge:nodename nor servname provided, or not known ([redacted-uri])"
+       ],
+       "contextsummary": {}
+      }
+     },
+     "go-after": {
+      "exitcode": 1,
+      "executionlogmessages": [
+       {
+        "messagetype": "Error",
+        "value": "Schema 'UsrParityNoSuchEntity' requires 'title-localizations' with a non-empty 'en-US' value."
+       }
+      ],
+      "dataforge": {
+       "used": true,
+       "coverage": {
+        "health": false,
+        "tables": false,
+        "lookups": false,
+        "relations": false,
+        "tablecolumns": false
+       },
+       "warnings": [
+        "dataforge:nodename nor servname provided, or not known ([redacted-uri])"
+       ],
+       "contextsummary": {}
+      }
+     }
+    },
+    "create-lookup": {
+     "before": "match",
+     "after": "match"
+    },
+    "update-entity-schema": {
+     "before": "match",
+     "after": "match"
+    },
+    "modify-entity-schema-column": {
+     "before": "match",
+     "after": "match"
+    },
+    "set-entity-schema-properties": {
+     "before": "match",
+     "after": "match"
+    },
+    "sync-schemas": {
+     "before": "match",
+     "after": "match"
+    },
+    "get-component-info": {
+     "before": "match",
+     "after": "match"
+    },
+    "create-page": {
+     "before": "match",
+     "after": "match"
+    },
+    "update-page": {
+     "before": "match",
+     "after": "match"
+    },
+    "sync-pages": {
+     "before": "match",
+     "after": "match"
+    },
+    "create-related-page-addon": {
+     "before": "match",
+     "after": "match"
+    },
+    "export-schema": {
+     "before": "differ",
+     "after": "match",
+     "clio": {
+      "exitcode": -1,
+      "executionlogmessages": [
+       {
+        "messagetype": "Error",
+        "value": "[WebException] nodename nor servname provided, or not known (nonexistent.invalid:PORT) → [HttpRequestException] nodename nor servname provided, or not known (nonexistent.invalid:PORT) → [SocketException] nodename nor servname provided, or not known"
+       }
+      ]
+     },
+     "go-before": {
+      "exitcode": 1,
+      "executionlogmessages": [
+       {
+        "messagetype": "Error",
+        "value": "To use this command, you need to install the cliogate package version 2.0.0.46 or higher. Install or update the package in the target environment and retry.\nRun 'clio install-gate -e <environment>' (or call the install-gate MCP tool) to install/update cliogate."
+       }
+      ]
+     }
+    },
+    "import-schema": {
+     "before": "differ",
+     "after": "match",
+     "clio": {
+      "exitcode": -1,
+      "executionlogmessages": [
+       {
+        "messagetype": "Error",
+        "value": "[WebException] nodename nor servname provided, or not known (nonexistent.invalid:PORT) → [HttpRequestException] nodename nor servname provided, or not known (nonexistent.invalid:PORT) → [SocketException] nodename nor servname provided, or not known"
+       }
+      ]
+     },
+     "go-before": {
+      "exitcode": 1,
+      "executionlogmessages": [
+       {
+        "messagetype": "Error",
+        "value": "To use this command, you need to install the cliogate package version 2.0.0.46 or higher. Install or update the package in the target environment and retry.\nRun 'clio install-gate -e <environment>' (or call the install-gate MCP tool) to install/update cliogate."
+       }
+      ]
+     }
+    },
+    "unlock-for-hotfix": {
+     "before": "differ",
+     "after": "match",
+     "clio": {
+      "exitcode": -1,
+      "executionlogmessages": [
+       {
+        "messagetype": "Info",
+        "value": "Enable hotfix state for package: \"UsrParityPkg\""
+       },
+       {
+        "messagetype": "Error",
+        "value": "[WebException] nodename nor servname provided, or not known (nonexistent.invalid:PORT) → [HttpRequestException] nodename nor servname provided, or not known (nonexistent.invalid:PORT) → [SocketException] nodename nor servname provided, or not known"
+       }
+      ]
+     },
+     "go-before": {
+      "exitcode": -1,
+      "executionlogmessages": [
+       {
+        "messagetype": "Info",
+        "value": "Enable hotfix state for package: \"UsrParityPkg\""
+       },
+       {
+        "messagetype": "Error",
+        "value": "[Exception] nodename nor servname provided, or not known (nonexistent.invalid:PORT)"
+       }
+      ]
+     }
+    },
+    "finish-hotfix": {
+     "before": "differ",
+     "after": "match",
+     "clio": {
+      "exitcode": -1,
+      "executionlogmessages": [
+       {
+        "messagetype": "Info",
+        "value": "Disable hotfix state for package: \"UsrParityPkg\""
+       },
+       {
+        "messagetype": "Error",
+        "value": "[WebException] nodename nor servname provided, or not known (nonexistent.invalid:PORT) → [HttpRequestException] nodename nor servname provided, or not known (nonexistent.invalid:PORT) → [SocketException] nodename nor servname provided, or not known"
+       }
+      ]
+     },
+     "go-before": {
+      "exitcode": -1,
+      "executionlogmessages": [
+       {
+        "messagetype": "Info",
+        "value": "Disable hotfix state for package: \"UsrParityPkg\""
+       },
+       {
+        "messagetype": "Error",
+        "value": "[Exception] nodename nor servname provided, or not known (nonexistent.invalid:PORT)"
+       }
+      ]
+     }
+    }
+   }
+  },
   "fresh-down": {
    "tools-compared": 114,
    "identical-before": 104,
