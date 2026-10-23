@@ -12,6 +12,8 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
+	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -203,4 +205,52 @@ func invokeNewIntegrationTestProject(ctx context.Context, envs *environments, ar
 		request.TargetFramework = framework
 	}
 	return structuredToolResult(workspace.CreateIntegrationTestProject(request)), nil
+}
+
+func init() {
+	registerTool(map[string]any{"name": "new-ui-project"}, invokeNewUIProject, withAnnotations(localWorkspaceAnnotations))
+}
+
+var uiProjectPackagePattern = regexp.MustCompile(`^[A-Za-z0-9_]+$`)
+
+// invokeNewUIProject is CreateUiProjectTool: the workspace directory and package name are checked before
+// the command runs with the process directory pinned to the workspace (here: passed to it).
+func invokeNewUIProject(ctx context.Context, envs *environments, args map[string]any) (*mcp.CallToolResult, error) {
+	bound, err := clioBind("new-ui-project", args, []clioMember{
+		{name: "workspaceDirectory", kind: clioString}, {name: "projectName", kind: clioString},
+		{name: "packageName", kind: clioString}, {name: "vendorPrefix", kind: clioString},
+		{name: "empty", kind: clioBool}, {name: "creatioVersion", kind: clioString},
+	})
+	if err != nil {
+		return nil, err
+	}
+	directory, _ := bound.str("workspaceDirectory")
+	packageName, _ := bound.str("packageName")
+	refuse := func(message string) (*mcp.CallToolResult, error) {
+		return structuredToolResult(creatio.CommandFailure(message)), nil
+	}
+	switch {
+	case strings.TrimSpace(directory) == "":
+		return refuse("workspaceDirectory is required and must be an absolute path to an existing clio workspace.")
+	case !workspace.IsFullyQualified(directory):
+		return refuse("workspaceDirectory must be a fully-qualified absolute path. Drive-relative ('C:ws') and root-relative ('\\ws') paths are rejected. Received: '" + directory + "'.")
+	}
+	if info, err := os.Stat(directory); err != nil || !info.IsDir() {
+		return refuse("workspaceDirectory does not exist: '" + directory + "'.")
+	}
+	if info, err := os.Stat(filepath.Join(directory, ".clio/workspaceSettings.json")); err != nil || info.IsDir() {
+		return refuse("workspaceDirectory is not a clio workspace (missing '.clio/workspaceSettings.json'): '" + directory + "'. " +
+			"Create it first with the create-workspace tool.")
+	}
+	if strings.TrimSpace(packageName) == "" || !uiProjectPackagePattern.MatchString(packageName) {
+		return refuse("packageName must be a simple identifier matching '^[A-Za-z0-9_]+$'. Path separators, '..', and absolute paths are rejected to keep scaffolding inside the workspace. Received: '" + packageName + "'.")
+	}
+	request := workspace.UIProjectRequest{WorkspaceDirectory: directory, PackageName: packageName,
+		VendorPrefix: optionalBound(bound, "vendorPrefix")}
+	request.ProjectName, _ = bound.str("projectName")
+	request.CreatioVersion, _ = bound.str("creatioVersion")
+	if flag, ok := bound.values["empty"].(bool); ok {
+		request.Empty = flag
+	}
+	return structuredToolResult(workspace.CreateUIProject(request)), nil
 }

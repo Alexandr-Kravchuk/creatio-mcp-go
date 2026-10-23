@@ -33,7 +33,9 @@ const (
 var identifierPattern = regexp.MustCompile(`\A[A-Za-z_][A-Za-z0-9_]*\z`)
 
 // isIdentifierFragment is ClioIdentifier.IsIdentifierFragment.
-func isIdentifierFragment(value string) bool { return value != "" && identifierPattern.MatchString(value) }
+func isIdentifierFragment(value string) bool {
+	return value != "" && identifierPattern.MatchString(value)
+}
 
 // validPackageName is PackageCreator.IsValidPackageName.
 func validPackageName(name string) bool {
@@ -476,8 +478,8 @@ type appPackage struct {
 // appDescriptor is AppDescriptorJson, written by System.Text.Json in this member order.
 type appDescriptor struct {
 	Name, Description, Maintainer, Icon, IconName, Color, Version, RequiredPlatformVersion string
-	MarketplaceLink, HelpLink, OrderLink, SupportEmail, Code                             string
-	Packages                                                                             []appPackage
+	MarketplaceLink, HelpLink, OrderLink, SupportEmail, Code                               string
+	Packages                                                                               []appPackage
 }
 
 func (a appDescriptor) json() string {

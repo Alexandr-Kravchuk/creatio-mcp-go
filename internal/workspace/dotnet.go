@@ -8,7 +8,9 @@ package workspace
 import (
 	"bytes"
 	"crypto/rand"
+	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -140,6 +142,8 @@ func writeJSON(builder *strings.Builder, value jsonValue, style jsonStyle, depth
 		}
 	case int:
 		fmt.Fprintf(builder, "%d", typed)
+	case jsonNumber:
+		builder.WriteString(string(typed))
 	case string:
 		builder.WriteString(jsonString(typed, style))
 	case jsonArray:
@@ -309,8 +313,8 @@ func isPathRooted(path string) bool {
 	return path[0] == '\\' || (len(path) >= 2 && path[1] == ':' && unicode.IsLetter(rune(path[0])))
 }
 
-// isFullyQualified is Path.IsPathFullyQualified: rooted and, on Windows, not drive- or root-relative.
-func isFullyQualified(path string) bool {
+// IsFullyQualified is Path.IsPathFullyQualified: rooted and, on Windows, not drive- or root-relative.
+func IsFullyQualified(path string) bool {
 	if runtime.GOOS != "windows" {
 		return strings.HasPrefix(path, "/")
 	}
@@ -348,3 +352,80 @@ func fullPath(path string) string {
 
 // mkdirAll is Directory.CreateDirectory.
 func mkdirAll(path string) error { return os.MkdirAll(path, 0o777) }
+
+// jsonNumber is a number kept as the text it was parsed from, as JsonNode keeps it.
+type jsonNumber string
+
+func (o *jsonObject) get(name string) jsonValue {
+	for _, item := range o.members {
+		if item.name == name {
+			return item.value
+		}
+	}
+	return nil
+}
+
+// set replaces a member's value in place or appends the member, as JsonObject's indexer does.
+func (o *jsonObject) set(name string, value jsonValue) {
+	for index, item := range o.members {
+		if item.name == name {
+			o.members[index].value = value
+			return
+		}
+	}
+	o.members = append(o.members, member(name, value))
+}
+
+// parseJSONNode is JsonNode.Parse into the ordered tree the writers take.
+func parseJSONNode(data []byte) (jsonValue, error) {
+	decoder := json.NewDecoder(bytes.NewReader(data))
+	decoder.UseNumber()
+	value, err := parseJSONValue(decoder)
+	if err != nil {
+		return nil, err
+	}
+	if _, err := decoder.Token(); err != io.EOF {
+		return nil, errorf("'%s' is invalid after a single JSON value.", "extra")
+	}
+	return value, nil
+}
+
+func parseJSONValue(decoder *json.Decoder) (jsonValue, error) {
+	token, err := decoder.Token()
+	if err != nil {
+		return nil, err
+	}
+	switch typed := token.(type) {
+	case json.Delim:
+		if typed == '[' {
+			array := jsonArray{}
+			for decoder.More() {
+				item, err := parseJSONValue(decoder)
+				if err != nil {
+					return nil, err
+				}
+				array = append(array, item)
+			}
+			_, err := decoder.Token()
+			return array, err
+		}
+		result := object()
+		for decoder.More() {
+			key, err := decoder.Token()
+			if err != nil {
+				return nil, err
+			}
+			item, err := parseJSONValue(decoder)
+			if err != nil {
+				return nil, err
+			}
+			result.members = append(result.members, member(key.(string), item))
+		}
+		_, err := decoder.Token()
+		return result, err
+	case json.Number:
+		return jsonNumber(typed), nil
+	default:
+		return typed, nil
+	}
+}

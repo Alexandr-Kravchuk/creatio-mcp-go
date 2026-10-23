@@ -442,5 +442,313 @@
     }
    }
   ]
+ },
+ {
+  "name": "ui-project",
+  "stand": {
+   "rules": [
+    {
+     "route": "DataService/json/SyncReply/SelectQuery",
+     "body": "{\"success\":true,\"rows\":[]}"
+    }
+   ]
+  },
+  "steps": [
+   {
+    "tool": "create-workspace",
+    "args": {
+     "workspaceName": "ws",
+     "directory": "{home}/base"
+    }
+   },
+   {
+    "tool": "new-ui-project",
+    "label": "current template",
+    "args": {
+     "workspaceDirectory": "{ws}",
+     "projectName": "my_module",
+     "packageName": "UsrUi",
+     "vendorPrefix": "usr"
+    }
+   },
+   {
+    "tool": "new-ui-project",
+    "label": "empty template, existing package",
+    "args": {
+     "workspaceDirectory": "{ws}",
+     "projectName": "second_one",
+     "packageName": "UsrUi",
+     "vendorPrefix": "usr",
+     "empty": true
+    }
+   },
+   {
+    "tool": "new-ui-project",
+    "label": "legacy 8.0.9",
+    "args": {
+     "workspaceDirectory": "{ws}",
+     "projectName": "legacy_one",
+     "packageName": "UsrOld",
+     "vendorPrefix": "old",
+     "creatioVersion": "8.0.9"
+    }
+   },
+   {
+    "tool": "new-ui-project",
+    "label": "legacy 8.1 empty",
+    "args": {
+     "workspaceDirectory": "{ws}",
+     "projectName": "legacy_two",
+     "packageName": "UsrOld",
+     "vendorPrefix": "old",
+     "creatioVersion": " 8.1 ",
+     "empty": true
+    }
+   },
+   {
+    "tool": "new-ui-project",
+    "label": "10.x",
+    "args": {
+     "workspaceDirectory": "{ws}",
+     "projectName": "new_one",
+     "packageName": "UsrNew",
+     "vendorPrefix": "abc",
+     "creatioVersion": "10.0.0"
+    }
+   },
+   {
+    "tool": "new-ui-project",
+    "label": "existing project",
+    "args": {
+     "workspaceDirectory": "{ws}",
+     "projectName": "my_module",
+     "packageName": "UsrUi",
+     "vendorPrefix": "usr"
+    }
+   },
+   {
+    "tool": "new-ui-project",
+    "label": "bad project name",
+    "args": {
+     "workspaceDirectory": "{ws}",
+     "projectName": "MyModule",
+     "packageName": "UsrUi",
+     "vendorPrefix": "usr"
+    }
+   },
+   {
+    "tool": "new-ui-project",
+    "label": "bad vendor",
+    "args": {
+     "workspaceDirectory": "{ws}",
+     "projectName": "v_one",
+     "packageName": "UsrUi",
+     "vendorPrefix": "USR1"
+    }
+   },
+   {
+    "tool": "new-ui-project",
+    "label": "too old version",
+    "args": {
+     "workspaceDirectory": "{ws}",
+     "projectName": "v_two",
+     "packageName": "UsrUi",
+     "vendorPrefix": "usr",
+     "creatioVersion": "7.18"
+    }
+   },
+   {
+    "tool": "new-ui-project",
+    "label": "invalid version",
+    "args": {
+     "workspaceDirectory": "{ws}",
+     "projectName": "v_three",
+     "packageName": "UsrUi",
+     "vendorPrefix": "usr",
+     "creatioVersion": "eight"
+    }
+   },
+   {
+    "tool": "new-ui-project",
+    "label": "package casing",
+    "args": {
+     "workspaceDirectory": "{ws}",
+     "projectName": "v_four",
+     "packageName": "usrui",
+     "vendorPrefix": "usr"
+    }
+   },
+   {
+    "tool": "new-ui-project",
+    "label": "empty project name",
+    "args": {
+     "workspaceDirectory": "{ws}",
+     "projectName": "",
+     "packageName": "UsrUi",
+     "vendorPrefix": "usr"
+    }
+   },
+   {
+    "tool": "new-ui-project",
+    "label": "no vendor",
+    "args": {
+     "workspaceDirectory": "{ws}",
+     "projectName": "v_five",
+     "packageName": "UsrVendorless"
+    }
+   },
+   {
+    "tool": "new-ui-project",
+    "label": "bad package",
+    "args": {
+     "workspaceDirectory": "{ws}",
+     "projectName": "v_six",
+     "packageName": "../x",
+     "vendorPrefix": "usr"
+    }
+   },
+   {
+    "tool": "new-ui-project",
+    "label": "relative dir",
+    "args": {
+     "workspaceDirectory": "base/ws",
+     "projectName": "p",
+     "packageName": "P",
+     "vendorPrefix": "usr"
+    }
+   },
+   {
+    "tool": "new-ui-project",
+    "label": "missing dir",
+    "args": {
+     "workspaceDirectory": "{home}/none",
+     "projectName": "p",
+     "packageName": "P",
+     "vendorPrefix": "usr"
+    }
+   },
+   {
+    "tool": "new-ui-project",
+    "label": "not a workspace",
+    "args": {
+     "workspaceDirectory": "{home}/base",
+     "projectName": "p",
+     "packageName": "P",
+     "vendorPrefix": "usr"
+    }
+   },
+   {
+    "tool": "new-ui-project",
+    "label": "no directory",
+    "args": {
+     "projectName": "p",
+     "packageName": "P",
+     "vendorPrefix": "usr"
+    }
+   }
+  ]
+ },
+ {
+  "name": "ui-project-existing-package",
+  "steps": [
+   {
+    "tool": "create-workspace",
+    "args": {
+     "workspaceName": "ws",
+     "directory": "{home}/base"
+    }
+   },
+   {
+    "write": "base/ws/global.json",
+    "content": "{\n  \"sdk\": {\"version\": \"10.0.100\", \"rollForward\": \"latestFeature\"},\n  \"x\": 1.50\n}\n"
+   },
+   {
+    "tool": "add-package",
+    "args": {
+     "name": "Pkg1",
+     "workspace-path": "{ws}"
+    }
+   },
+   {
+    "write": "base/ws/packages/Broken/readme.txt",
+    "content": "x"
+   },
+   {
+    "write": "base/ws/packages/Wrong/descriptor.json",
+    "content": "{\"Descriptor\": {\"UId\": \"3a71e376-9ac3-3049-c62b-9c43b9abe054\", \"Name\": \"Other\"}}"
+   },
+   {
+    "write": "base/ws/packages/Bad/descriptor.json",
+    "content": "{\"Descriptor\": {\"UId\": \"x\"}}"
+   },
+   {
+    "write": "base/ws/packages/Zero/descriptor.json",
+    "content": "{\"descriptor\": {\"uId\": \"00000000-0000-0000-0000-000000000000\", \"name\": \"Zero\"}}"
+   },
+   {
+    "write": "base/ws/packages/Ext/descriptor.json",
+    "content": "{\"Descriptor\": {\"UId\": \"3a71e376-9ac3-3049-c62b-9c43b9abe055\", \"Name\": \"Ext\", \"Type\": 0}}"
+   },
+   {
+    "tool": "new-ui-project",
+    "label": "reuse Pkg1",
+    "args": {
+     "workspaceDirectory": "{ws}",
+     "projectName": "p_one",
+     "packageName": "Pkg1",
+     "vendorPrefix": "usr"
+    }
+   },
+   {
+    "tool": "new-ui-project",
+    "label": "no descriptor",
+    "args": {
+     "workspaceDirectory": "{ws}",
+     "projectName": "p_two",
+     "packageName": "Broken",
+     "vendorPrefix": "usr"
+    }
+   },
+   {
+    "tool": "new-ui-project",
+    "label": "name mismatch",
+    "args": {
+     "workspaceDirectory": "{ws}",
+     "projectName": "p_three",
+     "packageName": "Wrong",
+     "vendorPrefix": "usr"
+    }
+   },
+   {
+    "tool": "new-ui-project",
+    "label": "malformed",
+    "args": {
+     "workspaceDirectory": "{ws}",
+     "projectName": "p_four",
+     "packageName": "Bad",
+     "vendorPrefix": "usr"
+    }
+   },
+   {
+    "tool": "new-ui-project",
+    "label": "empty uid",
+    "args": {
+     "workspaceDirectory": "{ws}",
+     "projectName": "p_five",
+     "packageName": "Zero",
+     "vendorPrefix": "usr"
+    }
+   },
+   {
+    "tool": "new-ui-project",
+    "label": "reuse external",
+    "args": {
+     "workspaceDirectory": "{ws}",
+     "projectName": "p_six",
+     "packageName": "Ext",
+     "vendorPrefix": "usr"
+    }
+   }
+  ]
  }
 ]
