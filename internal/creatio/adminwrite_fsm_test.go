@@ -158,3 +158,114 @@ func TestSetFsmModeProbeOutlastsTheClientTimeout(t *testing.T) {
 		t.Errorf("get-fsm-mode = %#v, %v", status, err)
 	}
 }
+
+// adminWriteFsmFlakyStand answers the login, then aborts the first drops[route] requests of a route without an
+// answer (the connection is closed, as by a site that is restarting) before answering with answers[route]. It
+// counts the requests per route, the login included.
+func adminWriteFsmFlakyStand(t *testing.T, drops map[string]int, answers map[string]func(http.ResponseWriter)) (*Client, func(string) int) {
+	t.Helper()
+	previousDelay := pkgWriteSyncDelay
+	pkgWriteSyncDelay = time.Millisecond
+	t.Cleanup(func() { pkgWriteSyncDelay = previousDelay })
+	var mu sync.Mutex
+	counts := map[string]int{}
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		route := strings.TrimPrefix(r.URL.Path, "/0/")
+		mu.Lock()
+		counts[route]++
+		count := counts[route]
+		mu.Unlock()
+		if count <= drops[route] {
+			panic(http.ErrAbortHandler)
+		}
+		if route == "/ServiceModel/AuthService.svc/Login" {
+			_, _ = w.Write([]byte(`{"Code":0}`))
+			return
+		}
+		answer, ok := answers[route]
+		if !ok {
+			t.Errorf("unexpected route %s", route)
+			http.NotFound(w, r)
+			return
+		}
+		answer(w)
+	}))
+	t.Cleanup(server.Close)
+	return newFormsTestClient(t, server.URL), func(route string) int {
+		mu.Lock()
+		defer mu.Unlock()
+		return counts[route]
+	}
+}
+
+func adminWriteFsmAnswer(status int, body string) func(http.ResponseWriter) {
+	return func(w http.ResponseWriter) {
+		w.WriteHeader(status)
+		_, _ = w.Write([]byte(body))
+	}
+}
+
+// clio's FileDesignModePackages sends GetIsFileDesignMode and LoadPackagesTo* with 30 attempts 3 s apart: a
+// request that got no answer from a restarting site is sent again (live run T24: a connection reset after 190 s).
+func TestSetFsmModeSendsARequestThatGotNoAnswerAgain(t *testing.T) {
+	const load = "ServiceModel/AppInstallerService.svc/LoadPackagesToDB"
+	client, count := adminWriteFsmFlakyStand(t, map[string]int{pkgWriteFSMRoute: 2, load: 1}, map[string]func(http.ResponseWriter){
+		pkgWriteFSMRoute: adminWriteFsmAnswer(http.StatusOK, `{"success":true,"value":true}`),
+		load:             adminWriteFsmAnswer(http.StatusOK, `{"success":true,"errors":[]}`),
+	})
+	log := &adminWriteFsmLog{}
+	if result := client.adminWriteLoadPackages(context.Background(), "LoadPackagesToDB", "database", log); result != adminWriteLoadCompleted {
+		t.Fatalf("result = %v, log = %#v", result, log.messages)
+	}
+	want := []LogMessage{
+		{"None", "Start load packages to database on a web application"},
+		{"Info", "Load packages to database on a web application completed"},
+		{"None", ""},
+	}
+	if !reflect.DeepEqual(log.messages, want) {
+		t.Errorf("log = %#v", log.messages)
+	}
+	if count(pkgWriteFSMRoute) != 3 || count(load) != 2 {
+		t.Errorf("requests: GetIsFileDesignMode %d, LoadPackagesToDB %d", count(pkgWriteFSMRoute), count(load))
+	}
+}
+
+// An answer ends the loop whatever its status (Creatio.Client retries only a request that threw), and the loop
+// gives up after the 30th request that got no answer.
+func TestSetFsmModeRetriesOnlyUnansweredRequestsAndAtMostThirtyTimes(t *testing.T) {
+	client, count := adminWriteFsmFlakyStand(t, nil, map[string]func(http.ResponseWriter){
+		pkgWriteFSMRoute: adminWriteFsmAnswer(http.StatusInternalServerError, `{}`),
+	})
+	log := &adminWriteFsmLog{}
+	if result := client.adminWriteLoadPackages(context.Background(), "LoadPackagesToDB", "database", log); result != adminWriteLoadRefused ||
+		len(log.messages) != 1 || !strings.Contains(log.messages[0].Value, "returned HTTP 500") {
+		t.Fatalf("result = %v, log = %#v", result, log.messages)
+	}
+	if count(pkgWriteFSMRoute) != 1 {
+		t.Errorf("an answered request was sent %d times", count(pkgWriteFSMRoute))
+	}
+
+	silent, silentCount := adminWriteFsmFlakyStand(t, map[string]int{pkgWriteFSMRoute: 1000}, nil)
+	log = &adminWriteFsmLog{}
+	if result := silent.adminWriteLoadPackages(context.Background(), "LoadPackagesToDB", "database", log); result != adminWriteLoadRefused ||
+		len(log.messages) != 1 || log.messages[0].MessageType != "Error" || !strings.Contains(log.messages[0].Value, "transport failure") {
+		t.Fatalf("result = %v, log = %#v", result, log.messages)
+	}
+	if silentCount(pkgWriteFSMRoute) != 30 {
+		t.Errorf("GetIsFileDesignMode was sent %d times, want 30", silentCount(pkgWriteFSMRoute))
+	}
+}
+
+// Creatio.Client logs in once before its loop: a login that got no answer is not retried.
+func TestSetFsmModeDoesNotRetryTheLogin(t *testing.T) {
+	const login = "/ServiceModel/AuthService.svc/Login"
+	client, count := adminWriteFsmFlakyStand(t, map[string]int{login: 1000}, nil)
+	log := &adminWriteFsmLog{}
+	if result := client.adminWriteLoadPackages(context.Background(), "LoadPackagesToDB", "database", log); result != adminWriteLoadRefused ||
+		len(log.messages) != 1 || log.messages[0].MessageType != "Error" {
+		t.Fatalf("result = %v, log = %#v", result, log.messages)
+	}
+	if count(login) != 1 || count(pkgWriteFSMRoute) != 0 {
+		t.Errorf("requests: login %d, GetIsFileDesignMode %d", count(login), count(pkgWriteFSMRoute))
+	}
+}
