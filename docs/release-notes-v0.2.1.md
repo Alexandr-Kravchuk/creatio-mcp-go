@@ -56,8 +56,10 @@ after the cliogate install); later runs imported in 13.2–16.5 s, as clio.
   failure texts differ. Timeouts and TLS failures during login are transport failures now, but keep Go's wording.
 - A host that stops resolving while this server holds a session for it: the request fails as a transport failure,
   as on clio, but with Go's wording (for example `get-fsm-mode`: `... dial tcp: lookup <host>: no such host`, where
-  clio says `nodename nor servname provided, or not known`). clio logs in before every call, so it always reports
-  the login's text; this server reuses its session and reports the request's.
+  clio says `nodename nor servname provided, or not known`). clio's own text depends on the tool: 15 tools
+  (`get-fsm-mode` among them) log in again on every call and report the login's text; the others reuse the session
+  and report `One or more errors occurred. (<sentence> (host:port))`. (Corrected 2026-10-23: an earlier version of
+  these notes said clio logs in before every call; a later measurement showed it does so only for those 15 tools.)
 - `GetIsFileDesignMode` and the package loads of `set-fsm-mode`: clio retries 30 times 3 s apart, this server tries
   once.
 - A refused connection on Windows keeps Go's text (still a transport failure); the Linux and Windows host-not-found

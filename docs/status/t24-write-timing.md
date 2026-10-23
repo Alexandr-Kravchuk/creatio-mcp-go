@@ -90,7 +90,9 @@ a connection reset from the recycling site after 190 s, so that round's `off` wa
 
 ### `restart-by-environment-name` without waiting: not slower; T23 was order
 
-Go 0.56–0.60 s, clio 2.51–3.08 s in both orders (clio logs in again before each request, Go reuses its session). On this host the unload
+Go 0.56–0.60 s, clio 2.51–3.08 s in both orders. Where clio's extra ~2 s goes was not established: both servers reuse
+their session for this tool (a later measurement, 2026-10-23, showed clio logs in again on every call only for 15
+tools, restart not among them). On this host the unload
 answers in under 0.5 s even 120 s after the other side's unload; the restart cost moves to the next request (the
 read after it: 60–70 s). On T23's host the restart request itself paid it when it was the first request after the other side's unload: 14 s on Go, which always went second there.
 
