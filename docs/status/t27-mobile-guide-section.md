@@ -1,7 +1,7 @@
 # T27 — get-mobile-page-conversion-guide (section, to merge into t27-page-smoke-mobile.md)
 
-State on 2026-10-23 (second session): **engine ported and byte-equal to clio on 530 recorded calls; tool flow,
-probes and registration still open — tool NOT registered.** clio's own design notes say a partial guide is
+State on 2026-10-23 (third session): **engine byte-equal to clio on 530 recorded calls; handler, probes and
+registration done — tool registered; refusals equal clio on 25 of 26 recorded answers; success path not yet compared.** clio's own design notes say a partial guide is
 worse than none (it would tell an agent to insert elements the mobile template already has, or drop rules it
 cannot see), so the tool stays out of `tools/list` until the engine and its regression tests are complete.
 The inventory row stays "not ported".
@@ -92,22 +92,45 @@ texts are in `internal/mobileguide/testdata/clio-refusals/` (26 files). What the
 - The `version` check runs only after a successful page read, so a bad version on an unreachable stand reports the
   read failure.
 
-## Not ported yet (lines of clio C#)
+## Third session (2026-10-23): handler, probes, registration
 
-| Piece | Lines | Notes |
-|---|---|---|
-| `MobilePageConversionGuideTool.cs` handler | ~350 | binding (one record `args`, web defaults), page reads, version validation/resolution, the three catalog loads, rules, the two template reads and their refusals, the probes, `Analyze`, the response; all helpers above are ready |
-| `internal/creatio/mobileguide_bridge.go` | — | export the merged bundle (as Newtonsoft JSON → `toJToken`/`toJsonNode` in mobileguide, which also re-applies Json.NET's date reading the Go get-page does not), the schema chain, version resolution, the parsed web/mobile catalogs as `RegistryEntry` (properties/inputs/outputs in document order, `globalReferences.baseInputs`), the mobile request catalog |
-| Probe HTTP halves: `MobileSectionRegistrationProbe` (OData GETs `odata/SysModule…`, `SysModuleInWorkplace`, `SysApplicationClientType`, `SysWorkplace`), `ExistingMobilePageProbe`, `MobileActionTargetProbe` (DataService SelectQuery, add-on designer `GetSchema`), `PageBusinessRuleProbe` (page schema context + `GetSchema`), `SchemaNameResolver`, `DefaultPageAddonReader` | ~900 code lines | first find how the repo issues an OData GET (`callService` accepts only `rest/`, `ServiceModel/`, `DataService/` routes) |
-| Registration + `tool_t21a_test.go` flip | — | only after the handler and probes |
-| Fake stand `scripts/fake-stands/t27/fake_mobile.py` + live comparison | — | serve get-page bundles (source page, web template, mobile template) and the probe queries from the clio fixtures; point the `CLIO_*_LOCAL_FILE` overrides at the clio test fixtures |
+Registered and served (read-only, idempotent). Commits `c790cc8` (flow, probes, bridge) and `8e71afc` (tool,
+registration, `tool_t21a_test.go` now asserts the tool IS registered with ReadOnly+Idempotent).
 
-Plan for the probes: extend the oracle the same way — wrap the probes' pure entry points in the clio copy so the
-clio probe tests (`MobileActionTargetProbeTests`, `PageBusinessRuleProbeTests`, `MobileSectionRegistrationProbeTests`,
-`ExistingMobilePageProbeTests`) record their stubbed service answers and the probe results, and hand-port only the
-HTTP layer. Note: the 800 clio tests the oracle runs include the probe tests, but only `Analyze` calls are recorded
-today, so the oracle says nothing yet about the probes. Re-recording names files after the recording process id, so a
-changed tarball is not by itself a regression signal — the Go test compares content.
+- `internal/creatio/mobileguide_bridge.go`: `NewMobileGuideStand(client, failure)` implements `mobileguide.Stand` —
+  get-page read (`GetPage`, bundle sections as compact Newtonsoft JSON, schema chain names), version probe
+  (`componentInfoProbeVersion`), mobile/web catalogs (clio's validation through `componentInfoParseCatalog`, then the
+  raw entries re-read, blank types dropped, stably sorted like the catalog; `references.baseInputs`), the mobile request
+  catalog (`dataWriteParseRequestCatalog`), the rules fetch, the version warnings, and the probe client (OData GET with
+  30 s like `odataReadGet`, `esqSelect`, AddonSchemaDesignerService.GetSchema, page rule schema context).
+- `internal/mobileguide/probes.go`: HTTP halves of the four probes plus SchemaNameResolver / DefaultPageAddonReader,
+  behind the `ProbeClient` interface. clio's `Parallel.For` (8) over entity add-on reads runs sequentially (outcomes
+  are indexed, same answer).
+- `internal/mobileguide/tool.go`: `Run` = the handler in clio's order; `ParseRegistryEntry` (non-test copy of the oracle
+  decoder); bundle sections go through `parseNewtonsoft` → `toJsonNode` (Json.NET date reading re-applied).
+- `cmd/creatio-mcp-go/tool_get_mobile_page_conversion_guide.go`: one `args` record, members ignoring case, unknown keys
+  ignored, `t21aBinder.str` type errors; no environment name and no uri → clio's resolver text (no fallback to the active
+  environment, as measured); answer text via `creatio.ClioMcpResultText`.
+
+Tests: `TestMobileGuideRefusalsMatchClio` replays the recorded refusals — **25 of 26 equal**. Not compared: `no-args.raw`
+(a direct call `{}` cannot be told from `{"args":{}}` after `unwrapArgs`; through clio-run it matches). Raw-name answers
+are compared without clio's trailing `[clio] Executed/Attempted '…' directly; it is not advertised in tools/list…` line:
+this server never writes that hint (server-wide, not this tool).
+
+Known gaps, not measured:
+- **The success path is NOT compared with clio yet** (no fake stand run; steps 4–5 below). Only the refusals are.
+- PageBusinessRuleProbe: clio also merges the page hierarchy's bodies in `PageBusinessRuleSchemaProvider` and reports a
+  merge failure in the probe note; the Go context read skips the merge.
+- Probe JSON request bodies are Go maps (keys sorted), clio's JObjects keep insertion order; Creatio does not care.
+- `rowBool` approximates `JToken.Value<bool?>()` for non-boolean cells.
+
+## Still open
+
+| Step | Notes |
+|---|---|
+| Probe oracle | wrap the probes' entry points in the clio copy (`scripts/mobileguide-oracle/`) so `MobileActionTargetProbeTests`, `PageBusinessRuleProbeTests`, `MobileSectionRegistrationProbeTests`, `ExistingMobilePageProbeTests` record stubbed service answers and results; replay them against `ProbeClient` fakes |
+| Fake stand `scripts/fake-stands/t27/fake_mobile.py` | serve get-page bundles (source page, web template, mobile template) and the probe/version queries from clio fixtures; point `CLIO_*_LOCAL_FILE` at fixtures; compare raw answer text of clio 142 and this server on several pages |
+| Docs | `docs/clio-mcp-comparison.md`, `docs/install.md`, `docs/migration-plan.md` still say the tool is not served; the inventory row (`docs/clio-inventory.*`, off-limits here) still says "not ported" |
 
 ## Next session: facts already established
 

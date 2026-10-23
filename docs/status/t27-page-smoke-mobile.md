@@ -5,7 +5,7 @@ The two page tools T21a left out ([t21a status](t21a-page-package-status.md#not-
 | Tool | Status | Go |
 |---|---|---|
 | `page-smoke` | ported, registered | `cmd/creatio-mcp-go/tool_page_smoke.go`, `internal/pagesmoke`, `internal/creatio/pagesmoke_support.go` |
-| `get-mobile-page-conversion-guide` | engine ported (530/530 recorded clio `Analyze` answers byte-equal), handler/probes open, not registered | see [t27-mobile-guide-section.md](t27-mobile-guide-section.md) |
+| `get-mobile-page-conversion-guide` | registered: engine 530/530 recorded clio `Analyze` answers byte-equal, handler and four probes ported, refusals 25/26 equal clio; success path not yet compared on a fake stand | see [t27-mobile-guide-section.md](t27-mobile-guide-section.md) |
 
 ## page-smoke
 
@@ -82,8 +82,8 @@ watched entities of a click (shared watcher code, measured for trigger-smoke), W
 
 ## get-mobile-page-conversion-guide
 
-Not finished in this task: the rules data, the rules catalog, the answer types and the refusals that need no
-analysis are in (`internal/mobileguide`, `scripts/generate-mobile-conversion-rules.py`); the analysis engine
-(`WebToMobileAnalysisService`, 8.2K lines), the tool flow, the four probes and the fake stand are not. The tool stays
-unregistered, because clio's own comments say a partial guide is worse than none. Details, the exact remaining
-steps and the `CLIO_*_LOCAL_FILE` names: [t27-mobile-guide-section.md](t27-mobile-guide-section.md).
+Served since 2026-10-23 (third session): rules data and catalog, answer types, the analysis engine (byte-equal to
+clio on 530 recorded `Analyze` calls), the handler (`mobileguide.Run`), the four probes (`internal/mobileguide/probes.go`)
+and the stand bridge (`internal/creatio/mobileguide_bridge.go`). The recorded no-stand refusals match clio on 25 of 26
+answers (the direct call without an `args` record is the exception). Still open: a probe oracle and the fake-stand
+comparison of the success path. Details: [t27-mobile-guide-section.md](t27-mobile-guide-section.md).
