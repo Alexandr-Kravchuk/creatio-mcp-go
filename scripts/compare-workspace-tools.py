@@ -243,7 +243,11 @@ def normalize_requests(requests, home, url):
             body = DATE.sub(lambda m: dates.setdefault(m.group(0), f"{{date{len(dates) + 1}}}"), body)
         except UnicodeDecodeError:
             body = describe_binary(request["body"])
-        line = f'{request["method"]} {request["path"]}?{request["query"]} {body}'
+        query = request["query"]
+        if body.startswith("zip{"):
+            # An upload names the archive's byte length, which the deflate encoder decides.
+            query = re.sub(r"totalFileLength=\d+", "totalFileLength={zip-length}", query)
+        line = f'{request["method"]} {request["path"]}?{query} {body}'
         # The installer's log listener polls GetLogFile while the install request runs; whether its first poll
         # lands before or after that request, or at all, is a race on both sides, so repeated polls count once.
         if out and line == out[-1] and request["method"] == "GET" and request["path"].endswith("/GetLogFile"):
