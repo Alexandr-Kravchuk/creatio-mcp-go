@@ -16,16 +16,17 @@ const processBuilderMissingMessage = "To use this command, you need to install t
 	"Install the package in the target environment and retry.\n" + processWriteInstallHint
 
 // ListUserTasks reads the process designer palette through the CrtProcessBuilder ProcessDesignService. Like
-// clio it first refuses when that package is not installed. Past that gate the log opens with clio's
-// "Reading user task catalog from '<environment>'..." Info line, then lists one "name<TAB>uid" Info line per
-// task and a closing total, or the Error of a failed read, exactly as clio's command log does.
+// clio it first applies its [RequiresPackage(CrtProcessBuilder)] gate: it refuses when that package is not
+// installed or is older than the CrtProcessBuilder the installed clio carries. Past that gate the log opens
+// with clio's "Reading user task catalog from '<environment>'..." Info line, then lists one "name<TAB>uid"
+// Info line per task and a closing total, or the Error of a failed read, exactly as clio's command log does.
 func (c *Client) ListUserTasks(ctx context.Context, environmentName string) CommandResult {
-	installed, err := c.userTasksPackageInstalled(ctx, processBuilderPackageName)
+	refusal, err := c.processWriteGate(ctx, "")
 	if err != nil {
 		return NewCommandResult(-1, "Error", CommandExceptionText(err))
 	}
-	if !installed {
-		return NewCommandResult(1, "Error", processBuilderMissingMessage)
+	if refusal != "" {
+		return NewCommandResult(1, "Error", refusal)
 	}
 	reading := LogMessage{MessageType: "Info", Value: fmt.Sprintf("Reading user task catalog from '%s'...", environmentName)}
 	tasks, err := c.readUserTasks(ctx)
