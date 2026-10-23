@@ -9,7 +9,9 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
+	"time"
 )
 
 func TestSchemaTransferExportPreservesPayloadAndNeverOverwrites(t *testing.T) {
@@ -130,6 +132,7 @@ func TestSchemaTransferImportEnforcesIdentityAndDryRun(t *testing.T) {
 	}
 }
 func TestAppDeleteUsesScalarGUIDAndTransportFailure(t *testing.T) {
+	pkgWriteFastRestart(t)
 	for _, fail := range []bool{false, true} {
 		t.Run(map[bool]string{false: "Success", true: "Failure"}[fail], func(t *testing.T) {
 			const id = "00000000-0000-0000-0000-000000000001"
@@ -159,6 +162,41 @@ func TestAppDeleteUsesScalarGUIDAndTransportFailure(t *testing.T) {
 				t.Fatalf("%#v", result)
 			}
 		})
+	}
+}
+
+// uninstall-app-remote keeps RemoteCommandOptions' 100 s timeout and three attempts: an uninstall slower than the
+// client's 45 s still succeeds (live run T24: 47.8-63.9 s), and a failed attempt is retried.
+func TestAppDeleteOutlastsTheClientTimeoutAndRetries(t *testing.T) {
+	pkgWriteFastRestart(t)
+	const id = "00000000-0000-0000-0000-000000000001"
+	const delay = 300 * time.Millisecond
+	var calls int
+	var mu sync.Mutex
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasSuffix(r.URL.Path, "/Login") {
+			io.WriteString(w, `{"Code":0}`)
+			return
+		}
+		mu.Lock()
+		calls++
+		call := calls
+		mu.Unlock()
+		if call == 1 {
+			http.Error(w, "failed", 500)
+			return
+		}
+		time.Sleep(delay)
+		io.WriteString(w, `{}`)
+	}))
+	defer server.Close()
+	client, _ := NewClient(Config{BaseURL: server.URL, Login: "example", Password: "replace-me"})
+	client.http.Timeout = delay / 3
+	if result := client.DeleteApp(context.Background(), id); !result.Success {
+		t.Fatalf("%#v", result)
+	}
+	if calls != 2 {
+		t.Fatalf("uninstall calls = %d", calls)
 	}
 }
 

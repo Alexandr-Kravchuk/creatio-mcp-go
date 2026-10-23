@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"time"
 )
 
 // FsmStaticFileContent is the staticFileContent object GetApplicationInfo reports when FSM mode is off.
@@ -27,14 +26,13 @@ type FsmModeResult struct {
 // GetFsmMode derives file system mode from ApplicationInfoService.svc/GetApplicationInfo the way clio's
 // FsmModeStatusService does: useStaticFileContent=false with staticFileContent=null is "on",
 // useStaticFileContent=true with a populated staticFileContent is "off", anything else is an error.
+//
+// clio posts with Timeout.Infinite, so a request that reaches a site still starting after a restart or an FSM
+// toggle waits for it (live run T24: 60.9-70.4 s) instead of failing at the client's 45 s; the bound is the
+// 30 minutes set-fsm-mode's package loads use.
 func (c *Client) GetFsmMode(ctx context.Context) (FsmModeResult, error) {
-	return c.getFsmMode(ctx, 0)
-}
-
-// getFsmMode is GetFsmMode with the GetApplicationInfo request bounded by timeout; 0 is the client's 45 s.
-func (c *Client) getFsmMode(ctx context.Context, timeout time.Duration) (FsmModeResult, error) {
 	// clio posts an empty body to this route.
-	response, err := c.callEnvironmentRoute(ctx, http.MethodPost, applicationInfoRoute, []byte{}, timeout)
+	response, err := c.callEnvironmentRoute(ctx, http.MethodPost, applicationInfoRoute, []byte{}, adminWriteFsmLoadTimeout)
 	if err != nil {
 		return FsmModeResult{}, fmt.Errorf("GetApplicationInfo request failed: %w", err)
 	}

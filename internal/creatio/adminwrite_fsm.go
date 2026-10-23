@@ -213,10 +213,9 @@ func (c *Client) adminWriteSetFsmConfig(ctx context.Context, target AdminWriteFs
 		requested = "on"
 	}
 	if runtime.GOOS != "windows" && !target.IsNetCore {
-		// EnsurePlatformSupport: Web.config of a .NET Framework site cannot be edited from here. clio's
-		// FsmModeStatusService posts GetApplicationInfo with Timeout.Infinite, so a probe that reaches the site
-		// while it restarts after the previous toggle waits for it instead of failing after 45 s (live run T24).
-		status, err := c.getFsmMode(ctx, adminWriteFsmLoadTimeout)
+		// EnsurePlatformSupport: Web.config of a .NET Framework site cannot be edited from here. The probe waits
+		// for a site still restarting after the previous toggle, as clio's FsmModeStatusService does.
+		status, err := c.GetFsmMode(ctx)
 		if err != nil {
 			log.add("Error", fmt.Sprintf("Could not determine current FSM state on environment '%s': %s. "+
 				"Remote FSM toggle on .NET Framework Creatio from macOS/Linux requires probing the server first.", target.Name, err.Error()))

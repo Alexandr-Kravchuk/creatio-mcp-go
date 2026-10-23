@@ -5,7 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 )
+
+// appWriteUninstallTimeout is RemoteCommandOptions' default TimeOut (100 000 ms), which uninstall-app-remote keeps.
+// An uninstall can take a minute on a loaded site (live run T24: 47.8-63.9 s).
+const appWriteUninstallTimeout = 100 * time.Second
 
 type AppDeleteResponse struct {
 	Success bool   `json:"success"`
@@ -35,9 +40,20 @@ func (c *Client) DeleteApp(ctx context.Context, name string) AppDeleteResponse {
 		}
 	}
 	body, _ := json.Marshal(id)
-	_, err := c.callService(ctx, serviceCall{Route: "ServiceModel/AppInstallerService.svc/UninstallApp", Body: body})
-	if err != nil {
-		return AppDeleteResponse{Error: err.Error()}
+	// RemoteCommand posts with MaxAttempts and RetryDelay, as the restart request does.
+	var err error
+	for attempt := 1; attempt <= pkgWriteRestartAttempts; attempt++ {
+		call := serviceCall{Route: "ServiceModel/AppInstallerService.svc/UninstallApp", Body: body, Timeout: appWriteUninstallTimeout}
+		if _, err = c.callService(ctx, call); err == nil {
+			return AppDeleteResponse{Success: true}
+		}
+		if attempt == pkgWriteRestartAttempts || ctx.Err() != nil {
+			break
+		}
+		select {
+		case <-ctx.Done():
+		case <-time.After(pkgWriteRestartRetryDelay):
+		}
 	}
-	return AppDeleteResponse{Success: true}
+	return AppDeleteResponse{Error: err.Error()}
 }

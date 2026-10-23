@@ -105,7 +105,7 @@ func TestSetFsmModeOffEditsTheLocalConfigOfANetCoreSite(t *testing.T) {
 
 // The probe before the remote toggle waits for a slow GetApplicationInfo the way clio's FsmModeStatusService does
 // (Timeout.Infinite) instead of failing at the client's default timeout: the site may still be restarting after
-// the previous toggle (live run T24). get-fsm-mode itself keeps the default.
+// the previous toggle (live run T24).
 func TestSetFsmModeProbeOutlastsTheClientTimeout(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("the remote toggle is the macOS/Linux path")
@@ -153,8 +153,8 @@ func TestSetFsmModeProbeOutlastsTheClientTimeout(t *testing.T) {
 	if got != "ServiceModel/WorkspaceExplorerService.svc/GetIsFileDesignMode,"+applicationInfoRoute {
 		t.Errorf("routes = %s", got)
 	}
-	// The read tool keeps the client's timeout.
-	if _, err := client.GetFsmMode(context.Background()); err == nil {
-		t.Error("get-fsm-mode waited past the client timeout")
+	// get-fsm-mode waits the same way (live run T24: the first read after a restart took 60.9-70.4 s on clio).
+	if status, err := client.GetFsmMode(context.Background()); err != nil || status.Mode != "off" {
+		t.Errorf("get-fsm-mode = %#v, %v", status, err)
 	}
 }
