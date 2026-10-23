@@ -29,9 +29,10 @@ const (
 // PageValidateGapWarning names the checks of clio's validate-page this server does not run, so a passing
 // verdict is never read as clio's full verdict.
 const PageValidateGapWarning = "This server checked only JavaScript syntax (structurally: brackets, strings, comments, templates), " +
-	"the section marker pairs, the JSON/object content of each section, and the resources argument. It did NOT run clio's " +
-	"field and column binding, handler, converter, validator, schema-deps, context-await, localizable-text, AST lint, chart-widget, " +
-	"run-process-button or parent-container (known-containers) checks; run clio validate-page before update-page for the full verdict."
+	"the section marker pairs, the JSON/object content of each section, the resources argument and the parent-container " +
+	"(known-containers) references. It did NOT run clio's field and column binding, widget caption resource, handler, converter, " +
+	"validator, schema-deps, context-await, localizable-text, AST lint, chart-widget, run-process-button, placement-slot " +
+	"(insert/move propertyName) or data-source binding checks; run clio validate-page before update-page for the full verdict."
 
 // PageValidateMobileUnsupported is the refusal for a mobile (JSON) body, whose validation in clio applies the
 // diff through the client-engine appliers and the component catalogs.
@@ -43,6 +44,9 @@ type PageValidateRequest struct {
 	Body      string
 	BodyFile  string
 	Resources string
+	// KnownContainers are the page's inherited element names; nil when the caller gave none, which makes an
+	// unresolved parent a warning instead of an error.
+	KnownContainers []string
 }
 
 // PageValidateResult is clio's validate-page envelope.
@@ -70,18 +74,19 @@ var (
 
 // ValidatePage validates a Freedom UI page body offline, without calling Creatio, following clio's
 // validate-page: the body or body-file is resolved with clio's rules and texts, then the JavaScript syntax
-// gate, marker integrity and section content run. The remaining clio checks are named in
-// PageValidateGapWarning, which every web verdict past the syntax gate carries.
-func ValidatePage(input PageValidateRequest) PageValidateResult {
+// gate, marker integrity, section content and, when those pass, the parent-container check run. The
+// remaining clio checks are named in PageValidateGapWarning, which every web verdict past the syntax gate
+// carries. err is a failure clio raises (a container where its diff reader expects a name).
+func ValidatePage(input PageValidateRequest) (PageValidateResult, error) {
 	body, refusal := pageValidateResolveBody(input)
 	if refusal != "" {
-		return pageValidateInvalidSource(refusal)
+		return pageValidateInvalidSource(refusal), nil
 	}
 	if strings.HasPrefix(strings.TrimSpace(body), "{") {
-		return pageValidateInvalidSource(PageValidateMobileUnsupported)
+		return pageValidateInvalidSource(PageValidateMobileUnsupported), nil
 	}
 	if _, err := classicPageParse(body); err != nil {
-		return pageValidateInvalidSource(pageValidateSyntaxMessage(body, err))
+		return pageValidateInvalidSource(pageValidateSyntaxMessage(body, err)), nil
 	}
 	markers := pageValidateMarkerIntegrity(body)
 	content := []string{}
@@ -95,12 +100,26 @@ func ValidatePage(input PageValidateRequest) PageValidateResult {
 		}
 	}
 	errorsList := append(append([]string{}, markers...), content...)
-	outcomes := PageValidationOutcomes{MarkersOK: len(markers) == 0, JSSyntaxOK: true, ContentOK: contentOK,
-		Warnings: []string{PageValidateGapWarning}}
+	warnings := []string{}
+	if len(markers) == 0 && contentOK {
+		// clio runs it only on a body whose syntax, markers and content passed, and folds its errors into content.
+		parents, err := ValidatePageParents(body, input.KnownContainers)
+		if err != nil {
+			return PageValidateResult{}, err
+		}
+		if len(parents.Errors) > 0 {
+			contentOK = false
+			errorsList = append(errorsList, parents.Errors...)
+		}
+		warnings = append(warnings, parents.Warnings...)
+	}
+	// The gap warning comes last, so clio's own warnings keep their positions.
+	warnings = append(warnings, PageValidateGapWarning)
+	outcomes := PageValidationOutcomes{MarkersOK: len(markers) == 0, JSSyntaxOK: true, ContentOK: contentOK, Warnings: warnings}
 	if len(errorsList) > 0 {
 		outcomes.Errors = errorsList
 	}
-	return PageValidateResult{Valid: outcomes.MarkersOK && outcomes.ContentOK, Validation: outcomes}
+	return PageValidateResult{Valid: outcomes.MarkersOK && outcomes.ContentOK, Validation: outcomes}, nil
 }
 
 func pageValidateInvalidSource(message string) PageValidateResult {
