@@ -44,7 +44,7 @@ func pinClock(t *testing.T) {
 	t.Cleanup(func() { now, newGUID = previousNow, previousGUID })
 }
 
-func messages(result creatio.CommandResult) string {
+func resultText(result creatio.CommandResult) string {
 	var lines []string
 	for _, message := range result.Messages {
 		lines = append(lines, message.MessageType+": "+message.Value)
@@ -67,7 +67,7 @@ func newWorkspace(t *testing.T) string {
 	base := t.TempDir()
 	result := CreateWorkspace(context.Background(), CreateWorkspaceRequest{WorkspaceName: "ws", Directory: base})
 	if result.ExitCode != 0 {
-		t.Fatalf("create-workspace: %s", messages(result))
+		t.Fatalf("create-workspace: %s", resultText(result))
 	}
 	return filepath.Join(base, "ws")
 }
@@ -102,8 +102,8 @@ func TestCreateWorkspaceWritesClioLayout(t *testing.T) {
 		}
 	}
 	again := CreateWorkspace(context.Background(), CreateWorkspaceRequest{WorkspaceName: "ws", Directory: filepath.Dir(root)})
-	if again.ExitCode != 1 || !strings.Contains(messages(again), "Destination folder already exists and is not empty") {
-		t.Fatalf("second create: %s", messages(again))
+	if again.ExitCode != 1 || !strings.Contains(resultText(again), "Destination folder already exists and is not empty") {
+		t.Fatalf("second create: %s", resultText(again))
 	}
 }
 
@@ -112,9 +112,9 @@ func TestCreateWorkspaceWithoutNuGetWarnsAndOmitsTheVersion(t *testing.T) {
 	base := t.TempDir()
 	result := CreateWorkspace(context.Background(), CreateWorkspaceRequest{WorkspaceName: "ws", Directory: base})
 	if result.ExitCode != 0 {
-		t.Fatal(messages(result))
+		t.Fatal(resultText(result))
 	}
-	text := messages(result)
+	text := resultText(result)
 	if !strings.Contains(text, "Error: Error while getting Creatio SDK versions from NuGet:") ||
 		!strings.Contains(text, "Warning: The workspace application version could not be resolved: Creatio SDK versions could not be read") {
 		t.Fatalf("messages:\n%s", text)
@@ -134,8 +134,8 @@ func TestCreateWorkspaceRefusals(t *testing.T) {
 	}
 	for want, request := range cases {
 		result := CreateWorkspace(context.Background(), request)
-		if result.ExitCode != 1 || messages(result) != "Error: "+want {
-			t.Errorf("%+v: %s", request, messages(result))
+		if result.ExitCode != 1 || resultText(result) != "Error: "+want {
+			t.Errorf("%+v: %s", request, resultText(result))
 		}
 	}
 }
@@ -146,7 +146,7 @@ func TestAddPackageAsAppWritesSchemaAndAppDescriptor(t *testing.T) {
 	prefix := "Usr"
 	result := AddPackage(context.Background(), AddPackageRequest{Name: "App1", WorkspacePath: root, AsApp: true, SchemaNamePrefix: &prefix})
 	if result.ExitCode != 0 {
-		t.Fatal(messages(result))
+		t.Fatal(resultText(result))
 	}
 	pkg := filepath.Join(root, "packages", "App1")
 	for _, path := range []string{"Files/App1.csproj", "Files/src/cs/App1App.cs", "Files/app-descriptor.json",
@@ -163,8 +163,8 @@ func TestAddPackageAsAppWritesSchemaAndAppDescriptor(t *testing.T) {
 		t.Fatal("package project not added to MainSolution.slnx")
 	}
 	second := AddPackage(context.Background(), AddPackageRequest{Name: "App1", WorkspacePath: root})
-	if second.ExitCode != -1 || !strings.HasPrefix(messages(second), "Error: [InvalidOperationException] Directory '") {
-		t.Fatalf("existing package: %s", messages(second))
+	if second.ExitCode != -1 || !strings.HasPrefix(resultText(second), "Error: [InvalidOperationException] Directory '") {
+		t.Fatalf("existing package: %s", resultText(second))
 	}
 }
 
@@ -182,7 +182,7 @@ func TestAddPackageReadsThePrefixAndDownloadsConfiguration(t *testing.T) {
 			}
 			return creatio.NewCommandResult(0, "None", "downloaded")
 		}})
-	text := messages(result)
+	text := resultText(result)
 	if result.ExitCode != 0 || downloads != 1 || !strings.Contains(text, "Using schema-name prefix 'Abc'") || !strings.HasSuffix(text, "None: downloaded") {
 		t.Fatalf("exit %d, downloads %d:\n%s", result.ExitCode, downloads, text)
 	}
@@ -194,16 +194,16 @@ func TestAddPackageReadsThePrefixAndDownloadsConfiguration(t *testing.T) {
 func TestTestProjectsRegisterInSolutions(t *testing.T) {
 	root := newWorkspace(t)
 	if result := AddPackage(context.Background(), AddPackageRequest{Name: "Pkg1", WorkspacePath: root}); result.ExitCode != 0 {
-		t.Fatal(messages(result))
+		t.Fatal(resultText(result))
 	}
 	name := "Pkg1"
 	unit := CreateTestProject(TestProjectRequest{PackageName: &name, WorkspacePath: root})
 	if unit.ExitCode != 0 {
-		t.Fatal(messages(unit))
+		t.Fatal(resultText(unit))
 	}
 	integration := CreateIntegrationTestProject(TestProjectRequest{PackageName: &name, WorkspacePath: root, TargetFramework: "net10.0"})
 	if integration.ExitCode != 0 {
-		t.Fatal(messages(integration))
+		t.Fatal(resultText(integration))
 	}
 	main := readText(t, filepath.Join(root, "MainSolution.slnx"))
 	for _, path := range []string{filepath.Join("tests", "Pkg1", "Pkg1.Tests.csproj"), filepath.Join("tests", "Pkg1.IntegrationTests", "Pkg1.IntegrationTests.csproj")} {
@@ -215,8 +215,8 @@ func TestTestProjectsRegisterInSolutions(t *testing.T) {
 	refused := CreateIntegrationTestProject(TestProjectRequest{PackageName: &bad, WorkspacePath: root, TargetFramework: "net"})
 	want := "None: ERROR (PredicateValidator) - Package name must not contain C# reserved keywords.\n" +
 		"None: ERROR (RegularExpressionValidator) - Target framework must be a valid .NET target framework moniker, for example net10.0 or net472."
-	if refused.ExitCode != 1 || messages(refused) != want {
-		t.Fatalf("refusal:\n%s", messages(refused))
+	if refused.ExitCode != 1 || resultText(refused) != want {
+		t.Fatalf("refusal:\n%s", resultText(refused))
 	}
 }
 
@@ -225,10 +225,10 @@ func TestUIProjectUsesLegacyTemplateAndPinsSDK(t *testing.T) {
 	vendor := "usr"
 	result := CreateUIProject(UIProjectRequest{WorkspaceDirectory: root, ProjectName: "my_module", PackageName: "UsrUi", VendorPrefix: &vendor, CreatioVersion: "8.0.9"})
 	if result.ExitCode != 0 {
-		t.Fatal(messages(result))
+		t.Fatal(resultText(result))
 	}
-	if !strings.Contains(messages(result), "UI project template: ui/8.0.8/ui-project (legacy template for Creatio 8.0.8); requested Creatio version: 8.0.9;") {
-		t.Fatal(messages(result))
+	if !strings.Contains(resultText(result), "UI project template: ui/8.0.8/ui-project (legacy template for Creatio 8.0.8); requested Creatio version: 8.0.9;") {
+		t.Fatal(resultText(result))
 	}
 	global := readText(t, filepath.Join(root, "global.json"))
 	if !strings.Contains(global, `"Microsoft.VisualStudio.JavaScript.Sdk": "1.0.5581896"`) {

@@ -209,7 +209,7 @@ func fileURIPath(value string) (string, bool) {
 		}
 		return local, true
 	}
-	if isFullyQualified(value) {
+	if IsFullyQualified(value) {
 		return fullPath(value), true
 	}
 	return "", false
