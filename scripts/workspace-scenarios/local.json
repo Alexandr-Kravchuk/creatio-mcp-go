@@ -750,5 +750,85 @@
     }
    }
   ]
+ },
+ {
+  "name": "solution-order",
+  "steps": [
+   {
+    "tool": "create-workspace",
+    "args": {
+     "workspaceName": "ws",
+     "directory": "{home}/base"
+    }
+   },
+   {
+    "write": "base/ws/packages/b/Files/b.csproj",
+    "content": "<Project />"
+   },
+   {
+    "write": "base/ws/packages/Ab/Files/Ab.csproj",
+    "content": "<Project />"
+   },
+   {
+    "write": "base/ws/packages/A_b/Files/A_b.csproj",
+    "content": "<Project />"
+   },
+   {
+    "write": "base/ws/packages/ab1/Files/ab1.csproj",
+    "content": "<Project />"
+   },
+   {
+    "write": "base/ws/packages/a/Files/a.csproj",
+    "content": "<Project />"
+   },
+   {
+    "write": "base/ws/packages/_x/Files/_x.csproj",
+    "content": "<Project />"
+   },
+   {
+    "write": "base/ws/packages/a1/Files/a1.csproj",
+    "content": "<Project />"
+   },
+   {
+    "write": "base/ws/packages/x_/Files/x_.csproj",
+    "content": "<Project />"
+   },
+   {
+    "write": "base/ws/packages/x1/Files/x1.csproj",
+    "content": "<Project />"
+   },
+   {
+    "write": "base/ws/packages/X0/Files/X0.csproj",
+    "content": "<Project />"
+   },
+   {
+    "write": "base/ws/packages/Ab_c/Files/Ab_c.csproj",
+    "content": "<Project />"
+   },
+   {
+    "write": "base/ws/packages/Abc/Files/Abc.csproj",
+    "content": "<Project />"
+   },
+   {
+    "write": "base/ws/packages/Z9/Files/Z9.csproj",
+    "content": "<Project />"
+   },
+   {
+    "write": "base/ws/packages/z_1/Files/z_1.csproj",
+    "content": "<Project />"
+   },
+   {
+    "write": "base/ws/packages/Q/Files/Q.csproj",
+    "content": "<Project />"
+   },
+   {
+    "tool": "add-package",
+    "label": "one call adds every project",
+    "args": {
+     "name": "M",
+     "workspace-path": "{ws}"
+    }
+   }
+  ]
  }
 ]

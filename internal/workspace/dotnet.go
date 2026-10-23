@@ -190,7 +190,7 @@ func jsonString(text string, style jsonStyle) string {
 		switch r {
 		case '"':
 			if style == systemTextJSONStyle {
-				builder.WriteString(`"`)
+				builder.WriteString(`\u0022`)
 			} else {
 				builder.WriteString(`\"`)
 			}
