@@ -1,0 +1,347 @@
+{
+  "schema": 1,
+  "clio_startup_seconds": 0.75,
+  "go_startup_seconds": 0.05,
+  "counts": {
+    "skipped": 0,
+    "match": 0,
+    "both-failed": 0,
+    "error-text": 0,
+    "known-diff": 0,
+    "mismatch": 7
+  },
+  "scenarios": [
+    {
+      "scenario": "create-app round 0 (warm-up)",
+      "verdict": "mismatch",
+      "first": "clio",
+      "steps": [
+        {
+          "step": "settle",
+          "kind": "read-back",
+          "verdict": "match",
+          "clio_seconds": 1.21,
+          "go_seconds": 0.69,
+          "differences": []
+        },
+        {
+          "step": "create-app",
+          "kind": "write",
+          "verdict": "known-diff",
+          "clio_seconds": 178.15,
+          "go_seconds": 59.27,
+          "differences": [
+            "$.applicationid: value differs",
+            "$.entities[0].uid: value differs",
+            "$.packageuid: value differs",
+            "$.pages[0].uid: value differs",
+            "$.pages[1].uid: value differs",
+            "$.pages[2].uid: value differs"
+          ]
+        },
+        {
+          "step": "3:cleanup (clio)",
+          "kind": "cleanup",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "3:cleanup (go)",
+          "kind": "cleanup",
+          "verdict": "mismatch",
+          "differences": [
+            "$: delete-app failed on go"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": "create-app round 1",
+      "verdict": "mismatch",
+      "first": "go",
+      "steps": [
+        {
+          "step": "settle",
+          "kind": "read-back",
+          "verdict": "match",
+          "clio_seconds": 0.65,
+          "go_seconds": 0.16,
+          "differences": []
+        },
+        {
+          "step": "create-app",
+          "kind": "write",
+          "verdict": "known-diff",
+          "clio_seconds": 53.45,
+          "go_seconds": 55.76,
+          "differences": [
+            "$.applicationid: value differs",
+            "$.entities[0].uid: value differs",
+            "$.packageuid: value differs",
+            "$.pages[0].uid: value differs",
+            "$.pages[1].uid: value differs",
+            "$.pages[2].uid: value differs"
+          ],
+          "attempts": {
+            "clio": 3,
+            "go": 1
+          }
+        },
+        {
+          "step": "3:cleanup (go)",
+          "kind": "cleanup",
+          "verdict": "mismatch",
+          "differences": [
+            "$: delete-app failed on go"
+          ]
+        },
+        {
+          "step": "3:cleanup (clio)",
+          "kind": "cleanup",
+          "verdict": "match",
+          "differences": []
+        }
+      ]
+    },
+    {
+      "scenario": "create-app round 2",
+      "verdict": "mismatch",
+      "first": "clio",
+      "steps": [
+        {
+          "step": "settle",
+          "kind": "read-back",
+          "verdict": "match",
+          "clio_seconds": 0.59,
+          "go_seconds": 0.18,
+          "differences": []
+        },
+        {
+          "step": "create-app",
+          "kind": "write",
+          "verdict": "known-diff",
+          "clio_seconds": 72.95,
+          "go_seconds": 94.2,
+          "differences": [
+            "$.applicationid: value differs",
+            "$.entities[0].uid: value differs",
+            "$.packageuid: value differs",
+            "$.pages[0].uid: value differs",
+            "$.pages[1].uid: value differs",
+            "$.pages[2].uid: value differs"
+          ],
+          "attempts": {
+            "clio": 1,
+            "go": 3
+          }
+        },
+        {
+          "step": "3:cleanup (clio)",
+          "kind": "cleanup",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "3:cleanup (go)",
+          "kind": "cleanup",
+          "verdict": "mismatch",
+          "differences": [
+            "$: delete-app failed on go"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": "create-app round 3",
+      "verdict": "mismatch",
+      "first": "go",
+      "steps": [
+        {
+          "step": "settle",
+          "kind": "read-back",
+          "verdict": "match",
+          "clio_seconds": 0.64,
+          "go_seconds": 0.24,
+          "differences": []
+        },
+        {
+          "step": "create-app",
+          "kind": "write",
+          "verdict": "known-diff",
+          "clio_seconds": 69.2,
+          "go_seconds": 56.79,
+          "differences": [
+            "$.applicationid: value differs",
+            "$.entities[0].uid: value differs",
+            "$.packageuid: value differs",
+            "$.pages[0].uid: value differs",
+            "$.pages[1].uid: value differs",
+            "$.pages[2].uid: value differs"
+          ],
+          "attempts": {
+            "clio": 3,
+            "go": 1
+          }
+        },
+        {
+          "step": "3:cleanup (go)",
+          "kind": "cleanup",
+          "verdict": "mismatch",
+          "differences": [
+            "$: delete-app failed on go"
+          ]
+        },
+        {
+          "step": "3:cleanup (clio)",
+          "kind": "cleanup",
+          "verdict": "match",
+          "differences": []
+        }
+      ]
+    },
+    {
+      "scenario": "create-app round 4",
+      "verdict": "mismatch",
+      "first": "clio",
+      "steps": [
+        {
+          "step": "settle",
+          "kind": "read-back",
+          "verdict": "match",
+          "clio_seconds": 0.73,
+          "go_seconds": 0.19,
+          "differences": []
+        },
+        {
+          "step": "create-app",
+          "kind": "write",
+          "verdict": "known-diff",
+          "clio_seconds": 62.86,
+          "go_seconds": 64.95,
+          "differences": [
+            "$.applicationid: value differs",
+            "$.entities[0].uid: value differs",
+            "$.packageuid: value differs",
+            "$.pages[0].uid: value differs",
+            "$.pages[1].uid: value differs",
+            "$.pages[2].uid: value differs"
+          ],
+          "attempts": {
+            "clio": 1,
+            "go": 3
+          }
+        },
+        {
+          "step": "3:cleanup (clio)",
+          "kind": "cleanup",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "3:cleanup (go)",
+          "kind": "cleanup",
+          "verdict": "mismatch",
+          "differences": [
+            "$: delete-app failed on go"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": "create-app round 5",
+      "verdict": "mismatch",
+      "first": "go",
+      "steps": [
+        {
+          "step": "settle",
+          "kind": "read-back",
+          "verdict": "match",
+          "clio_seconds": 0.58,
+          "go_seconds": 0.13,
+          "differences": []
+        },
+        {
+          "step": "create-app",
+          "kind": "write",
+          "verdict": "known-diff",
+          "clio_seconds": 53.19,
+          "go_seconds": 52.7,
+          "differences": [
+            "$.applicationid: value differs",
+            "$.entities[0].uid: value differs",
+            "$.packageuid: value differs",
+            "$.pages[0].uid: value differs",
+            "$.pages[1].uid: value differs",
+            "$.pages[2].uid: value differs"
+          ],
+          "attempts": {
+            "clio": 3,
+            "go": 1
+          }
+        },
+        {
+          "step": "3:cleanup (go)",
+          "kind": "cleanup",
+          "verdict": "mismatch",
+          "differences": [
+            "$: delete-app failed on go"
+          ]
+        },
+        {
+          "step": "3:cleanup (clio)",
+          "kind": "cleanup",
+          "verdict": "match",
+          "differences": []
+        }
+      ]
+    },
+    {
+      "scenario": "create-app round 6",
+      "verdict": "mismatch",
+      "first": "clio",
+      "steps": [
+        {
+          "step": "settle",
+          "kind": "read-back",
+          "verdict": "match",
+          "clio_seconds": 0.64,
+          "go_seconds": 0.95,
+          "differences": []
+        },
+        {
+          "step": "create-app",
+          "kind": "write",
+          "verdict": "known-diff",
+          "clio_seconds": 58.6,
+          "go_seconds": 56.01,
+          "differences": [
+            "$.applicationid: value differs",
+            "$.entities[0].uid: value differs",
+            "$.packageuid: value differs",
+            "$.pages[0].uid: value differs",
+            "$.pages[1].uid: value differs",
+            "$.pages[2].uid: value differs"
+          ],
+          "attempts": {
+            "clio": 1,
+            "go": 3
+          }
+        },
+        {
+          "step": "3:cleanup (clio)",
+          "kind": "cleanup",
+          "verdict": "match",
+          "differences": []
+        },
+        {
+          "step": "3:cleanup (go)",
+          "kind": "cleanup",
+          "verdict": "mismatch",
+          "differences": [
+            "$: delete-app failed on go"
+          ]
+        }
+      ]
+    }
+  ]
+}

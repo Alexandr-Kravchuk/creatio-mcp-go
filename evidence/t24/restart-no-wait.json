@@ -1,0 +1,253 @@
+{
+  "schema": 1,
+  "clio_startup_seconds": 0.76,
+  "go_startup_seconds": 0.05,
+  "counts": {
+    "skipped": 0,
+    "match": 4,
+    "both-failed": 0,
+    "error-text": 0,
+    "known-diff": 0,
+    "mismatch": 3
+  },
+  "scenarios": [
+    {
+      "scenario": "restart-by-environment-name waitReady false round 0 (warm-up)",
+      "verdict": "match",
+      "first": "clio",
+      "steps": [
+        {
+          "step": "ready before",
+          "kind": "read-back",
+          "verdict": "match",
+          "clio_seconds": 0.81,
+          "go_seconds": 0.62,
+          "differences": []
+        },
+        {
+          "step": "restart waitReady false",
+          "kind": "write",
+          "verdict": "match",
+          "clio_seconds": 1.85,
+          "go_seconds": 0.47,
+          "differences": []
+        },
+        {
+          "step": "ready after",
+          "kind": "read-back",
+          "verdict": "match",
+          "clio_seconds": 61.91,
+          "go_seconds": 0.38,
+          "differences": []
+        }
+      ]
+    },
+    {
+      "scenario": "restart-by-environment-name waitReady false round 1",
+      "verdict": "mismatch",
+      "first": "go",
+      "steps": [
+        {
+          "step": "ready before",
+          "kind": "read-back",
+          "verdict": "match",
+          "clio_seconds": 0.81,
+          "go_seconds": 0.08,
+          "differences": []
+        },
+        {
+          "step": "restart waitReady false",
+          "kind": "write",
+          "verdict": "match",
+          "clio_seconds": 1.66,
+          "go_seconds": 0.44,
+          "differences": []
+        },
+        {
+          "step": "ready after",
+          "kind": "read-back",
+          "verdict": "mismatch",
+          "clio_seconds": 14.59,
+          "go_seconds": 45.01,
+          "differences": [
+            "$.environmentname: only in clio",
+            "$.error: only in go",
+            "$.mode: only in clio",
+            "$.staticfilecontent: only in clio",
+            "$.success: only in go",
+            "$.usestaticfilecontent: only in clio"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": "restart-by-environment-name waitReady false round 2",
+      "verdict": "match",
+      "first": "clio",
+      "steps": [
+        {
+          "step": "ready before",
+          "kind": "read-back",
+          "verdict": "match",
+          "clio_seconds": 0.65,
+          "go_seconds": 0.16,
+          "differences": []
+        },
+        {
+          "step": "restart waitReady false",
+          "kind": "write",
+          "verdict": "match",
+          "clio_seconds": 2.29,
+          "go_seconds": 0.57,
+          "differences": []
+        },
+        {
+          "step": "ready after",
+          "kind": "read-back",
+          "verdict": "match",
+          "clio_seconds": 60.87,
+          "go_seconds": 1.4,
+          "differences": []
+        }
+      ]
+    },
+    {
+      "scenario": "restart-by-environment-name waitReady false round 3",
+      "verdict": "mismatch",
+      "first": "go",
+      "steps": [
+        {
+          "step": "ready before",
+          "kind": "read-back",
+          "verdict": "match",
+          "clio_seconds": 0.76,
+          "go_seconds": 0.11,
+          "differences": []
+        },
+        {
+          "step": "restart waitReady false",
+          "kind": "write",
+          "verdict": "match",
+          "clio_seconds": 3.08,
+          "go_seconds": 0.56,
+          "differences": []
+        },
+        {
+          "step": "ready after",
+          "kind": "read-back",
+          "verdict": "mismatch",
+          "clio_seconds": 15.39,
+          "go_seconds": 45.01,
+          "differences": [
+            "$.environmentname: only in clio",
+            "$.error: only in go",
+            "$.mode: only in clio",
+            "$.staticfilecontent: only in clio",
+            "$.success: only in go",
+            "$.usestaticfilecontent: only in clio"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": "restart-by-environment-name waitReady false round 4",
+      "verdict": "match",
+      "first": "clio",
+      "steps": [
+        {
+          "step": "ready before",
+          "kind": "read-back",
+          "verdict": "match",
+          "clio_seconds": 0.65,
+          "go_seconds": 0.11,
+          "differences": []
+        },
+        {
+          "step": "restart waitReady false",
+          "kind": "write",
+          "verdict": "match",
+          "clio_seconds": 2.51,
+          "go_seconds": 0.7,
+          "differences": []
+        },
+        {
+          "step": "ready after",
+          "kind": "read-back",
+          "verdict": "match",
+          "clio_seconds": 70.42,
+          "go_seconds": 1.22,
+          "differences": []
+        }
+      ]
+    },
+    {
+      "scenario": "restart-by-environment-name waitReady false round 5",
+      "verdict": "mismatch",
+      "first": "go",
+      "steps": [
+        {
+          "step": "ready before",
+          "kind": "read-back",
+          "verdict": "match",
+          "clio_seconds": 0.98,
+          "go_seconds": 0.12,
+          "differences": []
+        },
+        {
+          "step": "restart waitReady false",
+          "kind": "write",
+          "verdict": "match",
+          "clio_seconds": 3.85,
+          "go_seconds": 0.84,
+          "differences": []
+        },
+        {
+          "step": "ready after",
+          "kind": "read-back",
+          "verdict": "mismatch",
+          "clio_seconds": 27.11,
+          "go_seconds": 45.0,
+          "differences": [
+            "$.environmentname: only in clio",
+            "$.error: only in go",
+            "$.mode: only in clio",
+            "$.staticfilecontent: only in clio",
+            "$.success: only in go",
+            "$.usestaticfilecontent: only in clio"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": "restart-by-environment-name waitReady false round 6",
+      "verdict": "match",
+      "first": "clio",
+      "steps": [
+        {
+          "step": "ready before",
+          "kind": "read-back",
+          "verdict": "match",
+          "clio_seconds": 0.68,
+          "go_seconds": 0.19,
+          "differences": []
+        },
+        {
+          "step": "restart waitReady false",
+          "kind": "write",
+          "verdict": "match",
+          "clio_seconds": 2.99,
+          "go_seconds": 0.6,
+          "differences": []
+        },
+        {
+          "step": "ready after",
+          "kind": "read-back",
+          "verdict": "match",
+          "clio_seconds": 62.58,
+          "go_seconds": 0.11,
+          "differences": []
+        }
+      ]
+    }
+  ]
+}
