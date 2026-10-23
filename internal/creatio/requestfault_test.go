@@ -153,3 +153,33 @@ func TestPackageHotfixReportsTheExceptionChain(t *testing.T) {
 		t.Fatalf("unlock-for-hotfix = %#v", result)
 	}
 }
+
+func TestRestartReportsClioReadableMessage(t *testing.T) {
+	// RemoteCommand logs GetReadableMessageException: a login's WebException(ConnectFailure) is enriched (measured
+	// against clio 8.1.0.142 with a closed port and a resetting stand); a call's AggregateException is rendered by
+	// its inner exception (read in clio's source).
+	pkgWriteFastRestart(t)
+	cases := []struct {
+		name      string
+		transport http.RoundTripper
+		session   bool
+		want      string
+	}{
+		{"refused at the login", refusingTransport(), false, "Cannot connect to the application: " + refusedSentence() +
+			" (127.0.0.1:9) (WebException: ConnectFailure). Make sure the site is running and accessible."},
+		{"reset at the login", resetTransport("read"), false, "Cannot connect to the application: An error occurred while sending " +
+			"the request. (WebException: ConnectFailure). Make sure the site is running and accessible."},
+		{"refused with a session", refusingTransport(), true, refusedSentence() + " (127.0.0.1:9)"},
+	}
+	for _, tc := range cases {
+		client := newFormsTestClient(t, "http://127.0.0.1:9")
+		client.http.Transport = tc.transport
+		if tc.session {
+			holdSession(client)
+		}
+		result := client.RestartApplication(context.Background())
+		if result.ExitCode != 1 || len(result.Messages) != 1 || result.Messages[0].Value != tc.want {
+			t.Errorf("%s: restart = %#v", tc.name, result)
+		}
+	}
+}

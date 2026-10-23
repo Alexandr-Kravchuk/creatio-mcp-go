@@ -234,6 +234,23 @@ func InnermostExceptionText(err error) (string, bool) {
 	return fault.sentence, true
 }
 
+// readableMessage is clio's GetReadableMessageException, which RemoteCommand logs for a failed command: a
+// connect fault the login met is a WebException, enriched with its status (measured against clio 8.1.0.142 with
+// restart-by-environment-name and a closed port or a resetting stand); a call's AggregateException is rendered
+// by its inner exception (read in clio's source); any other failure by its own message.
+func readableMessage(err error) string {
+	fault, ok := asConnectFault(err)
+	switch {
+	case !ok:
+		return err.Error()
+	case fault.request:
+		return fault.httpMessage()
+	case fault.kind == faultTimeout:
+		return fault.Error() + " (WebException: Timeout)"
+	}
+	return "Cannot connect to the application: " + fault.Error() + " (WebException: ConnectFailure). Make sure the site is running and accessible."
+}
+
 // CommandExceptionText is the text of clio's exit -1 envelope (CommandExecutionResult.FromException) for an
 // unexpected failure: the exception chain of a connect fault, otherwise the failure's own text.
 func CommandExceptionText(err error) string {
