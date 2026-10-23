@@ -17,6 +17,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/Alexandr-Kravchuk/creatio-mcp-go/internal/creatio"
@@ -266,8 +267,12 @@ var runDotnet = func(ctx context.Context, args ...string) string {
 	return out + newLine() + errText
 }
 
+// startFailureText is the Win32Exception message .NET gives a program it cannot find.
 func startFailureText(err error) string {
 	if errors.Is(err, exec.ErrNotFound) || errors.Is(err, os.ErrNotExist) {
+		if runtime.GOOS == "windows" {
+			return "The system cannot find the file specified."
+		}
 		return "No such file or directory"
 	}
 	return err.Error()

@@ -17,9 +17,15 @@ it answers AuthService.svc/Login with session cookies and every other request wi
 "unless". Unmatched requests get {"success":true}.
 
 In arguments {home} is the side's home and {ws} is {home}/base/ws. Compared per step: the answer, with
-clio's correlation-id left out and the home path replaced by {home}. Compared per scenario: the tree under
-{home}/base (paths, file modes, bytes), with GUIDs and Microsoft JSON dates replaced by placeholders numbered
-in order of appearance, and the requests each side sent to a fake stand. Nothing reaches a real stand, and
+clio's correlation-id left out, the home path replaced by {home}, clio's temporary folders (<TMPDIR>/clio/<GUID
+"N">) numbered {tmpN} in order of appearance and dotnet restore's "(in N sec)" masked. Compared per scenario:
+the tree under {home}/base (paths, file modes, bytes), with GUIDs and Microsoft JSON dates replaced by
+placeholders numbered in order of appearance, and the requests each side sent to a fake stand. A binary body
+that is a zip is compared by its entries, each .gz package by its decoded files (path and SHA-256, in archive
+order), and an upload's totalFileLength is masked: the zip's own bytes carry modification times and the deflate
+encoder's choices. Consecutive identical GetLogFile polls count once (the installer's log listener races the
+install request on both sides). Both servers run with DOTNET_NOLOGO and without the ASP.NET developer
+certificate, because restore-workspace runs `dotnet restore`. Nothing reaches a real stand, and
 neither this machine's clio settings nor its workspaces are read or written; create-workspace reads the
 CreatioSDK versions from api.nuget.org on both sides, as clio does.
 

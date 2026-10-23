@@ -23,6 +23,7 @@ host_matches=$(printf '%s\n' "$host_matches" | rg -v -i '([a-z0-9-]+\.)+(test)-[
 # The encoding/xml local-name property is a Go member access. Match only the
 # complete reported token at its known source location; other tokens still fail.
 host_matches=$(printf '%s\n' "$host_matches" | rg -v '^internal/creatio/odatawrite\.go:[0-9]+:(element|attr)\.Name\.Local$' || true)
+host_matches=$(printf '%s\n' "$host_matches" | rg -v '^internal/workspace/xmldoc\.go:[0-9]+:name\.Local$' || true)
 if [[ -n "$host_matches" ]]; then
   printf '%s\n' "$host_matches" >&2
   echo "possible non-public hostname found" >&2
