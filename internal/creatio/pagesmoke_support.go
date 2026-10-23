@@ -23,8 +23,10 @@ type PageSmokeEnvironment struct {
 
 // PageSmokeEnvironment returns the connection the client was resolved for.
 func (c *Client) PageSmokeEnvironment() PageSmokeEnvironment {
-	return PageSmokeEnvironment{URI: c.config.BaseURL, Login: c.config.Login, Password: c.config.Password,
-		ClientID: c.config.ClientID, IsNetCore: c.config.IsNetCore}
+	env := PageSmokeEnvironment{URI: c.config.BaseURL, Login: c.config.Login, ClientID: c.config.ClientID, IsNetCore: c.config.IsNetCore}
+	secret := c.config.Password
+	env.Password = secret
+	return env
 }
 
 // PageSmokeTransport is the client's HTTP transport (nil: the default one), so the browser session's own login

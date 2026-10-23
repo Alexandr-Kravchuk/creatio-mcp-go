@@ -23,6 +23,8 @@ host_matches=$(printf '%s\n' "$host_matches" | rg -v -i '([a-z0-9-]+\.)+(test)-[
 # The encoding/xml local-name property is a Go member access. Match only the
 # complete reported token at its known source location; other tokens still fail.
 host_matches=$(printf '%s\n' "$host_matches" | rg -v '^internal/creatio/odatawrite\.go:[0-9]+:(element|attr)\.Name\.Local$' || true)
+# page-smoke's generated page script calls a regular expression's test method on the login path: not a host.
+host_matches=$(printf '%s\n' "$host_matches" | rg -v '^internal/pagesmoke/scripts_gen\.go:[0-9]+:i\.test$' || true)
 if [[ -n "$host_matches" ]]; then
   printf '%s\n' "$host_matches" >&2
   echo "possible non-public hostname found" >&2
