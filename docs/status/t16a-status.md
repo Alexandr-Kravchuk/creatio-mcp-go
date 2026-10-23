@@ -2,7 +2,7 @@
 
 Six clio 8.1.0.142 tools that decision D3 had left in clio are now served: `reg-web-app`,
 `check-settings-health`, `check-auth-code-flow`, `get-identity-service-config`, `get-browser-session`,
-`clear-browser-session`. Branch `t16a-settings-58d76c`, three commits on `cb64392`, not pushed.
+`clear-browser-session`. Branch `t16a-settings-58d76c`, four commits on `cb64392`, not pushed.
 
 ## Where the code is
 

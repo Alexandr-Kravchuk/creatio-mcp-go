@@ -74,6 +74,8 @@ func TestDetectRuntimeDecidesAsClio(t *testing.T) {
 		uri := "http://127.0.0.1:9"
 		if test.mode != "closed" {
 			uri = runtimeSite(t, test.mode)
+		} else {
+			useRegistrationTransport(t, refusingTransport())
 		}
 		target := RegistrationTarget{URI: uri + "/"}
 		if test.credentials {
@@ -98,11 +100,22 @@ func TestDetectRuntimeDecidesAsClio(t *testing.T) {
 	}
 }
 
+// useRegistrationTransport makes reg-web-app's probes and logins use transport for one test: a closed port is
+// simulated rather than dialed, since a real refused dial is worded differently on Windows.
+func useRegistrationTransport(t *testing.T, transport http.RoundTripper) {
+	t.Helper()
+	previous := RegistrationTransport
+	RegistrationTransport = transport
+	t.Cleanup(func() { RegistrationTransport = previous })
+}
+
 func TestCheckRegistrationLoginTexts(t *testing.T) {
+	useRegistrationTransport(t, refusingTransport())
 	if err := CheckRegistrationLogin(context.Background(), RegistrationTarget{URI: "http://127.0.0.1:9", Login: "u", Password: "p"}); err == nil ||
 		err.Error() != "Connection refused (127.0.0.1:9)" {
 		t.Fatalf("closed port: %v", err)
 	}
+	useRegistrationTransport(t, registrationTransport())
 	uri := runtimeSite(t, "500")
 	if err := CheckRegistrationLogin(context.Background(), RegistrationTarget{URI: uri, Login: "u", Password: "p"}); err == nil ||
 		err.Error() != "The remote server returned an error: (500) Internal Server Error." {
