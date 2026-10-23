@@ -393,7 +393,7 @@ func parseNewtonsoftDate(text string) (time.Time, dateKind, bool) {
 			offset = -offset
 		}
 		utc := base.Add(-offset)
-		return utc.In(time.Local), dateLocal, true
+		return time.Unix(utc.Unix(), int64(utc.Nanosecond())), dateLocal, true
 	}
 	return time.Time{}, 0, false
 }

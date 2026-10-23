@@ -25,6 +25,8 @@ host_matches=$(printf '%s\n' "$host_matches" | rg -v -i '([a-z0-9-]+\.)+(test)-[
 host_matches=$(printf '%s\n' "$host_matches" | rg -v '^internal/creatio/odatawrite\.go:[0-9]+:(element|attr)\.Name\.Local$' || true)
 # page-smoke's generated page script calls a regular expression's test method on the login path: not a host.
 host_matches=$(printf '%s\n' "$host_matches" | rg -v '^internal/pagesmoke/scripts_gen\.go:[0-9]+:i\.test$' || true)
+# The oracle test project references the .NET test SDK NuGet package by its id: a package id, not a host.
+host_matches=$(printf '%s\n' "$host_matches" | rg -v '^scripts/mobileguide-oracle/oracle-tests\.csproj:[0-9]+:Microsoft\.NET\.Test$' || true)
 if [[ -n "$host_matches" ]]; then
   printf '%s\n' "$host_matches" >&2
   echo "possible non-public hostname found" >&2
