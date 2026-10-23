@@ -40,5 +40,27 @@ class ClioToolsDirTest(unittest.TestCase):
         self.assertIsNone(compare_mcp.clio_tools_dir(None))
         self.assertEqual(compare_mcp.with_clio_tools({"A": "1"}, "/opt/clio/clio.dll"), {"A": "1"})
 
+class GoEnvironmentTest(unittest.TestCase):
+    def test_variables_mode_gives_go_no_clio_settings_file(self):
+        import json, os, tempfile
+        with tempfile.TemporaryDirectory() as temp:
+            settings = pathlib.Path(temp) / "appsettings.json"
+            settings.write_text(json.dumps({"Environments": {"dev": {
+                "Uri": "http://127.0.0.1:9", "Login": "u", "Password": "p"}}}), encoding="utf-8")
+            env = compare_mcp.go_environment("dev", str(settings), "variables")
+            self.assertEqual(env["CREATIO_URL"], "http://127.0.0.1:9")
+            self.assertNotEqual(pathlib.Path(env["CLIO_HOME"]).resolve(), pathlib.Path(temp).resolve())
+            self.assertEqual(os.listdir(env["CLIO_HOME"]), [])
+            os.rmdir(env["CLIO_HOME"])
+
+    def test_name_mode_points_go_at_the_settings_file(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as temp:
+            settings = pathlib.Path(temp) / "appsettings.json"
+            env = compare_mcp.go_environment("dev", str(settings), "name")
+            self.assertEqual(env["CLIO_HOME"], str(pathlib.Path(temp).resolve()))
+            self.assertFalse(any(key.startswith("CREATIO_") for key in env))
+
+
 if __name__ == "__main__":
     unittest.main()

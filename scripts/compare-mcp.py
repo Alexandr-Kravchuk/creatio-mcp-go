@@ -4,7 +4,9 @@
 Both servers run over stdio and read the same clio appsettings.json. By default (--go-env-mode=name)
 the Go server starts with no CREATIO_* variables and receives `environment-name` per call exactly as clio
 does. --go-env-mode=variables keeps the older mode: the named environment is copied from clio's
-appsettings.json into CREATIO_* variables of the Go child process, and Go calls carry no environment-name.
+appsettings.json into CREATIO_* variables of the Go child process, Go calls carry no environment-name, and
+the Go child gets an empty CLIO_HOME (an unnamed call is served by CREATIO_* only when no clio settings file
+exists; next to one it is refused, as clio refuses it).
 
 --clio-env takes one name or several separated by commas. With several, every case runs once per name
 against the SAME two server processes, which checks that one Go process serves many environments.
@@ -12,7 +14,7 @@ against the SAME two server processes, which checks that one Go process serves m
 Printed and persisted: verdicts, timings, and the JSON paths that differ. Never values, URLs,
 environment names or credentials, so the evidence file is safe to share.
 """
-import argparse, json, os, pathlib, re, subprocess, sys, time
+import argparse, json, os, pathlib, re, subprocess, sys, tempfile, time
 
 REPO = pathlib.Path(__file__).resolve().parent.parent
 
@@ -241,6 +243,8 @@ def go_environment(clio_env, settings_path, mode="variables"):
     for variable, key in (oauth if settings.get("ClientId") else forms).items():
         env[variable] = settings.get(key) or ""
     env["CREATIO_IS_NET_CORE"] = "true" if settings.get("IsNetCore") else "false"
+    # Without a settings file the CREATIO_* variables are the only target, so unnamed calls go there.
+    env["CLIO_HOME"] = tempfile.mkdtemp(prefix="creatio-mcp-go-no-clio-settings-")
     return env
 
 

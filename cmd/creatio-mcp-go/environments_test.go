@@ -271,33 +271,55 @@ func TestMissingSettingsFileMeansNoEnvironments(t *testing.T) {
 	}
 }
 
-func TestDefaultTargetIsCreatioVariablesThenTheActiveEnvironment(t *testing.T) {
+func TestUnnamedCallIsRefusedLikeClioUnlessCreatioVariablesAreTheOnlyTarget(t *testing.T) {
 	setup := newTwoEnvironments(t)
-	client, err := setup.envs.client("", creatio.ConnectionOverrides{})
-	if err != nil {
-		t.Fatal(err)
+	// The settings file has an active environment; clio's resolver never uses it for an unnamed call.
+	if _, err := setup.envs.client("", creatio.ConnectionOverrides{}); err == nil || err.Error() != missingTargetMessage {
+		t.Fatalf("active environment err = %v", err)
 	}
-	if rows, err := odataProbe(client); err != nil || rows.Rows[0]["Name"] != "oauth" {
-		t.Fatalf("active environment rows = %#v, err = %v", rows, err)
+	if _, err := setup.envs.client("  ", creatio.ConnectionOverrides{}); err == nil || err.Error() != missingTargetMessage {
+		t.Fatalf("blank name err = %v", err)
 	}
 	t.Setenv("CREATIO_URL", setup.forms.server.URL)
 	t.Setenv("CREATIO_LOGIN", "example-user")
 	t.Setenv("CREATIO_PASSWORD", "replace-me")
+	// CREATIO_* next to a settings file: either could be meant, so the call is refused.
 	withVariables := newEnvironments(setup.path)
-	client, err = withVariables.client("", creatio.ConnectionOverrides{})
+	if _, err := withVariables.client("", creatio.ConnectionOverrides{}); err == nil || err.Error() != missingTargetMessage {
+		t.Fatalf("CREATIO_* with settings err = %v", err)
+	}
+	// A named environment is served as before.
+	client, err := withVariables.client("beta-oauth", creatio.ConnectionOverrides{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if rows, err := odataProbe(client); err != nil || rows.Rows[0]["Name"] != "oauth" {
+		t.Fatalf("named rows = %#v, err = %v", rows, err)
+	}
+	// No settings file: CREATIO_* are the only target, and unnamed calls go there.
+	missing := filepath.Join(t.TempDir(), "appsettings.json")
+	onlyVariables := newEnvironments(missing)
+	client, err = onlyVariables.client("", creatio.ConnectionOverrides{})
 	if err != nil {
 		t.Fatal(err)
 	}
 	if rows, err := odataProbe(client); err != nil || rows.Rows[0]["Name"] != "forms" {
 		t.Fatalf("CREATIO_* rows = %#v, err = %v", rows, err)
 	}
-	// A named environment still wins over the CREATIO_* default.
-	client, err = withVariables.client("beta-oauth", creatio.ConnectionOverrides{})
-	if err != nil {
-		t.Fatal(err)
+	// A settings file written later (clio reg-web-app) ends the exception at the next call.
+	writeSettings(t, missing, "", map[string]map[string]any{"dev": {"Uri": setup.oauth.server.URL, "Login": "u", "Password": "p"}})
+	if _, err := onlyVariables.client("", creatio.ConnectionOverrides{}); err == nil || err.Error() != missingTargetMessage {
+		t.Fatalf("CREATIO_* after the settings file appeared err = %v", err)
 	}
-	if rows, err := odataProbe(client); err != nil || rows.Rows[0]["Name"] != "oauth" {
-		t.Fatalf("named rows = %#v, err = %v", rows, err)
+}
+
+func TestUnusableCreatioVariablesAreReportedOnlyWithoutASettingsFile(t *testing.T) {
+	clearCreatioVariables(t)
+	t.Setenv("CREATIO_URL", "https://example.com")
+	envs := newEnvironments(filepath.Join(t.TempDir(), "appsettings.json"))
+	_, err := envs.client("", creatio.ConnectionOverrides{})
+	if err == nil || !isEnvironmentError(err) || err.Error() == missingTargetMessage {
+		t.Fatalf("err = %v", err)
 	}
 }
 
@@ -311,10 +333,9 @@ func TestDirectConnectionArgumentsBuildAOneOffClient(t *testing.T) {
 	if rows, err := odataProbe(client); err != nil || rows.Rows[0]["Name"] != "forms" {
 		t.Fatalf("direct rows = %#v, err = %v", rows, err)
 	}
-	// A tool whose clio counterpart has no uri argument ignores it and serves the default target.
-	client, _, _ = setup.envs.resolve("get-app-info", args, scopeName)
-	if rows, err := odataProbe(client); err != nil || rows.Rows[0]["Name"] != "oauth" {
-		t.Fatalf("name-only rows = %#v, err = %v", rows, err)
+	// A tool whose clio counterpart has no uri argument ignores it, so the call names no target.
+	if _, refusal, _ := setup.envs.resolve("get-app-info", args, scopeName); refusal == nil || refusal.Error() != missingTargetMessage {
+		t.Fatalf("name-only refusal = %v", refusal)
 	}
 	// uri next to a registered name repoints it, as clio's EnvironmentSettings.Fill does.
 	client, _, _ = setup.envs.resolve("get-page", map[string]any{"environment-name": "alpha-forms", "uri": setup.oauth.server.URL}, scopeDirect)
