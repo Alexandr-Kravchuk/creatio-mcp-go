@@ -24,28 +24,36 @@ after v0.2.0, and a closer look at three write steps that looked slower than cli
   and the failure of the v0.2.0 live write run, covered by a unit test against a slow fake site; not reproduced on a
   real restarting site.
 
+- **`delete-app` and `get-fsm-mode` wait for a slow site as clio does.** `delete-app` sent `UninstallApp` with the
+  client's 45 s and one attempt; clio's `uninstall-app-remote` waits 100 s and tries three times, 1 s apart. On the
+  timing stand an uninstall took 48–64 s: `delete-app` failed 7 of 7 on this server (the application was removed
+  anyway) and succeeded 7 of 7 on clio. `get-fsm-mode` failed 3 of 3 at 45 s as the first request after a restart,
+  where clio waited 61–70 s and answered; it now waits up to 30 minutes, as `set-fsm-mode`'s probe.
+
 ## Write timing: three steps that looked slower
 
-In the v0.2.0 live write run clio always called first. Reading both servers' code for the three steps
-([status/t24-write-timing.md](status/t24-write-timing.md)):
+In the v0.2.0 live write run clio always called first. Measured again on a fresh stand with the order alternated
+(`compare-mcp-writes.py --order alternate`, the scenarios in `scripts/write-scenarios/timing/`, 3 rounds per order
+after a warm-up; medians, seconds; details in [status/t24-write-timing.md](status/t24-write-timing.md)):
 
-| Step | v0.2.0 run: clio / Go | Verdict |
-|---|---|---|
-| `set-fsm-mode off` | 4.6 s / 14.8 s and 59.5 s (failed) | 59.5 s: the probe timeout above, fixed. 14.8 s: order — Go's request was the first after the site restarted |
-| `restart-by-environment-name` without waiting | 1.4–1.6 s / 14.0–14.8 s | Order: same requests, timeout and retries on both; Go's request started the unloaded site |
-| `create-app` before a compile | 16.5 s / 32.7 s | Order and stand state: over all 22 create-app pairs of that run the median is clio 13.5 s, Go 10.7 s |
+| Step | v0.2.0 run: clio / Go | Go first: clio / Go | clio first: clio / Go | Verdict |
+|---|---|---|---|---|
+| `set-fsm-mode off`, already off | – | 0.63 / 0.10 | 0.60 / 0.10 | not slower |
+| `set-fsm-mode off` from on, first side | 4.6 / 14.8 and 59.5 (failed) | Go 14.9 (n=6) | clio 14.6 (n=9) | same: the time is the stand's package import; 59.5 s was the probe timeout, fixed |
+| `set-fsm-mode off` from on, second side | – | clio 70.5 | Go 66.1 | same: both wait for the recycled site |
+| `restart-by-environment-name` without waiting | 1.4–1.6 / 14.0–14.8 | 3.08 / 0.56 | 2.51 / 0.60 | Go faster; v0.2.0's 14 s was order (its request started the unloaded site) |
+| `create-app` | 16.5 / 32.7 | 53.5 / 55.8 | 62.9 / 65.0 | same; v0.2.0's 32.7 s was order and stand state |
 
-The write harness can now alternate which server calls first (`compare-mcp-writes.py --order alternate`), and
-`scripts/write-scenarios/timing/` holds the four timing scenarios. **The measurement with the order alternated was
-not made:** the stand stopped answering HTTP before the first round. Until it is, the verdicts above come from the
-code and the v0.2.0 numbers.
+The fresh stand is a different, slower host than v0.2.0's, so its absolute numbers are not comparable with the
+v0.2.0 column. Early in the session 4 of Go's 8 `set-fsm-mode off` imports were slow (26.7–132.7 s, the slowest right
+after the cliogate install); later runs imported in 13.2–16.5 s, as clio.
 
 ## Known differences, not changed
 
 - On a host that accepts connections but never answers, clio's login waits 100 s and this server's 45 s, and the
   failure texts differ. Timeouts and TLS failures during login are transport failures now, but keep Go's wording.
 - `GetIsFileDesignMode` and the package loads of `set-fsm-mode`: clio retries 30 times 3 s apart, this server tries
-  once; `get-fsm-mode`: clio has no timeout, this server 45 s.
+  once.
 - A refused connection on Windows keeps Go's text (still a transport failure); the Linux and Windows host-not-found
   sentences are .NET's, not measured on those systems.
 

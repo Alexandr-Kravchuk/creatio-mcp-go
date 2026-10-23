@@ -102,12 +102,14 @@ and the platform refuses the second side's create twice while the first side's r
 second side presumably waited at the gate inside the call instead (T23: 32.65 s on Go, 40.14 s once on clio); the
 median of all 22 T23 pairs was clio 13.51 s, Go 10.65 s.
 
-## Found live: this server failed where clio succeeded (not changed)
+## Found live: this server failed where clio succeeded (fixed in 789e539)
 
-Outside the three steps, so no code was changed (the brief allowed changes only for a slower step). Same class as
-6faaf0c: a request this server caps at the client's 45 s where clio waits longer.
+Outside the three steps. Same class as 6faaf0c: a request this server capped at the client's 45 s where clio waits
+longer. Fixed after the run: `delete-app` keeps clio's 100 s and three attempts 1 s apart, `get-fsm-mode` waits up
+to 30 minutes (tests `TestAppDeleteOutlastsTheClientTimeoutAndRetries`, `TestSetFsmModeProbeOutlastsTheClientTimeout`;
+both fail without the change).
 
-| Tool | Live | clio 8.1.0.142 | This server | One-line fix |
+| Tool | Live | clio 8.1.0.142 | This server before 789e539 | Fix |
 |---|---|---|---|---|
 | `delete-app` | 7 of 7 failed on Go: `UninstallApp` took 47.8–63.9 s on this host (clio's 53.4–60.2 s); clio 7 of 7 succeeded | `uninstall-app-remote`: `RemoteCommandOptions` timeout 100 000 ms, `MaxAttempts` 3, `RetryDelay` 1 s | `callService` default 45 s, one attempt (`appwrite_delete.go`) | `Timeout: 100 * time.Second` (and clio's 3 attempts) |
 | `get-fsm-mode` | 3 of 3 failed on Go at 45.0 s when it was the first request after an unload; clio waited 60.9–70.4 s and answered | `FsmModeStatusService`: `Timeout.Infinite` | 45 s (`GetFsmMode`) | `getFsmMode(ctx, adminWriteFsmLoadTimeout)` |
@@ -119,7 +121,7 @@ gave up): the read below found none of them.
 
 | Difference | clio 8.1.0.142 | This server | Why not changed here |
 |---|---|---|---|
-| Login timeout | 100 s | 45 s (client timeout) | `client.go` login path belongs to another stream; seen only on an unresponsive host (first attempt) |
+| Login timeout | 100 s | 45 s (client timeout) | Seen only on an unresponsive host (first attempt); this server gives up sooner, and the texts differ |
 | `GetIsFileDesignMode`, `LoadPackagesToDB/FileSystem` | `Timeout.Infinite`, 30 attempts 3 s apart | 30 min, one attempt | clio's retry was needed once (connection reset after 190 s in a setup `on`, which only clio ran); no Go call hit it |
 
 ## First attempt: stand outage
