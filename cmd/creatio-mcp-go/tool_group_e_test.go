@@ -18,6 +18,9 @@ func TestGroupEToolsAnswerByRawNameAndThroughClioRun(t *testing.T) {
 			_, _ = w.Write([]byte(`{"Code":0}`))
 		case "/0/ServiceModel/ThemeService.svc/GetAvailableThemes":
 			_, _ = w.Write([]byte(`{"success":true,"values":[]}`))
+		case "/0/ServiceModel/ApplicationInfoService.svc/GetApplicationInfo":
+			// list-themes' 10.0.0 floor reads the core version first.
+			_, _ = w.Write([]byte(`{"success":true,"applicationInfo":{"sysValues":{"coreVersion":"10.2.363.0"}}}`))
 		case "/0/DataService/json/SyncReply/SelectQuery":
 			_, _ = w.Write([]byte(`{"success":true,"rows":[]}`))
 		case "/0/rest/schema.template.api/templates":

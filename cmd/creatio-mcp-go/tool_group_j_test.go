@@ -79,9 +79,9 @@ func TestGroupJToolsAnswerByRawNameAndThroughClioRun(t *testing.T) {
 	}
 }
 
-// clio's get-theme carries [RequiresCreatioVersion("10.0.0")]: below the floor, or when the version cannot be
-// checked, the tool answers the gate's refusal with its code and never reads the theme catalog or the id.
-func TestGetThemeRefusesBelowTheThemeServiceFloor(t *testing.T) {
+// clio's get-theme and list-themes carry [RequiresCreatioVersion("10.0.0")]: below the floor, or when the version
+// cannot be checked, the tool answers the gate's refusal with its code and never reads the theme catalog or the id.
+func TestThemeReadsRefuseBelowTheThemeServiceFloor(t *testing.T) {
 	creatioServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case "/ServiceModel/AuthService.svc/Login":
@@ -108,14 +108,15 @@ func TestGetThemeRefusesBelowTheThemeServiceFloor(t *testing.T) {
 		}
 		session := connectTestClient(t, newMCPServer(client), mcp.NewClient(&mcp.Implementation{Name: "probe-client", Version: "test"}, nil))
 		// A non-GUID id would be refused by the command itself; the floor answers first, as in clio.
-		for _, call := range callPaths("get-theme", map[string]any{"id": "abc"}) {
+		calls := append(callPaths("get-theme", map[string]any{"id": "abc"}), callPaths("list-themes", map[string]any{})...)
+		for _, call := range calls {
 			result, err := session.CallTool(context.Background(), call)
 			if err != nil || result.IsError {
 				t.Fatalf("call via %q = %#v, err = %v", call.Name, result, err)
 			}
 			want := `{"success":false,"error":` + groupEJSON(t, message) + `}`
 			if text := result.Content[0].(*mcp.TextContent).Text; text != want {
-				t.Errorf("%s via %s = %s\nwant %s", baseURL, call.Name, text, want)
+				t.Errorf("%s via %s %v = %s\nwant %s", baseURL, call.Name, call.Arguments, text, want)
 			}
 		}
 	}
