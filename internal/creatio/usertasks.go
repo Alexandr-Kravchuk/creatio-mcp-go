@@ -20,6 +20,8 @@ const processBuilderMissingMessage = "To use this command, you need to install t
 // installed or is older than the CrtProcessBuilder the installed clio carries. Past that gate the log opens
 // with clio's "Reading user task catalog from '<environment>'..." Info line, then lists one "name<TAB>uid"
 // Info line per task and a closing total, or the Error of a failed read, exactly as clio's command log does.
+// A call that names no environment (the CREATIO_* target, which clio does not have) is quoted by the target's
+// URL, the one thing that identifies it.
 func (c *Client) ListUserTasks(ctx context.Context, environmentName string) CommandResult {
 	refusal, err := c.processWriteGate(ctx, "")
 	if err != nil {
@@ -27,6 +29,9 @@ func (c *Client) ListUserTasks(ctx context.Context, environmentName string) Comm
 	}
 	if refusal != "" {
 		return NewCommandResult(1, "Error", refusal)
+	}
+	if strings.TrimSpace(environmentName) == "" {
+		environmentName = c.config.BaseURL
 	}
 	reading := LogMessage{MessageType: "Info", Value: fmt.Sprintf("Reading user task catalog from '%s'...", environmentName)}
 	tasks, err := c.readUserTasks(ctx)

@@ -65,6 +65,22 @@ func TestListUserTasksListsPaletteAfterPackageGate(t *testing.T) {
 	}
 }
 
+// A call without an environment name (the CREATIO_* target, which clio does not have) quotes the target's URL
+// instead of an empty name.
+func TestListUserTasksQuotesTheTargetURLWithoutAnEnvironmentName(t *testing.T) {
+	userTasksBundle(t)
+	server := userTasksServer(t, `{"success":true,"rows":[{"Name":"CrtProcessBuilder","Version":"1.6.6.104"}]}`,
+		`{"ListUserTasksResult":{"success":true,"userTasks":[]}}`)
+	defer server.Close()
+	for _, name := range []string{"", "  "} {
+		result := newFormsTestClient(t, server.URL).ListUserTasks(context.Background(), name)
+		if result.ExitCode != 0 || len(result.Messages) != 2 ||
+			result.Messages[0] != (LogMessage{"Info", "Reading user task catalog from '" + server.URL + "'..."}) {
+			t.Fatalf("name %q: result = %#v", name, result)
+		}
+	}
+}
+
 func TestListUserTasksRefusesWithoutProcessBuilder(t *testing.T) {
 	userTasksBundle(t)
 	server := userTasksServer(t, `{"success":true,"rows":[{"Name":"CrtBase","Version":"8.1.0"}]}`, `{}`)
