@@ -82,18 +82,3 @@ func (c *Client) readUserTasks(ctx context.Context) ([]userTaskInfo, error) {
 	}
 	return envelope.Result.UserTasks, nil
 }
-
-// packageInstalled checks presence the way clio's package gate does: a case-insensitive name match against the
-// installed package list.
-func (c *Client) userTasksPackageInstalled(ctx context.Context, name string) (bool, error) {
-	rows, err := c.selectRows(ctx, buildSelectQuery("SysPackage", map[string]string{"Name": "Name"}, nil, 10000))
-	if err != nil {
-		return false, err
-	}
-	for _, row := range rows {
-		if strings.EqualFold(rowString(row, "Name"), name) {
-			return true, nil
-		}
-	}
-	return false, nil
-}

@@ -81,13 +81,12 @@ func describeLibRows(rows ...[4]any) string {
 }
 
 func TestDescribeBusinessProcessResolvesCaptionAndOverlaysVersionFacts(t *testing.T) {
+	userTasksBundle(t)
 	family := describeLibRows([4]any{describeRootUID, "UsrApprove", false, 0}, [4]any{describeV2UID, "UsrApprove_v2", true, 1})
 	client, requests := groupIServer(t, func(request groupIRequest) (int, string) {
 		switch {
 		case request.Root == "SysPackage" && len(request.Filters) == 0 && strings.Contains(request.Body, `"UId"`):
-			return 200, `{"success":true,"rows":[{"UId":"` + describePackage + `","Name":"UsrPkg","Id":"x"},{"Name":"CrtProcessBuilder","UId":"44444444-4444-4444-4444-444444444444"}]}`
-		case request.Root == "SysPackage":
-			return 200, `{"success":true,"rows":[{"Name":"CrtProcessBuilder"}]}`
+			return 200, `{"success":true,"rows":[{"UId":"` + describePackage + `","Name":"UsrPkg","Id":"x"},{"Name":"CrtProcessBuilder","UId":"44444444-4444-4444-4444-444444444444","Version":"1.6.6.104"}]}`
 		case request.Root == "VwProcessLib" && request.Filters["Caption"] == "Approve order":
 			return 200, family
 		case request.Root == "VwProcessLib" && request.Filters["VersionParentUId"] == describeRootUID:
@@ -128,10 +127,11 @@ func TestDescribeBusinessProcessResolvesCaptionAndOverlaysVersionFacts(t *testin
 }
 
 func TestDescribeBusinessProcessReportsServerFailureAndIdentityRule(t *testing.T) {
+	userTasksBundle(t)
 	client, requests := groupIServer(t, func(request groupIRequest) (int, string) {
 		switch {
 		case request.Root == "SysPackage":
-			return 200, `{"success":true,"rows":[{"Name":"crtprocessbuilder"}]}`
+			return 200, `{"success":true,"rows":[{"Name":"crtprocessbuilder","Version":"1.6.6.104"}]}`
 		case request.Path == "/0/rest/ProcessDesignService/DescribeProcess":
 			return 200, `{"DescribeProcessResult":{"success":false,"errorMessage":"Process 'UsrNope' not found"}}`
 		}
@@ -153,12 +153,31 @@ func TestDescribeBusinessProcessReportsServerFailureAndIdentityRule(t *testing.T
 }
 
 func TestDescribeBusinessProcessRefusesWithoutProcessBuilder(t *testing.T) {
+	userTasksBundle(t)
 	client, _ := groupIServer(t, func(request groupIRequest) (int, string) {
-		return 200, `{"success":true,"rows":[{"Name":"CrtBase"}]}`
+		return 200, `{"success":true,"rows":[{"Name":"CrtBase","Version":"8.1.0"}]}`
 	})
 	result := client.DescribeBusinessProcess(context.Background(), ProcessDescribeRequest{ProcessName: "UsrApprove"})
 	if result.ExitCode != 1 || result.Messages[0].Value != processBuilderMissingMessage {
 		t.Fatalf("result = %#v", result)
+	}
+}
+
+// clio's DescribeProcessOptions carry the same [RequiresPackage(CrtProcessBuilder)] as list-user-tasks, so the
+// convergence rule refuses an environment with an older CrtProcessBuilder before anything is read.
+func TestDescribeBusinessProcessRefusesAProcessBuilderOlderThanTheBundledOne(t *testing.T) {
+	userTasksBundle(t)
+	client, requests := groupIServer(t, func(request groupIRequest) (int, string) {
+		return 200, `{"success":true,"rows":[{"Name":"CrtProcessBuilder","Version":"1.6.6.80"}]}`
+	})
+	result := client.DescribeBusinessProcess(context.Background(), ProcessDescribeRequest{ProcessName: "UsrApprove"})
+	want := "This clio carries CrtProcessBuilder 1.6.6.104, but the target environment has 1.6.6.80. " +
+		"Update the package in the target environment and retry.\n" + processWriteInstallHint
+	if result.ExitCode != 1 || len(result.Messages) != 1 || result.Messages[0] != (LogMessage{"Error", want}) {
+		t.Fatalf("result = %#v", result)
+	}
+	if len(*requests) != 1 || (*requests)[0].Root != "SysPackage" {
+		t.Fatalf("requests after the refusal: %#v", *requests)
 	}
 }
 

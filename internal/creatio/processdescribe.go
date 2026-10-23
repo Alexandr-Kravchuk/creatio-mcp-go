@@ -44,17 +44,17 @@ type processDescribeLibRow struct {
 	ModifiedOn      string // as DataService returned it; "" when absent
 }
 
-// DescribeBusinessProcess is clio's describe-business-process: the CrtProcessBuilder package gate, the
-// one-identity rule, the server-side ProcessDesignService.DescribeProcess read, then the process library's
+// DescribeBusinessProcess is clio's describe-business-process: the CrtProcessBuilder package gate (presence and
+// clio's convergence to the CrtProcessBuilder it carries, as list-user-tasks), the one-identity rule, the server-side ProcessDesignService.DescribeProcess read, then the process library's
 // version facts overlaid on the graph. Like clio 8.1.0.142 the reply is one compact JSON Info line in the
 // requested mode (processdescribe_modes.go).
 func (c *Client) DescribeBusinessProcess(ctx context.Context, request ProcessDescribeRequest) CommandResult {
-	installed, err := c.userTasksPackageInstalled(ctx, processBuilderPackageName)
+	refusal, err := c.processWriteGate(ctx, "")
 	if err != nil {
 		return NewCommandResult(-1, "Error", CommandExceptionText(err))
 	}
-	if !installed {
-		return NewCommandResult(1, "Error", processBuilderMissingMessage)
+	if refusal != "" {
+		return NewCommandResult(1, "Error", refusal)
 	}
 	identities := 0
 	for _, identity := range []string{request.ProcessName, request.ProcessUID, request.ProcessCaption} {
