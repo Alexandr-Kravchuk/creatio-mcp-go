@@ -9,7 +9,8 @@ is a list of steps (scripts/workspace-scenarios/*.json):
   {"tool": "create-workspace", "args": {...}}           a call through clio-run ("direct": true: by raw name)
   {"mkdir": "base"} / {"write": "path", "content": ".."} prepare the home
 
-A scenario with "stand": {"rules": [...]} gets a fake Creatio site per side, registered as environment "fake":
+A scenario's "environment" object is merged into environment "fake" ({home} substituted), for example an
+EnvironmentPath. A scenario with "stand": {"rules": [...]} gets a fake Creatio site per side, registered as environment "fake":
 it answers AuthService.svc/Login with session cookies and every other request with the first rule whose
 "route" ends the path and whose "method" and "contains" (texts in the body or query) match; a rule answers
 "body" (text), "body_base64" or "body_file" (relative to scripts/workspace-scenarios/fixtures) with
@@ -230,7 +231,8 @@ def tree(root):
     files = {}
     for base, folders, names in os.walk(root):
         folders.sort()
-        for name in sorted(names):
+        # os.walk lists a link to a folder among the folders and does not descend into it.
+        for name in sorted(names + [f for f in folders if os.path.islink(os.path.join(base, f))]):
             full = os.path.join(base, name)
             relative = os.path.relpath(full, root).replace(os.sep, "/")
             if os.path.islink(full):
@@ -309,6 +311,7 @@ def run_steps(command, home, scenario, clio_dll, stand_url):
     if scenario.get("environments", True):
         environments = {"fake": {"Uri": stand_url or "http://127.0.0.1:9", "Login": "example-user", "Password": "replace-me",
                                  "IsNetCore": True, "Safe": False, "Maintainer": scenario.get("maintainer", "Customer")}}
+        environments["fake"].update(substitute(scenario.get("environment", {}), {"{home}": home}))
     seed_home(clio_dll, home, environments)
     os.makedirs(os.path.join(home, "base"), exist_ok=True)
     mapping = {"{ws}": os.path.join(home, "base", "ws"), "{home}": home}
