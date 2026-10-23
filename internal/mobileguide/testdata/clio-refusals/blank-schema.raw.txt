@@ -1,0 +1,2 @@
+{"success":false,"sourceSchemaName":"   ","error":"Could not read source page '   ': schemaName is required. If the page is a Classic UI page, migrate it to a Freedom UI web page first."}
+[clio] Executed 'get-mobile-page-conversion-guide' directly; it is not advertised in tools/list. Prefer the advertised executor next time: clio-run {"command":"get-mobile-page-conversion-guide","args":{…}} (discover contracts via get-tool-contract).

@@ -1,0 +1,1 @@
+{"success":false,"sourceSchemaName":"UsrX_FormPage","error":"Failed to read source page 'UsrX_FormPage': Safe environment confirmation required but it was declined or the context is non-interactive. Environment: '[redacted-uri]'."}

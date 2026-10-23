@@ -1,0 +1,2 @@
+{"success":false,"sourceSchemaName":"UsrX_FormPage","error":"Failed to read source page 'UsrX_FormPage': Safe environment confirmation required but it was declined or the context is non-interactive. Environment: '[redacted-uri]'."}
+[clio] Executed 'get-mobile-page-conversion-guide' directly; it is not advertised in tools/list. Prefer the advertised executor next time: clio-run {"command":"get-mobile-page-conversion-guide","args":{…}} (discover contracts via get-tool-contract).
