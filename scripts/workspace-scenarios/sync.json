@@ -1,0 +1,167 @@
+[
+  {"name": "sync-refusals", "steps": [
+    {"mkdir": "base/ws"},
+    {"write": "base/afile.txt", "content": "not a folder"},
+    {"tool": "push-workspace", "label": "push blank path", "args": {"environment-name": "fake", "workspace-path": " "}},
+    {"tool": "push-workspace", "label": "push no args", "args": {}},
+    {"tool": "push-workspace", "label": "push null path", "args": {"environment-name": "fake", "workspace-path": null}},
+    {"tool": "push-workspace", "label": "push network path", "args": {"environment-name": "fake", "workspace-path": "//server/share"}},
+    {"tool": "push-workspace", "label": "push backslash network path", "args": {"environment-name": "fake", "workspace-path": "\\\\server\\share"}},
+    {"tool": "push-workspace", "label": "push relative path", "args": {"environment-name": "fake", "workspace-path": "base/ws"}},
+    {"tool": "push-workspace", "label": "push dot path", "args": {"environment-name": "fake", "workspace-path": "./ws"}},
+    {"tool": "push-workspace", "label": "push missing path", "args": {"environment-name": "fake", "workspace-path": "{home}/base/nowhere"}},
+    {"tool": "push-workspace", "label": "push path is a file", "args": {"environment-name": "fake", "workspace-path": "{home}/base/afile.txt"}},
+    {"tool": "push-workspace", "label": "push unknown environment", "args": {"environment-name": "nope", "workspace-path": "{ws}"}},
+    {"tool": "push-workspace", "label": "push no environment", "args": {"workspace-path": "{ws}"}},
+    {"tool": "push-workspace", "label": "push blank environment", "args": {"environment-name": " ", "workspace-path": "{ws}"}},
+    {"tool": "push-workspace", "label": "push missing path before unknown environment", "args": {"environment-name": "nope", "workspace-path": "{home}/base/nowhere"}},
+    {"tool": "push-workspace", "label": "push not a workspace", "args": {"environment-name": "fake", "workspace-path": "{ws}"}},
+    {"tool": "push-workspace", "label": "push wrong skip-backup type", "args": {"environment-name": "fake", "workspace-path": "{ws}", "skip-backup": "yes"}},
+    {"tool": "push-workspace", "label": "push wrong skip-backup type, blank path", "args": {"environment-name": "fake", "workspace-path": "", "skip-backup": 1}},
+    {"tool": "push-workspace", "label": "push wrong path type", "args": {"environment-name": "fake", "workspace-path": 5}},
+    {"tool": "push-workspace", "label": "push wrong environment type", "args": {"environment-name": true, "workspace-path": "{ws}"}},
+    {"tool": "push-workspace", "label": "push null skip-backup", "args": {"environment-name": "fake", "workspace-path": "{ws}", "skip-backup": null}},
+    {"tool": "push-workspace", "label": "push case-insensitive keys", "args": {"Environment-Name": "fake", "WORKSPACE-PATH": "{ws}", "Skip-Backup": true}},
+    {"tool": "push-workspace", "label": "push unknown key ignored", "args": {"environment-name": "fake", "workspace-path": "{ws}", "unlock": true}},
+    {"tool": "push-workspace", "label": "push direct call", "direct": true, "args": {"environment-name": "fake", "workspace-path": "{ws}"}},
+    {"tool": "restore-workspace", "label": "restore blank path", "args": {"environment-name": "fake", "workspace-path": ""}},
+    {"tool": "restore-workspace", "label": "restore network path", "args": {"environment-name": "fake", "workspace-path": "//server/share"}},
+    {"tool": "restore-workspace", "label": "restore relative path", "args": {"environment-name": "fake", "workspace-path": "ws"}},
+    {"tool": "restore-workspace", "label": "restore missing path", "args": {"environment-name": "fake", "workspace-path": "{home}/base/nowhere"}},
+    {"tool": "restore-workspace", "label": "restore unknown environment", "args": {"environment-name": "nope", "workspace-path": "{ws}"}},
+    {"tool": "restore-workspace", "label": "restore no environment", "args": {"workspace-path": "{ws}"}},
+    {"tool": "restore-workspace", "label": "restore skip-backup ignored", "args": {"environment-name": "nope", "workspace-path": "{ws}", "skip-backup": "x"}},
+    {"tool": "restore-workspace", "label": "restore wrong path type", "args": {"environment-name": "fake", "workspace-path": []}}
+  ]},
+
+  {"name": "sync-push-one", "stand": {"rules": [
+      {"route": "/GetLogFile", "method": "GET", "unless": "installed", "body": "2026-01-01 Log start\n", "content_type": "text/plain"},
+      {"route": "/InstallAppFromFile", "set": "installed", "body": "{\"success\":true}"},
+      {"route": "/GetLogFile", "method": "GET", "if": "installed", "body": "2026-01-01 Log start\nInstalling UsrPkg\nPackage installation finished\n", "content_type": "text/plain"}
+    ]}, "steps": [
+    {"tool": "create-workspace", "args": {"workspaceName": "ws", "directory": "{home}/base"}},
+    {"write": "base/ws/.clio/workspaceSettings.json", "content": "{\n  \"Packages\": [\"UsrPkg\"],\n  \"ApplicationVersion\": \"8.1.3\",\n  \"IgnorePackages\": [],\n  \"ExternalPackages\": []\n}"},
+    {"write": "base/ws/packages/UsrPkg/descriptor.json", "content": "{\"Descriptor\": {\"Name\": \"UsrPkg\", \"PackageVersion\": \"8.1.3\"}}"},
+    {"write": "base/ws/packages/UsrPkg/Schemas/UsrPage/descriptor.json", "content": "{\"Descriptor\": {\"Name\": \"UsrPage\"}}"},
+    {"write": "base/ws/packages/UsrPkg/Schemas/UsrPage/UsrPage.js", "content": "define(\"UsrPage\", [], function() {\n  return {\n    viewConfigDiff: /**SCHEMA_VIEW_CONFIG_DIFF*/[\n      // a comment\n      {\"operation\": \"insert\", \"name\": \"UsrButton\", \"values\": {\"caption\": \"Save it\", \"type\": \"crt.Button\", \"items\": [{\"name\": \"Inner\", \"label\": \"Hello\"}, {\"label\": \"$Attribute\"}],},},\n      {\"operation\": \"insert\", \"name\": \"UsrPhoto\", \"values\": {\"type\": \"crt.ImageInput\", \"tooltip\": \"$Resources.Strings.UsrPhoto_tooltip\"}},\n      {\"operation\": \"merge\", \"name\": \"UsrButton\", \"values\": {\"title\": \"#ResourceString(UsrButton_title)#\", \"placeholder\": \"Type here\"}},\n      {\"operation\": \"insert\", \"name\": \"UsrDesign\", \"values\": {\"type\": \"crt.Label\", \"_designOptions\": {\"caption\": \"design only\"}, \"data\": {\"typeName\": \"X\", \"caption\": \"descriptor\"}}},\n    ]/**SCHEMA_VIEW_CONFIG_DIFF*/\n  };\n});\n"},
+    {"write": "base/ws/packages/UsrPkg/Schemas/UsrMobile/descriptor.json", "content": "{\"Descriptor\": {\"Name\": \"UsrMobile\"}}"},
+    {"write": "base/ws/packages/UsrPkg/Schemas/UsrMobile/UsrMobile.js", "content": "{\"viewConfigDiff\": [{\"operation\": \"insert\", \"name\": \"M1\", \"values\": {\"type\": \"crt.Label\", \"caption\": \"Mobile text\"}}]}"},
+    {"write": "base/ws/packages/UsrPkg/Schemas/UsrCode/descriptor.json", "content": "{\"Descriptor\": {\"Name\": \"UsrCode\"}}"},
+    {"write": "base/ws/packages/UsrPkg/Schemas/UsrCode/UsrCode.cs", "content": "namespace UsrPkg { }\n"},
+    {"write": "base/ws/packages/UsrPkg/Data/UsrData/descriptor.json", "content": "{\"Descriptor\": {\"Name\": \"UsrData\"}}"},
+    {"write": "base/ws/packages/UsrPkg/Data/UsrData/data.json", "content": "[]"},
+    {"write": "base/ws/packages/UsrPkg/Resources/UsrPage/resource.en-US.xml", "content": "<Resources />"},
+    {"write": "base/ws/packages/UsrPkg/Files/UsrPkg.csproj", "content": "<Project Sdk=\"Microsoft.NET.Sdk\" />\n"},
+    {"write": "base/ws/packages/UsrPkg/Files/obj/project.assets.json", "content": "{}"},
+    {"write": "base/ws/packages/UsrPkg/Files/Bin/UsrPkg.pdb", "content": "pdb"},
+    {"write": "base/ws/packages/UsrPkg/Files/Bin/Autofac.dll", "content": "autofac"},
+    {"write": "base/ws/packages/UsrPkg/Files/Bin/UsrPkg.dll", "content": "dll"},
+    {"write": "base/ws/packages/UsrPkg/notes.txt", "content": "not an element"},
+    {"tool": "push-workspace", "args": {"environment-name": "fake", "workspace-path": "{ws}"}}
+  ]},
+
+  {"name": "sync-push-two-skip-backup", "stand": {"rules": [
+      {"route": "/GetLogFile", "method": "GET", "unless": "installed", "body": "Log start\n", "content_type": "text/plain"},
+      {"route": "/InstallAppFromFile", "set": "installed", "body": "{\"success\":true}"},
+      {"route": "/GetLogFile", "method": "GET", "if": "installed", "body": "Log start\nPackage installation finished\n", "content_type": "text/plain"}
+    ]}, "steps": [
+    {"tool": "create-workspace", "args": {"workspaceName": "ws", "directory": "{home}/base"}},
+    {"write": "base/ws/.clio/workspaceSettings.json", "content": "{\"Packages\": [\"UsrSecond\", \"UsrSkipMe\", \"UsrFirst\", \"UsrExternal\"], \"ApplicationVersion\": \"8.1.3\", \"IgnorePackages\": [\"usrskip*\"], \"ExternalPackages\": [\"UsrExternal\"]}"},
+    {"write": "base/ws/packages/UsrFirst/descriptor.json", "content": "{\"Descriptor\": {\"Name\": \"UsrFirst\"}}"},
+    {"write": "base/ws/packages/UsrFirst/Schemas/UsrA/descriptor.json", "content": "{}"},
+    {"write": "base/ws/packages/UsrFirst/Schemas/UsrA/UsrA.js", "content": "define(\"UsrA\", [], function() { return {}; });\n"},
+    {"write": "base/ws/packages/UsrFirst/Schemas/placeholder.txt", "content": ""},
+    {"write": "base/ws/packages/UsrSecond/branches/8.1/descriptor.json", "content": "{\"Descriptor\": {\"Name\": \"UsrSecond\"}}"},
+    {"write": "base/ws/packages/UsrSecond/branches/8.1/Files/src/a.cs", "content": "// a\n"},
+    {"write": "base/ws/packages/UsrSecond/branches/8.1/Files/src/b.cs", "content": "// b\n"},
+    {"write": "base/ws/packages/UsrSkipMe/descriptor.json", "content": "{}"},
+    {"tool": "push-workspace", "args": {"environment-name": "fake", "workspace-path": "{ws}", "skip-backup": true}}
+  ]},
+
+  {"name": "sync-push-install-failure", "stand": {"rules": [
+      {"route": "/GetLogFile", "method": "GET", "unless": "installed", "body": "Log start\n", "content_type": "text/plain"},
+      {"route": "/InstallAppFromFile", "set": "installed", "body": "{\"success\":false,\"errorInfo\":{\"errorCode\":\"PackageInstallError\",\"message\":\"Package UsrPkg could not be installed\"}}"},
+      {"route": "/GetLogFile", "method": "GET", "if": "installed", "body": "Log start\nError: UsrPkg could not be installed\n", "content_type": "text/plain"}
+    ]}, "steps": [
+    {"tool": "create-workspace", "args": {"workspaceName": "ws", "directory": "{home}/base"}},
+    {"write": "base/ws/.clio/workspaceSettings.json", "content": "{\"Packages\": [\"UsrPkg\"], \"ApplicationVersion\": \"8.1.3\"}"},
+    {"write": "base/ws/packages/UsrPkg/descriptor.json", "content": "{}"},
+    {"tool": "push-workspace", "args": {"environment-name": "fake", "workspace-path": "{ws}", "skip-backup": false}}
+  ]},
+
+  {"name": "sync-push-invalid-archive", "stand": {"rules": [
+      {"route": "/GetLogFile", "method": "GET", "body": "", "content_type": "text/plain"},
+      {"route": "/InstallAppFromFile", "body": "{\"success\":false,\"errorInfo\":{\"errorCode\":\"InvalidGZipArchiveException\",\"message\":\"The archive is not a gzip archive\"}}"}
+    ]}, "steps": [
+    {"tool": "create-workspace", "args": {"workspaceName": "ws", "directory": "{home}/base"}},
+    {"write": "base/ws/.clio/workspaceSettings.json", "content": "{\"Packages\": [\"UsrPkg\"]}"},
+    {"write": "base/ws/packages/UsrPkg/descriptor.json", "content": "{}"},
+    {"tool": "push-workspace", "args": {"environment-name": "fake", "workspace-path": "{ws}"}}
+  ]},
+
+  {"name": "sync-push-descriptor-missing", "stand": {"rules": []}, "steps": [
+    {"tool": "create-workspace", "args": {"workspaceName": "ws", "directory": "{home}/base"}},
+    {"write": "base/ws/.clio/workspaceSettings.json", "content": "{\"Packages\": [\"UsrPkg\", \"UsrOther\"], \"ApplicationVersion\": \"8.1.3\"}"},
+    {"write": "base/ws/packages/UsrPkg/descriptor.json", "content": "{}"},
+    {"write": "base/ws/packages/UsrPkg/Schemas/UsrBroken/UsrBroken.js", "content": "define(\"UsrBroken\", [], function() { return {}; });\n"},
+    {"write": "base/ws/packages/UsrPkg/Schemas/UsrBroken/metadata.json", "content": "{}"},
+    {"write": "base/ws/packages/UsrPkg/Schemas/UsrBroken/properties.json", "content": "{}"},
+    {"write": "base/ws/packages/UsrPkg/Schemas/UsrBroken/Localization/x.json", "content": "{}"},
+    {"write": "base/ws/packages/UsrPkg/Schemas/UsrFine/descriptor.json", "content": "{}"},
+    {"write": "base/ws/packages/UsrOther/descriptor.json", "content": "{}"},
+    {"write": "base/ws/packages/UsrOther/Data/UsrOld/Localization/data.en-US.json", "content": "[]"},
+    {"write": "base/ws/packages/UsrOther/Data/UsrOld/.DS_Store", "content": "x"},
+    {"write": "base/ws/packages/UsrOther/Data/UsrGone/.DS_Store", "content": "x"},
+    {"tool": "push-workspace", "label": "push refused", "args": {"environment-name": "fake", "workspace-path": "{ws}"}},
+    {"write": "base/ws/.clio/workspaceSettings.json", "content": "{\"Packages\": [\"UsrNoDescriptor\"]}"},
+    {"mkdir": "base/ws/packages/UsrNoDescriptor/Schemas"},
+    {"tool": "push-workspace", "label": "push without package descriptor", "args": {"environment-name": "fake", "workspace-path": "{ws}"}}
+  ]},
+
+  {"name": "sync-restore-one", "stand": {"rules": [
+      {"route": "/GetZipPackages", "contains": "[\"UsrPkg\"]", "body_file": "sync-UsrPkg.zip", "content_type": "application/octet-stream"},
+      {"route": "/GetAutogeneratedFolder", "contains": "\"UsrPkg\"", "body_file": "sync-UsrPkg-autogen.gz", "content_type": "application/octet-stream"}
+    ]}, "steps": [
+    {"tool": "create-workspace", "args": {"workspaceName": "ws", "directory": "{home}/base"}},
+    {"write": "base/ws/.clio/workspaceSettings.json", "content": "{\"Packages\": [\"UsrPkg\"], \"ApplicationVersion\": \"8.1.3\", \"IgnorePackages\": [], \"ExternalPackages\": []}"},
+    {"write": "base/ws/packages/UsrPkg/stale.txt", "content": "replaced by the download"},
+    {"write": "base/ws/packages/UsrKeep/Files/UsrKeep.csproj", "content": "<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup><TargetFramework>netstandard2.0</TargetFramework></PropertyGroup></Project>"},
+    {"write": "base/ws/packages/UsrKeep/Files/Empty.csproj", "content": "  \n"},
+    {"write": "base/ws/packages/UsrKeep/Files/Old.csproj", "content": "<Project xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\"></Project>"},
+    {"tool": "restore-workspace", "args": {"environment-name": "fake", "workspace-path": "{ws}"}}
+  ]},
+
+  {"name": "sync-restore-two", "stand": {"rules": [
+      {"route": "/GetZipPackages", "contains": "[\"UsrPkg\"]", "body_file": "sync-UsrPkg.zip", "content_type": "application/octet-stream"},
+      {"route": "/GetZipPackages", "contains": "[\"UsrSecond\"]", "body_file": "sync-UsrSecond.zip", "content_type": "application/octet-stream"},
+      {"route": "/GetAutogeneratedFolder", "contains": "\"UsrPkg\"", "body_file": "sync-UsrPkg-autogen.gz", "content_type": "application/octet-stream"},
+      {"route": "/GetAutogeneratedFolder", "contains": "\"UsrSecond\"", "body_file": "sync-UsrSecond-autogen.gz", "content_type": "application/octet-stream"}
+    ]}, "steps": [
+    {"tool": "create-workspace", "args": {"workspaceName": "ws", "directory": "{home}/base"}},
+    {"write": "base/ws/.clio/workspaceSettings.json", "content": "{\"Packages\": [\"UsrSecond\", \"UsrSkip\", \"UsrPkg\", \"UsrExt\"], \"ApplicationVersion\": \"8.1.3\", \"IgnorePackages\": [\"Usr?kip\"], \"ExternalPackages\": [\"UsrExt\"]}"},
+    {"tool": "restore-workspace", "args": {"environment-name": "fake", "workspace-path": "{ws}"}}
+  ]},
+
+  {"name": "sync-restore-none", "stand": {"rules": []}, "steps": [
+    {"tool": "create-workspace", "args": {"workspaceName": "ws", "directory": "{home}/base"}},
+    {"write": "base/ws/.clio/workspaceSettings.json", "content": "{\"Packages\": [\"UsrIgnored\", \"UsrExt\"], \"ApplicationVersion\": \"8.1.3\", \"IgnorePackages\": [\"UsrIgnored\"], \"ExternalPackages\": [\"UsrExt\"]}"},
+    {"write": "base/ws/packages/UsrLocal/Files/UsrLocal.csproj", "content": "<?xml version=\"1.0\"?>\n<Project Sdk=\"Microsoft.NET.Sdk\">\n  <Import Project=\"other.props\" />\n  <PropertyGroup><TargetFramework>netstandard2.0</TargetFramework></PropertyGroup>\n</Project>\n"},
+    {"tool": "restore-workspace", "args": {"environment-name": "fake", "workspace-path": "{ws}"}}
+  ]},
+
+  {"name": "sync-restore-download-fails", "stand": {"rules": [
+      {"route": "/GetZipPackages", "status": 404, "body": "Not found", "content_type": "text/plain"}
+    ]}, "steps": [
+    {"tool": "create-workspace", "args": {"workspaceName": "ws", "directory": "{home}/base"}},
+    {"write": "base/ws/.clio/workspaceSettings.json", "content": "{\"Packages\": [\"UsrPkg\"], \"ApplicationVersion\": \"8.1.3\"}"},
+    {"tool": "restore-workspace", "args": {"environment-name": "fake", "workspace-path": "{ws}"}}
+  ]},
+
+  {"name": "sync-restore-not-workspace", "stand": {"rules": []},
+   "known-differences": ["restore-workspace", "requests"],
+   "note": "clio answers a folder without .clio/workspaceSettings.json by creating a workspace in its own working directory (CreateWorkspaceCommand resets the root to it) and restoring there; this server refuses with the missing settings file.",
+   "steps": [
+    {"mkdir": "base/ws"},
+    {"tool": "restore-workspace", "args": {"environment-name": "fake", "workspace-path": "{ws}"}}
+  ]}
+]

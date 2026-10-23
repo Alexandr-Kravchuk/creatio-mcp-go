@@ -26,8 +26,8 @@ CreatioSDK versions from api.nuget.org on both sides, as clio does.
     python3 scripts/compare-workspace-tools.py --clio-dll <clio.dll> --go-bin <creatio-mcp-go> --work <dir> \
         [--scenario NAME ...] [--evidence evidence/t16c-workspace.json] [--show]
 """
-import argparse, base64, glob, hashlib, http.server, json, os, pathlib, re, shutil, socket, stat, subprocess, sys
-import threading, time, urllib.parse
+import argparse, base64, glob, gzip, hashlib, http.server, io, json, os, pathlib, re, shutil, socket, stat, subprocess
+import sys, threading, time, urllib.parse, zipfile
 
 REPO = pathlib.Path(__file__).resolve().parent.parent
 SCENARIOS = REPO / "scripts" / "workspace-scenarios"
@@ -35,6 +35,8 @@ FIXTURES = SCENARIOS / "fixtures"
 GUID = re.compile(r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")
 DATE = re.compile(r"/Date\(\d+\)/")
 CORRELATION = re.compile(r',?"correlation-id":"[0-9a-f]+"')
+TEMP_NAME = re.compile(r"/clio/([0-9a-f]{32})")
+RESTORE_TIME = re.compile(r"\(in [0-9][0-9.,]* (?:sec|ms|min)\)")
 
 
 class Server:
@@ -46,6 +48,10 @@ class Server:
                     "CLIO_HOME": home, "CLIO_TELEMETRY_HOME": os.path.join(home, "telemetry"),
                     "TMPDIR": os.path.join(home, "tmp"), "DOTNET_CLI_TELEMETRY_OPTOUT": "1",
                     "CLIO_TELEMETRY_ENABLED": "false", "CLIO_KNOWLEDGE_CURATED_API_BASE_URL": "http://127.0.0.1:9/",
+                    # restore-workspace runs `dotnet restore` on both sides: no first-run banner, no developer
+                    # certificate written into the machine's keychain, no workload check.
+                    "DOTNET_NOLOGO": "1", "DOTNET_GENERATE_ASPNET_CERTIFICATE": "false",
+                    "DOTNET_CLI_WORKLOAD_UPDATE_NOTIFY_DISABLE": "1",
                     "CLIO_COMPONENT_REGISTRY_CDN_BASE_URL": "http://127.0.0.1:9/"})
         env.update(env_extra or {})
         for folder in ("home", "tmp"):
@@ -184,6 +190,46 @@ class Stand:
         return None
 
 
+def describe_clio_gz(data):
+    """clio's .gz package stream as 'path:sha256' entries; None when it is not one."""
+    try:
+        raw = gzip.decompress(data)
+    except (OSError, EOFError):
+        return None
+    entries, position = [], 0
+    while position + 4 <= len(raw):
+        length = int.from_bytes(raw[position:position + 4], "little", signed=True)
+        position += 4
+        if length <= 0 or position + 2 * length > len(raw):
+            break
+        name = raw[position:position + 2 * length].decode("utf-16-le", "replace")
+        position += 2 * length
+        size = int.from_bytes(raw[position:position + 4], "little", signed=True)
+        position += 4
+        entries.append(f"{name}:{hashlib.sha256(raw[position:position + size]).hexdigest()[:12]}")
+        position += size
+    return entries
+
+
+def describe_binary(data):
+    """A binary body as compared: a zip by its entry names and decoded .gz package contents (the zip's own bytes
+    carry each entry's modification time and the encoder's deflate choices, which no two runs share), else its
+    SHA-256."""
+    if data.startswith(b"PK\x03\x04"):
+        try:
+            with zipfile.ZipFile(io.BytesIO(data)) as archive:
+                parts = []
+                for info in archive.infolist():
+                    content = archive.read(info)
+                    described = describe_clio_gz(content)
+                    parts.append(f"{info.filename}=" + (f"[{', '.join(described)}]" if described is not None
+                                                         else hashlib.sha256(content).hexdigest()[:12]))
+                return "zip{" + "; ".join(parts) + "}"
+        except zipfile.BadZipFile:
+            pass
+    return "sha256:" + hashlib.sha256(data).hexdigest()
+
+
 def normalize_requests(requests, home, url):
     out = []
     guids, dates = {}, {}
@@ -196,8 +242,13 @@ def normalize_requests(requests, home, url):
             body = GUID.sub(lambda m: guids.setdefault(m.group(0).lower(), f"{{guid{len(guids) + 1}}}"), body)
             body = DATE.sub(lambda m: dates.setdefault(m.group(0), f"{{date{len(dates) + 1}}}"), body)
         except UnicodeDecodeError:
-            body = "sha256:" + hashlib.sha256(request["body"]).hexdigest()
-        out.append(f'{request["method"]} {request["path"]}?{request["query"]} {body}')
+            body = describe_binary(request["body"])
+        line = f'{request["method"]} {request["path"]}?{request["query"]} {body}'
+        # The installer's log listener polls GetLogFile while the install request runs; whether its first poll
+        # lands before or after that request, or at all, is a race on both sides, so repeated polls count once.
+        if out and line == out[-1] and request["method"] == "GET" and request["path"].endswith("/GetLogFile"):
+            continue
+        out.append(line)
     return out
 
 
@@ -214,7 +265,11 @@ def answer_text(response, home):
     for variant in sorted({home, os.path.realpath(home), json.dumps(home)[1:-1], json.dumps(os.path.realpath(home))[1:-1]},
                           key=len, reverse=True):
         text = text.replace(variant, "{home}")
-    return text
+    # clio's temporary folders are <TMPDIR>/clio/<GUID "N">, numbered here in order of appearance; dotnet restore
+    # reports how long it took.
+    names = {}
+    text = TEMP_NAME.sub(lambda m: "/clio/" + names.setdefault(m.group(1), f"{{tmp{len(names) + 1}}}"), text)
+    return RESTORE_TIME.sub("(in {time})", text)
 
 
 def tree(root):
