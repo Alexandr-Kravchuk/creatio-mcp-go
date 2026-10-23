@@ -23,6 +23,10 @@ func init() {
 		if refusal := unknownArgumentError(args, "environment-name"); refusal != "" {
 			return structuredToolResult(creatio.NewCommandResult(1, "Error", refusal)), nil
 		}
+		// clio's own check of the name, before the resolver: exit code -1.
+		if envs.nameRequired(args) {
+			return structuredToolResult(creatio.NewCommandResult(-1, "Error", environmentNameRequired)), nil
+		}
 		client, failure, err := envs.resolve("list-user-tasks", args, scopeName)
 		if err != nil {
 			return nil, err

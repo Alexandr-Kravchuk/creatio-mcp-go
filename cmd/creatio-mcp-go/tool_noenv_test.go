@@ -40,6 +40,10 @@ func TestCallsWithoutEnvironmentNameAreAnsweredLikeClio(t *testing.T) {
 	}{
 		{tool: "list-themes", args: map[string]any{}, want: map[string]any{"success": false, "error": required}},
 		{tool: "check-theming-access", args: map[string]any{}, want: map[string]any{"success": false, "error": required}},
+		{tool: "get-theme", args: map[string]any{"id": guid}, want: map[string]any{"success": false, "error": required}},
+		{tool: "get-theme", args: map[string]any{}, want: map[string]any{"success": false, "error": required}},
+		{tool: "list-user-tasks", args: map[string]any{}, want: map[string]any{"exit-code": float64(-1),
+			"execution-log-messages": []any{map[string]any{"message-type": "Error", "value": required}}}},
 		{tool: "get-target-package", args: map[string]any{"package": "Custom"}, want: map[string]any{"success": false, "resolutionFailed": false, "error": required}},
 		{tool: "dataforge-status", args: map[string]any{}, want: forge("status_error", "environment-name is required.")},
 		{tool: "dataforge-find-tables", args: map[string]any{"query": "contact"}, want: forge("find_tables_error", "environment-name is required.")},

@@ -68,6 +68,10 @@ func invokeGetTheme(ctx context.Context, envs *environments, args map[string]any
 	if refusal := unknownArgumentError(args, "environment-name", "id", "output-file"); refusal != "" {
 		return structuredToolResult(creatio.ThemeGetResult{Error: refusal}), nil
 	}
+	// clio checks the environment name before the id.
+	if envs.nameRequired(args) {
+		return structuredToolResult(creatio.ThemeGetResult{Error: environmentNameRequired}), nil
+	}
 	if strings.TrimSpace(id) == "" {
 		return structuredToolResult(creatio.ThemeGetResult{Error: "id is required and cannot be empty."}), nil
 	}
