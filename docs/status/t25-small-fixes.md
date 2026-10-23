@@ -31,14 +31,13 @@ refusals counted as equal only when their texts are equal too.
 | before (`b152743`) | 335 | 531 |
 | resolver change only (`6337022`) | 701 | 165 |
 
-| with each tool's own check (`tool_args.go` helpers, per-tool order) | 804 | 85 |
+| with each tool's own check, merged with main `14e791d` (890 cases) | 808 | 82 |
 
-The same cases with `environment-name: ""` and `"  "`: 826 equal, 63 different each. The remaining
-differences are not about the environment (validate-page gap warning, get-guidance diagnostics,
-merge-creatio-artifact `resolver-version`, `documentationSource`, odata-* diagnostics, …), plus
-`get-theme` and `list-user-tasks`, owned by another session: clio answers them without a name with
-`{"success":false,"error":"environment-name is required and cannot be empty."}` (before the `id` check)
-and `{"exit-code":-1,…"environment-name is required and cannot be empty."}`. A `{}` sweep of all 232
+The same cases with `environment-name: ""`: 832 equal, 58 different; with `"  "`: 834 equal, 56 different.
+The remaining differences are not about the environment (validate-page gap warning, get-guidance
+diagnostics, merge-creatio-artifact `resolver-version`, `documentationSource`, odata-* diagnostics, …).
+`get-theme` (name checked before `id`) and `list-user-tasks` (exit -1, clio's own text) were changed after
+the merge with main, where another session had already ported their version gates. A `{}` sweep of all 232
 tools through `clio-run` changed no tool from equal to different. Tools now follow clio: their own
 "environment-name is required…" texts where clio has them (list-themes, check-theming-access,
 get-target-package, dataforge-*, process tools, read-page-business-rules, sequence tools,
