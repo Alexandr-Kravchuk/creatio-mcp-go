@@ -99,7 +99,8 @@ At 00:25 (local time) the stand still answered: its login page in 0.08 s, its he
 start). The harness started at 00:27 and its very first call already went unanswered. From then on every HTTP
 request to every site of the stand's IIS and the SSH banner of the host timed out, while TCP connect and ping still
 answered and other corporate hosts answered through the same VPN tunnel, so the tunnel was not the cause. The host
-was only probed, not changed (other stands live there). It was still not answering when this file was written.
+was only probed, not changed (other stands live there). Polled every 50 s, it was still not answering at 03:01,
+when the window ended; it needs someone at the host.
 
 ## Not verified live
 
