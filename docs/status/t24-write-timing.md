@@ -94,6 +94,12 @@ Go 0.56–0.60 s, clio 2.51–3.08 s in both orders (clio logs in again before e
 answers in under 0.5 s even 120 s after the other side's unload; the restart cost moves to the next request (the
 read after it: 60–70 s). On T23's host the restart request itself paid it when it was the first request after the other side's unload: 14 s on Go, which always went second there.
 
+A check of the fixed binary later the same day (789e539, by hand, one pair per order, 120 s apart) found the stand in
+that state too: the second side's restart request paid the site start itself. clio first, Go second: Go 64.34 s,
+succeeded. Go first, clio second: clio failed after 100.78 s ("The operation was canceled. (WebException: Timeout)")
+and the VPN tunnel dropped right after, so that failure is not counted. Two Go failures of an earlier harness run
+(92 s, 81 s, Go second) fell inside the same VPN instability and are discarded as well.
+
 ### `create-app` before a compile: not slower; T23 was order and stand state
 
 First side: Go 55.76 s, clio 62.86 s; second side (last attempt): Go 64.95 s, clio 53.45 s. `CreateApp` itself takes
@@ -107,7 +113,9 @@ median of all 22 T23 pairs was clio 13.51 s, Go 10.65 s.
 Outside the three steps. Same class as 6faaf0c: a request this server capped at the client's 45 s where clio waits
 longer. Fixed after the run: `delete-app` keeps clio's 100 s and three attempts 1 s apart, `get-fsm-mode` waits up
 to 30 minutes (tests `TestAppDeleteOutlastsTheClientTimeoutAndRetries`, `TestSetFsmModeProbeOutlastsTheClientTimeout`;
-both fail without the change).
+both fail without the change). Live after the fix: one `create-app` round (Go first) on the same stand, both
+`delete-app` cleanups succeeded (the harness does not record cleanup durations, so whether this uninstall ran past
+45 s is not known); `get-fsm-mode` as the first request after a restart answered after 61.31 s on Go.
 
 | Tool | Live | clio 8.1.0.142 | This server before 789e539 | Fix |
 |---|---|---|---|---|

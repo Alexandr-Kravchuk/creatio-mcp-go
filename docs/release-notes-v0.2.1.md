@@ -28,7 +28,9 @@ after v0.2.0, and a closer look at three write steps that looked slower than cli
   client's 45 s and one attempt; clio's `uninstall-app-remote` waits 100 s and tries three times, 1 s apart. On the
   timing stand an uninstall took 48–64 s: `delete-app` failed 7 of 7 on this server (the application was removed
   anyway) and succeeded 7 of 7 on clio. `get-fsm-mode` failed 3 of 3 at 45 s as the first request after a restart,
-  where clio waited 61–70 s and answered; it now waits up to 30 minutes, as `set-fsm-mode`'s probe.
+  where clio waited 61–70 s and answered; it now waits up to 30 minutes, as `set-fsm-mode`'s probe. Checked live
+  after the fix: `get-fsm-mode` answered after 61 s as the first request after a restart, and `delete-app`
+  succeeded.
 
 ## Write timing: three steps that looked slower
 
@@ -52,6 +54,10 @@ after the cliogate install); later runs imported in 13.2–16.5 s, as clio.
 
 - On a host that accepts connections but never answers, clio's login waits 100 s and this server's 45 s, and the
   failure texts differ. Timeouts and TLS failures during login are transport failures now, but keep Go's wording.
+- A host that stops resolving while this server holds a session for it: the request fails as a transport failure,
+  as on clio, but with Go's wording (for example `get-fsm-mode`: `... dial tcp: lookup <host>: no such host`, where
+  clio says `nodename nor servname provided, or not known`). clio logs in before every call, so it always reports
+  the login's text; this server reuses its session and reports the request's.
 - `GetIsFileDesignMode` and the package loads of `set-fsm-mode`: clio retries 30 times 3 s apart, this server tries
   once.
 - A refused connection on Windows keeps Go's text (still a transport failure); the Linux and Windows host-not-found
