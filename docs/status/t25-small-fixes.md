@@ -30,7 +30,6 @@ refusals counted as equal only when their texts are equal too.
 |---|---|---|
 | before (`b152743`) | 335 | 531 |
 | resolver change only (`6337022`) | 701 | 165 |
-
 | with each tool's own check, merged with main `14e791d` (890 cases) | 808 | 82 |
 
 The same cases with `environment-name: ""`: 832 equal, 58 different; with `"  "`: 834 equal, 56 different.
