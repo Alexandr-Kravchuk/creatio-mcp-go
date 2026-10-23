@@ -2,7 +2,7 @@
 
 Six clio 8.1.0.142 tools that decision D3 had left in clio are now served: `reg-web-app`,
 `check-settings-health`, `check-auth-code-flow`, `get-identity-service-config`, `get-browser-session`,
-`clear-browser-session`. Branch `t16a-settings-58d76c`, four commits on `cb64392`, not pushed.
+`clear-browser-session`. Branch `t16a-settings-58d76c`, six commits, rebased on main and pushed to main on 2026-10-23.
 
 ## Where the code is
 
@@ -98,6 +98,10 @@ settings). Answers and the resulting `Environments` section were diffed:
   `QuerySysSettings` (the current user's value) first. Same as `verify-oauth-app`.
 - `check-auth-code-flow` also accepts `environment-name`, as this server's identity assertion tools do; clio
   binds only `environmentName`. A blank or unknown name, a format and every answer are clio's.
+- `get-browser-session` and `clear-browser-session` refuse a call without `environment-name` with clio's
+  missing-target text even when `CREATIO_*` variables would serve it (no settings file): the session needs the
+  stored login and password, which the `CREATIO_*` client does not expose. `get-identity-service-config`
+  follows the resolver, so it is served there as other tools are.
 - No `correlation-id` in the command envelope, as in every command-style tool here.
 
 ## Not verified

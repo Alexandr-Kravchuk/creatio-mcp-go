@@ -28,12 +28,13 @@ func invokeCheckAuthCodeFlow(ctx context.Context, envs *environments, args map[s
 	if err != nil {
 		return nil, err
 	}
-	if !present {
-		return nil, errors.New("The arguments dictionary is missing a value for the required parameter 'environmentName'. (Parameter 'arguments')")
-	}
+	// clio binds every parameter before it reports a missing one, so a format of the wrong type is refused first.
 	format, err := optionalStringArg(args, tool, "format")
 	if err != nil {
 		return nil, err
+	}
+	if !present {
+		return nil, errors.New("The arguments dictionary is missing a value for the required parameter 'environmentName'. (Parameter 'arguments')")
 	}
 	if strings.TrimSpace(name) == "" {
 		return structuredToolResult(creatio.CommandFailure("environment-name is required and cannot be empty.")), nil
@@ -57,10 +58,8 @@ func invokeGetIdentityServiceConfig(ctx context.Context, envs *environments, arg
 	if err != nil {
 		return nil, err
 	}
-	if strings.TrimSpace(name) == "" {
-		// clio's command resolver names no target for a blank name; it does not fall back to a default one.
-		return structuredToolResult(creatio.IdentityServiceConfigResponse{Error: missingTargetMessage}), nil
-	}
+	// A blank name is refused by the resolver with clio's missing-target text (CREATIO_* serve it only while
+	// clio's settings file does not exist).
 	client, failure, err := envs.resolve("get-identity-service-config", map[string]any{"environment-name": name}, scopeName)
 	if err != nil {
 		return nil, err
