@@ -43,6 +43,8 @@ DATE = re.compile(r"/Date\(\d+\)/")
 CORRELATION = re.compile(r',?"correlation-id":"[0-9a-f]+"')
 TEMP_NAME = re.compile(r"/clio/([0-9a-f]{32})")
 RESTORE_TIME = re.compile(r"\(in [0-9][0-9.,]* (?:sec|ms|min)\)")
+LISTENED_LOG = re.compile(r'(\{"message-type":"None","value":"Installation log:"\},\{"message-type":"None","value":"(?:[^"\\]|\\.)+"\}),'
+                          r'\{"message-type":"None","value":""\}')
 
 
 class Server:
@@ -279,6 +281,10 @@ def answer_text(response, home):
     # reports how long it took.
     names = {}
     text = TEMP_NAME.sub(lambda m: "/clio/" + names.setdefault(m.group(1), f"{{tmp{len(names) + 1}}}"), text)
+    # The installer writes the log's growth once: from its listener (then the final read adds an empty line) or
+    # from the final read; which one depends on whether a poll lands between the install answer and the
+    # listener's stop, on clio as on this server.
+    text = LISTENED_LOG.sub(r"\1", text)
     return RESTORE_TIME.sub("(in {time})", text)
 
 
