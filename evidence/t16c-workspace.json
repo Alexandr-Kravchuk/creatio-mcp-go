@@ -1,0 +1,49 @@
+{
+  "schema": 1,
+  "counts": {
+    "match": 4,
+    "known-diff": 1,
+    "mismatch": 0
+  },
+  "scenarios": [
+    {
+      "scenario": "create-workspace",
+      "verdict": "match",
+      "files": 126,
+      "steps": 12,
+      "differences": []
+    },
+    {
+      "scenario": "add-package",
+      "verdict": "match",
+      "files": 78,
+      "steps": 10,
+      "differences": []
+    },
+    {
+      "scenario": "add-package-as-app",
+      "verdict": "match",
+      "files": 142,
+      "steps": 7,
+      "differences": []
+    },
+    {
+      "scenario": "add-package-environment",
+      "verdict": "known-diff",
+      "files": 61,
+      "steps": 3,
+      "differences": [
+        {
+          "what": "requests"
+        }
+      ]
+    },
+    {
+      "scenario": "test-projects",
+      "verdict": "match",
+      "files": 71,
+      "steps": 17,
+      "differences": []
+    }
+  ]
+}

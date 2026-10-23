@@ -345,3 +345,6 @@ func fullPath(path string) string {
 	}
 	return absolute
 }
+
+// mkdirAll is Directory.CreateDirectory.
+func mkdirAll(path string) error { return os.MkdirAll(path, 0o777) }

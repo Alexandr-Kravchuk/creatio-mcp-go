@@ -18,8 +18,8 @@ it answers AuthService.svc/Login with session cookies and every other request wi
 
 In arguments {home} is the side's home and {ws} is {home}/base/ws. Compared per step: the answer, with
 clio's correlation-id left out and the home path replaced by {home}. Compared per scenario: the tree under
-{home}/base (paths, file modes, bytes), with GUIDs and Microsoft JSON dates replaced by placeholders numbered
-in order of appearance, and the requests each side sent to a fake stand. Nothing reaches a real stand, and
+{home}/base (paths, file modes, bytes), with GUIDs replaced by placeholders numbered in order of appearance and
+Microsoft JSON dates by {date}, and the requests each side sent to a fake stand. Nothing reaches a real stand, and
 neither this machine's clio settings nor its workspaces are read or written; create-workspace reads the
 CreatioSDK versions from api.nuget.org on both sides, as clio does.
 
@@ -190,11 +190,15 @@ def normalize_requests(requests, home, url):
     for request in requests:
         try:
             body = request["body"].decode("utf-8")
+            try:  # JSON bodies as data: member order is the serializer's, not the request's meaning
+                body = json.dumps(json.loads(body), sort_keys=True, ensure_ascii=False, separators=(",", ":"))
+            except ValueError:
+                pass
             for variant in sorted({home, os.path.realpath(home), json.dumps(home)[1:-1]}, key=len, reverse=True):
                 body = body.replace(variant, "{home}")
             body = body.replace(url, "{stand}")
             body = GUID.sub(lambda m: guids.setdefault(m.group(0).lower(), f"{{guid{len(guids) + 1}}}"), body)
-            body = DATE.sub(lambda m: dates.setdefault(m.group(0), f"{{date{len(dates) + 1}}}"), body)
+            body = DATE.sub("{date}", body)
         except UnicodeDecodeError:
             body = "sha256:" + hashlib.sha256(request["body"]).hexdigest()
         out.append(f'{request["method"]} {request["path"]}?{request["query"]} {body}')
@@ -211,6 +215,10 @@ def answer_text(response, home):
         if result.get("isError"):
             text = "isError: " + text
     text = CORRELATION.sub("", text)
+    try:  # compared as JSON data, so escaping conventions (\u003c versus <) do not count
+        text = json.dumps(json.loads(text), ensure_ascii=False, separators=(",", ":"))
+    except ValueError:
+        pass
     for variant in sorted({home, os.path.realpath(home), json.dumps(home)[1:-1], json.dumps(os.path.realpath(home))[1:-1]},
                           key=len, reverse=True):
         text = text.replace(variant, "{home}")
@@ -253,7 +261,7 @@ def normalize_tree(files, home):
         for variant in sorted({home, os.path.realpath(home)}, key=len, reverse=True):
             text = text.replace(variant, "{home}")
         text = GUID.sub(placeholder(guids, "guid"), text)
-        text = DATE.sub(placeholder(dates, "date"), text)
+        text = DATE.sub("{date}", text)
         out[path] = (mode, text)
     return out
 
