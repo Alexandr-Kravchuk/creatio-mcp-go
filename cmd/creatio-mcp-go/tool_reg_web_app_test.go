@@ -21,6 +21,9 @@ func t16aSession(t *testing.T) (*mcp.ClientSession, *environments, string) {
 	t.Helper()
 	clearCreatioVariables(t)
 	path := filepath.Join(t.TempDir(), "clio", "appsettings.json")
+	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
+		t.Fatal(err)
+	}
 	envs := newEnvironments(path)
 	session := connectTestClient(t, newMCPServerWithHiddenTools(envs, defaultHiddenToolServices()),
 		mcp.NewClient(&mcp.Implementation{Name: "probe-client", Version: "test"}, nil))
