@@ -5,7 +5,7 @@ The two page tools T21a left out ([t21a status](t21a-page-package-status.md#not-
 | Tool | Status | Go |
 |---|---|---|
 | `page-smoke` | ported, registered | `cmd/creatio-mcp-go/tool_page_smoke.go`, `internal/pagesmoke`, `internal/creatio/pagesmoke_support.go` |
-| `get-mobile-page-conversion-guide` | started, not registered | see [t27-mobile-guide-section.md](t27-mobile-guide-section.md) (branch `worktree-agent-a7fa7ac6b1fa2d5bb`, merged here when it merged cleanly) |
+| `get-mobile-page-conversion-guide` | engine ported (530/530 recorded clio `Analyze` answers byte-equal), handler/probes open, not registered | see [t27-mobile-guide-section.md](t27-mobile-guide-section.md) |
 
 ## page-smoke
 
