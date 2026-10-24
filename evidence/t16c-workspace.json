@@ -1,11 +1,210 @@
 {
   "schema": 1,
   "counts": {
-    "match": 4,
-    "known-diff": 1,
+    "match": 28,
+    "known-diff": 7,
     "mismatch": 0
   },
   "scenarios": [
+    {
+      "scenario": "gsc-modes",
+      "verdict": "match",
+      "files": 0,
+      "steps": 15,
+      "differences": []
+    },
+    {
+      "scenario": "gsc-fractional-minutes",
+      "verdict": "known-diff",
+      "files": 0,
+      "steps": 2,
+      "differences": [
+        {
+          "step": "fractional 1.5 minutes",
+          "what": "answer"
+        },
+        {
+          "step": "fractional 0.02 minutes",
+          "what": "answer"
+        }
+      ]
+    },
+    {
+      "scenario": "gsc-validation",
+      "verdict": "known-diff",
+      "files": 0,
+      "steps": 28,
+      "differences": [
+        {
+          "step": "aliases and unknown keys in request order",
+          "what": "answer"
+        },
+        {
+          "step": "duplicate key variants",
+          "what": "answer"
+        }
+      ]
+    },
+    {
+      "scenario": "gsc-responses",
+      "verdict": "match",
+      "files": 0,
+      "steps": 32,
+      "differences": []
+    },
+    {
+      "scenario": "gsc-request-timeout",
+      "verdict": "match",
+      "files": 0,
+      "steps": 2,
+      "differences": []
+    },
+    {
+      "scenario": "aim-validation",
+      "verdict": "match",
+      "files": 1,
+      "steps": 16,
+      "differences": []
+    },
+    {
+      "scenario": "aim-models",
+      "verdict": "match",
+      "files": 19,
+      "steps": 3,
+      "differences": []
+    },
+    {
+      "scenario": "aim-list-failures",
+      "verdict": "match",
+      "files": 2,
+      "steps": 7,
+      "differences": []
+    },
+    {
+      "scenario": "aim-runtime-failures",
+      "verdict": "match",
+      "files": 4,
+      "steps": 9,
+      "differences": []
+    },
+    {
+      "scenario": "link-binding",
+      "verdict": "match",
+      "files": 2,
+      "steps": 37,
+      "differences": []
+    },
+    {
+      "scenario": "link-local",
+      "verdict": "match",
+      "files": 18,
+      "steps": 24,
+      "differences": []
+    },
+    {
+      "scenario": "link-prepare-local",
+      "verdict": "match",
+      "files": 8,
+      "steps": 3,
+      "differences": []
+    },
+    {
+      "scenario": "link-environment-path",
+      "verdict": "match",
+      "files": 5,
+      "steps": 4,
+      "differences": []
+    },
+    {
+      "scenario": "link-prepare-stand",
+      "verdict": "known-diff",
+      "files": 2,
+      "steps": 4,
+      "differences": [
+        {
+          "what": "requests"
+        },
+        {
+          "step": "[stand] prepare, dry run",
+          "what": "answer"
+        },
+        {
+          "step": "[stand] prepare and link",
+          "what": "answer"
+        },
+        {
+          "step": "[stand] unlocked, dry run",
+          "what": "answer"
+        },
+        {
+          "step": "[stand] unlocked, flat repository",
+          "what": "answer"
+        },
+        {
+          "path": "env/Terrasoft.Configuration/Pkg/PkgA",
+          "what": "extra in go"
+        },
+        {
+          "path": "env/Terrasoft.Configuration/Pkg/PkgB",
+          "what": "extra in go"
+        }
+      ]
+    },
+    {
+      "scenario": "link-unlocked-versioned-stand",
+      "verdict": "known-diff",
+      "files": 4,
+      "steps": 2,
+      "differences": [
+        {
+          "what": "requests"
+        },
+        {
+          "step": "[stand] versioned, dry run",
+          "what": "answer"
+        },
+        {
+          "step": "[stand] versioned",
+          "what": "answer"
+        },
+        {
+          "path": "env/Terrasoft.Configuration/Pkg/PkgV",
+          "what": "extra in go"
+        },
+        {
+          "path": "env/Terrasoft.Configuration/Pkg/PkgV/descriptor.json",
+          "what": "missing in go"
+        }
+      ]
+    },
+    {
+      "scenario": "link-no-site",
+      "verdict": "known-diff",
+      "files": 1,
+      "steps": 5,
+      "differences": [
+        {
+          "step": "[no site] env package path, incomplete package",
+          "what": "answer"
+        },
+        {
+          "step": "[no site] env package path, dry run",
+          "what": "answer"
+        },
+        {
+          "step": "[no site] environment as a path",
+          "what": "answer"
+        },
+        {
+          "step": "[no site] unlocked, environment as a path",
+          "what": "answer"
+        },
+        {
+          "step": "[no site] unlocked, missing path, dry run",
+          "what": "answer"
+        }
+      ]
+    },
     {
       "scenario": "create-workspace",
       "verdict": "match",
@@ -44,6 +243,112 @@
       "files": 71,
       "steps": 17,
       "differences": []
+    },
+    {
+      "scenario": "ui-project",
+      "verdict": "match",
+      "files": 269,
+      "steps": 19,
+      "differences": []
+    },
+    {
+      "scenario": "ui-project-existing-package",
+      "verdict": "match",
+      "files": 128,
+      "steps": 8,
+      "differences": []
+    },
+    {
+      "scenario": "solution-order",
+      "verdict": "match",
+      "files": 69,
+      "steps": 2,
+      "differences": []
+    },
+    {
+      "scenario": "sync-refusals",
+      "verdict": "match",
+      "files": 1,
+      "steps": 30,
+      "differences": []
+    },
+    {
+      "scenario": "sync-push-one",
+      "verdict": "match",
+      "files": 58,
+      "steps": 2,
+      "differences": []
+    },
+    {
+      "scenario": "sync-push-two-skip-backup",
+      "verdict": "match",
+      "files": 50,
+      "steps": 2,
+      "differences": []
+    },
+    {
+      "scenario": "sync-push-install-failure",
+      "verdict": "match",
+      "files": 43,
+      "steps": 2,
+      "differences": []
+    },
+    {
+      "scenario": "sync-push-invalid-archive",
+      "verdict": "match",
+      "files": 43,
+      "steps": 2,
+      "differences": []
+    },
+    {
+      "scenario": "sync-push-descriptor-missing",
+      "verdict": "match",
+      "files": 52,
+      "steps": 3,
+      "differences": []
+    },
+    {
+      "scenario": "sync-restore-one",
+      "verdict": "match",
+      "files": 218,
+      "steps": 2,
+      "differences": []
+    },
+    {
+      "scenario": "sync-restore-two",
+      "verdict": "match",
+      "files": 220,
+      "steps": 2,
+      "differences": []
+    },
+    {
+      "scenario": "sync-restore-none",
+      "verdict": "match",
+      "files": 206,
+      "steps": 2,
+      "differences": []
+    },
+    {
+      "scenario": "sync-restore-download-fails",
+      "verdict": "match",
+      "files": 42,
+      "steps": 2,
+      "differences": []
+    },
+    {
+      "scenario": "sync-restore-not-workspace",
+      "verdict": "known-diff",
+      "files": 0,
+      "steps": 1,
+      "differences": [
+        {
+          "what": "requests"
+        },
+        {
+          "step": "restore-workspace",
+          "what": "answer"
+        }
+      ]
     }
   ]
 }
