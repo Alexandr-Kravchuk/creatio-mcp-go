@@ -27,7 +27,8 @@ F/F/T/F), so a direct raw-name call is gated and `clio-run` runs them. The long 
 - `scripts/compare-workspace-tools.py`, all 35 scenarios against clio 8.1.0.142: 28 match, 7 known
   differences (listed below), 0 mismatches (`evidence/t16c-workspace.json`).
 - `scripts/compare-contracts.py`: 1085 match, 0 unexplained; known: 46 not-ported rows (the 23 tools of T16a,
-  T16b and T21a, each on two surfaces; before T16c: 70) and the one multi-name batch clio shortens.
+  T16b and T21a, each on two surfaces; before T16c: 70) and the one multi-name batch clio shortens. After the
+  merge with main (T16a, T25): 1115 match, 34 not-ported rows; the harness and every check above unchanged.
 - `go vet ./...`, `go test -race ./...`, `GOOS=windows GOARCH=amd64 go build ./...`, `python3 -m pytest -q
   scripts` (74 passed, 8 skipped), `scripts/check-public-safety.sh`: pass.
 
