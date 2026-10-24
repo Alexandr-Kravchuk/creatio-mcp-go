@@ -256,7 +256,7 @@ func TestWorkspaceSyncDownloadsAndPing(t *testing.T) {
 	if refused.PingApplication(context.Background()) {
 		t.Fatal("a ping whose login gets no answer must fail")
 	}
-	if err := refused.ResetSchemaChangeState(context.Background(), "UsrPkg"); err == nil || !strings.Contains(err.Error(), "Connection refused (127.0.0.1:1)") {
+	if err := refused.ResetSchemaChangeState(context.Background(), "UsrPkg"); err == nil || !strings.Contains(err.Error(), refusedSentence()+" (127.0.0.1:1)") {
 		t.Fatalf("transport text %v", err)
 	}
 }

@@ -234,7 +234,8 @@ func TestPackPackageFiltersAndOrdersAsClio(t *testing.T) {
 		t.Fatalf("entries %v", entries)
 	}
 	joined := strings.Join(entries, ";")
-	for _, want := range []string{"Files/Bin/UsrPkg.dll=dll", "Schemas/UsrA/descriptor.json={}"} {
+	// Entry names are native relative paths, as clio's ConvertToRelativePath gives them ("\\" on Windows).
+	for _, want := range []string{filepath.FromSlash("Files/Bin/UsrPkg.dll") + "=dll", filepath.FromSlash("Schemas/UsrA/descriptor.json") + "={}"} {
 		if !strings.Contains(joined, want) {
 			t.Fatalf("missing %s in %v", want, entries)
 		}
@@ -410,7 +411,7 @@ func TestRestoreWorkspaceDownloadsPackagesAndPreparesTheWorkspace(t *testing.T) 
 		t.Fatalf("csproj %s", csproj)
 	}
 	solution, _ := os.ReadFile(filepath.Join(root, "MainSolution.slnx"))
-	if !strings.Contains(string(solution), "packages/UsrPkg/Files/UsrPkg.csproj") {
+	if !strings.Contains(string(solution), filepath.FromSlash("packages/UsrPkg/Files/UsrPkg.csproj")) {
 		t.Fatalf("solution %s", solution)
 	}
 	if got := strings.Join(*requests, "\n"); got != "GET / \nPOST /ServiceModel/PackageInstallerService.svc/GetZipPackages [\"UsrPkg\"]\n"+

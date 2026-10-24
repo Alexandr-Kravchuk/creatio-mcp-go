@@ -77,6 +77,8 @@ func TestGenerateModelsMatchesClioByteForByte(t *testing.T) {
 			text = strings.ReplaceAll(text, "\n", "\r\n")
 		} else {
 			text = strings.ReplaceAll(text, "\n", newLine())
+			// A column description's own line break stays "\n": clio appends the host newline only after it.
+			text = strings.ReplaceAll(text, "Notes about the contact."+newLine()+"Free text.", "Notes about the contact.\nFree text.")
 		}
 		actual, err := os.ReadFile(filepath.Join(destination, filepath.Base(path)))
 		if err != nil || string(actual) != text {

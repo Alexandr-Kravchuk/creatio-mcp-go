@@ -170,11 +170,11 @@ func TestGenerateSourceCodeTimeoutAndUnreachableSite(t *testing.T) {
 	dead := newFormsTestClient(t, "http://127.0.0.1:9")
 	dead.http.Transport = refusingTransport()
 	result = dead.GenerateSourceCode(context.Background(), GenerateSourceCodeRequest{TimeoutMilliseconds: GenerateSourceCodeDefaultTimeout})
-	want := "Cannot connect to the application: Connection refused (127.0.0.1:9) (WebException: ConnectFailure). Make sure the site is running and accessible."
+	want := "Cannot connect to the application: " + refusedSentence() + " (127.0.0.1:9) (WebException: ConnectFailure). Make sure the site is running and accessible."
 	if result.ExitCode != 1 || len(result.Messages) != 3 || result.Messages[2].Value != want {
 		t.Fatalf("unreachable result = %#v", result)
 	}
-	if _, _, err := dead.EntityModelSchemas(context.Background(), "en-US"); err == nil || err.Error() != "Connection refused (127.0.0.1:9)" {
+	if _, _, err := dead.EntityModelSchemas(context.Background(), "en-US"); err == nil || err.Error() != refusedSentence()+" (127.0.0.1:9)" {
 		t.Fatalf("unreachable model read = %v", err)
 	}
 }
