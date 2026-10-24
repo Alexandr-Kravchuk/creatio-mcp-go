@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "clio_startup_seconds": 1.35,
+  "go_startup_seconds": 0.46,
+  "counts": {
+    "match": 6,
+    "both-failed": 0,
+    "error-text": 0,
+    "known-diff": 0,
+    "mismatch": 0
+  },
+  "cases": [
+    {
+      "tool": "list-user-tasks",
+      "case": "list-user-tasks default [env 1]",
+      "verdict": "match",
+      "clio_seconds": 0.11,
+      "go_seconds": 0.03,
+      "differences": []
+    },
+    {
+      "tool": "list-user-tasks",
+      "case": "list-user-tasks default [env 2]",
+      "verdict": "match",
+      "clio_seconds": 0.03,
+      "go_seconds": 0.02,
+      "differences": []
+    },
+    {
+      "tool": "get-theme",
+      "case": "get-theme unknown id [env 1]",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "get-theme",
+      "case": "get-theme unknown id [env 2]",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "get-theme",
+      "case": "get-theme non-GUID id [env 1]",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "get-theme",
+      "case": "get-theme non-GUID id [env 2]",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    }
+  ]
+}

@@ -26,14 +26,13 @@ func pkgWriteRequiredFlatString(args map[string]any, tool, name string) (string,
 	return optionalStringArg(args, tool, name)
 }
 
-// pkgWriteBlankEnvironment refuses a blank environment name. clio passes it on and resolves the ACTIVE
-// environment; this server does not run a destructive tool against an environment the caller did not name
-// (a deliberate difference, recorded in the T15 status).
-func pkgWriteBlankEnvironment(argument, name string) *mcp.CallToolResult {
-	if !pkgWriteBlank(name) {
+// pkgWriteBlankEnvironment refuses a blank environment name the way clio's resolver does (ToolCommandResolver:
+// neither a name nor a uri), whichever argument carries the name.
+func pkgWriteBlankEnvironment(envs *environments, name string) *mcp.CallToolResult {
+	if !pkgWriteBlank(name) || envs.hasDefaultTarget() {
 		return nil
 	}
-	return structuredToolResult(creatio.CommandFailure(argument + " is required and cannot be empty."))
+	return resolverFailureEnvelope(&environmentError{message: missingTargetMessage})
 }
 
 // pkgWriteNamedEnvironment resolves a tool whose environment argument is not environment-name.
@@ -52,7 +51,7 @@ func init() {
 			if err != nil {
 				return nil, err
 			}
-			if refusal := pkgWriteBlankEnvironment("environmentName", name); refusal != nil {
+			if refusal := pkgWriteBlankEnvironment(envs, name); refusal != nil {
 				return refusal, nil
 			}
 			client, failure, err := pkgWriteNamedEnvironment(envs, item.name, name)

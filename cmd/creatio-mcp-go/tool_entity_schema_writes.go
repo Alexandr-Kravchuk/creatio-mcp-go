@@ -64,6 +64,13 @@ func init() {
 			if err != nil {
 				return nil, err
 			}
+			if !lookup {
+				// ENG-103025: a call without a required argument is answered with the mini-contract, before
+				// anything reaches the environment (environment-name is the resolver's to check).
+				if missing := creatio.SchemaWriteEntCreateMissing(parsed); len(missing) > 0 {
+					return structuredToolResult(creatio.CommandFailure(creatio.MiniContractCreateEntitySchema(missing))), nil
+				}
+			}
 			client, failure, failureText, err := schemaWriteEntResolve(envs, tool, args)
 			if err != nil {
 				return nil, err

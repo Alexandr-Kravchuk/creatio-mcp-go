@@ -11,7 +11,8 @@ func init() {
 	registerTool(map[string]any{
 		"name": "list-user-tasks",
 		"description": "List the user-facing user tasks (process designer palette, custom ones included) of the target environment. " +
-			"Returns clio's command envelope { exit-code, execution-log-messages }: an Info line \"Reading user task catalog from '<environment>'...\", " +
+			"Returns clio's command envelope { exit-code, execution-log-messages }: an Info line \"Reading user task catalog from '<environment>'...\" " +
+			"(the target URL when the call names no environment), " +
 			"then one Info line \"name<TAB>uid\" per task, then the total. " +
 			"Pass a name as userTaskName on a userTask element of create-business-process; prefer the dedicated sendEmail, approval, addData " +
 			"and changeAccessRights element types for EmailTemplateUserTask, ApprovalUserTask, AddDataUserTask and ChangeAdminRightsUserTask. " +
@@ -22,6 +23,10 @@ func init() {
 		if refusal := unknownArgumentError(args, "environment-name"); refusal != "" {
 			return structuredToolResult(creatio.NewCommandResult(1, "Error", refusal)), nil
 		}
+		// clio's own check of the name, before the resolver: exit code -1.
+		if envs.nameRequired(args) {
+			return structuredToolResult(creatio.NewCommandResult(-1, "Error", environmentNameRequired)), nil
+		}
 		client, failure, err := envs.resolve("list-user-tasks", args, scopeName)
 		if err != nil {
 			return nil, err
@@ -30,7 +35,7 @@ func init() {
 			return resolverFailureEnvelope(failure), nil
 		}
 		// The name the call selected the environment by, which clio's log line quotes; resolve already
-		// refused a selector that is not a string.
+		// refused a selector that is not a string. Without one the line quotes the target's URL.
 		environmentName, _ := args["environment-name"].(string)
 		return structuredToolResult(client.ListUserTasks(ctx, environmentName)), nil
 	})

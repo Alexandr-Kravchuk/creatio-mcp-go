@@ -10,8 +10,8 @@ import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// esqMembers is clio's ExecuteEsqArgs. clio's record also requires environment-name; this server keeps
-// resolving a call without one to its default target, as for every other tool.
+// esqMembers is clio's ExecuteEsqArgs. The record requires environment-name (environments.requireEnvironment):
+// a call without it fails the binding, and a blank one reaches ESQPrepare.
 var esqMembers = []clioMember{{"query", clioAny, false}, {"environment-name", clioString, false}, {"timeout", clioInt, false}}
 
 // esqRun is ExecuteEsqTool.Run after binding: the local checks, then the environment, then the request.
@@ -42,7 +42,7 @@ func esqRun(ctx context.Context, envs *environments, tool string, bound clioBoun
 func init() {
 	registerTool(map[string]any{"name": "execute-esq-to-file"}, func(ctx context.Context, envs *environments, args map[string]any) (*mcp.CallToolResult, error) {
 		const tool = "execute-esq-to-file"
-		bound, err := clioBind(tool, args, append(append([]clioMember(nil), esqMembers...), clioMember{"output-file", clioString, true}))
+		bound, err := clioBind(tool, args, envs.requireEnvironment(append(append([]clioMember(nil), esqMembers...), clioMember{"output-file", clioString, true})))
 		if err != nil {
 			return nil, err
 		}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -76,7 +77,7 @@ func TestGroupFToolsRefuseEnvironmentSelectorsAndWrongTypes(t *testing.T) {
 		{&mcp.CallToolParams{Name: "last-compilation-log", Arguments: map[string]any{"environment-name": "other"}}, false, `"diagnostics":[],"error":"Environment with key 'other' not found.`},
 		{&mcp.CallToolParams{Name: "get-fsm-mode", Arguments: map[string]any{"environmentName": "other"}}, true,
 			"MCP tool 'get-fsm-mode' failed: Environment with key 'other' not found. Check your clio configuration."},
-		{&mcp.CallToolParams{Name: "clio-run", Arguments: map[string]any{"command": "get-fsm-mode", "args": map[string]any{"environment-name": "other"}}}, true,
+		{&mcp.CallToolParams{Name: "clio-run", Arguments: map[string]any{"command": "get-fsm-mode", "args": map[string]any{"environmentName": "other"}}}, true,
 			"Error: tool 'get-fsm-mode' failed: Environment with key 'other' not found. Check your clio configuration."},
 		{&mcp.CallToolParams{Name: "resolve-oauth-system-user", Arguments: map[string]any{"environment-name": "other"}}, false, `{"success":false,"error":"Environment with key 'other' not found.`},
 		{&mcp.CallToolParams{Name: "resolve-oauth-system-user", Arguments: map[string]any{"id": 5}}, true, "argument 'id' for MCP tool 'resolve-oauth-system-user' must be a string."},
@@ -90,6 +91,36 @@ func TestGroupFToolsRefuseEnvironmentSelectorsAndWrongTypes(t *testing.T) {
 		}
 		if text := result.Content[0].(*mcp.TextContent).Text; !strings.Contains(text, c.want) {
 			t.Errorf("%s %v = %s, want it to contain %s", c.call.Name, c.call.Arguments, text, c.want)
+		}
+	}
+}
+
+// Without environmentName get-fsm-mode answers with clio's binder and FsmModeStatusService texts; the
+// common spelling environment-name is not read, as clio's binder does not read it.
+func TestGetFsmModeRefusesAMissingNameLikeClio(t *testing.T) {
+	clearCreatioVariables(t)
+	path := filepath.Join(t.TempDir(), "appsettings.json")
+	writeSettings(t, path, "dev", map[string]map[string]any{"dev": {"Uri": "https://dev.example.com", "Login": "u", "Password": "p"}})
+	session := connectTestClient(t, newMCPServerWithHiddenTools(newEnvironments(path), defaultHiddenToolServices()),
+		mcp.NewClient(&mcp.Implementation{Name: "probe-client", Version: "test"}, nil))
+	cases := []struct {
+		args map[string]any
+		want string
+	}{
+		{map[string]any{}, "Error: tool 'get-fsm-mode' failed: " + fsmModeMissingName},
+		{map[string]any{"environment-name": "dev"}, "Error: tool 'get-fsm-mode' failed: " + fsmModeMissingName},
+		{map[string]any{"environmentName": ""}, "Error: tool 'get-fsm-mode' failed: " + fsmModeBlankName},
+		{map[string]any{"environmentName": "  "}, "Error: tool 'get-fsm-mode' failed: " + fsmModeBlankName},
+		{map[string]any{"environmentName": nil}, fsmModeNullName},
+	}
+	for _, c := range cases {
+		result, err := session.CallTool(context.Background(), &mcp.CallToolParams{Name: "clio-run",
+			Arguments: map[string]any{"command": "get-fsm-mode", "args": c.args}})
+		if err != nil || !result.IsError {
+			t.Fatalf("%v = %#v, err = %v", c.args, result, err)
+		}
+		if text := result.Content[0].(*mcp.TextContent).Text; text != c.want {
+			t.Errorf("%v = %s, want %s", c.args, text, c.want)
 		}
 	}
 }

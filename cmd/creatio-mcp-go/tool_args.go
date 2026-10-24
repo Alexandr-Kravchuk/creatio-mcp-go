@@ -89,6 +89,51 @@ func (e *environments) target(tool string, args map[string]any, scope connection
 	return e.client(name, overrides)
 }
 
+// hasDefaultTarget says whether a call without a name is served by CREATIO_* variables: they name the only
+// target there is while clio's settings file does not exist. Every tool that refuses a missing name leaves the
+// call to that default target, as the resolver does.
+func (e *environments) hasDefaultTarget() bool {
+	if e == nil {
+		return false
+	}
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	return (e.fallback != nil || e.fallbackErr != nil) && !e.settingsFileExists()
+}
+
+// nameRequired is true when the call names no environment and no default target serves it: the tools that
+// check the name themselves refuse such a call with their own text.
+func (e *environments) nameRequired(args map[string]any) bool {
+	return environmentNameBlank(args) && !e.hasDefaultTarget()
+}
+
+// requireEnvironment marks environment-name `required` in a copy of a binder's members, as C#'s `required`
+// does in clio's argument records (an absent member fails the whole binding), unless a default target serves
+// a call without a name.
+func (e *environments) requireEnvironment(members []clioMember) []clioMember {
+	bound := append([]clioMember(nil), members...)
+	if e.hasDefaultTarget() {
+		return bound
+	}
+	for index := range bound {
+		if bound[index].name == "environment-name" {
+			bound[index].required = true
+		}
+	}
+	return bound
+}
+
+// environmentNameBlank is clio's string.IsNullOrWhiteSpace(args.EnvironmentName): the tools that check the
+// name themselves refuse an absent, null or blank environment-name before they resolve anything. A name of
+// another JSON type is refused earlier, by the binder.
+func environmentNameBlank(args map[string]any) bool {
+	name, _ := args["environment-name"].(string)
+	return strings.TrimSpace(name) == ""
+}
+
+// environmentNameRequired is the text of those own checks.
+const environmentNameRequired = "environment-name is required and cannot be empty."
+
 // resolve is target for tools with their own failure envelope. A binding failure (a selector that is not a
 // string) comes back as err, because clio raises it before the tool runs; a resolution failure comes back as
 // refusal, for the tool to report the way its clio counterpart does.

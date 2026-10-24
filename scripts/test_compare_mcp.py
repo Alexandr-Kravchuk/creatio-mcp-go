@@ -24,6 +24,18 @@ class KnownDifferenceTest(unittest.TestCase):
         self.assertFalse(compare_mcp.known_difference("$.compilationhistory.finishedsecondsago: value differs", known))
 
 
+class CaseKnownDifferencesTest(unittest.TestCase):
+    CASE = {"known-differences": ["$.checkedutc"], "known-differences-variables": ["$.executionlogmessages[0].value"]}
+
+    def test_name_mode_keeps_only_the_listed_paths(self):
+        self.assertEqual(compare_mcp.case_known_differences(self.CASE, "name"), {"$.checkedutc"})
+        self.assertEqual(compare_mcp.case_known_differences({}, "name"), set())
+
+    def test_variables_mode_adds_the_environment_name_and_the_mode_paths(self):
+        self.assertEqual(compare_mcp.case_known_differences(self.CASE, "variables"),
+                         {"$.checkedutc", "$.environmentname", "$.executionlogmessages[0].value"})
+        self.assertEqual(compare_mcp.case_known_differences({}, "variables"), {"$.environmentname"})
+
 
 class ClioToolsDirTest(unittest.TestCase):
     def test_tool_path_of_a_dll_inside_a_tool_store(self):
@@ -39,6 +51,28 @@ class ClioToolsDirTest(unittest.TestCase):
         self.assertIsNone(compare_mcp.clio_tools_dir("/opt/clio/clio.dll"))
         self.assertIsNone(compare_mcp.clio_tools_dir(None))
         self.assertEqual(compare_mcp.with_clio_tools({"A": "1"}, "/opt/clio/clio.dll"), {"A": "1"})
+
+class GoEnvironmentTest(unittest.TestCase):
+    def test_variables_mode_gives_go_no_clio_settings_file(self):
+        import json, os, tempfile
+        with tempfile.TemporaryDirectory() as temp:
+            settings = pathlib.Path(temp) / "appsettings.json"
+            settings.write_text(json.dumps({"Environments": {"dev": {
+                "Uri": "http://127.0.0.1:9", "Login": "u", "Password": "p"}}}), encoding="utf-8")
+            env = compare_mcp.go_environment("dev", str(settings), "variables")
+            self.assertEqual(env["CREATIO_URL"], "http://127.0.0.1:9")
+            self.assertNotEqual(pathlib.Path(env["CLIO_HOME"]).resolve(), pathlib.Path(temp).resolve())
+            self.assertEqual(os.listdir(env["CLIO_HOME"]), [])
+            os.rmdir(env["CLIO_HOME"])
+
+    def test_name_mode_points_go_at_the_settings_file(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as temp:
+            settings = pathlib.Path(temp) / "appsettings.json"
+            env = compare_mcp.go_environment("dev", str(settings), "name")
+            self.assertEqual(env["CLIO_HOME"], str(pathlib.Path(temp).resolve()))
+            self.assertFalse(any(key.startswith("CREATIO_") for key in env))
+
 
 if __name__ == "__main__":
     unittest.main()

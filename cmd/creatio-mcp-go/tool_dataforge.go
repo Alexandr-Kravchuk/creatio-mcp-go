@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"math"
 	"strconv"
+	"strings"
 
 	"github.com/Alexandr-Kravchuk/creatio-mcp-go/internal/creatio"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -53,7 +54,7 @@ func init() {
 			if err != nil {
 				return nil, err
 			}
-			client, failure, err := dataForgeTarget(envs, tool, args)
+			client, failure, err := dataForgeTarget(envs, tool, args, [2]string{"query", query})
 			if client == nil {
 				return failure, err
 			}
@@ -81,7 +82,7 @@ func init() {
 			if err != nil {
 				return nil, err
 			}
-			client, failure, err := dataForgeTarget(envs, tool, args)
+			client, failure, err := dataForgeTarget(envs, tool, args, [2]string{"query", query})
 			if client == nil {
 				return failure, err
 			}
@@ -109,7 +110,7 @@ func init() {
 			if err != nil {
 				return nil, err
 			}
-			client, failure, err := dataForgeTarget(envs, tool, args)
+			client, failure, err := dataForgeTarget(envs, tool, args, [2]string{"source-table", source}, [2]string{"target-table", target})
 			if client == nil {
 				return failure, err
 			}
@@ -126,7 +127,7 @@ func init() {
 			if err != nil {
 				return nil, err
 			}
-			client, failure, err := dataForgeTarget(envs, tool, args)
+			client, failure, err := dataForgeTarget(envs, tool, args, [2]string{"table-name", tableName})
 			if client == nil {
 				return failure, err
 			}
@@ -175,7 +176,18 @@ func init() {
 
 // dataForgeTarget resolves the call's environment after the tool's own arguments are validated, as clio
 // checks environment-name last. A failure is reported inside the tool's envelope with its error code.
-func dataForgeTarget(envs *environments, tool string, args map[string]any) (*creatio.Client, *mcp.CallToolResult, error) {
+//
+// required lists the tool's own required arguments as {name, value} pairs, checked in order before
+// environment-name, which clio checks last of all (EnsureRequired, then Execute).
+func dataForgeTarget(envs *environments, tool string, args map[string]any, required ...[2]string) (*creatio.Client, *mcp.CallToolResult, error) {
+	for _, argument := range required {
+		if strings.TrimSpace(argument[1]) == "" {
+			return nil, structuredToolResult(creatio.DataForgeFailure(tool, argument[0]+" is required.")), nil
+		}
+	}
+	if envs.nameRequired(args) {
+		return nil, structuredToolResult(creatio.DataForgeFailure(tool, "environment-name is required.")), nil
+	}
 	client, refusal, err := envs.resolve(tool, args, scopeName)
 	if err != nil {
 		return nil, nil, err

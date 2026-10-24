@@ -1,8 +1,12 @@
 package creatio
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -200,5 +204,67 @@ func TestODataReadToFileWritesTheResponseBytes(t *testing.T) {
 	}
 	if _, err := os.Stat(other); !os.IsNotExist(err) {
 		t.Fatal("a rejected body was written")
+	}
+}
+
+// chunkedReader hands out at most size bytes per Read, as a transport splits a body.
+type chunkedReader struct {
+	data []byte
+	size int
+}
+
+func (r *chunkedReader) Read(p []byte) (int, error) {
+	if len(r.data) == 0 {
+		return 0, io.EOF
+	}
+	n := copy(p[:min(len(p), r.size)], r.data)
+	r.data = r.data[n:]
+	return n, nil
+}
+
+// Creatio.Client checks the ceiling once per read of its 81920-byte buffer, so the size clio reports is the
+// bytes read up to and including the read that crossed it.
+func TestODataReadBoundedReportsTheSizeClioReports(t *testing.T) {
+	body, observed, err := odataReadBounded(&chunkedReader{data: make([]byte, 200), size: 30}, 100)
+	if !errors.Is(err, errResponseTooLarge) || observed != 120 || len(body) != 90 {
+		t.Fatalf("chunks of 30: observed = %d, body = %d, err = %v", observed, len(body), err)
+	}
+	_, observed, err = odataReadBounded(bytes.NewReader(make([]byte, 300000)), 200000)
+	if !errors.Is(err, errResponseTooLarge) || observed != 3*odataReadCopyBufferBytes {
+		t.Fatalf("full buffers: observed = %d, err = %v", observed, err)
+	}
+	body, _, err = odataReadBounded(&chunkedReader{data: make([]byte, 100), size: 7}, 100)
+	if err != nil || len(body) != 100 {
+		t.Fatalf("a body of exactly the ceiling: body = %d, err = %v", len(body), err)
+	}
+}
+
+func TestODataReadInlineIsNotCappedAtFourMiB(t *testing.T) {
+	name := strings.Repeat("x", 5<<20)
+	client := odataTestClient(t, map[string]string{
+		"/odata/Contact": `{"@odata.context":"http://h/odata/$metadata#Contact","value":[{"Id":"1","Name":"` + name + `"}]}`,
+	})
+	got := client.ODataRead142(context.Background(), ODataReadArgs{Entity: "Contact"}, nil, nil)
+	if !got.Success || *got.Count != 1 || len(got.Value) < 5<<20 {
+		t.Fatalf("5 MiB read: success = %v, error = %v", got.Success, got.Error)
+	}
+}
+
+func TestODataReadToFileRefusesPastSixtyFourMiBWithTheObservedSize(t *testing.T) {
+	t.Chdir(t.TempDir())
+	client := odataTestClient(t, map[string]string{"/odata/Contact": strings.Repeat(" ", ODataReadMaxFileBytes+1)})
+	path, _ := ToFileResolve("big.json")
+	got := client.ODataReadToFile(context.Background(), ODataReadArgs{Entity: "Contact"}, nil, nil, path)
+	if got.Success || *got.ErrorCode != "transport" {
+		t.Fatalf("refusal = %+v", got)
+	}
+	var observed int64
+	if _, err := fmt.Sscanf(*got.Error, "OData response is at least %d bytes", &observed); err != nil ||
+		observed <= ODataReadMaxFileBytes || observed > ODataReadMaxFileBytes+odataReadCopyBufferBytes ||
+		!strings.HasSuffix(*got.Error, "exceeds the 67108864-byte limit for one call. Narrow the query with select, or page it with top and skip.") {
+		t.Fatalf("error = %s", *got.Error)
+	}
+	if _, err := os.Stat(path); !os.IsNotExist(err) {
+		t.Fatal("a refused body was written")
 	}
 }

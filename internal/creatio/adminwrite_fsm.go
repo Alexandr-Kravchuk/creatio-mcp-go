@@ -21,6 +21,7 @@ import (
 )
 
 const (
+	// adminWriteFsmLoadTimeout bounds one request where clio waits with Timeout.Infinite.
 	adminWriteFsmLoadTimeout    = 30 * time.Minute
 	adminWriteFsmRestartTimeout = 90 * time.Second
 )
@@ -142,8 +143,7 @@ func (c *Client) adminWriteLoadPackages(ctx context.Context, endpoint, storage s
 }
 
 func (c *Client) adminWriteLoadStorage(ctx context.Context, endpoint, storage string, log *adminWriteFsmLog) (adminWriteLoadResult, error) {
-	stateBody, err := c.callService(ctx, serviceCall{Route: "ServiceModel/WorkspaceExplorerService.svc/GetIsFileDesignMode", Body: []byte{},
-		Timeout: adminWriteFsmLoadTimeout, Label: "WorkspaceExplorerService"})
+	stateBody, err := c.adminWriteFsmPost(ctx, pkgWriteFSMRoute, "WorkspaceExplorerService")
 	if err != nil {
 		return adminWriteLoadRefused, err
 	}
@@ -164,8 +164,7 @@ func (c *Client) adminWriteLoadStorage(ctx context.Context, endpoint, storage st
 		return adminWriteLoadDisabled, nil
 	}
 	log.add("None", "Start load packages to "+storage+" on a web application")
-	body, err := c.callService(ctx, serviceCall{Route: "ServiceModel/AppInstallerService.svc/" + endpoint, Body: []byte{},
-		Timeout: adminWriteFsmLoadTimeout, Label: "AppInstallerService"})
+	body, err := c.adminWriteFsmPost(ctx, "ServiceModel/AppInstallerService.svc/"+endpoint, "AppInstallerService")
 	if err != nil {
 		return adminWriteLoadRefused, err
 	}
@@ -204,6 +203,31 @@ func (c *Client) adminWriteLoadStorage(ctx context.Context, endpoint, storage st
 	}
 	log.add("Error", adminWriteFsmLoadMessage(storage, adminWriteFsmErrorDetails(response.ErrorInfo)))
 	return adminWriteLoadRefused, nil
+}
+
+// adminWriteFsmPost is FileDesignModePackages' ExecutePostRequest(url, "", Timeout.Infinite, 30, 3) as
+// Creatio.Client runs it: the session is established once before the loop, so a failed login is not retried;
+// a request that got no answer (a refused, reset or dropped connection, the re-login of an expired session
+// included) is sent again 3 s later, up to 30 attempts in all, because a site that has just restarted accepts
+// requests with a delay; an answer of any status ends the loop. A request that runs past this server's
+// per-request bound is not sent again: clio's request has no bound to run past.
+func (c *Client) adminWriteFsmPost(ctx context.Context, route, label string) ([]byte, error) {
+	if _, err := c.currentSession(ctx); err != nil {
+		return nil, classifyLoginFailure(err)
+	}
+	call := serviceCall{Route: route, Body: []byte{}, Timeout: adminWriteFsmLoadTimeout, Label: label}
+	for attempt := 1; ; attempt++ {
+		body, err := c.callService(ctx, call)
+		if err == nil || !isTransportError(err) || errors.Is(err, context.DeadlineExceeded) ||
+			attempt >= pkgWriteSyncAttempts || ctx.Err() != nil {
+			return body, err
+		}
+		select {
+		case <-ctx.Done():
+			return nil, err
+		case <-time.After(pkgWriteSyncDelay):
+		}
+	}
 }
 
 // adminWriteSetFsmConfig is SetFsmConfigCommand.Execute for a registered environment.

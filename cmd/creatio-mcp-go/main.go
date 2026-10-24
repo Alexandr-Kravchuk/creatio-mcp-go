@@ -125,7 +125,7 @@ func newMCPServerWithHiddenTools(envs *environments, hostTools hiddenToolService
 				if err != nil {
 					return structuredToolResult(creatio.AppListResponse{Error: redacted(err)}), nil
 				}
-				response := client.ListAppsResponse(ctx)
+				response := client.ListAppsResponse(withClioLogin(ctx, "list-apps"))
 				// clio's list-apps redacts every failure it reports.
 				response.Error = redact.Text(response.Error)
 				return structuredToolResult(response), nil
@@ -294,6 +294,13 @@ func invokeHiddenTool(ctx context.Context, envs *environments, hostTools hiddenT
 		if err := decodeStrictArgs(withoutEnvironmentArgs(args, scopeDirect), &input); err != nil {
 			return nil, fmt.Errorf("decode get-package-file arguments: %w", err)
 		}
+		// clio checks both arguments before it resolves the environment.
+		if strings.TrimSpace(input.PackageName) == "" {
+			return structuredToolResult(creatio.PackageFileResult{Error: "package-name is required and cannot be empty."}), nil
+		}
+		if strings.TrimSpace(input.FilePath) == "" {
+			return structuredToolResult(creatio.PackageFileResult{Error: "file-path is required and cannot be empty."}), nil
+		}
 		client, failure, err := envs.resolve(name, args, scopeDirect)
 		if err != nil {
 			return nil, err
@@ -308,6 +315,10 @@ func invokeHiddenTool(ctx context.Context, envs *environments, hostTools hiddenT
 		}
 		if err := decodeStrictArgs(withoutEnvironmentArgs(args, scopeDirect), &input); err != nil {
 			return nil, fmt.Errorf("decode list-package-files arguments: %w", err)
+		}
+		// clio checks the package before it resolves the environment.
+		if strings.TrimSpace(input.PackageName) == "" {
+			return structuredToolResult(creatio.PackageFilesResult{Files: []string{}, Error: "package-name is required and cannot be empty."}), nil
 		}
 		client, failure, err := envs.resolve(name, args, scopeDirect)
 		if err != nil {
@@ -343,6 +354,10 @@ func invokeHiddenTool(ctx context.Context, envs *environments, hostTools hiddenT
 		}
 		if err := decodeStrictArgs(withoutEnvironmentArgs(args, scopeName), &input); err != nil {
 			return nil, fmt.Errorf("decode list-app-sections arguments: %w", err)
+		}
+		// clio checks the application code before it resolves the environment.
+		if strings.TrimSpace(input.ApplicationCode) == "" {
+			return structuredToolResult(creatio.AppSectionsResult{Error: "application-code is required."}), nil
 		}
 		client, failure, err := envs.resolve(name, args, scopeName)
 		if err != nil {
@@ -389,7 +404,7 @@ func invokeHiddenTool(ctx context.Context, envs *environments, hostTools hiddenT
 		return structuredToolResult(hostTools.findEmptyIISPort(ctx)), nil
 	case "execute-esq":
 		// clio 8.1.0.142's ExecuteEsqTool.Run, shared with execute-esq-to-file (tool_esq142.go).
-		bound, err := clioBind(name, args, esqMembers)
+		bound, err := clioBind(name, args, envs.requireEnvironment(esqMembers))
 		if err != nil {
 			return nil, err
 		}
@@ -428,8 +443,12 @@ func invokeHiddenTool(ctx context.Context, envs *environments, hostTools hiddenT
 		if err := decodeStrictArgs(args, &input); err != nil {
 			return nil, fmt.Errorf("decode start-creatio arguments: %w", err)
 		}
+		if _, present := args["environmentName"]; !present {
+			// clio binds the flat parameter environmentName; without it the call is refused before the tool runs.
+			return nil, errors.New("The arguments dictionary is missing a value for the required parameter 'environmentName'. (Parameter 'arguments')")
+		}
 		if strings.TrimSpace(input.EnvironmentName) == "" {
-			return nil, errors.New("environmentName is required")
+			return resolverFailureEnvelope(&environmentError{message: missingTargetMessage}), nil
 		}
 		result, err := hostTools.startCreatio(ctx, input.EnvironmentName, progress)
 		if err != nil {
@@ -579,10 +598,10 @@ func clioFailure(prefix string, err error) error {
 		return err
 	}
 	// Redacted as clio's McpToolErrorFilter and clio-run catch blocks redact a raised failure. A request that got
-	// no answer is reported by its innermost exception, the SocketException, as clio's filter reports it.
+	// no answer is reported by its innermost exception, the SocketException or the cancelled operation, as clio's filter reports it.
 	text := err.Error()
-	if socket, ok := creatio.SocketExceptionText(err); ok {
-		text = socket
+	if innermost, ok := creatio.InnermostExceptionText(err); ok {
+		text = innermost
 	}
 	return errors.New(prefix + redact.Text(text))
 }

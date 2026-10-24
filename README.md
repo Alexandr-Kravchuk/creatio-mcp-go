@@ -65,8 +65,9 @@ claude mcp add creatio-go -- /path/to/creatio-mcp-go
 codex mcp add creatio-go -- /path/to/creatio-mcp-go
 ```
 
-The server reads the environments from clio's `appsettings.json`. Without clio, set one default
-environment with `--env CREATIO_URL=… --env CREATIO_LOGIN=… --env CREATIO_PASSWORD=…`.
+The server reads the environments from clio's `appsettings.json`; a call without `environment-name` is
+refused, as in clio. Without clio (no `appsettings.json`), set one environment with
+`--env CREATIO_URL=… --env CREATIO_LOGIN=… --env CREATIO_PASSWORD=…`; calls without a name go there.
 OAuth, .NET Core sites, Windows, knowledge bundles and write safety: [docs/install.md](docs/install.md).
 
 ## Documentation

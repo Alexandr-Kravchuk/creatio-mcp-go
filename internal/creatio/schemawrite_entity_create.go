@@ -21,6 +21,23 @@ type SchemaWriteEntCreateArgs struct {
 	IsDBView                                                               *bool
 }
 
+// SchemaWriteEntCreateMissing is EntitySchemaTool.MissingCreateArguments: the required arguments of
+// create-entity-schema the call lacks. The title counts as supplied when title-localizations is non-empty
+// or the legacy title is present.
+func SchemaWriteEntCreateMissing(parsed SchemaWriteEntCreateArgs) []string {
+	var missing []string
+	if strings.TrimSpace(parsed.PackageName) == "" {
+		missing = append(missing, "package-name")
+	}
+	if strings.TrimSpace(parsed.SchemaName) == "" {
+		missing = append(missing, "schema-name")
+	}
+	if len(parsed.TitleLocalizations) == 0 && strings.TrimSpace(parsed.LegacyTitle) == "" {
+		missing = append(missing, "title-localizations")
+	}
+	return missing
+}
+
 // ParseSchemaWriteEntCreateArgs binds create-entity-schema's or create-lookup's arguments.
 func ParseSchemaWriteEntCreateArgs(tool string, args map[string]any) (SchemaWriteEntCreateArgs, error) {
 	b := schemaWriteEntBinder{tool: tool}

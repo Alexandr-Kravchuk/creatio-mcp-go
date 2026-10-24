@@ -28,7 +28,6 @@ func TestEnrollSequenceParticipantsMCP(t *testing.T) {
 		want string
 	}{
 		{map[string]any{"contact-ids": []any{}}, "Error: tool 'enroll-sequence-participants' failed: Provide a non-empty sequence-id and 1–100 unique, non-empty contact-ids."},
-		{map[string]any{"environment-name": " ", "contact-ids": []any{}}, "Error: tool 'enroll-sequence-participants' failed: environment-name is required."},
 		{map[string]any{"sequence-id": "nope"}, "invalid-parameter-type: argument 'sequence-id' for MCP tool 'enroll-sequence-participants' must be an object."},
 		{map[string]any{"contact-ids": "x"}, "invalid-parameter-type: argument 'contact-ids' for MCP tool 'enroll-sequence-participants' must be an array."},
 		{map[string]any{"contact-ids": []any{"x"}}, "invalid-parameter-type: argument 'contact-ids' for MCP tool 'enroll-sequence-participants' contains a value that does not match"},

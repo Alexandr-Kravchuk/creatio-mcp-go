@@ -36,8 +36,19 @@ func userTasksServer(t *testing.T, packages string, listUserTasks string) *httpt
 	}))
 }
 
+// userTasksBundledVersion is the CrtProcessBuilder clio 8.1.0.142 carries.
+const userTasksBundledVersion = "1.6.6.104"
+
+// userTasksBundle points the convergence check at a clio archive carrying CrtProcessBuilder 1.6.6.104, so a
+// test does not depend on the clio installed on the machine.
+func userTasksBundle(t *testing.T) {
+	t.Helper()
+	processWriteArchive(t, map[string]string{"descriptor.json": `{"Descriptor":{"PackageVersion":"` + userTasksBundledVersion + `"}}`})
+}
+
 func TestListUserTasksListsPaletteAfterPackageGate(t *testing.T) {
-	server := userTasksServer(t, `{"success":true,"rows":[{"Name":"CrtBase"},{"Name":"crtprocessbuilder"}]}`,
+	userTasksBundle(t)
+	server := userTasksServer(t, `{"success":true,"rows":[{"Name":"CrtBase","Version":"8.1.0"},{"Name":"crtprocessbuilder","Version":"1.6.6.104"}]}`,
 		`{"ListUserTasksResult":{"success":true,"userTasks":[{"name":"ReadDataUserTask","uid":"u-1"},{"name":"ApprovalUserTask","uid":"u-2"}]}}`)
 	defer server.Close()
 	result := newFormsTestClient(t, server.URL).ListUserTasks(context.Background(), "dev")
@@ -54,8 +65,25 @@ func TestListUserTasksListsPaletteAfterPackageGate(t *testing.T) {
 	}
 }
 
+// A call without an environment name (the CREATIO_* target, which clio does not have) quotes the target's URL
+// instead of an empty name.
+func TestListUserTasksQuotesTheTargetURLWithoutAnEnvironmentName(t *testing.T) {
+	userTasksBundle(t)
+	server := userTasksServer(t, `{"success":true,"rows":[{"Name":"CrtProcessBuilder","Version":"1.6.6.104"}]}`,
+		`{"ListUserTasksResult":{"success":true,"userTasks":[]}}`)
+	defer server.Close()
+	for _, name := range []string{"", "  "} {
+		result := newFormsTestClient(t, server.URL).ListUserTasks(context.Background(), name)
+		if result.ExitCode != 0 || len(result.Messages) != 2 ||
+			result.Messages[0] != (LogMessage{"Info", "Reading user task catalog from '" + server.URL + "'..."}) {
+			t.Fatalf("name %q: result = %#v", name, result)
+		}
+	}
+}
+
 func TestListUserTasksRefusesWithoutProcessBuilder(t *testing.T) {
-	server := userTasksServer(t, `{"success":true,"rows":[{"Name":"CrtBase"}]}`, `{}`)
+	userTasksBundle(t)
+	server := userTasksServer(t, `{"success":true,"rows":[{"Name":"CrtBase","Version":"8.1.0"}]}`, `{}`)
 	defer server.Close()
 	result := newFormsTestClient(t, server.URL).ListUserTasks(context.Background(), "dev")
 	if result.ExitCode != 1 || len(result.Messages) != 1 || result.Messages[0].MessageType != "Error" || result.Messages[0].Value != processBuilderMissingMessage {
@@ -63,8 +91,36 @@ func TestListUserTasksRefusesWithoutProcessBuilder(t *testing.T) {
 	}
 }
 
+// clio's convergence rule (BundledPackageConvergence): an environment whose CrtProcessBuilder is older than the
+// one the installed clio carries is refused before ProcessDesignService is called, naming both versions.
+func TestListUserTasksRefusesAProcessBuilderOlderThanTheBundledOne(t *testing.T) {
+	userTasksBundle(t)
+	server := userTasksServer(t, `{"success":true,"rows":[{"Name":"CrtBase","Version":"8.1.0"},{"Name":"CrtProcessBuilder","Version":"1.6.6.103"}]}`, `{}`)
+	defer server.Close()
+	result := newFormsTestClient(t, server.URL).ListUserTasks(context.Background(), "dev")
+	want := "This clio carries CrtProcessBuilder 1.6.6.104, but the target environment has 1.6.6.103. " +
+		"Update the package in the target environment and retry.\n" + processWriteInstallHint
+	if result.ExitCode != 1 || len(result.Messages) != 1 || result.Messages[0] != (LogMessage{"Error", want}) {
+		t.Fatalf("result = %#v", result)
+	}
+}
+
+// Without a readable clio archive there is nothing to converge to, so an older package is let through, as clio
+// does when its own archive cannot be read.
+func TestListUserTasksLetsAnOlderProcessBuilderThroughWithoutABundledArchive(t *testing.T) {
+	processWriteNoArchive(t)
+	server := userTasksServer(t, `{"success":true,"rows":[{"Name":"CrtProcessBuilder","Version":"1.6.6.103"}]}`,
+		`{"ListUserTasksResult":{"success":true,"userTasks":[]}}`)
+	defer server.Close()
+	result := newFormsTestClient(t, server.URL).ListUserTasks(context.Background(), "dev")
+	if result.ExitCode != 0 || len(result.Messages) != 2 || result.Messages[1] != (LogMessage{"Info", "Total user tasks: 0"}) {
+		t.Fatalf("result = %#v", result)
+	}
+}
+
 func TestListUserTasksReportsServiceFailure(t *testing.T) {
-	server := userTasksServer(t, `{"success":true,"rows":[{"Name":"CrtProcessBuilder"}]}`,
+	userTasksBundle(t)
+	server := userTasksServer(t, `{"success":true,"rows":[{"Name":"CrtProcessBuilder","Version":"1.6.6.104"}]}`,
 		`{"ListUserTasksResult":{"success":false,"errorMessage":"Palette unavailable"}}`)
 	defer server.Close()
 	result := newFormsTestClient(t, server.URL).ListUserTasks(context.Background(), "dev")

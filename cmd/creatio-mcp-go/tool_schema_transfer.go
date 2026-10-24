@@ -33,7 +33,11 @@ func init() {
 			if failure != nil {
 				return resolverFailureEnvelope(failure), nil
 			}
-			if requirement := client.SchemaTransferRequirement(ctx); requirement != "" {
+			requirement, err := client.SchemaTransferRequirement(ctx)
+			if err != nil {
+				return structuredToolResult(creatio.NewCommandResult(-1, "Error", creatio.CommandExceptionText(err))), nil
+			}
+			if requirement != "" {
 				return structuredToolResult(creatio.CommandFailure(requirement)), nil
 			}
 			input := creatio.SchemaTransferRequest{SchemaName: values["schema-name"], PackageName: values["package-name"], ManagerName: values["manager-name"], Destination: values["destination"], Path: values["path"], DryRun: dry, AllowNewLayer: layer}

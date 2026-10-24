@@ -1,0 +1,1036 @@
+[
+ {
+  "tool": "list-apps",
+  "args": {},
+  "clio-run": false,
+  "go-wrapped": false
+ },
+ {
+  "tool": "list-packages",
+  "args": {},
+  "clio-run": false,
+  "go-wrapped": false
+ },
+ {
+  "tool": "list-app-sections",
+  "args": {
+   "application-code": "CrtCustomer360App"
+  },
+  "clio-run": false,
+  "go-wrapped": false
+ },
+ {
+  "tool": "list-pages",
+  "args": {
+   "search-pattern": "Contact",
+   "limit": 20
+  },
+  "clio-run": false,
+  "go-wrapped": false
+ },
+ {
+  "tool": "get-entity-schema-properties",
+  "args": {
+   "schema-name": "Contact"
+  },
+  "clio-run": false,
+  "go-wrapped": false
+ },
+ {
+  "tool": "get-sql-schema",
+  "args": {
+   "schema-name": "BorderRadiusFeatureMSSql"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "list-package-files",
+  "args": {
+   "package-name": "cliogate"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "get-package-file",
+  "args": {
+   "package-name": "cliogate",
+   "file-path": "cs/CreatioApiGateway.cs"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "execute-esq",
+  "args": {
+   "query": {
+    "rootSchemaName": "Contact",
+    "operationType": 0,
+    "rowCount": 5,
+    "columns": {
+     "items": {
+      "Name": {
+       "expression": {
+        "expressionType": 0,
+        "columnPath": "Name"
+       }
+      }
+     }
+    }
+   }
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "list-themes",
+  "args": {
+   "environmentName": "zz-no-such-environment"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "get-app-info",
+  "args": {
+   "code": "CrtCustomer360App"
+  },
+  "clio-run": false,
+  "go-wrapped": false
+ },
+ {
+  "tool": "find-app",
+  "args": {
+   "search-pattern": "customer"
+  },
+  "clio-run": false,
+  "go-wrapped": false
+ },
+ {
+  "tool": "find-entity-schema",
+  "args": {
+   "schema-name": "Contact"
+  },
+  "clio-run": false,
+  "go-wrapped": false
+ },
+ {
+  "tool": "get-entity-schema-column-properties",
+  "args": {
+   "schema-name": "Contact",
+   "column-name": "Owner"
+  },
+  "clio-run": false,
+  "go-wrapped": false
+ },
+ {
+  "tool": "get-sys-setting",
+  "args": {
+   "code": "SchemaNamePrefix"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "list-sys-settings",
+  "args": {},
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "get-user-culture",
+  "args": {},
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "describe-environment",
+  "args": {},
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "get-schema-name-prefix",
+  "args": {},
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "get-target-package",
+  "args": {},
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "list-entity-client-schemas",
+  "args": {
+   "entity-name": "Contact"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "get-page",
+  "args": {
+   "schema-name": "Contacts_FormPage"
+  },
+  "clio-run": false,
+  "go-wrapped": false
+ },
+ {
+  "tool": "read-entity-business-rules",
+  "args": {
+   "package-name": "CrtCustomer360App",
+   "entity-schema-name": "AccountAddress"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "read-page-business-rules",
+  "args": {
+   "package-name": "CrtCustomer360App",
+   "page-schema-name": "Accounts_FormPage"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "get-record-rights",
+  "args": {
+   "entity": "Contact",
+   "record-id": "6ae2bd8b-dc6a-46b0-b478-47e95d994cc0"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "get-process-signature",
+  "args": {
+   "process-name": "SearchingContact"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "list-printables",
+  "args": {},
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "list-user-tasks",
+  "args": {},
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "list-page-templates",
+  "args": {},
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "compile-status",
+  "args": {},
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "restart-status",
+  "args": {
+   "ignored": 1
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "last-compilation-log",
+  "args": {},
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "resolve-oauth-system-user",
+  "args": {},
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "verify-oauth-app",
+  "args": {},
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "get-fsm-mode",
+  "args": {},
+  "clio-run": true,
+  "go-wrapped": false,
+  "env-key": "environmentName"
+ },
+ {
+  "tool": "dataforge-status",
+  "args": {},
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "dataforge-find-tables",
+  "args": {
+   "query": "contact"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "dataforge-find-lookups",
+  "args": {
+   "query": "Mr",
+   "schema-name": "ContactSalutationType",
+   "limit": 3
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "dataforge-get-relations",
+  "args": {
+   "source-table": "Contact",
+   "target-table": "Account"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "dataforge-get-table-columns",
+  "args": {
+   "table-name": "Contact"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "dataforge-context",
+  "args": {
+   "candidate-terms": [
+    "contact",
+    "account"
+   ],
+   "lookup-hints": [
+    "Mr"
+   ],
+   "relation-pairs": [
+    {
+     "source-table": "Contact",
+     "target-table": "Account"
+    },
+    {
+     "source-table": "Lead",
+     "target-table": "Account"
+    }
+   ]
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "get-schema",
+  "args": {
+   "schema-name": "ContactConsts"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "get-client-unit-schema",
+  "args": {
+   "schema-name": "ContactSectionV2"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "get-page-hierarchy",
+  "args": {
+   "schema-name": "Contacts_FormPage"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "validate-page",
+  "args": {
+   "body": "define(\"UsrParity_FormPage\", /**SCHEMA_DEPS*/[]/**SCHEMA_DEPS*/, function/**SCHEMA_ARGS*/()/**SCHEMA_ARGS*/ {\n\treturn {\n\t\tviewConfigDiff: /**SCHEMA_VIEW_CONFIG_DIFF*/[{\"operation\": \"remove\", \"name\": \"X\"},]/**SCHEMA_VIEW_CONFIG_DIFF*/,\n\t\tviewModelConfigDiff: /**SCHEMA_VIEW_MODEL_CONFIG_DIFF*/[]/**SCHEMA_VIEW_MODEL_CONFIG_DIFF*/,\n\t\tmodelConfigDiff: /**SCHEMA_MODEL_CONFIG_DIFF*/[]/**SCHEMA_MODEL_CONFIG_DIFF*/,\n\t\thandlers: /**SCHEMA_HANDLERS*/[]/**SCHEMA_HANDLERS*/,\n\t\tconverters: /**SCHEMA_CONVERTERS*/{}/**SCHEMA_CONVERTERS*/,\n\t\tvalidators: /**SCHEMA_VALIDATORS*/{}/**SCHEMA_VALIDATORS*/\n\t};\n});"
+  },
+  "clio-run": false,
+  "go-wrapped": false
+ },
+ {
+  "tool": "get-classic-list-columns",
+  "args": {
+   "schema-name": "ContactSectionV2"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "get-classic-page-sources",
+  "args": {
+   "schema-name": "ZzNoSuchSchema",
+   "output-file": "/etc/creatio-mcp-parity.json"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "describe-business-process",
+  "args": {
+   "process-name": "SearchingContact"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "get-process-page-facts",
+  "args": {
+   "schema-name": "Accounts_FormPage"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "get-sequence-context",
+  "args": {},
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "read-data-binding-db",
+  "args": {
+   "package-name": "CrtBase",
+   "binding-name": "SysModuleFolderMode"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "get-email-template",
+  "args": {
+   "email-id": "bfd68356-c72b-4c33-b29f-067eb77cb474"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "get-related-page-addon",
+  "args": {
+   "entity-schema-name": "Account",
+   "package-name": "CrtCustomer360App"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "inspect-user",
+  "args": {
+   "action": "list",
+   "user-login": "Supervisor"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "inspect-role",
+  "args": {
+   "action": "list",
+   "name": "All employees"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "inspect-license",
+  "args": {
+   "action": "user-list",
+   "user-id": "7f3b869f-34f3-4f20-ab4d-7480a5fdf647"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "inspect-access",
+  "args": {
+   "action": "ip-list",
+   "unit-id": "a29a3ba5-4b0d-de11-9a51-005056c00008"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "check-theming-access",
+  "args": {},
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "get-theme",
+  "args": {
+   "id": "00000000-0000-0000-0000-000000000001"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "create-entity-business-rules",
+  "args": {
+   "package-name": "NoSuchPkgParityX",
+   "entity-schema-name": "Contact",
+   "rules": [
+    {
+     "caption": "x",
+     "condition": {
+      "logicalOperation": "AND",
+      "conditions": []
+     },
+     "actions": [
+      {
+       "type": "bogus",
+       "items": [
+        "A"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "update-page-business-rules",
+  "args": {
+   "package-name": "NoSuchPkgParityX",
+   "schema-name": "X",
+   "rules": [
+    {
+     "caption": "x",
+     "condition": {
+      "logicalOperation": "AND",
+      "conditions": []
+     },
+     "actions": [
+      {
+       "type": "apply-filter"
+      }
+     ]
+    }
+   ]
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "create-page-business-rules",
+  "args": {
+   "package-name": "NoSuchPkgParityX",
+   "page-schema-name": "X",
+   "rules": [
+    {
+     "caption": "x",
+     "condition": {
+      "logicalOperation": "AND",
+      "conditions": []
+     },
+     "actions": [
+      {
+       "type": "set-values",
+       "items": []
+      }
+     ]
+    }
+   ]
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "update-entity-business-rules",
+  "args": {
+   "package-name": "NoSuchPkgParityX",
+   "entity-schema-name": "Contact",
+   "rules": [
+    null
+   ]
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "delete-entity-business-rules",
+  "args": {
+   "package-name": "NoSuchPkgParityX",
+   "entity-schema-name": "Contact",
+   "rule-names": [
+    "a"
+   ],
+   "zz": 1
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "get-request-info",
+  "args": {},
+  "clio-run": false,
+  "go-wrapped": false
+ },
+ {
+  "tool": "run-process",
+  "args": {
+   "process-name": "UsrParityNeverLaunch",
+   "processName": "typo"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "odata-update",
+  "args": {
+   "entity": "UsrParityNonexistent",
+   "id": "00000000-0000-0000-0000-000000000001"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "odata-delete",
+  "args": {
+   "entity": "UsrParityNonexistent",
+   "id": "00000000-0000-0000-0000-000000000001"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "create-data-binding-db",
+  "args": {
+   "package-name": "UsrParityNoSuchPkg",
+   "schema-name": "Contact"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "upsert-data-binding-row-db",
+  "args": {
+   "package-name": "Custom",
+   "binding-name": "UsrParityNoSuchBinding",
+   "values": "{}"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "remove-data-binding-row-db",
+  "args": {
+   "package-name": "Custom",
+   "binding-name": "UsrParityNoSuchBinding",
+   "key-value": "00000000-0000-0000-0000-000000000001"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "execute-dataservice-batch",
+  "args": {
+   "operations": "x"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "execute-sql-script",
+  "args": {
+   "script": "SELECT 1 AS A"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "create-sys-setting",
+  "args": {
+   "code": "UsrParityNotCreated",
+   "name": "Example",
+   "value-type-name": "Unknown"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "update-sys-setting",
+  "args": {
+   "code": "UsrParityNotCreated",
+   "value": "x",
+   "value-file-path": "/tmp/x"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "download-sys-setting-file",
+  "args": {
+   "code": "SchemaNamePrefix",
+   "file-name": "/private/tmp/UsrParityNoSuchFile-x.bin"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "manage-user",
+  "args": {
+   "action": "bogus"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "manage-role",
+  "args": {
+   "action": "bogus"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "manage-license",
+  "args": {
+   "action": "bogus"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "manage-access",
+  "args": {
+   "action": "bogus"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "create-server-to-server-oauth-app",
+  "args": {
+   "system-user": "UsrParityNoSuchUser",
+   "client-name": "UsrParityNotCreated"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "set-fsm-mode",
+  "args": {
+   "mode": true
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "create-business-process",
+  "args": {
+   "descriptor": "{\"name\":\"UsrParityT13\"}"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "modify-business-process",
+  "args": {
+   "operations": "[]"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "modify-business-process-as-new-version",
+  "args": {
+   "process-name": "UsrParityT13NoProcess"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "set-active-business-process-version",
+  "args": {
+   "version-name": "UsrParityT13NoProcess"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "validate-process-graph",
+  "args": {},
+  "clio-run": false,
+  "go-wrapped": false
+ },
+ {
+  "tool": "enroll-sequence-participants",
+  "args": {
+   "sequence-id": "5b1f0c2e-1111-4b6a-9c1e-000000000001",
+   "contact-ids": [
+    "5b1f0c2e-2222-4b6a-9c1e-000000000002"
+   ]
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "set-logo",
+  "args": {},
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "set-background-image",
+  "args": {},
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "advise-theme-palette",
+  "args": {
+   "operation": "triage",
+   "colors": [
+    "#E91E63",
+    "#CDDC39",
+    "#123456"
+   ]
+  },
+  "clio-run": false,
+  "go-wrapped": false
+ },
+ {
+  "tool": "update-email-template",
+  "args": {
+   "email-id": "5a2f3c7e-0c1d-4e8b-9f61-7d3b2a1c0e94",
+   "format": "legacy",
+   "expected-checksum": "abc",
+   "confirm": false
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "restart-by-environment-name",
+  "args": {
+   "waitReady": false
+  },
+  "clio-run": true,
+  "go-wrapped": false,
+  "env-key": "environmentName",
+  "fresh-only": true
+ },
+ {
+  "tool": "compile-creatio",
+  "args": {
+   "package-name": "UsrParityA,UsrParityB"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "add-custom-logging",
+  "args": {
+   "min-level": "Loud"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "create-app",
+  "args": {
+   "name": "Parity",
+   "code": ""
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "create-app-section",
+  "args": {
+   "application-code": "UsrParityNoApp",
+   "caption": "Orders",
+   "icon-background": "purple-ish"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "update-app-section",
+  "args": {
+   "application-code": "UsrParityNoApp",
+   "section-code": "UsrOrders"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "delete-app-section",
+  "args": {
+   "application-code": "UsrParityNoApp",
+   "section-code": "UsrOrders",
+   "delete-entity-schema": "yes"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "create-entity-schema",
+  "args": {
+   "package-name": "UsrParityNoSuchPkg",
+   "schema-name": "UsrParityNoSuchEntity"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "create-lookup",
+  "args": {
+   "package-name": "UsrParityNoSuchPkg",
+   "schema-name": "UsrParityNoSuchEntity",
+   "title-localizations": {
+    "en-US": "Parity"
+   },
+   "columns": [
+    {
+     "column-name": "Name",
+     "type": "Text"
+    }
+   ]
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "update-entity-schema",
+  "args": {
+   "package-name": "UsrParityNoSuchPkg",
+   "schema-name": "UsrParityNoSuchEntity",
+   "operations": []
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "modify-entity-schema-column",
+  "args": {
+   "package-name": "UsrParityNoSuchPkg",
+   "schema-name": "UsrParityNoSuchEntity",
+   "action": "remove",
+   "column-name": "UsrA",
+   "title-localizations": {
+    "en-US": "A"
+   }
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "set-entity-schema-properties",
+  "args": {
+   "package-name": "UsrParityNoSuchPkg",
+   "schema-name": "UsrParityNoSuchEntity"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "sync-schemas",
+  "args": {
+   "package-name": "UsrParityNoSuchPkg"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "get-component-info",
+  "args": {},
+  "clio-run": false,
+  "go-wrapped": false
+ },
+ {
+  "tool": "create-page",
+  "args": {
+   "schema-name": "UsrParityMissingPage",
+   "template": "UsrParityNoSuchTemplate",
+   "package-name": "UsrParityMissing"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "update-page",
+  "args": {
+   "schema-name": "UsrParityMissingPage",
+   "mode": "append",
+   "body": "/**SCHEMA_VIEW_MODEL_CONFIG*/{}/**SCHEMA_VIEW_MODEL_CONFIG*/"
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "sync-pages",
+  "args": {
+   "validate": false,
+   "pages": [
+    {
+     "schema-name": "UsrParityBadPage",
+     "body": "define("
+    },
+    {
+     "schema-name": "UsrParityMissingPage",
+     "body": "define(\"UsrParityMissingPage\", /**SCHEMA_DEPS*/[]/**SCHEMA_DEPS*/, function/**SCHEMA_ARGS*/()/**SCHEMA_ARGS*/ {\n\treturn {\n\t\tviewConfigDiff: /**SCHEMA_VIEW_CONFIG_DIFF*/[]/**SCHEMA_VIEW_CONFIG_DIFF*/,\n\t\tviewModelConfigDiff: /**SCHEMA_VIEW_MODEL_CONFIG_DIFF*/[]/**SCHEMA_VIEW_MODEL_CONFIG_DIFF*/,\n\t\tmodelConfigDiff: /**SCHEMA_MODEL_CONFIG_DIFF*/[]/**SCHEMA_MODEL_CONFIG_DIFF*/,\n\t\thandlers: /**SCHEMA_HANDLERS*/[]/**SCHEMA_HANDLERS*/,\n\t\tconverters: /**SCHEMA_CONVERTERS*/{}/**SCHEMA_CONVERTERS*/,\n\t\tvalidators: /**SCHEMA_VALIDATORS*/{}/**SCHEMA_VALIDATORS*/\n\t};\n});"
+    }
+   ]
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "create-related-page-addon",
+  "args": {
+   "entity-schema-name": "UsrParityMissing",
+   "package-name": "UsrParityMissingPkg",
+   "pages": [
+    null
+   ]
+  },
+  "clio-run": true,
+  "go-wrapped": false
+ },
+ {
+  "tool": "export-schema",
+  "args": {},
+  "clio-run": true
+ },
+ {
+  "tool": "import-schema",
+  "args": {},
+  "clio-run": true
+ },
+ {
+  "tool": "unlock-for-hotfix",
+  "args": {
+   "package-name": "UsrParityPkg"
+  },
+  "clio-run": true
+ },
+ {
+  "tool": "finish-hotfix",
+  "args": {
+   "package-name": "UsrParityPkg"
+  },
+  "clio-run": true
+ }
+]

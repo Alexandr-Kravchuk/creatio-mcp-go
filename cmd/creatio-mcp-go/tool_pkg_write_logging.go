@@ -35,6 +35,16 @@ func init() {
 			minLevel = values["min-level"]
 		}
 
+		// clio resolves the environment (InternalExecute) before the command validates its options, so an absent,
+		// blank or unknown name is the resolver's refusal, whatever else the call lacks.
+		client, refusal, err := pkgWriteNamedEnvironment(envs, tool, name)
+		if err != nil {
+			return nil, err
+		}
+		if refusal != nil {
+			return resolverFailureEnvelope(refusal), nil
+		}
+
 		// AddCustomLoggingOptionsValidator: every rule, in order.
 		var failures []string
 		failure := func(validator, message string) {
@@ -63,13 +73,6 @@ func init() {
 			return structuredToolResult(creatio.CommandResult{ExitCode: 1, Messages: messages}), nil
 		}
 
-		client, refusal, err := pkgWriteNamedEnvironment(envs, tool, name)
-		if err != nil {
-			return nil, err
-		}
-		if refusal != nil {
-			return resolverFailureEnvelope(refusal), nil
-		}
 		settings, _ := envs.snapshot()
 		environment, ok := settings.Find(name)
 		if !ok {

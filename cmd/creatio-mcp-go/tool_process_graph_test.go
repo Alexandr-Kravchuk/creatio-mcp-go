@@ -64,7 +64,6 @@ func TestValidateProcessGraphMCP(t *testing.T) {
 		{map[string]any{"nodes": []any{map[string]any{"name": "s"}}, "edges": []any{nil}}, `edges[0] is null. Every entry must be an object, e.g. {"source":"s","target":"e"}.`},
 		{map[string]any{"nodes": []any{map[string]any{"name": "s"}}, "edges": []any{map[string]any{"from": "s", "to": "e", "bad": 1}}}, "edges[0]: Rename: 'from' -> 'source', 'to' -> 'target'. Unknown args: 'bad'. Valid keys on an edge: source, target, flow-kind, condition, results."},
 		{map[string]any{"nodes": []any{map[string]any{"name": "s"}}, "edges": []any{map[string]any{"source": "s", "target": "e", "flow-kind": "maybe"}}}, "Unknown 'flow-kind' value 'maybe'. Use 'sequence' (or omit it), 'conditional' or 'default'. It is refused rather than treated as a plain flow, because the rules that care about the difference would then answer about a graph you did not describe."},
-		{map[string]any{"nodes": []any{map[string]any{"name": "s"}}, "environment-name": ""}, "environment-name is required and cannot be empty."},
 	}
 	for _, item := range refusals {
 		answer := processGraphCallAll(t, session, item.args)

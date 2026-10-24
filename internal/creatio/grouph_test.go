@@ -222,41 +222,53 @@ func TestValidatePageRunsMarkerAndSectionChecks(t *testing.T) {
 	body := func(diff, converters string) string {
 		return strings.Replace(strings.Replace(template, "%s", diff, 1), "%s", converters, 1)
 	}
-	if ok := ValidatePage(PageValidateRequest{Body: body(`[{"a": 1},]`, "{}")}); !ok.Valid || len(ok.Validation.Warnings) != 1 {
+	if ok := mustValidatePage(t, PageValidateRequest{Body: body(`[{"a": 1},]`, "{}")}); !ok.Valid || len(ok.Validation.Warnings) != 1 {
 		t.Fatalf("ok = %#v", ok)
 	}
 	// clio 8.1.0.142 parses JSON sections with JsonCommentHandling.Skip: comments are not errors.
 	for _, diff := range []string{`[/* c */{"operation": "remove", "name": "X"}]`, "[// line\n{\"a\": \"//not a comment\"}]"} {
-		if commented := ValidatePage(PageValidateRequest{Body: body(diff, "{}")}); !commented.Valid || !commented.Validation.ContentOK {
+		if commented := mustValidatePage(t, PageValidateRequest{Body: body(diff, "{}")}); !commented.Valid || !commented.Validation.ContentOK {
 			t.Fatalf("commented %q = %#v", diff, commented)
 		}
 	}
-	if unterminated := ValidatePage(PageValidateRequest{Body: body(`[/* open {"a": 1}]`, "{}")}); unterminated.Validation.ContentOK {
+	if unterminated := mustValidatePage(t, PageValidateRequest{Body: body(`[/* open {"a": 1}]`, "{}")}); unterminated.Validation.ContentOK {
 		t.Fatalf("an unterminated comment must fail: %#v", unterminated)
 	}
-	converters := ValidatePage(PageValidateRequest{Body: body("[]", "[]")})
+	converters := mustValidatePage(t, PageValidateRequest{Body: body("[]", "[]")})
 	if converters.Valid || converters.Validation.ContentOK ||
 		converters.Validation.Errors[0] != "Invalid JavaScript object section in SCHEMA_CONVERTERS: section must remain an object literal." {
 		t.Fatalf("converters = %#v", converters)
 	}
-	syntax := ValidatePage(PageValidateRequest{Body: "define(\"X\", [], function() { return { "})
+	syntax := mustValidatePage(t, PageValidateRequest{Body: "define(\"X\", [], function() { return { "})
 	if syntax.Validation.Errors[0] != "JavaScript syntax error at line 1, column 39: Unexpected end of input. The body was NOT sent to Creatio." {
 		t.Fatalf("syntax = %#v", syntax)
 	}
-	markers := ValidatePage(PageValidateRequest{Body: "define(\"X\", [], function() { return {}; });"})
+	markers := mustValidatePage(t, PageValidateRequest{Body: "define(\"X\", [], function() { return {}; });"})
 	if markers.Validation.MarkersOK || !markers.Validation.JSSyntaxOK || len(markers.Validation.Errors) != 8 {
 		t.Fatalf("markers = %#v", markers)
 	}
-	for request, want := range map[PageValidateRequest]string{
-		{}:                        "Either 'body' or 'body-file' must provide page body content.",
-		{BodyFile: "relative.js"}: "body-file must be an absolute local path.",
-		{BodyFile: filepath.Join(t.TempDir(), "missing", "body.js")}: "body-file was not found.",
-		{Body: `{"viewConfigDiff": []}`}:                             PageValidateMobileUnsupported,
+	for _, c := range []struct {
+		request PageValidateRequest
+		want    string
+	}{
+		{PageValidateRequest{}, "Either 'body' or 'body-file' must provide page body content."},
+		{PageValidateRequest{BodyFile: "relative.js"}, "body-file must be an absolute local path."},
+		{PageValidateRequest{BodyFile: filepath.Join(t.TempDir(), "missing", "body.js")}, "body-file was not found."},
+		{PageValidateRequest{Body: `{"viewConfigDiff": []}`}, PageValidateMobileUnsupported},
 	} {
-		if result := ValidatePage(request); result.Valid || result.Validation.Errors[0] != want {
-			t.Errorf("%#v = %#v", request, result)
+		if result := mustValidatePage(t, c.request); result.Valid || result.Validation.Errors[0] != c.want {
+			t.Errorf("%#v = %#v", c.request, result)
 		}
 	}
+}
+
+func mustValidatePage(t *testing.T, request PageValidateRequest) PageValidateResult {
+	t.Helper()
+	result, err := ValidatePage(request)
+	if err != nil {
+		t.Fatalf("%#v: %v", request, err)
+	}
+	return result
 }
 
 func TestClassicPageSourcesHelpersMatchClio(t *testing.T) {

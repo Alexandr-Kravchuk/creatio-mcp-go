@@ -57,7 +57,7 @@ func init() {
 			if err != nil {
 				return nil, err
 			}
-			if _, present := args["environment-name"]; present && strings.TrimSpace(environment) == "" {
+			if strings.TrimSpace(environment) == "" && !envs.hasDefaultTarget() {
 				return nil, errors.New("environment-name is required.")
 			}
 			client, err := envs.target(processSequenceTool, args, scopeName)

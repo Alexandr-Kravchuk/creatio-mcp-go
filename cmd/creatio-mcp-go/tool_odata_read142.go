@@ -14,8 +14,8 @@ import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// odataReadMembers is clio's ODataReadArgs. clio's record also requires environment-name; this server keeps
-// resolving a call without one to its default target, as for every other tool.
+// odataReadMembers is clio's ODataReadArgs. The record requires environment-name (environments.requireEnvironment):
+// a call without it fails the binding.
 var odataReadMembers = []clioMember{
 	{"entity", clioString, true}, {"select", clioAny, false}, {"expand", clioAny, false}, {"order-by", clioString, false},
 	{"top", clioInt, false}, {"skip", clioInt, false}, {"count", clioBool, false}, {"filters", clioAny, false},
@@ -24,12 +24,12 @@ var odataReadMembers = []clioMember{
 
 // bindODataRead binds the call as System.Text.Json binds ODataReadArgs / ODataReadToFileArgs, the nested
 // filters record included.
-func bindODataRead(tool string, args map[string]any, toFile bool) (creatio.ODataReadArgs, *string, error) {
+func bindODataRead(envs *environments, tool string, args map[string]any, toFile bool) (creatio.ODataReadArgs, *string, error) {
 	members := odataReadMembers
 	if toFile {
 		members = append(append([]clioMember(nil), odataReadMembers...), clioMember{"output-file", clioString, true})
 	}
-	bound, err := clioBind(tool, args, members)
+	bound, err := clioBind(tool, args, envs.requireEnvironment(members))
 	if err != nil {
 		return creatio.ODataReadArgs{}, nil, err
 	}
@@ -193,7 +193,7 @@ func odataReadResolve(envs *environments, tool string, environmentName *string, 
 // odataReadAnswer is ODataReadTool.Read for the inline tool.
 func odataReadAnswer(ctx context.Context, envs *environments, args map[string]any) (*mcp.CallToolResult, error) {
 	const tool = "odata-read"
-	read, environmentName, err := bindODataRead(tool, args, false)
+	read, environmentName, err := bindODataRead(envs, tool, args, false)
 	if err != nil {
 		return nil, err
 	}
@@ -214,7 +214,7 @@ func odataReadAnswer(ctx context.Context, envs *environments, args map[string]an
 func init() {
 	registerTool(map[string]any{"name": "odata-read-to-file"}, func(ctx context.Context, envs *environments, args map[string]any) (*mcp.CallToolResult, error) {
 		const tool = "odata-read-to-file"
-		read, environmentName, err := bindODataRead(tool, args, true)
+		read, environmentName, err := bindODataRead(envs, tool, args, true)
 		if err != nil {
 			return nil, err
 		}
