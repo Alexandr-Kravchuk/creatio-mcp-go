@@ -115,7 +115,6 @@ func TestSetActiveBusinessProcessVersionMCP(t *testing.T) {
 	}{
 		{map[string]any{}, -1, "one of version-name or version-uid is required."},
 		{map[string]any{"version-name": "a", "version-uid": "b"}, -1, "Provide only one of version-name or version-uid, not both."},
-		{map[string]any{"version-name": "a", "environment-name": " "}, -1, "environment-name is required and cannot be empty."},
 		{map[string]any{"version-name": "a", "process-name": "b", "environmentName": "c"}, 1, "Rename: 'environmentName' -> 'environment-name'. Unknown args: 'process-name'. Valid: environment-name, version-name, version-uid."},
 	}
 	for _, item := range refusals {
@@ -175,15 +174,16 @@ func TestProcessDesignWritesMCP(t *testing.T) {
 		code int
 		want string
 	}{
-		{"create-business-process", map[string]any{}, 1, "descriptor is required and cannot be empty."},
-		{"create-business-process", map[string]any{"descriptor": "  "}, 1, "descriptor is required and cannot be empty."},
-		{"create-business-process", map[string]any{"descriptor": []any{}}, 1, "descriptor must be a JSON object, or a string holding one. Received a JSON array."},
+		// ENG-103025: a refusal of a call that lacks a required argument gains the mini-contract; these calls
+		// name no environment, so it is listed as missing too.
+		{"create-business-process", map[string]any{}, 1, "descriptor is required and cannot be empty. " + creatio.MiniContractCreateBusinessProcess([]string{"environment-name", "descriptor"})},
+		{"create-business-process", map[string]any{"descriptor": "  "}, 1, "descriptor is required and cannot be empty. " + creatio.MiniContractCreateBusinessProcess([]string{"environment-name", "descriptor"})},
+		{"create-business-process", map[string]any{"descriptor": []any{}}, 1, "descriptor must be a JSON object, or a string holding one. Received a JSON array. " + creatio.MiniContractCreateBusinessProcess([]string{"environment-name"})},
 		{"create-business-process", map[string]any{"descriptor": true, "x": 1}, 1, "Unknown args: 'x'. Valid: environment-name, package-name, descriptor."},
-		{"create-business-process", map[string]any{"descriptor": "{}", "environment-name": ""}, -1, "environment-name is required and cannot be empty."},
-		{"modify-business-process", map[string]any{"operations": "[]"}, -1, "one of process-name or process-uid is required."},
-		{"modify-business-process", map[string]any{"process-name": "a"}, 1, "operations is required and cannot be empty."},
-		{"modify-business-process", map[string]any{"process-name": "a", "operations": 3}, 1, "operations must be a JSON array, or a string holding one. Received a JSON number."},
-		{"modify-business-process", map[string]any{"process-name": "a", "process-uid": "b", "operations": "[]"}, -1, "Provide only one of process-name or process-uid, not both."},
+		{"modify-business-process", map[string]any{"operations": "[]"}, -1, "one of process-name or process-uid is required. " + creatio.MiniContractModifyBusinessProcess([]string{"environment-name", "process-name or process-uid"})},
+		{"modify-business-process", map[string]any{"process-name": "a"}, 1, "operations is required and cannot be empty. " + creatio.MiniContractModifyBusinessProcess([]string{"environment-name", "operations"})},
+		{"modify-business-process", map[string]any{"process-name": "a", "operations": 3}, 1, "operations must be a JSON array, or a string holding one. Received a JSON number. " + creatio.MiniContractModifyBusinessProcess([]string{"environment-name"})},
+		{"modify-business-process", map[string]any{"process-name": "a", "process-uid": "b", "operations": "[]"}, -1, "Provide only one of process-name or process-uid, not both. " + creatio.MiniContractModifyBusinessProcess([]string{"environment-name"})},
 		{"modify-business-process-as-new-version", map[string]any{"process-name": "a", "operations": false}, 1, "operations must be a JSON array, or a string holding one. Received a JSON boolean."},
 		{"modify-business-process-as-new-version", map[string]any{"process-name": "a", "confirm-layout-change": true}, 1, "Unknown args: 'confirm-layout-change'. Valid: environment-name, process-name, process-uid, package-name, operations."},
 	}

@@ -59,7 +59,9 @@ func updatePage(ctx context.Context, client *creatio.Client, failure error, requ
 	preflight := creatio.PageUpdateCheck(request)
 	if preflight.Failure != nil {
 		response := *preflight.Failure
-		if preflight.SyntaxOnly && failure != nil {
+		// clio probes the environment only when the call names one (an environment-name or a uri).
+		named := strings.TrimSpace(request.EnvironmentName) != "" || strings.TrimSpace(request.EnvironmentURI) != ""
+		if preflight.SyntaxOnly && failure != nil && named {
 			response = creatio.PageUpdateResponse{Error: failure.Error()}
 		}
 		response.MarkDryRunFailure(request.DryRun, request.SchemaName)

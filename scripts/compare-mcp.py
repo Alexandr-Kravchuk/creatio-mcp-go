@@ -4,7 +4,9 @@
 Both servers run over stdio and read the same clio appsettings.json. By default (--go-env-mode=name)
 the Go server starts with no CREATIO_* variables and receives `environment-name` per call exactly as clio
 does. --go-env-mode=variables keeps the older mode: the named environment is copied from clio's
-appsettings.json into CREATIO_* variables of the Go child process, and Go calls carry no environment-name.
+appsettings.json into CREATIO_* variables of the Go child process, Go calls carry no environment-name, and
+the Go child gets an empty CLIO_HOME (an unnamed call is served by CREATIO_* only when no clio settings file
+exists; next to one it is refused, as clio refuses it).
 
 --clio-env takes one name or several separated by commas. With several, every case runs once per name
 against the SAME two server processes, which checks that one Go process serves many environments.
@@ -12,7 +14,7 @@ against the SAME two server processes, which checks that one Go process serves m
 Printed and persisted: verdicts, timings, and the JSON paths that differ. Never values, URLs,
 environment names or credentials, so the evidence file is safe to share.
 """
-import argparse, json, os, pathlib, re, subprocess, sys, time
+import argparse, json, os, pathlib, re, subprocess, sys, tempfile, time
 
 REPO = pathlib.Path(__file__).resolve().parent.parent
 
@@ -118,6 +120,18 @@ def known_difference(path, known):
         if re.fullmatch(re.escape(pattern).replace(re.escape("[*]"), r"\[\d+\]"), path):
             return True
     return False
+
+
+def case_known_differences(case, go_env_mode):
+    """The difference paths a case accepts. In --go-env-mode=variables Go is given no environment name, so it
+    cannot echo one: $.environmentname (compile-status, get-fsm-mode, ...) and the paths the case lists under
+    known-differences-variables (list-user-tasks quotes the target URL where clio quotes the name) are known
+    there too. In name mode those paths must match."""
+    known = set(case.get("known-differences", []))
+    if go_env_mode == "variables":
+        known.add("$.environmentname")
+        known.update(case.get("known-differences-variables", []))
+    return known
 
 
 def normalize(value):
@@ -241,6 +255,8 @@ def go_environment(clio_env, settings_path, mode="variables"):
     for variable, key in (oauth if settings.get("ClientId") else forms).items():
         env[variable] = settings.get(key) or ""
     env["CREATIO_IS_NET_CORE"] = "true" if settings.get("IsNetCore") else "false"
+    # Without a settings file the CREATIO_* variables are the only target, so unnamed calls go there.
+    env["CLIO_HOME"] = tempfile.mkdtemp(prefix="creatio-mcp-go-no-clio-settings-")
     return env
 
 
@@ -317,10 +333,7 @@ def main():
             else:
                 name, clio_value, clio_seconds, go_value, go_seconds = call_tool(case, index)
             outcome, paths = verdict(normalize(clio_value), normalize(go_value))
-            known = set(case.get("known-differences", []))
-            if options.go_env_mode == "variables":
-                # Go is given no name in this mode, so it cannot echo one (compile-status, get-fsm-mode, ...).
-                known.add("$.environmentname")
+            known = case_known_differences(case, options.go_env_mode)
             if outcome == "mismatch" and paths and all(known_difference(path, known) for path in paths):
                 # Listed in the case file with the reason; reported, but not counted as a regression.
                 outcome = "known-diff"

@@ -1,11 +1,13 @@
 package main
 
 // The environment registry: every call names its target with environment-name, resolved against clio's
-// appsettings.json the way clio resolves it, with one authenticated client kept per target.
+// appsettings.json the way clio resolves it, with one authenticated client kept per target. A call that
+// names none is refused as clio refuses it, unless CREATIO_* variables give the only target there is.
 
 import (
 	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"sort"
 	"strings"
@@ -16,7 +18,7 @@ import (
 )
 
 // missingTargetMessage is clio's ToolCommandResolver text for a call that names neither an environment nor
-// a uri. Here it is reached only when no CREATIO_* default and no active clio environment exist either.
+// a uri. clio never falls back to its active environment there, and neither does this server.
 const missingTargetMessage = "Either a configured environment name or an explicit URI is required for MCP command execution. " +
 	"Prefer a registered environment name; use explicit URI credentials only as a bootstrap or emergency fallback."
 
@@ -68,8 +70,9 @@ type settingsStamp struct {
 // environments resolves a call's target to an authenticated client. It is safe for concurrent use.
 type environments struct {
 	path string
-	// fallback serves calls that name no environment when CREATIO_* variables are set; fallbackErr is the
-	// reason those variables could not be used.
+	// fallback serves calls that name no environment when CREATIO_* variables are set and no clio settings
+	// file exists, so the variables name the only target there is; fallbackErr is the reason those
+	// variables could not be used.
 	fallback    *creatio.Client
 	fallbackErr error
 
@@ -81,7 +84,8 @@ type environments struct {
 	clients  map[creatio.Config]*creatio.Client
 }
 
-// newEnvironments reads CREATIO_* as the unnamed default (when present) and clio's settings file at path.
+// newEnvironments reads CREATIO_* as the unnamed default (when present; used only while no settings file
+// exists at path) and clio's settings file at path.
 func newEnvironments(path string) *environments {
 	registry := &environments{path: path, clients: map[creatio.Config]*creatio.Client{}}
 	if creatio.EnvConfigPresent() {
@@ -157,20 +161,14 @@ func (e *environments) client(name string, overrides creatio.ConnectionOverrides
 		target = found.Fill(overrides)
 	case overrides.URI != "":
 		target = creatio.ClioEnvironment{}.Fill(overrides)
-	case e.fallback != nil:
+	case e.fallback != nil && !e.settingsFileExists():
 		return e.fallback, nil
-	case e.fallbackErr != nil:
+	case e.fallbackErr != nil && !e.settingsFileExists():
 		return nil, &environmentError{message: e.fallbackErr.Error()}
 	default:
-		settings, _ := e.snapshotLocked()
-		active, ok := settings.Active()
-		if !ok {
-			return nil, &environmentError{message: missingTargetMessage}
-		}
-		if active.Safe != nil && *active.Safe {
-			return nil, safeEnvironmentError(active.URI)
-		}
-		target = active.Fill(overrides)
+		// clio's ToolCommandResolver refuses a call without a name or uri; its active environment is
+		// never used. CREATIO_* next to a settings file are refused too: either could be meant.
+		return nil, &environmentError{message: missingTargetMessage}
 	}
 	config, err := target.Config()
 	if err != nil {
@@ -188,6 +186,16 @@ func (e *environments) client(name string, overrides creatio.ConnectionOverrides
 	}
 	e.clients[config] = client
 	return client, nil
+}
+
+// settingsFileExists says whether clio's settings file is there now: CREATIO_* serve unnamed calls only
+// while it is not. staticEnvironments has no file.
+func (e *environments) settingsFileExists() bool {
+	if e.path == "" {
+		return false
+	}
+	_, err := os.Stat(e.path)
+	return !errors.Is(err, fs.ErrNotExist)
 }
 
 // environmentNotFoundMessage is clio's EnvironmentNotFoundError.Build text for an MCP session, left

@@ -88,6 +88,16 @@ type inspectFilter struct {
 	value  any // inspectGUID, string, int or []int
 }
 
+// InspectActionRefusal is clio's tool-method refusal of an action the inspection tool does not accept. It
+// is raised before the environment is resolved, so the caller asks for it first; nil means the action is fine.
+func InspectActionRefusal(tool InspectTool, request InspectRequest) *CommandResult {
+	if inspectAccepts(tool, request.Action) {
+		return nil
+	}
+	refusal := CommandFailure("This inspection tool accepts only: " + strings.Join(tool.actions, ", ") + ".")
+	return &refusal
+}
+
 // Inspect runs one inspection action. The action check comes first, as clio's tool method runs it before
 // the command; everything after it fails into the command's own messages.
 func (c *Client) Inspect(ctx context.Context, tool InspectTool, request InspectRequest) CommandResult {

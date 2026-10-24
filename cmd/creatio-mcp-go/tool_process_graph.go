@@ -186,7 +186,7 @@ func init() {
 			if refusal := processGraphEntryError(nodes, edges); refusal != "" {
 				return processGraphRefusal(refusal), nil
 			}
-			if _, present := args["environment-name"]; present && strings.TrimSpace(environment) == "" {
+			if strings.TrimSpace(environment) == "" && !envs.hasDefaultTarget() {
 				return processGraphRefusal(processWriteMissingEnvironment), nil
 			}
 			client, failure, err := envs.resolve(processGraphTool, args, scopeName)

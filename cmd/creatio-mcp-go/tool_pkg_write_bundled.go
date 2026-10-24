@@ -46,18 +46,18 @@ func pkgWriteBundledArchive(folder, file string) string {
 
 // pkgWriteEnvironmentArg reads install-*'s record argument environment-name; a blank one is refused (clio
 // would resolve the active environment).
-func pkgWriteEnvironmentArg(args map[string]any, tool string) (string, *mcp.CallToolResult, error) {
+func pkgWriteEnvironmentArg(envs *environments, args map[string]any, tool string) (string, *mcp.CallToolResult, error) {
 	name, err := optionalStringArg(args, tool, "environment-name")
 	if err != nil {
 		return "", nil, err
 	}
-	return name, pkgWriteBlankEnvironment("environment-name", name), nil
+	return name, pkgWriteBlankEnvironment(envs, name), nil
 }
 
 func init() {
 	registerTool(map[string]any{"name": "install-gate"}, func(ctx context.Context, envs *environments, args map[string]any) (*mcp.CallToolResult, error) {
 		const tool = "install-gate"
-		name, refusal, err := pkgWriteEnvironmentArg(args, tool)
+		name, refusal, err := pkgWriteEnvironmentArg(envs, args, tool)
 		if err != nil || refusal != nil {
 			return refusal, err
 		}
@@ -77,7 +77,7 @@ func init() {
 
 	registerTool(map[string]any{"name": "install-dashboards-migrator"}, func(ctx context.Context, envs *environments, args map[string]any) (*mcp.CallToolResult, error) {
 		const tool = "install-dashboards-migrator"
-		name, refusal, err := pkgWriteEnvironmentArg(args, tool)
+		name, refusal, err := pkgWriteEnvironmentArg(envs, args, tool)
 		if err != nil || refusal != nil {
 			return refusal, err
 		}

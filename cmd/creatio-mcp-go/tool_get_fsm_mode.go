@@ -23,28 +23,41 @@ func init() {
 }
 
 // fsmModeAnswer is clio's FsmModeStatusResult: the environment name exactly as the caller passed it, then
-// the mode. Without a name the call goes to the default target and no name is echoed.
+// the mode. A call without a name is served only by the CREATIO_* default (no clio settings file), and then
+// no name is echoed.
 type fsmModeAnswer struct {
 	EnvironmentName string `json:"environmentName,omitempty"`
 	creatio.FsmModeResult
 }
 
+// clio's texts for a missing or blank environmentName: its MCP binder's for a required parameter that is
+// absent or null, and FsmModeStatusService's ArgumentException for an empty one.
+const (
+	fsmModeMissingName = "The arguments dictionary is missing a value for the required parameter 'environmentName'. (Parameter 'arguments')"
+	fsmModeNullName    = "invalid-parameter-type: argument 'environmentName' for MCP tool 'get-fsm-mode' must be a string. " +
+		"Received a JSON null, and the argument is required."
+	fsmModeBlankName = "Environment name is required. (Parameter 'environmentName')"
+)
+
 // clio has no envelope for this tool: every failure is a tool error. clio binds one scalar parameter,
-// environmentName; environment-name is honoured too, so a caller using the common spelling is never served
-// by another environment. Other keys are ignored, as clio's method binder does.
+// environmentName, and ignores other keys (environment-name among them), as its method binder does.
 func invokeGetFsmMode(ctx context.Context, envs *environments, args map[string]any) (*mcp.CallToolResult, error) {
+	raw, present := args["environmentName"]
+	if present && raw == nil {
+		return nil, errors.New(fsmModeNullName)
+	}
 	name, err := optionalStringArg(args, "get-fsm-mode", "environmentName")
 	if err != nil {
 		return nil, err
 	}
-	if strings.TrimSpace(name) == "" {
-		if name, err = optionalStringArg(args, "get-fsm-mode", "environment-name"); err != nil {
-			return nil, err
-		}
-	}
 	client, err := envs.client(name, creatio.ConnectionOverrides{})
 	if err != nil {
-		if strings.HasPrefix(err.Error(), "Environment with key '") {
+		switch {
+		case strings.TrimSpace(name) == "" && err.Error() == missingTargetMessage && !present:
+			return nil, errors.New(fsmModeMissingName)
+		case strings.TrimSpace(name) == "" && err.Error() == missingTargetMessage:
+			return nil, errors.New(fsmModeBlankName)
+		case strings.HasPrefix(err.Error(), "Environment with key '"):
 			// get-fsm-mode looks the name up without clio's resolver, so its text is the older one.
 			return nil, fmt.Errorf("Environment with key '%s' not found. Check your clio configuration.", name)
 		}

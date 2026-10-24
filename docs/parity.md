@@ -19,10 +19,15 @@ Cases live in `scripts/mcp-parity-cases.json` and `scripts/parity-cases/*.json`;
 
 The Go server starts without `CREATIO_*` variables and gets `environment-name` on every call, as clio
 does (`--go-env-mode=name`, the default). `--go-env-mode=variables` keeps the older mode: the named
-environment is copied into `CREATIO_*` variables and the calls carry no name. `--clio-env a,b` runs every
+environment is copied into `CREATIO_*` variables, the calls carry no name, and the Go child gets an empty
+`CLIO_HOME`, because `CREATIO_*` serve an unnamed call only while no clio `appsettings.json` exists. `--clio-env a,b` runs every
 case once per name against the same two processes, so one Go process serves both environments in
 alternation; the evidence numbers the environments instead of naming them. The write script below takes
 the same `--go-env-mode` with the same default.
+
+In `--go-env-mode=variables` Go cannot echo a name it was not given, so `$.environmentname` is a known
+difference there, and so are the paths a case lists under `known-differences-variables` (list-user-tasks
+quotes the `CREATIO_URL` target where clio quotes the name). In name mode those paths are compared.
 
 A case with `"clio-run": true` reaches both servers through `clio-run`. Use it for a tool that is not
 read-only: called directly by raw name, both servers answer `confirmation-required` instead of running it
@@ -88,6 +93,15 @@ Measured on 2026-10-20 against clio 8.1.0.142: 875 `match`, 130 `known:not-porte
 
 A clio upgrade shows up here as `unexplained`: rerun `scripts/clio-inventory.py` against the new clio, then
 `go generate ./internal/cliocontract`, then `go test ./...`.
+
+`.github/workflows/clio-watch.yml` does that every Monday (and on demand) for the newest clio on NuGet
+(`scripts/clio-watch.sh`): when clio's tools, contracts, prompts or resources changed against
+`docs/clio-inventory.json` (`scripts/clio_watch_diff.py`, which ignores the date, the version string and the
+served marks), it pushes `clio-<version>-inventory` with the regenerated files and opens or updates a PR
+listing new and removed tools, changed input schemas and the `unexplained` rows of this script. The PR is
+never merged automatically. While the repository does not allow GitHub Actions to create pull requests,
+it opens an issue with the same text instead. `scripts/clio-watch.sh --dry-run [--clio-dll <clio.dll>]`
+prints locally what it would post and changes nothing.
 
 ## Write tools: `scripts/compare-mcp-writes.py`
 

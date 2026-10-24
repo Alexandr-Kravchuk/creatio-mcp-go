@@ -25,8 +25,8 @@ type odataArg struct {
 }
 
 // odataWriteArgs are clio 8.1.0.142's argument records of the three OData write tools. required are the
-// members clio's record declares `required`: a missing one fails the whole binding. clio's own records
-// also require environment-name; this server keeps resolving a call without one to its default target.
+// members clio's record declares `required`: a missing one fails the whole binding. The records also require
+// environment-name, which bindODataArgs demands unless a default target serves a call without a name.
 var odataWriteArgs = map[string]struct {
 	args     []odataArg
 	required []string
@@ -49,8 +49,12 @@ type odataBound struct {
 	extra   map[string]json.RawMessage
 }
 
-func bindODataArgs(tool string, args map[string]any) (odataBound, error) {
+func bindODataArgs(envs *environments, tool string, args map[string]any) (odataBound, error) {
 	spec := odataWriteArgs[tool]
+	spec.required = append([]string(nil), spec.required...)
+	if !envs.hasDefaultTarget() {
+		spec.required = append(spec.required, "environment-name")
+	}
 	bound := odataBound{strings: map[string]string{}, bools: map[string]bool{}, json: map[string]json.RawMessage{},
 		lists: map[string][]string{}, extra: map[string]json.RawMessage{}}
 	matched := map[string]string{} // member -> the key that bound it
@@ -137,7 +141,7 @@ func bindODataArgs(tool string, args map[string]any) (odataBound, error) {
 func init() {
 	for _, name := range []string{"odata-create", "odata-update", "odata-delete"} {
 		registerTool(map[string]any{"name": name}, func(ctx context.Context, envs *environments, args map[string]any) (*mcp.CallToolResult, error) {
-			input, err := bindODataArgs(name, args)
+			input, err := bindODataArgs(envs, name, args)
 			if err != nil {
 				return nil, err
 			}

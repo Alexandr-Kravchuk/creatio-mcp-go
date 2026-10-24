@@ -20,7 +20,7 @@ func TestCompileCreatioRefusesAScopeItCannotHonour(t *testing.T) {
 		"`process-name` is empty. Pass the business process code, or omit the argument for a full compilation.":                       {"environment-name": "parity-env", "process-name": ""},
 		"`process-name` is null. Pass a value, or omit both scope arguments for a full compilation. Nothing was compiled.":            {"environment-name": "parity-env", "process-name": nil},
 		"Provide only one of `package-name` or `process-name`: `process-name` already compiles the package the process is in.":        {"environment-name": "parity-env", "package-name": "A", "process-name": "B"},
-		"environment-name is required and cannot be empty.":                                                                           {"package-name": "UsrPkg"},
+		"[EnvironmentResolutionException] " + missingTargetMessage:                                                                    {"package-name": "UsrPkg"},
 	} {
 		var answer creatio.CommandResult
 		pkgWriteCall(t, session, "compile-creatio", args, &answer)

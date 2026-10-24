@@ -65,16 +65,24 @@ func init() {
 		if err := decodeStrictArgs(withoutEnvironmentArgs(args, scopeName), &input); err != nil {
 			return nil, fmt.Errorf("decode read-page-business-rules arguments: %w", err)
 		}
+		schemaName := input.PageSchemaName
+		if strings.TrimSpace(schemaName) == "" {
+			schemaName = input.SchemaName
+		}
+		// clio names every missing field, environment-name first, before it resolves the environment.
+		environmentName, _ := args["environment-name"].(string)
+		if envs.hasDefaultTarget() {
+			environmentName = "default target" // a default target serves a call without a name
+		}
+		if message := ruleWritePageRequestError(ruleWriteToolArgs{environment: environmentName, pkg: input.PackageName, schema: schemaName}, "", 1); message != "" {
+			return structuredToolResult(creatio.BusinessRulesReadResponse{Rules: []creatio.BusinessRule{}, Error: message}), nil
+		}
 		client, refusal, err := envs.resolve("read-page-business-rules", args, scopeName)
 		if err != nil {
 			return nil, err
 		}
 		if refusal != nil {
 			return resolverFailureEnvelope(refusal), nil
-		}
-		schemaName := input.PageSchemaName
-		if strings.TrimSpace(schemaName) == "" {
-			schemaName = input.SchemaName
 		}
 		return structuredToolResult(client.ReadPageBusinessRules(ctx, creatio.BusinessRulesReadRequest{
 			PackageName: input.PackageName, SchemaName: schemaName,

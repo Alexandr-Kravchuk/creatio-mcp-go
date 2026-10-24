@@ -5,11 +5,13 @@ package creatio
 // structured filter, the response classification and identity checks, and the file summary.
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -27,6 +29,14 @@ const (
 
 	// ODataReadMaxFileBytes is ODataFileContract.MaxResponseBytes, the file mode's response ceiling.
 	ODataReadMaxFileBytes = 64 << 20
+	// odataReadMaxInlineBytes is the only bound clio's inline read has: ExecuteGetRequest reads the answer
+	// with HttpClient.ReadAsStringAsync, whose buffer is capped by .NET's default
+	// MaxResponseContentBufferSize, int.MaxValue bytes.
+	odataReadMaxInlineBytes = math.MaxInt32
+	// odataReadCopyBufferBytes is the buffer of Creatio.Client's CopyResponseToFileBoundedAsync. Its ceiling
+	// check runs per read, so the size it reports is the bytes read up to and including the read that
+	// crossed the ceiling.
+	odataReadCopyBufferBytes = 81920
 
 	odataReadValidArguments = "Valid: entity, environment-name, filters, select, expand, order-by, top, skip, count. " +
 		"Raw filter strings are not supported; use the structured filters object. " +
@@ -524,8 +534,9 @@ func odataReadRequestPath(args ODataReadArgs, selectColumns, expandColumns []str
 // ---- the request ----
 
 // odataReadGet is the GET both read paths send: the body whatever the status (clio's IApplicationClient
-// reads it that way), err on a transport or session failure, errResponseTooLarge past the ceiling.
-func (c *Client) odataReadGet(ctx context.Context, path string, limit int) ([]byte, error) {
+// reads it that way), err on a transport or session failure, errResponseTooLarge past the ceiling. observed
+// is the size clio reports for a body past the ceiling (see odataReadBounded).
+func (c *Client) odataReadGet(ctx context.Context, path string, limit int) (payload []byte, observed int64, err error) {
 	requestCtx, cancel := context.WithTimeout(ctx, odataReadTimeout)
 	defer cancel()
 	response, _, err := c.doAuthenticated(requestCtx, c.requestClient(), func() (*http.Request, error) {
@@ -536,17 +547,33 @@ func (c *Client) odataReadGet(ctx context.Context, path string, limit int) ([]by
 		return request, err
 	})
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	defer response.Body.Close()
-	payload, err := io.ReadAll(io.LimitReader(response.Body, int64(limit)+1))
-	if err != nil {
-		return nil, err
+	return odataReadBounded(response.Body, int64(limit))
+}
+
+// odataReadBounded reads body the way Creatio.Client's CopyResponseToFileBoundedAsync copies it: reads of
+// at most odataReadCopyBufferBytes, refused once the bytes read so far plus the current read exceed limit.
+// observed is that sum, which depends on how the transport splits the body, as it does in clio.
+func odataReadBounded(body io.Reader, limit int64) ([]byte, int64, error) {
+	var payload bytes.Buffer
+	buffer := make([]byte, odataReadCopyBufferBytes)
+	for {
+		read, err := body.Read(buffer)
+		if read > 0 {
+			if int64(payload.Len())+int64(read) > limit {
+				return payload.Bytes(), int64(payload.Len()) + int64(read), errResponseTooLarge
+			}
+			payload.Write(buffer[:read])
+		}
+		if errors.Is(err, io.EOF) {
+			return payload.Bytes(), 0, nil
+		}
+		if err != nil {
+			return nil, 0, err
+		}
 	}
-	if len(payload) > limit {
-		return payload, errResponseTooLarge
-	}
-	return payload, nil
 }
 
 // ODataReadPrepare is the part of both read tools before the environment: argument validation, then the
@@ -580,10 +607,11 @@ func ODataReadTransportFailure(message string, args ODataReadArgs) ODataReadResp
 
 // ODataRead142 is ODataReadTool.ReadCore after the environment was resolved.
 func (c *Client) ODataRead142(ctx context.Context, args ODataReadArgs, selectColumns, expandColumns []string) ODataReadResponse {
-	body, err := c.odataReadGet(ctx, odataReadRequestPath(args, selectColumns, expandColumns), maxResponseBytes)
+	body, _, err := c.odataReadGet(ctx, odataReadRequestPath(args, selectColumns, expandColumns), odataReadMaxInlineBytes)
 	if err != nil {
 		if errors.Is(err, errResponseTooLarge) {
-			return ODataReadTransportFailure(fmt.Sprintf("response exceeds %d bytes", maxResponseBytes), args)
+			// clio's wording past HttpClient's buffer cap was not measured (a 2 GiB answer).
+			return ODataReadTransportFailure(fmt.Sprintf("response exceeds %d bytes", odataReadMaxInlineBytes), args)
 		}
 		return ODataReadTransportFailure(err.Error(), args)
 	}
@@ -835,11 +863,11 @@ func odataLookupColumnHint(fields []string) string {
 // resolved: the bounded fetch, one classification and summary pass, then the byte-exact file.
 func (c *Client) ODataReadToFile(ctx context.Context, args ODataReadArgs, selectColumns, expandColumns []string, path string) ODataReadResponse {
 	entity := dataWriteTrim(args.Entity)
-	body, err := c.odataReadGet(ctx, odataReadRequestPath(args, selectColumns, expandColumns), ODataReadMaxFileBytes)
+	body, observed, err := c.odataReadGet(ctx, odataReadRequestPath(args, selectColumns, expandColumns), ODataReadMaxFileBytes)
 	if err != nil {
 		if errors.Is(err, errResponseTooLarge) {
 			return ODataReadFailure(fmt.Sprintf("OData response is at least %d bytes, which exceeds the "+
-				"%d-byte limit for one call. Narrow the query with select, or page it with top and skip.", len(body), ODataReadMaxFileBytes),
+				"%d-byte limit for one call. Narrow the query with select, or page it with top and skip.", observed, ODataReadMaxFileBytes),
 				odataCodeTransport, nil, entity)
 		}
 		return ODataReadFailure(redact.Text(err.Error()), odataCodeTransport, nil, entity)

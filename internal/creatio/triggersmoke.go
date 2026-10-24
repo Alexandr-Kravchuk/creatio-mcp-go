@@ -11,9 +11,9 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"runtime"
 	"sort"
 	"strings"
-	"syscall"
 	"time"
 
 	"github.com/Alexandr-Kravchuk/creatio-mcp-go/internal/redact"
@@ -470,11 +470,15 @@ func (r *triggerSmokeRun) waitForProcesses(baseline *watchBaseline, attribution 
 }
 
 // clioConnectionText is an exception message as clio's client words it: a refused connection is the socket's
-// "Connection refused (host:port)" (measured against clio 8.1.0.142), anything else the error's own text.
+// "Connection refused (host:port)" (measured against clio 8.1.0.142), a connect fault already worded as
+// Creatio.Client raises it keeps that text, anything else is the error's own text.
 func clioConnectionText(err error) string {
+	if fault, ok := asConnectFault(err); ok {
+		return fault.Error()
+	}
 	var urlErr *url.Error
-	if errors.Is(err, syscall.ECONNREFUSED) && errors.As(err, &urlErr) {
-		return "Connection refused (" + rightsHostPort(urlErr.URL) + ")"
+	if isConnectionRefused(err) && errors.As(err, &urlErr) {
+		return connectSentence(err, runtime.GOOS) + " (" + rightsHostPort(urlErr.URL) + ")"
 	}
 	return err.Error()
 }

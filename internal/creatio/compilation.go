@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -74,6 +75,9 @@ func (c *Client) compileGetLastResult(ctx context.Context) ([]byte, error) {
 		return request, nil
 	})
 	if err != nil {
+		if getAnswersEmpty(err) {
+			return []byte{}, nil
+		}
 		if isRequestTransportError(err) {
 			return nil, fmt.Errorf("%s transport failure: %w", compileLastResultRoute, err)
 		}
@@ -92,11 +96,29 @@ func (c *Client) compileGetLastResult(ctx context.Context) ([]byte, error) {
 	return payload, nil
 }
 
+// compileNoTokenMessage is JsonSerializer.Deserialize's text for a payload with no JSON token in it (an empty
+// body: measured against clio 8.1.0.142), positioned after the whitespace it read.
+func compileNoTokenMessage(payload []byte) string {
+	line, column := 0, 0
+	for _, b := range payload {
+		if b == '\n' {
+			line, column = line+1, 0
+		} else {
+			column++
+		}
+	}
+	return fmt.Sprintf("The input does not contain any JSON tokens. Expected the input to start with a valid JSON token, "+
+		"when isFinalBlock is true. Path: $ | LineNumber: %d | BytePositionInLine: %d.", line, column)
+}
+
 // compileParseLastResult mirrors clio's DeserializeCreatioCompilationLog: errors, buildResult and success
 // must all be present (errors may be null, which reads as no diagnostics).
 func compileParseLastResult(payload []byte) (LastCompilationLogResult, error) {
 	trimmed := bytes.TrimSpace(payload)
-	if len(trimmed) == 0 || string(trimmed) == "null" {
+	if len(trimmed) == 0 {
+		return LastCompilationLogResult{}, errors.New(compileNoTokenMessage(payload))
+	}
+	if string(trimmed) == "null" {
 		return LastCompilationLogResult{}, fmt.Errorf("%s", compileEmptyPayloadMessage)
 	}
 	var decoded struct {

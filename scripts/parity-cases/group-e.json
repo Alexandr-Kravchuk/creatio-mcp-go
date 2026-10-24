@@ -6,7 +6,7 @@
   {"label": "list-printables module entity filter", "tool": "list-printables", "args": {"entity-name": " Contract "}, "clio-run": true},
   {"label": "list-printables no match", "tool": "list-printables", "args": {"entity-name": "ZzNoSuchEntity"}, "clio-run": true},
   {"label": "list-printables wrong argument type", "tool": "list-printables", "args": {"entity-name": 5}, "clio-run": true},
-  {"label": "list-user-tasks default", "tool": "list-user-tasks", "clio-run": true},
+  {"label": "list-user-tasks default", "tool": "list-user-tasks", "clio-run": true, "known-differences-variables": ["$.executionlogmessages[0].value"], "why": "The log opens with \"Reading user task catalog from '<environment>'...\". In --go-env-mode=variables Go is called without a name and quotes the CREATIO_URL target there; clio has no such mode and quotes the name it was given."},
   {"label": "list-user-tasks unknown argument", "tool": "list-user-tasks", "args": {"foo": 1}, "clio-run": true},
   {"label": "list-page-templates default", "tool": "list-page-templates", "clio-run": true},
   {"label": "list-page-templates web", "tool": "list-page-templates", "args": {"schema-type": "web"}, "clio-run": true},

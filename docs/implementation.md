@@ -45,8 +45,10 @@ clio. `cmd/creatio-mcp-go/environments.go` resolves it against clio's `appsettin
 (`internal/creatio/cliosettings.go`: the same file location rule, `CLIO_HOME` override, case-insensitive
 names, forms/OAuth/bearer selection and `EnvironmentSettings.Fill` overrides as clio), re-reads the file
 when its size or modification time changes, and keeps one authenticated `creatio.Client` per resolved
-connection. The `CREATIO_*` variables (see `.env.example`) are optional: they are the target of calls that
-name no environment, and clio's active environment is used after them. Each tool reports a resolution failure in its own
+connection. A call that names no environment and no `uri` is refused with clio 8.1.0.142's answer for that
+tool (its resolver text, or the tool's own check where clio has one); clio's active environment is never
+used. The `CREATIO_*` variables (see `.env.example`) are optional: they serve such calls only while clio's
+`appsettings.json` does not exist (T25). Each tool reports a resolution failure in its own
 clio envelope; `list-environments` is ported from clio's `ShowWebAppListTool`. The first reads below
 predate T1; they take `environment-name` like every other tool.
 
@@ -59,8 +61,10 @@ classification and its answer (`success`, `count`, `value`, `next-link`, `total-
 took `orderBy` and answered `{rows, count}`) is removed. The hand-written `odata-read` contract in
 `hiddenToolContracts` (`cmd/creatio-mcp-go/main.go`) still describes that old client; it is only the
 fallback for a tool the inventory lacks, and the inventory has `odata-read`, so it is never served.
-Inline `odata-read` reads at most the client's 4 MiB response ceiling; clio's inline read has none
-([t21b status](status/t21b-to-file-status.md#known-differences)). R1's `find-empty-iis-port` and `start-creatio` (`internal/hosttools`) use built-in `appcmd.exe`/`netstat.exe` and have no `creatio.client`, `Microsoft.Web.Administration`, WMI, PowerShell, or .NET helper dependency. `start-creatio` reads clio's `appsettings.json` and launches `dotnet Terrasoft.WebHost.dll` where appropriate; that is the Creatio application's runtime, not a .NET library linked into this MCP server. The Windows host tools have mocked coverage, which the Windows CI job runs (`go test ./...`, see [releasing.md](releasing.md)), but no live Windows run.
+Inline `odata-read` reads up to int.MaxValue bytes, the only bound clio's inline read has (.NET
+HttpClient's default buffer cap); `odata-read-to-file` refuses past 64 MiB and names the bytes read up to
+the 81920-byte read that crossed it, as Creatio.Client's copy loop does
+([t25 status](status/t25-small-fixes.md)). R1's `find-empty-iis-port` and `start-creatio` (`internal/hosttools`) use built-in `appcmd.exe`/`netstat.exe` and have no `creatio.client`, `Microsoft.Web.Administration`, WMI, PowerShell, or .NET helper dependency. `start-creatio` reads clio's `appsettings.json` and launches `dotnet Terrasoft.WebHost.dll` where appropriate; that is the Creatio application's runtime, not a .NET library linked into this MCP server. The Windows host tools have mocked coverage, which the Windows CI job runs (`go test ./...`, see [releasing.md](releasing.md)), but no live Windows run.
 
 `execute-esq` and `execute-esq-to-file` run one port of clio 8.1.0.142's `ExecuteEsqTool`
 (`internal/creatio/esq142.go`, `esqhints.go`; T21b): the SelectQuery goes to

@@ -261,6 +261,9 @@ func (c *Client) processWriteSendOnce(ctx context.Context, route string, body []
 	sender.CheckRedirect = func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }
 	response, err := c.sendWithSession(sender, request, session)
 	if err != nil {
+		if classified, ok := requestConnectFailure(requestCtx, err); ok {
+			return "", classified
+		}
 		return "", err
 	}
 	payload, err := readResponseLimit(response, maxResponseBytes)

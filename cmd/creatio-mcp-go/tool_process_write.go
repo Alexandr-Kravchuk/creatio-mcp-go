@@ -100,13 +100,27 @@ func processWriteTarget(name, uid, nameArg, uidArg string) *mcp.CallToolResult {
 	return nil
 }
 
-// processWriteBlankEnvironment is clio's refusal of an explicit blank environment-name (FromError); an absent
-// one goes to the default target instead (decision W1).
-func processWriteBlankEnvironment(args map[string]any) *mcp.CallToolResult {
-	if value, ok := args["environment-name"].(string); ok && strings.TrimSpace(value) == "" {
+// processWriteBlankEnvironment is clio's refusal of an absent or blank environment-name (FromError).
+func processWriteBlankEnvironment(envs *environments, args map[string]any) *mcp.CallToolResult {
+	if envs.nameRequired(args) {
 		return structuredToolResult(creatio.ProcessWriteError(processWriteMissingEnvironment))
 	}
 	return nil
+}
+
+// processWriteDecorated is ToolMiniContract.Decorate over a command-style refusal: the refusal keeps its exit
+// code and leading text, and the mini-contract follows it when the call lacks a required argument.
+func processWriteDecorated(refusal *mcp.CallToolResult, missing []string, render func([]string) string) *mcp.CallToolResult {
+	if len(missing) == 0 || refusal == nil {
+		return refusal
+	}
+	result, ok := refusal.StructuredContent.(creatio.ProcessWriteResult)
+	if !ok || len(result.Messages) == 0 {
+		return refusal
+	}
+	result.Messages = []creatio.LogMessage{{MessageType: result.Messages[0].MessageType,
+		Value: creatio.MiniContractDecorate(result.Messages[0].Value, missing, render)}}
+	return structuredToolResult(result)
 }
 
 // processWriteEnvironment resolves the target the way the other command-style tools do.
@@ -145,12 +159,20 @@ func init() {
 			if refusal := unknownArgumentError(args, "environment-name", "package-name", "descriptor"); refusal != "" {
 				return structuredToolResult(creatio.ProcessWriteFailure(refusal)), nil
 			}
-			if refusal := processWriteBlankEnvironment(args); refusal != nil {
-				return refusal, nil
+			// ENG-103025: a refusal for a missing environment or descriptor gains the mini-contract.
+			var missing []string
+			if environmentNameBlank(args) {
+				missing = append(missing, "environment-name")
+			}
+			if processWriteAbsentJSONDocument(args, "descriptor") {
+				missing = append(missing, "descriptor")
+			}
+			if refusal := processWriteBlankEnvironment(envs, args); refusal != nil {
+				return processWriteDecorated(refusal, missing, creatio.MiniContractCreateBusinessProcess), nil
 			}
 			descriptor, refusal := processWriteJSONDocument(args, "descriptor", false)
 			if refusal != "" {
-				return structuredToolResult(creatio.ProcessWriteFailure(refusal)), nil
+				return processWriteDecorated(structuredToolResult(creatio.ProcessWriteFailure(refusal)), missing, creatio.MiniContractCreateBusinessProcess), nil
 			}
 			client, failure, err := processWriteEnvironment(ctx, envs, tool, args)
 			if failure != nil || err != nil {
@@ -172,18 +194,29 @@ func init() {
 			if err != nil {
 				return nil, err
 			}
-			if refusal := unknownArgumentError(args, "environment-name", "process-name", "process-uid", "operations", "confirm-layout-change"); refusal != "" {
-				return structuredToolResult(creatio.ProcessWriteFailure(refusal)), nil
+			// ENG-103025: a refusal for a missing environment, process or operations gains the mini-contract.
+			var missing []string
+			if environmentNameBlank(args) {
+				missing = append(missing, "environment-name")
 			}
-			if refusal := processWriteBlankEnvironment(args); refusal != nil {
-				return refusal, nil
+			if strings.TrimSpace(values["process-name"]) == "" && strings.TrimSpace(values["process-uid"]) == "" {
+				missing = append(missing, "process-name or process-uid")
+			}
+			if processWriteAbsentJSONDocument(args, "operations") {
+				missing = append(missing, "operations")
+			}
+			if refusal := unknownArgumentError(args, "environment-name", "process-name", "process-uid", "operations", "confirm-layout-change"); refusal != "" {
+				return processWriteDecorated(structuredToolResult(creatio.ProcessWriteFailure(refusal)), missing, creatio.MiniContractModifyBusinessProcess), nil
+			}
+			if refusal := processWriteBlankEnvironment(envs, args); refusal != nil {
+				return processWriteDecorated(refusal, missing, creatio.MiniContractModifyBusinessProcess), nil
 			}
 			if refusal := processWriteTarget(values["process-name"], values["process-uid"], "process-name", "process-uid"); refusal != nil {
-				return refusal, nil
+				return processWriteDecorated(refusal, missing, creatio.MiniContractModifyBusinessProcess), nil
 			}
 			operations, refusal := processWriteJSONDocument(args, "operations", true)
 			if refusal != "" {
-				return structuredToolResult(creatio.ProcessWriteFailure(refusal)), nil
+				return processWriteDecorated(structuredToolResult(creatio.ProcessWriteFailure(refusal)), missing, creatio.MiniContractModifyBusinessProcess), nil
 			}
 			client, failure, err := processWriteEnvironment(ctx, envs, tool, args)
 			if failure != nil || err != nil {
@@ -205,7 +238,7 @@ func init() {
 			if refusal := unknownArgumentError(args, "environment-name", "process-name", "process-uid", "package-name", "operations"); refusal != "" {
 				return structuredToolResult(creatio.ProcessWriteFailure(refusal)), nil
 			}
-			if refusal := processWriteBlankEnvironment(args); refusal != nil {
+			if refusal := processWriteBlankEnvironment(envs, args); refusal != nil {
 				return refusal, nil
 			}
 			if refusal := processWriteTarget(values["process-name"], values["process-uid"], "process-name", "process-uid"); refusal != nil {
@@ -238,7 +271,7 @@ func init() {
 			if refusal := unknownArgumentError(args, "environment-name", "version-name", "version-uid"); refusal != "" {
 				return structuredToolResult(creatio.ProcessWriteFailure(refusal)), nil
 			}
-			if refusal := processWriteBlankEnvironment(args); refusal != nil {
+			if refusal := processWriteBlankEnvironment(envs, args); refusal != nil {
 				return refusal, nil
 			}
 			if refusal := processWriteTarget(values["version-name"], values["version-uid"], "version-name", "version-uid"); refusal != nil {

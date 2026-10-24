@@ -26,6 +26,9 @@ func TestGroupJToolsAnswerByRawNameAndThroughClioRun(t *testing.T) {
 			_, _ = w.Write([]byte(`{"GetLicOperationStatusesResult":{"success":true,"licOperationStatuses":[]}}`))
 		case "/0/ServiceModel/ThemeService.svc/GetAvailableThemes":
 			_, _ = w.Write([]byte(`{"success":true,"values":[]}`))
+		case "/0/ServiceModel/ApplicationInfoService.svc/GetApplicationInfo":
+			// get-theme's 10.0.0 floor reads the core version first.
+			_, _ = w.Write([]byte(`{"success":true,"applicationInfo":{"sysValues":{"coreVersion":"10.2.363.0"}}}`))
 		default:
 			t.Errorf("unexpected Creatio route %s", r.URL.Path)
 			http.NotFound(w, r)
@@ -73,6 +76,49 @@ func TestGroupJToolsAnswerByRawNameAndThroughClioRun(t *testing.T) {
 	contract, err := session.CallTool(context.Background(), &mcp.CallToolParams{Name: "get-tool-contract", Arguments: map[string]any{"name": "inspect-access"}})
 	if err != nil || contract.IsError {
 		t.Fatalf("inspect-access contract = %#v, err = %v", contract, err)
+	}
+}
+
+// clio's get-theme and list-themes carry [RequiresCreatioVersion("10.0.0")]: below the floor, or when the version
+// cannot be checked, the tool answers the gate's refusal with its code and never reads the theme catalog or the id.
+func TestThemeReadsRefuseBelowTheThemeServiceFloor(t *testing.T) {
+	creatioServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/ServiceModel/AuthService.svc/Login":
+			_, _ = w.Write([]byte(`{"Code":0}`))
+		case "/0/ServiceModel/ApplicationInfoService.svc/GetApplicationInfo":
+			_, _ = w.Write([]byte(`{"success":true,"applicationInfo":{"sysValues":{"coreVersion":"8.3.3.1520"}}}`))
+		default:
+			t.Errorf("unexpected Creatio route %s", r.URL.Path)
+			http.NotFound(w, r)
+		}
+	}))
+	defer creatioServer.Close()
+	closed := httptest.NewServer(http.NotFoundHandler())
+	closed.Close()
+	cases := map[string]string{
+		creatioServer.URL: "This command requires Creatio 10.0.0 or later. The target environment runs 8.3.3.1520. Update Creatio and retry. [version-too-old]",
+		closed.URL: "Could not perform the Creatio platform version check for the target environment (it could not be reached, or access was denied). " +
+			"This command requires 10.0.0 or later — verify connectivity and permissions, then retry. [version-check-failed]",
+	}
+	for baseURL, message := range cases {
+		client, err := creatio.NewClient(creatio.Config{BaseURL: baseURL, Login: "example-user", Password: "replace-me"})
+		if err != nil {
+			t.Fatal(err)
+		}
+		session := connectTestClient(t, newMCPServer(client), mcp.NewClient(&mcp.Implementation{Name: "probe-client", Version: "test"}, nil))
+		// A non-GUID id would be refused by the command itself; the floor answers first, as in clio.
+		calls := append(callPaths("get-theme", map[string]any{"id": "abc"}), callPaths("list-themes", map[string]any{})...)
+		for _, call := range calls {
+			result, err := session.CallTool(context.Background(), call)
+			if err != nil || result.IsError {
+				t.Fatalf("call via %q = %#v, err = %v", call.Name, result, err)
+			}
+			want := `{"success":false,"error":` + groupEJSON(t, message) + `}`
+			if text := result.Content[0].(*mcp.TextContent).Text; text != want {
+				t.Errorf("%s via %s %v = %s\nwant %s", baseURL, call.Name, call.Arguments, text, want)
+			}
+		}
 	}
 }
 

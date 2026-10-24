@@ -132,7 +132,15 @@ gave up): the read below found none of them.
 | Difference | clio 8.1.0.142 | This server | Why not changed here |
 |---|---|---|---|
 | Login timeout | 100 s | 45 s (client timeout) | Seen only on an unresponsive host (first attempt); this server gives up sooner, and the texts differ |
-| `GetIsFileDesignMode`, `LoadPackagesToDB/FileSystem` | `Timeout.Infinite`, 30 attempts 3 s apart | 30 min, one attempt | clio's retry was needed once (connection reset after 190 s in a setup `on`, which only clio ran); no Go call hit it |
+
+Changed after the run: `set-fsm-mode`'s `GetIsFileDesignMode` and `LoadPackagesToDB/FileSystem` (30 minutes, one
+attempt before) now retry as clio's `FileDesignModePackages` does through Creatio.Client 2.1.0: up to 30 attempts
+3 s apart for a request that got no answer (refused, reset or dropped connection, a failed re-login included); an
+answer of any HTTP status ends the loop, and the login before the loop is not retried. Each attempt keeps the
+30-minute bound that stands in for clio's `Timeout.Infinite` and is not repeated once it runs out. clio's retry
+was needed once here (connection reset after 190 s in a setup `on`, which only clio ran). Tests:
+`TestSetFsmModeSendsARequestThatGotNoAnswerAgain`, `TestSetFsmModeRetriesOnlyUnansweredRequestsAndAtMostThirtyTimes`
+(both fail without the change), `TestSetFsmModeDoesNotRetryTheLogin`. Not checked live.
 
 ## First attempt: stand outage
 

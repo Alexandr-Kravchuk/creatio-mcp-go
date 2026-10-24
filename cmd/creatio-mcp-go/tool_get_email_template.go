@@ -42,8 +42,11 @@ func init() {
 			"language-id": map[string]string{"type": "string", "description": "Optional SysLanguage GUID for EmailTemplateLang. When absent, returns an exists=false legacy variant with a creation checksum."},
 		}},
 	}, func(ctx context.Context, envs *environments, args map[string]any) (*mcp.CallToolResult, error) {
-		// email-id is a required member of clio's argument record, so its binder refuses the whole object.
-		if _, present := args["email-id"]; !present {
+		// email-id and environment-name are required members of clio's argument record, so its binder refuses the
+		// whole object without either.
+		_, hasEmailID := args["email-id"]
+		_, hasEnvironment := args["environment-name"]
+		if !hasEmailID || (!hasEnvironment && !envs.hasDefaultTarget()) {
 			return nil, errors.New("invalid-parameter-type: argument 'args' for MCP tool 'get-email-template' must be an object. Received an incompatible JSON value.")
 		}
 		values := map[string]string{}
@@ -57,6 +60,9 @@ func init() {
 		emailID, ok := emailTemplateGUIDText(values["email-id"])
 		if !ok {
 			return structuredToolResult(creatio.EmailTemplateFailure("email-id must be a GUID.")), nil
+		}
+		if envs.nameRequired(args) {
+			return structuredToolResult(creatio.EmailTemplateFailure("environment-name is required.")), nil
 		}
 		if strings.TrimSpace(values["language-id"]) != "" {
 			if _, ok := emailTemplateGUIDText(values["language-id"]); !ok {

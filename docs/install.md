@@ -129,14 +129,14 @@ masked, exactly as clio's tool does. The tools whose clio counterpart accepts `u
 `password` (and `describe-environment` also `client-id`, `client-secret`, `auth-app-uri`) accept them
 too, for a one-off connection without a registered name.
 
-**A call without `environment-name`** goes to the default target:
+**A call without `environment-name`** is refused, as clio refuses it, with clio's own answer for that
+tool (most often "Either a configured environment name or an explicit URI is required..."). clio's
+active environment (`ActiveEnvironmentKey`) is never used for it.
 
-1. the environment set by the `CREATIO_*` variables below, when `CREATIO_URL` is set;
-2. otherwise clio's active environment (`ActiveEnvironmentKey` in `appsettings.json`).
-
-clio itself refuses such a call ("Either a configured environment name or an explicit URI is
-required..."); this server keeps the default so a registration with `CREATIO_*` variables, as in
-earlier releases, keeps working.
+One exception: when the server was started with the `CREATIO_*` variables below and clio's
+`appsettings.json` does not exist, those variables are the only environment there is, and a call
+without a name goes there. Once `appsettings.json` exists (for example after `clio reg-web-app`), such a
+call is refused again, because either target could be meant.
 
 | Variable | Value |
 |---|---|

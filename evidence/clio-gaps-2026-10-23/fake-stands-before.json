@@ -1,0 +1,71 @@
+{
+  "schema": 1,
+  "clio_startup_seconds": 1.97,
+  "go_startup_seconds": 0.59,
+  "counts": {
+    "match": 3,
+    "both-failed": 2,
+    "error-text": 0,
+    "known-diff": 0,
+    "mismatch": 1
+  },
+  "cases": [
+    {
+      "tool": "list-user-tasks",
+      "case": "list-user-tasks default [env 1]",
+      "verdict": "mismatch",
+      "clio_seconds": 0.16,
+      "go_seconds": 0.0,
+      "differences": [
+        "$.executionlogmessages: 1 items in clio, 3 in go",
+        "$.executionlogmessages[0].messagetype: value differs",
+        "$.executionlogmessages[0].value: value differs",
+        "$.exitcode: value differs"
+      ]
+    },
+    {
+      "tool": "list-user-tasks",
+      "case": "list-user-tasks default [env 2]",
+      "verdict": "match",
+      "clio_seconds": 0.06,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "get-theme",
+      "case": "get-theme unknown id [env 1]",
+      "verdict": "both-failed",
+      "clio_seconds": 0.02,
+      "go_seconds": 0.0,
+      "differences": [
+        "$.error: value differs"
+      ]
+    },
+    {
+      "tool": "get-theme",
+      "case": "get-theme unknown id [env 2]",
+      "verdict": "match",
+      "clio_seconds": 0.01,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "get-theme",
+      "case": "get-theme non-GUID id [env 1]",
+      "verdict": "both-failed",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": [
+        "$.error: value differs"
+      ]
+    },
+    {
+      "tool": "get-theme",
+      "case": "get-theme non-GUID id [env 2]",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    }
+  ]
+}

@@ -103,11 +103,17 @@ func (r AppCreateRequest) EffectiveTemplate() string {
 // ValidateAppCreate is ApplicationCreateTool.ValidateCreateArgs followed by ParseOptionalTemplateData: the
 // checks clio makes before it resolves the environment.
 func ValidateAppCreate(request AppCreateRequest) (*AppTemplateData, error) {
+	// ENG-103025: a call without a name or code is answered with the required arguments and a minimal valid
+	// call after the refusal create-app always gave.
+	var missing []string
 	if strings.TrimSpace(request.Name) == "" {
-		return nil, errors.New("name is required.")
+		missing = append(missing, "name")
 	}
 	if strings.TrimSpace(request.Code) == "" {
-		return nil, errors.New("code is required.")
+		missing = append(missing, "code")
+	}
+	if len(missing) > 0 {
+		return nil, errors.New(missing[0] + " is required. " + MiniContractCreateApp(missing))
 	}
 	template := request.EffectiveTemplate()
 	known := false

@@ -1,0 +1,168 @@
+{
+  "schema": 1,
+  "clio_startup_seconds": 0.72,
+  "go_startup_seconds": 0.05,
+  "counts": {
+    "match": 18,
+    "both-failed": 0,
+    "error-text": 0,
+    "known-diff": 1,
+    "mismatch": 0
+  },
+  "cases": [
+    {
+      "tool": "list-themes",
+      "case": "list-themes legacy environmentName spelling",
+      "verdict": "match",
+      "clio_seconds": 0.02,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "list-themes",
+      "case": "list-themes default",
+      "verdict": "match",
+      "clio_seconds": 0.85,
+      "go_seconds": 0.56,
+      "differences": []
+    },
+    {
+      "tool": "list-themes",
+      "case": "list-themes unknown argument",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "list-user-tasks",
+      "case": "list-user-tasks default",
+      "verdict": "known-diff",
+      "clio_seconds": 0.59,
+      "go_seconds": 0.11,
+      "differences": [
+        "$.executionlogmessages[0].value: value differs"
+      ]
+    },
+    {
+      "tool": "list-user-tasks",
+      "case": "list-user-tasks unknown argument",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "describe-business-process",
+      "case": "describe process by code",
+      "verdict": "match",
+      "clio_seconds": 0.98,
+      "go_seconds": 0.29,
+      "differences": []
+    },
+    {
+      "tool": "describe-business-process",
+      "case": "describe process by caption",
+      "verdict": "match",
+      "clio_seconds": 1.33,
+      "go_seconds": 0.3,
+      "differences": []
+    },
+    {
+      "tool": "describe-business-process",
+      "case": "describe process no identity",
+      "verdict": "match",
+      "clio_seconds": 0.06,
+      "go_seconds": 0.09,
+      "differences": []
+    },
+    {
+      "tool": "describe-business-process",
+      "case": "describe process unknown argument",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "describe-business-process",
+      "case": "describe process wrong type",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "get-theme",
+      "case": "get-theme unknown id",
+      "verdict": "match",
+      "clio_seconds": 0.08,
+      "go_seconds": 0.15,
+      "differences": []
+    },
+    {
+      "tool": "get-theme",
+      "case": "get-theme braced unknown id",
+      "verdict": "match",
+      "clio_seconds": 0.08,
+      "go_seconds": 0.08,
+      "differences": []
+    },
+    {
+      "tool": "get-theme",
+      "case": "get-theme non-GUID id",
+      "verdict": "match",
+      "clio_seconds": 0.07,
+      "go_seconds": 0.06,
+      "differences": []
+    },
+    {
+      "tool": "get-theme",
+      "case": "get-theme missing id",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "get-theme",
+      "case": "get-theme numeric id",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "get-theme",
+      "case": "get-theme unknown argument",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "get-theme",
+      "case": "get-theme legacy outputFile",
+      "verdict": "match",
+      "clio_seconds": 0.0,
+      "go_seconds": 0.0,
+      "differences": []
+    },
+    {
+      "tool": "get-theme",
+      "case": "get-theme output-file outside allowed locations",
+      "verdict": "match",
+      "clio_seconds": 0.05,
+      "go_seconds": 0.06,
+      "differences": []
+    },
+    {
+      "tool": "get-theme",
+      "case": "get-theme output-file already exists",
+      "verdict": "match",
+      "clio_seconds": 0.05,
+      "go_seconds": 0.05,
+      "differences": []
+    }
+  ]
+}

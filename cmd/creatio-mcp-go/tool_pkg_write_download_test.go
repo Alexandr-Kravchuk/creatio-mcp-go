@@ -27,7 +27,7 @@ func TestDownloadConfigurationRefusals(t *testing.T) {
 		{"download-configuration-by-build", map[string]any{"build-path": missing, "workspace-path": workspace}, "Directory not found: " + missing},
 		{"download-configuration-by-environment", map[string]any{"environment-name": "parity-env"}, "Workspace path is required."},
 		{"download-configuration-by-environment", map[string]any{"environment-name": "parity-env", "workspace-path": "ws"}, "Workspace path must be absolute: ws"},
-		{"download-configuration-by-environment", map[string]any{"workspace-path": workspace}, "environment-name is required and cannot be empty."},
+		{"download-configuration-by-environment", map[string]any{"workspace-path": workspace}, "[EnvironmentResolutionException] " + missingTargetMessage},
 		{"download-configuration-by-environment", map[string]any{"environment-name": "missing-env", "workspace-path": workspace},
 			"[EnvironmentResolutionException] Environment with key 'missing-env' not found."},
 	} {
