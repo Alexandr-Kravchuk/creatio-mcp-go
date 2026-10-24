@@ -38,6 +38,7 @@ func TestT21aToolsCarryClioAnnotationsAndContracts(t *testing.T) {
 		"place-section-in-workplace": {Destructive: true, Idempotent: true},
 		"localize-page":              {Destructive: true, Idempotent: true},
 		"trigger-smoke":              {Destructive: true},
+		"page-smoke":                 {Destructive: true},
 	}
 	for name, annotations := range want {
 		if got := annotationsOf(name); got != annotations {
@@ -52,10 +53,11 @@ func TestT21aToolsCarryClioAnnotationsAndContracts(t *testing.T) {
 			t.Errorf("%s contract = %s", name, encoded)
 		}
 	}
-	for _, name := range []string{"page-smoke", "get-mobile-page-conversion-guide"} {
-		if _, ok := registeredTools[name]; ok {
-			t.Errorf("%s is registered although it is not ported", name)
-		}
+	if annotations := annotationsOf("get-mobile-page-conversion-guide"); annotations != (toolAnnotations{ReadOnly: true, Idempotent: true}) {
+		t.Errorf("get-mobile-page-conversion-guide annotations = %#v", annotations)
+	}
+	if _, ok := registeredTools["get-mobile-page-conversion-guide"]; !ok {
+		t.Error("get-mobile-page-conversion-guide is not registered")
 	}
 }
 

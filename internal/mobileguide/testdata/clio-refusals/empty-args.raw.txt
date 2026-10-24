@@ -1,0 +1,2 @@
+{"success":false,"error":"Failed to read source page '': Either a configured environment name or an explicit URI is required for MCP command execution. Prefer a registered environment name; use explicit URI credentials only as a bootstrap or emergency fallback."}
+[clio] Executed 'get-mobile-page-conversion-guide' directly; it is not advertised in tools/list. Prefer the advertised executor next time: clio-run {"command":"get-mobile-page-conversion-guide","args":{…}} (discover contracts via get-tool-contract).

@@ -1,0 +1,8 @@
+[
+ {"label":"open add","tool":"page-smoke","args":{"environment-name":"t27fake","page":"UsrX_FormPage","browser":"existing","browser-path":"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"}},
+ {"label":"open edit","tool":"page-smoke","args":{"environment-name":"t27fake","page":"UsrX_FormPage","record-id":"6B9D1A3E-0000-4000-8000-00000000000A","timeout":10}},
+ {"label":"click run","tool":"page-smoke","args":{"environment-name":"t27fake","page":"UsrX_FormPage","click":"run check","click-wait":3}},
+ {"label":"click ambiguous","tool":"page-smoke","args":{"environment-name":"t27fake","page":"UsrX_FormPage","click":"Save"}},
+ {"label":"click disabled","tool":"page-smoke","args":{"environment-name":"t27fake","page":"UsrX_FormPage","click":"ArchiveButton"}},
+ {"label":"click missing","tool":"page-smoke","args":{"environment-name":"t27fake","page":"UsrX_FormPage","click":"Nope"}}
+]

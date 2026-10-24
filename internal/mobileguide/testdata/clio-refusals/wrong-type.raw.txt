@@ -1,0 +1,2 @@
+isError invalid-parameter-type: argument 'schema-name' for MCP tool 'get-mobile-page-conversion-guide' must be a string. Received an incompatible JSON value.
+[clio] Attempted 'get-mobile-page-conversion-guide' directly; it is not advertised in tools/list. Prefer the advertised executor next time: clio-run {"command":"get-mobile-page-conversion-guide","args":{…}} (discover contracts via get-tool-contract).

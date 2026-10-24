@@ -1,0 +1,2 @@
+isError Error: tool 'get-mobile-page-conversion-guide' failed: The arguments dictionary is missing a value for the required parameter 'args'. (Parameter 'arguments')
+[clio] Attempted 'get-mobile-page-conversion-guide' directly; it is not advertised in tools/list. Prefer the advertised executor next time: clio-run {"command":"get-mobile-page-conversion-guide","args":{…}} (discover contracts via get-tool-contract).

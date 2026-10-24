@@ -1,0 +1,1 @@
+{"success":false,"error":"Failed to read source page '': Either a configured environment name or an explicit URI is required for MCP command execution. Prefer a registered environment name; use explicit URI credentials only as a bootstrap or emergency fallback."}

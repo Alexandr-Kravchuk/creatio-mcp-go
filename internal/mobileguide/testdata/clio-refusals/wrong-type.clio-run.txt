@@ -1,0 +1,1 @@
+isError invalid-parameter-type: argument 'schema-name' for MCP tool 'get-mobile-page-conversion-guide' must be a string. Received an incompatible JSON value.
